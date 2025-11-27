@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
-import { idbStorage } from './storage';
+import { get, set, del } from 'idb-keyval';
 import travelCover from '@assets/generated_images/travel_album_cover_art.png';
 import weddingCover from '@assets/generated_images/wedding_album_cover_art.png';
 
@@ -8,10 +8,10 @@ export interface Album {
   id: string;
   title: string;
   date: string;
-  frontCover: string;
-  backCover: string;
+  frontCover: string; // Base64 or ID
+  backCover: string;  // Base64 or ID
   theme: 'classic' | 'travel' | 'fun' | 'royal';
-  sheets: string[]; 
+  sheets: string[];   // IDs of the sheets in IDB
 }
 
 interface AlbumStore {
@@ -20,6 +20,23 @@ interface AlbumStore {
   getAlbum: (id: string) => Album | undefined;
   removeAlbum: (id: string) => void;
 }
+
+// Image Storage Helper (Direct Blob Storage)
+export const ImageStorage = {
+  save: async (id: string, file: File | Blob) => {
+    await set(`img_${id}`, file);
+  },
+  load: async (id: string): Promise<string | null> => {
+    const blob = await get(`img_${id}`);
+    if (blob) {
+      return URL.createObjectURL(blob);
+    }
+    return null;
+  },
+  delete: async (id: string) => {
+    await del(`img_${id}`);
+  }
+};
 
 // Helper to generate mock sheets (panoramic)
 const generateMockSheets = (count: number, seed: string) => {
@@ -47,8 +64,8 @@ export const useAlbumStore = create<AlbumStore>()(
       removeAlbum: (id) => set((state) => ({ albums: state.albums.filter(a => a.id !== id) })),
     }),
     {
-      name: 'album-storage-large', // New name to avoid conflicts with old localStorage data
-      storage: createJSONStorage(() => idbStorage),
+      name: 'album-metadata-v3',
+      storage: createJSONStorage(() => localStorage), // Metadata is small, localStorage is fine
     }
   )
 );

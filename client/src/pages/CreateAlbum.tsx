@@ -1,11 +1,10 @@
 import { useState, useCallback } from 'react';
 import { useLocation } from 'wouter';
-import { useAlbumStore } from '@/lib/store';
+import { useAlbumStore, ImageStorage } from '@/lib/store';
 import { useDropzone } from 'react-dropzone';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Upload, X, Loader2, ImagePlus } from 'lucide-react';
 import { motion } from 'framer-motion';
 
@@ -14,6 +13,7 @@ export default function CreateAlbum() {
   const { addAlbum } = useAlbumStore();
   const [step, setStep] = useState(1);
   const [loading, setLoading] = useState(false);
+  const [status, setStatus] = useState('');
 
   const [formData, setFormData] = useState({
     title: '',
@@ -23,17 +23,6 @@ export default function CreateAlbum() {
     backCover: null as File | null,
     sheets: [] as File[],
   });
-
-  // Helper to convert file to base64 (for small prototype persistence)
-  // In a real app, we'd upload to S3 and get a URL.
-  const fileToBase64 = (file: File): Promise<string> => {
-    return new Promise((resolve, reject) => {
-      const reader = new FileReader();
-      reader.readAsDataURL(file);
-      reader.onload = () => resolve(reader.result as string);
-      reader.onerror = error => reject(error);
-    });
-  };
 
   const onDropSheets = useCallback((acceptedFiles: File[]) => {
     setFormData(prev => ({
@@ -65,23 +54,38 @@ export default function CreateAlbum() {
     if (!formData.frontCover || !formData.backCover || formData.sheets.length === 0) return;
     
     setLoading(true);
+    setStatus('Preparing images...');
     
     try {
-      // Convert all files to base64 strings for storage
-      // Warning: This is heavy for localStorage, but necessary for "persistence" in this mock stack
-      const frontCoverBase64 = await fileToBase64(formData.frontCover);
-      const backCoverBase64 = await fileToBase64(formData.backCover);
-      const sheetPromises = formData.sheets.map(file => fileToBase64(file));
-      const sheetBase64s = await Promise.all(sheetPromises);
+      const albumId = Math.random().toString(36).substr(2, 9);
+      
+      // 1. Save Front Cover
+      const frontCoverId = `${albumId}_front`;
+      await ImageStorage.save(frontCoverId, formData.frontCover);
+      
+      // 2. Save Back Cover
+      const backCoverId = `${albumId}_back`;
+      await ImageStorage.save(backCoverId, formData.backCover);
+      
+      // 3. Save Sheets
+      const sheetIds: string[] = [];
+      for (let i = 0; i < formData.sheets.length; i++) {
+        setStatus(`Saving sheet ${i + 1} of ${formData.sheets.length}...`);
+        const sheetId = `${albumId}_sheet_${i}`;
+        await ImageStorage.save(sheetId, formData.sheets[i]);
+        sheetIds.push(sheetId);
+      }
+
+      setStatus('Finalizing album...');
 
       const newAlbum = {
-        id: Math.random().toString(36).substr(2, 9),
+        id: albumId,
         title: formData.title,
         date: formData.date,
         theme: formData.theme as any,
-        frontCover: frontCoverBase64,
-        backCover: backCoverBase64,
-        sheets: sheetBase64s,
+        frontCover: frontCoverId, // Storing ID reference
+        backCover: backCoverId,   // Storing ID reference
+        sheets: sheetIds,         // Storing ID references
       };
 
       addAlbum(newAlbum);
@@ -90,7 +94,7 @@ export default function CreateAlbum() {
     } catch (error) {
       console.error("Error processing files", error);
       setLoading(false);
-      alert("Failed to process images. They might be too large for this demo.");
+      alert("Something went wrong while saving the album. Please try again.");
     }
   };
 
@@ -102,7 +106,7 @@ export default function CreateAlbum() {
           <div className="relative z-10 flex items-center justify-between">
             <div>
               <h1 className="font-display text-3xl font-bold">Create Royal Album</h1>
-              <p className="opacity-80 text-sm">Design your 12x36 wedding masterpiece</p>
+              <p className="opacity-80 text-sm">High Quality Storage Enabled</p>
             </div>
             <span className="text-sm font-mono bg-white/20 px-3 py-1 rounded-full">Step {step} of 2</span>
           </div>
@@ -142,7 +146,6 @@ export default function CreateAlbum() {
               <div className="space-y-4">
                 <Label className="text-lg font-display">Cover Images</Label>
                 <div className="grid md:grid-cols-2 gap-6">
-                  {/* Front Cover Upload */}
                   <div className="space-y-2">
                     <span className="text-sm font-medium text-neutral-500 uppercase tracking-wider">Front Cover</span>
                     <CoverUploader 
@@ -152,7 +155,6 @@ export default function CreateAlbum() {
                     />
                   </div>
                   
-                  {/* Back Cover Upload */}
                   <div className="space-y-2">
                     <span className="text-sm font-medium text-neutral-500 uppercase tracking-wider">Back Cover</span>
                     <CoverUploader 
@@ -187,7 +189,7 @@ export default function CreateAlbum() {
                 </div>
                 <div>
                   <p className="font-bold text-neutral-900">Upload 12x36 Panoramic Sheets</p>
-                  <p>Upload your album sheets designed in 12x36 aspect ratio. We will automatically handle the fold for the flipbook experience.</p>
+                  <p>We now support full-resolution uploads. Images are stored securely in your browser's local database.</p>
                 </div>
               </div>
 
@@ -204,7 +206,7 @@ export default function CreateAlbum() {
                   <Upload className="w-10 h-10" />
                 </div>
                 <h3 className="font-display text-xl font-medium mb-2">Drop your album sheets here</h3>
-                <p className="text-neutral-400">Supports JPG, PNG (High Quality)</p>
+                <p className="text-neutral-400">Supports High-Res JPG, PNG</p>
               </div>
 
               {formData.sheets.length > 0 && (
@@ -213,7 +215,6 @@ export default function CreateAlbum() {
                   <div className="grid grid-cols-1 gap-3 max-h-60 overflow-y-auto pr-2">
                     {formData.sheets.map((file, idx) => (
                       <div key={idx} className="relative h-24 bg-neutral-100 rounded-md overflow-hidden group border border-neutral-200 flex">
-                        {/* Preview as panoramic strip */}
                         <img 
                           src={URL.createObjectURL(file)} 
                           alt="preview" 
@@ -243,7 +244,7 @@ export default function CreateAlbum() {
                   className="rounded-full px-10 bg-primary hover:bg-primary/90 text-primary-foreground font-bold shadow-lg hover:shadow-xl transition-all"
                 >
                   {loading ? <Loader2 className="w-5 h-5 animate-spin mr-2" /> : null}
-                  {loading ? 'Creating Masterpiece...' : 'Create Album'}
+                  {loading ? status || 'Processing...' : 'Create Album'}
                 </Button>
               </div>
             </motion.div>

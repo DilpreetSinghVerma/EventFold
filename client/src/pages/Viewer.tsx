@@ -1,13 +1,53 @@
 import { useParams, Link } from 'wouter';
-import { useAlbumStore } from '@/lib/store';
+import { useAlbumStore, ImageStorage } from '@/lib/store';
 import { Flipbook } from '@/components/Flipbook';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft, Share2, Home } from 'lucide-react';
+import { ArrowLeft, Share2, Home, Loader2 } from 'lucide-react';
+import { useEffect, useState } from 'react';
 
 export default function Viewer() {
   const { id } = useParams();
   const { getAlbum } = useAlbumStore();
   const album = getAlbum(id || '');
+  
+  const [loadedSheets, setLoadedSheets] = useState<string[]>([]);
+  const [loadedFrontCover, setLoadedFrontCover] = useState<string>('');
+  const [loadedBackCover, setLoadedBackCover] = useState<string>('');
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const loadImages = async () => {
+      if (!album) return;
+      
+      try {
+        // Check if images are URLs (mock data) or IDs (real data)
+        // Mock data URLs usually start with http
+        const isMock = album.frontCover.startsWith('http') || album.frontCover.startsWith('/src');
+        
+        if (isMock) {
+          setLoadedFrontCover(album.frontCover);
+          setLoadedBackCover(album.backCover);
+          setLoadedSheets(album.sheets);
+        } else {
+          // Load from IDB
+          const front = await ImageStorage.load(album.frontCover);
+          const back = await ImageStorage.load(album.backCover);
+          
+          const sheets = await Promise.all(album.sheets.map(id => ImageStorage.load(id)));
+          
+          setLoadedFrontCover(front || '');
+          setLoadedBackCover(back || '');
+          setLoadedSheets(sheets.filter(Boolean) as string[]);
+        }
+      } catch (e) {
+        console.error("Failed to load images", e);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadImages();
+  }, [album]);
 
   if (!album) {
     return (
@@ -17,6 +57,17 @@ export default function Viewer() {
           <Link href="/dashboard">
             <Button>Return Home</Button>
           </Link>
+        </div>
+      </div>
+    );
+  }
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-neutral-900 text-white">
+        <div className="text-center">
+          <Loader2 className="w-8 h-8 animate-spin mx-auto mb-4 text-primary" />
+          <p className="font-display">Loading High-Res Images...</p>
         </div>
       </div>
     );
@@ -57,9 +108,9 @@ export default function Viewer() {
       {/* Viewer Area */}
       <main className="flex-1 flex flex-col items-center justify-center p-4 md:p-8 overflow-hidden">
         <Flipbook 
-          sheets={album.sheets} 
-          frontCover={album.frontCover} 
-          backCover={album.backCover} 
+          sheets={loadedSheets} 
+          frontCover={loadedFrontCover} 
+          backCover={loadedBackCover} 
         />
       </main>
     </div>
