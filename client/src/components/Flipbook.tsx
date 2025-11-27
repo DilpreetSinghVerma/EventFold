@@ -1,6 +1,5 @@
 import React, { useRef, useState, useEffect } from 'react';
 import HTMLFlipBook from 'react-pageflip';
-import { TransformWrapper, TransformComponent } from 'react-zoom-pan-pinch';
 import { ChevronLeft, ChevronRight, Volume2, VolumeX, ZoomIn, ZoomOut, Maximize } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useIsMobile } from '@/hooks/use-mobile';
@@ -80,40 +79,28 @@ export function Flipbook({ sheets, frontCover, backCover }: FlipbookProps) {
 
   return (
     <div className="relative w-full h-full flex flex-col items-center">
-      {/* Zoom Wrapper */}
-      <TransformWrapper
-        initialScale={1}
-        minScale={0.5}
-        maxScale={4}
-        centerOnInit={true}
-        wheel={{ step: 0.1 }}
-      >
-        {({ zoomIn, zoomOut, resetTransform }) => (
-          <>
-            {/* Controls Toolbar */}
-            <div className="absolute top-4 left-1/2 -translate-x-1/2 z-50 flex gap-2 bg-black/60 backdrop-blur-md p-2 rounded-full border border-white/10 shadow-xl">
-               <Button variant="ghost" size="icon" onClick={() => zoomOut()} className="h-8 w-8 rounded-full text-white hover:bg-white/20">
-                 <ZoomOut className="w-4 h-4" />
-               </Button>
-               <Button variant="ghost" size="icon" onClick={() => resetTransform()} className="h-8 w-8 rounded-full text-white hover:bg-white/20">
-                 <Maximize className="w-4 h-4" />
-               </Button>
-               <Button variant="ghost" size="icon" onClick={() => zoomIn()} className="h-8 w-8 rounded-full text-white hover:bg-white/20">
-                 <ZoomIn className="w-4 h-4" />
-               </Button>
-               <div className="w-px h-4 bg-white/20 my-auto mx-1" />
-               <Button variant="ghost" size="icon" onClick={() => setIsMuted(!isMuted)} className="h-8 w-8 rounded-full text-white hover:bg-white/20">
-                 {isMuted ? <VolumeX className="w-4 h-4" /> : <Volume2 className="w-4 h-4" />}
-               </Button>
-            </div>
+      {/* Controls Toolbar */}
+      <div className="absolute top-4 left-1/2 -translate-x-1/2 z-50 flex gap-2 bg-black/60 backdrop-blur-md p-2 rounded-full border border-white/10 shadow-xl">
+         <Button variant="ghost" size="icon" className="h-8 w-8 rounded-full text-white hover:bg-white/20">
+           <ZoomOut className="w-4 h-4" />
+         </Button>
+         <Button variant="ghost" size="icon" className="h-8 w-8 rounded-full text-white hover:bg-white/20">
+           <Maximize className="w-4 h-4" />
+         </Button>
+         <Button variant="ghost" size="icon" className="h-8 w-8 rounded-full text-white hover:bg-white/20">
+           <ZoomIn className="w-4 h-4" />
+         </Button>
+         <div className="w-px h-4 bg-white/20 my-auto mx-1" />
+         <Button variant="ghost" size="icon" onClick={() => setIsMuted(!isMuted)} className="h-8 w-8 rounded-full text-white hover:bg-white/20">
+           {isMuted ? <VolumeX className="w-4 h-4" /> : <Volume2 className="w-4 h-4" />}
+         </Button>
+      </div>
 
-            <TransformComponent
-              wrapperClass="!w-full !h-full flex items-center justify-center"
-              contentClass="flex items-center justify-center"
-            >
-               <div className="relative py-10 px-4 perspective-[2000px]">
-                 {/* The Album Book Effect */}
-                 <div className="relative transition-transform duration-500 ease-out transform-style-3d shadow-[0_30px_60px_rgba(0,0,0,0.5)]">
+      {/* Book Flip Viewer */}
+      <div className="relative w-full h-full flex items-center justify-center">
+         <div className="relative py-10 px-4 perspective-[2000px]">
+           {/* The Album Book Effect */}
+           <div className="relative transition-transform duration-500 ease-out transform-style-3d shadow-[0_30px_60px_rgba(0,0,0,0.5)]">
                    
                    {/* @ts-ignore */}
                    <HTMLFlipBook
@@ -126,11 +113,11 @@ export function Flipbook({ sheets, frontCover, backCover }: FlipbookProps) {
                      maxHeight={1000}
                      maxShadowOpacity={0.5}
                      showCover={true}
-                     mobileScrollSupport={true}
+                     mobileScrollSupport={false}
                      className="bg-transparent"
                      ref={book}
                      onFlip={playFlipSound}
-                     usePortrait={dimensions.width < 400} // Only use portrait mode if pages are very small
+                     usePortrait={false}
                      startZIndex={0}
                      autoSize={true}
                      clickEventForward={true}
@@ -193,10 +180,7 @@ export function Flipbook({ sheets, frontCover, backCover }: FlipbookProps) {
                    </HTMLFlipBook>
                  </div>
                </div>
-            </TransformComponent>
-          </>
-        )}
-      </TransformWrapper>
+         </div>
 
       {/* Navigation Arrows (Outside Zoom) */}
       <div className="absolute bottom-8 flex gap-12 z-40 pointer-events-none">

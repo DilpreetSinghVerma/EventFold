@@ -1,4 +1,4 @@
-import { db } from "@/server/db";
+import { db } from "./db";
 import { albums, files, type InsertAlbum, type Album, type InsertFile, type File } from "@shared/schema";
 import { eq } from "drizzle-orm";
 
