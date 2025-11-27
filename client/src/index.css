@@ -4,60 +4,56 @@
 @custom-variant dark (&:is(.dark *));
 
 @theme inline {
-  --font-display: "Playfair Display", serif;
-  --font-sans: "DM Sans", sans-serif;
+  --font-display: "Cinzel", serif;
+  --font-script: "Great Vibes", cursive;
+  --font-sans: "Lato", sans-serif;
 
   --radius-sm: 0.25rem;
   --radius-md: 0.5rem;
   --radius-lg: 0.75rem;
   --radius-xl: 1rem;
 
-  /* Soft Nostalgia Theme Palette - H S% L% */
-  /* Warm Whites & Creams */
-  --color-background: 40 20% 97%; /* Creamy off-white */
-  --color-foreground: 30 10% 20%; /* Soft charcoal */
+  /* Royal Indian Wedding Theme - H S% L% */
+  
+  /* Backgrounds: Warm Creams and Rich Reds */
+  --color-background: 36 30% 96%; /* Warm Cream */
+  --color-foreground: 355 65% 25%; /* Deep Maroon Text */
 
   --color-card: 0 0% 100%;
-  --color-card-foreground: 30 10% 20%;
+  --color-card-foreground: 355 65% 25%;
 
   --color-popover: 0 0% 100%;
-  --color-popover-foreground: 30 10% 20%;
+  --color-popover-foreground: 355 65% 25%;
 
-  /* Primary - Elegant Gold/Bronze */
-  --color-primary: 35 40% 50%;
-  --color-primary-foreground: 0 0% 100%;
+  /* Primary: Royal Gold */
+  --color-primary: 45 90% 50%; /* Gold */
+  --color-primary-foreground: 355 65% 25%; /* Maroon on Gold */
 
-  /* Secondary - Soft Sage/Olive */
-  --color-secondary: 100 15% 90%;
-  --color-secondary-foreground: 100 20% 30%;
+  /* Secondary: Deep Maroon */
+  --color-secondary: 355 70% 35%; /* Rich Maroon */
+  --color-secondary-foreground: 45 90% 85%; /* Pale Gold on Maroon */
 
-  --color-muted: 40 10% 92%;
-  --color-muted-foreground: 30 5% 45%;
+  --color-muted: 36 20% 90%;
+  --color-muted-foreground: 355 40% 40%;
 
-  --color-accent: 40 20% 94%;
-  --color-accent-foreground: 35 40% 40%;
+  --color-accent: 45 60% 90%; /* Pale Gold */
+  --color-accent-foreground: 355 70% 30%;
 
   --color-destructive: 0 60% 50%;
   --color-destructive-foreground: 0 0% 98%;
 
-  --color-border: 40 10% 85%;
-  --color-input: 40 10% 85%;
-  --color-ring: 35 40% 50%;
+  --color-border: 45 50% 80%; /* Gold Border */
+  --color-input: 36 20% 90%;
+  --color-ring: 45 90% 50%;
 
-  --color-chart-1: 35 40% 50%;
-  --color-chart-2: 100 20% 40%;
-  --color-chart-3: 200 20% 40%;
-  --color-chart-4: 10 30% 50%;
-  --color-chart-5: 25 30% 50%;
-
-  --color-sidebar: 40 20% 96%;
-  --color-sidebar-foreground: 30 10% 20%;
-  --color-sidebar-primary: 35 40% 50%;
-  --color-sidebar-primary-foreground: 0 0% 100%;
-  --color-sidebar-accent: 40 15% 92%;
-  --color-sidebar-accent-foreground: 35 40% 40%;
-  --color-sidebar-border: 40 10% 88%;
-  --color-sidebar-ring: 35 40% 50%;
+  --color-sidebar: 355 70% 98%;
+  --color-sidebar-foreground: 355 65% 25%;
+  --color-sidebar-primary: 355 70% 35%;
+  --color-sidebar-primary-foreground: 45 90% 85%;
+  --color-sidebar-accent: 45 60% 90%;
+  --color-sidebar-accent-foreground: 355 70% 30%;
+  --color-sidebar-border: 45 50% 80%;
+  --color-sidebar-ring: 45 90% 50%;
 }
 
 @layer base {
@@ -66,11 +62,10 @@
   }
   body {
     @apply font-sans antialiased bg-background text-foreground;
-    /* Subtle grain texture overlay could be added here if we had an asset, 
-       but we'll rely on the generated image in the App layout */
+    background-image: radial-gradient(circle at center, transparent 0%, rgba(217, 4, 41, 0.03) 100%);
   }
   h1, h2, h3, h4, h5, h6 {
-    @apply font-display font-medium tracking-tight;
+    @apply font-display font-bold tracking-wide;
   }
 }
 
@@ -87,6 +82,9 @@
   backface-visibility: hidden;
 }
 
-.rotate-y-180 {
-  transform: rotateY(180deg);
+.ornate-border {
+  border: 2px solid hsl(45 90% 50%);
+  box-shadow: 
+    0 0 0 4px hsl(36 30% 96%),
+    0 0 0 6px hsl(45 90% 50%);
 }

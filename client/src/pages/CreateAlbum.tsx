@@ -6,11 +6,8 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
-import { Upload, X, Loader2 } from 'lucide-react';
+import { Upload, X, Loader2, ImagePlus } from 'lucide-react';
 import { motion } from 'framer-motion';
-import travelCover from '@assets/generated_images/travel_album_cover_art.png';
-import weddingCover from '@assets/generated_images/wedding_album_cover_art.png';
-import birthdayCover from '@assets/generated_images/birthday_album_cover_art.png';
 
 export default function CreateAlbum() {
   const [, setLocation] = useLocation();
@@ -21,68 +18,93 @@ export default function CreateAlbum() {
   const [formData, setFormData] = useState({
     title: '',
     date: new Date().toISOString().split('T')[0],
-    theme: 'classic',
-    files: [] as File[],
+    theme: 'royal',
+    frontCover: null as File | null,
+    backCover: null as File | null,
+    sheets: [] as File[],
   });
 
-  const onDrop = useCallback((acceptedFiles: File[]) => {
+  // Helper to convert file to base64 (for small prototype persistence)
+  // In a real app, we'd upload to S3 and get a URL.
+  const fileToBase64 = (file: File): Promise<string> => {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.readAsDataURL(file);
+      reader.onload = () => resolve(reader.result as string);
+      reader.onerror = error => reject(error);
+    });
+  };
+
+  const onDropSheets = useCallback((acceptedFiles: File[]) => {
     setFormData(prev => ({
       ...prev,
-      files: [...prev.files, ...acceptedFiles]
+      sheets: [...prev.sheets, ...acceptedFiles]
     }));
   }, []);
 
-  const { getRootProps, getInputProps, isDragActive } = useDropzone({ 
-    onDrop,
+  const { getRootProps: getSheetRootProps, getInputProps: getSheetInputProps, isDragActive: isSheetDragActive } = useDropzone({ 
+    onDrop: onDropSheets,
     accept: { 'image/*': [] } 
   });
 
-  const removeFile = (index: number) => {
+  const handleCoverDrop = (file: File, type: 'front' | 'back') => {
     setFormData(prev => ({
       ...prev,
-      files: prev.files.filter((_, i) => i !== index)
+      [type === 'front' ? 'frontCover' : 'backCover']: file
+    }));
+  };
+
+  const removeSheet = (index: number) => {
+    setFormData(prev => ({
+      ...prev,
+      sheets: prev.sheets.filter((_, i) => i !== index)
     }));
   };
 
   const handleSubmit = async () => {
+    if (!formData.frontCover || !formData.backCover || formData.sheets.length === 0) return;
+    
     setLoading(true);
     
-    // Simulate upload delay
-    await new Promise(resolve => setTimeout(resolve, 2000));
+    try {
+      // Convert all files to base64 strings for storage
+      // Warning: This is heavy for localStorage, but necessary for "persistence" in this mock stack
+      const frontCoverBase64 = await fileToBase64(formData.frontCover);
+      const backCoverBase64 = await fileToBase64(formData.backCover);
+      const sheetPromises = formData.sheets.map(file => fileToBase64(file));
+      const sheetBase64s = await Promise.all(sheetPromises);
 
-    const newAlbum = {
-      id: Math.random().toString(36).substr(2, 9),
-      title: formData.title,
-      date: formData.date,
-      theme: formData.theme as 'classic' | 'travel' | 'fun',
-      // Randomly assign one of our generated covers based on theme
-      cover: formData.theme === 'travel' ? travelCover : 
-             formData.theme === 'fun' ? birthdayCover : weddingCover,
-      // Use placeholders for the uploaded files since we can't really store them in this mock
-      pages: Array.from({ length: Math.max(formData.files.length, 6) }).map((_, i) => 
-        `https://picsum.photos/seed/${Math.random()}/800/1000`
-      ),
-    };
+      const newAlbum = {
+        id: Math.random().toString(36).substr(2, 9),
+        title: formData.title,
+        date: formData.date,
+        theme: formData.theme as any,
+        frontCover: frontCoverBase64,
+        backCover: backCoverBase64,
+        sheets: sheetBase64s,
+      };
 
-    addAlbum(newAlbum);
-    setLoading(false);
-    setLocation('/dashboard');
+      addAlbum(newAlbum);
+      setLoading(false);
+      setLocation('/dashboard');
+    } catch (error) {
+      console.error("Error processing files", error);
+      setLoading(false);
+      alert("Failed to process images. They might be too large for this demo.");
+    }
   };
 
   return (
-    <div className="min-h-screen bg-[#FDFBF7] flex items-center justify-center p-6">
-      <div className="w-full max-w-2xl bg-white rounded-2xl shadow-xl overflow-hidden border border-neutral-100">
-        <div className="bg-primary/5 p-6 border-b border-primary/10">
-          <div className="flex items-center justify-between">
-            <h1 className="font-display text-2xl font-bold text-primary-foreground mix-blend-difference text-neutral-800">Create New Album</h1>
-            <span className="text-sm font-mono text-neutral-400">Step {step} of 2</span>
-          </div>
-          {/* Progress Bar */}
-          <div className="w-full h-1 bg-neutral-200 mt-4 rounded-full overflow-hidden">
-            <div 
-              className="h-full bg-primary transition-all duration-500"
-              style={{ width: step === 1 ? '50%' : '100%' }}
-            />
+    <div className="min-h-screen bg-[#FDFBF7] flex items-center justify-center p-6 py-12">
+      <div className="w-full max-w-3xl bg-white rounded-2xl shadow-xl overflow-hidden border border-neutral-100">
+        <div className="bg-primary p-6 text-primary-foreground relative overflow-hidden">
+          <div className="absolute inset-0 opacity-10 bg-[url('https://www.transparenttextures.com/patterns/batik-ramp.png')] mix-blend-overlay"></div>
+          <div className="relative z-10 flex items-center justify-between">
+            <div>
+              <h1 className="font-display text-3xl font-bold">Create Royal Album</h1>
+              <p className="opacity-80 text-sm">Design your 12x36 wedding masterpiece</p>
+            </div>
+            <span className="text-sm font-mono bg-white/20 px-3 py-1 rounded-full">Step {step} of 2</span>
           </div>
         </div>
 
@@ -91,78 +113,65 @@ export default function CreateAlbum() {
             <motion.div 
               initial={{ opacity: 0, x: 20 }}
               animate={{ opacity: 1, x: 0 }}
-              className="space-y-6"
+              className="space-y-8"
             >
-              <div className="space-y-2">
-                <Label htmlFor="title">Album Title</Label>
-                <Input 
-                  id="title" 
-                  placeholder="e.g. Summer Vacation 2024" 
-                  value={formData.title}
-                  onChange={(e) => setFormData({...formData, title: e.target.value})}
-                  className="text-lg h-12"
-                />
+              <div className="grid md:grid-cols-2 gap-6">
+                <div className="space-y-2">
+                  <Label htmlFor="title" className="text-lg font-display">Album Title</Label>
+                  <Input 
+                    id="title" 
+                    placeholder="e.g. Priya & Rahul's Wedding" 
+                    value={formData.title}
+                    onChange={(e) => setFormData({...formData, title: e.target.value})}
+                    className="h-12 text-lg border-neutral-300 focus:border-primary"
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="date" className="text-lg font-display">Event Date</Label>
+                  <Input 
+                    id="date" 
+                    type="date"
+                    value={formData.date}
+                    onChange={(e) => setFormData({...formData, date: e.target.value})}
+                    className="h-12 border-neutral-300 focus:border-primary"
+                  />
+                </div>
               </div>
 
-              <div className="space-y-2">
-                <Label htmlFor="date">Event Date</Label>
-                <Input 
-                  id="date" 
-                  type="date"
-                  value={formData.date}
-                  onChange={(e) => setFormData({...formData, date: e.target.value})}
-                />
-              </div>
-
-              <div className="space-y-3">
-                <Label>Select Theme</Label>
-                <RadioGroup 
-                  defaultValue="classic" 
-                  value={formData.theme}
-                  onValueChange={(val) => setFormData({...formData, theme: val})}
-                  className="grid grid-cols-3 gap-4"
-                >
-                  <div>
-                    <RadioGroupItem value="classic" id="classic" className="peer sr-only" />
-                    <Label 
-                      htmlFor="classic"
-                      className="flex flex-col items-center justify-between rounded-xl border-2 border-muted bg-transparent p-4 hover:bg-neutral-50 peer-data-[state=checked]:border-primary peer-data-[state=checked]:bg-primary/5 cursor-pointer transition-all"
-                    >
-                      <span className="font-display text-lg mb-2">Classic</span>
-                      <div className="w-full h-12 bg-neutral-100 rounded-md border border-neutral-200" />
-                    </Label>
+              <div className="space-y-4">
+                <Label className="text-lg font-display">Cover Images</Label>
+                <div className="grid md:grid-cols-2 gap-6">
+                  {/* Front Cover Upload */}
+                  <div className="space-y-2">
+                    <span className="text-sm font-medium text-neutral-500 uppercase tracking-wider">Front Cover</span>
+                    <CoverUploader 
+                      file={formData.frontCover} 
+                      onDrop={(f) => handleCoverDrop(f, 'front')} 
+                      label="Upload Front"
+                    />
                   </div>
-                  <div>
-                    <RadioGroupItem value="travel" id="travel" className="peer sr-only" />
-                    <Label 
-                      htmlFor="travel"
-                      className="flex flex-col items-center justify-between rounded-xl border-2 border-muted bg-transparent p-4 hover:bg-neutral-50 peer-data-[state=checked]:border-primary peer-data-[state=checked]:bg-primary/5 cursor-pointer transition-all"
-                    >
-                      <span className="font-display text-lg mb-2">Travel</span>
-                      <div className="w-full h-12 bg-[#E3DCC2] rounded-md border border-neutral-200" />
-                    </Label>
+                  
+                  {/* Back Cover Upload */}
+                  <div className="space-y-2">
+                    <span className="text-sm font-medium text-neutral-500 uppercase tracking-wider">Back Cover</span>
+                    <CoverUploader 
+                      file={formData.backCover} 
+                      onDrop={(f) => handleCoverDrop(f, 'back')} 
+                      label="Upload Back"
+                    />
                   </div>
-                  <div>
-                    <RadioGroupItem value="fun" id="fun" className="peer sr-only" />
-                    <Label 
-                      htmlFor="fun"
-                      className="flex flex-col items-center justify-between rounded-xl border-2 border-muted bg-transparent p-4 hover:bg-neutral-50 peer-data-[state=checked]:border-primary peer-data-[state=checked]:bg-primary/5 cursor-pointer transition-all"
-                    >
-                      <span className="font-display text-lg mb-2">Fun</span>
-                      <div className="w-full h-12 bg-pink-100 rounded-md border border-neutral-200" />
-                    </Label>
-                  </div>
-                </RadioGroup>
+                </div>
               </div>
 
               <div className="pt-4 flex justify-end">
                 <Button 
                   onClick={() => setStep(2)} 
-                  disabled={!formData.title}
+                  disabled={!formData.title || !formData.frontCover || !formData.backCover}
                   size="lg"
-                  className="rounded-full px-8"
+                  className="rounded-full px-8 bg-primary hover:bg-primary/90 text-primary-foreground font-bold"
                 >
-                  Next Step
+                  Next: Add Sheets
                 </Button>
               </div>
             </motion.div>
@@ -172,59 +181,107 @@ export default function CreateAlbum() {
               animate={{ opacity: 1, x: 0 }}
               className="space-y-6"
             >
-              <div 
-                {...getRootProps()} 
-                className={`border-2 border-dashed rounded-xl p-10 text-center cursor-pointer transition-colors ${
-                  isDragActive ? 'border-primary bg-primary/5' : 'border-neutral-200 hover:border-primary/50'
-                }`}
-              >
-                <input {...getInputProps()} />
-                <div className="w-16 h-16 bg-primary/10 text-primary rounded-full flex items-center justify-center mx-auto mb-4">
-                  <Upload className="w-8 h-8" />
+              <div className="bg-neutral-50 p-4 rounded-lg border border-neutral-200 text-sm text-neutral-600 flex items-start gap-3">
+                <div className="bg-primary/10 p-2 rounded-full text-primary">
+                  <ImagePlus className="w-5 h-5" />
                 </div>
-                <h3 className="font-medium text-lg mb-1">Click or drag photos here</h3>
-                <p className="text-neutral-400 text-sm">Supports JPG, PNG (Max 10MB)</p>
+                <div>
+                  <p className="font-bold text-neutral-900">Upload 12x36 Panoramic Sheets</p>
+                  <p>Upload your album sheets designed in 12x36 aspect ratio. We will automatically handle the fold for the flipbook experience.</p>
+                </div>
               </div>
 
-              {formData.files.length > 0 && (
+              <div 
+                {...getSheetRootProps()} 
+                className={`border-2 border-dashed rounded-xl p-12 text-center cursor-pointer transition-all duration-300 ${
+                  isSheetDragActive 
+                    ? 'border-primary bg-primary/5 scale-[1.02]' 
+                    : 'border-neutral-300 hover:border-primary/50 hover:bg-neutral-50'
+                }`}
+              >
+                <input {...getSheetInputProps()} />
+                <div className="w-20 h-20 bg-primary/10 text-primary rounded-full flex items-center justify-center mx-auto mb-4">
+                  <Upload className="w-10 h-10" />
+                </div>
+                <h3 className="font-display text-xl font-medium mb-2">Drop your album sheets here</h3>
+                <p className="text-neutral-400">Supports JPG, PNG (High Quality)</p>
+              </div>
+
+              {formData.sheets.length > 0 && (
                 <div className="space-y-2">
-                  <h4 className="font-medium text-sm text-neutral-500">Selected Photos ({formData.files.length})</h4>
-                  <div className="grid grid-cols-4 gap-2 max-h-40 overflow-y-auto p-1">
-                    {formData.files.map((file, idx) => (
-                      <div key={idx} className="relative aspect-square bg-neutral-100 rounded-md overflow-hidden group">
+                  <h4 className="font-medium text-sm text-neutral-500 uppercase tracking-wider">Selected Sheets ({formData.sheets.length})</h4>
+                  <div className="grid grid-cols-1 gap-3 max-h-60 overflow-y-auto pr-2">
+                    {formData.sheets.map((file, idx) => (
+                      <div key={idx} className="relative h-24 bg-neutral-100 rounded-md overflow-hidden group border border-neutral-200 flex">
+                        {/* Preview as panoramic strip */}
                         <img 
                           src={URL.createObjectURL(file)} 
                           alt="preview" 
                           className="w-full h-full object-cover" 
                         />
-                        <button 
-                          onClick={() => removeFile(idx)}
-                          className="absolute top-1 right-1 bg-black/50 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity"
-                        >
-                          <X className="w-3 h-3" />
-                        </button>
+                        <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
+                          <span className="text-white text-xs font-medium">Sheet {idx + 1}</span>
+                          <button 
+                            onClick={() => removeSheet(idx)}
+                            className="bg-white/20 hover:bg-white/40 text-white rounded-full p-2 transition-colors"
+                          >
+                            <X className="w-4 h-4" />
+                          </button>
+                        </div>
                       </div>
                     ))}
                   </div>
                 </div>
               )}
 
-              <div className="pt-4 flex justify-between">
+              <div className="pt-8 flex justify-between border-t border-neutral-100">
                 <Button variant="ghost" onClick={() => setStep(1)}>Back</Button>
                 <Button 
                   onClick={handleSubmit} 
-                  disabled={formData.files.length === 0 || loading}
+                  disabled={formData.sheets.length === 0 || loading}
                   size="lg"
-                  className="rounded-full px-8"
+                  className="rounded-full px-10 bg-primary hover:bg-primary/90 text-primary-foreground font-bold shadow-lg hover:shadow-xl transition-all"
                 >
-                  {loading ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : null}
-                  {loading ? 'Creating...' : 'Create Album'}
+                  {loading ? <Loader2 className="w-5 h-5 animate-spin mr-2" /> : null}
+                  {loading ? 'Creating Masterpiece...' : 'Create Album'}
                 </Button>
               </div>
             </motion.div>
           )}
         </div>
       </div>
+    </div>
+  );
+}
+
+function CoverUploader({ file, onDrop, label }: { file: File | null, onDrop: (f: File) => void, label: string }) {
+  const { getRootProps, getInputProps, isDragActive } = useDropzone({
+    onDrop: (files) => files[0] && onDrop(files[0]),
+    accept: { 'image/*': [] },
+    maxFiles: 1
+  });
+
+  return (
+    <div 
+      {...getRootProps()}
+      className={`aspect-[3/4] rounded-lg border-2 border-dashed flex flex-col items-center justify-center cursor-pointer overflow-hidden relative transition-all ${
+        isDragActive ? 'border-primary bg-primary/5' : 'border-neutral-300 hover:border-primary/50'
+      } ${file ? 'border-solid border-primary/20' : ''}`}
+    >
+      <input {...getInputProps()} />
+      {file ? (
+        <>
+          <img src={URL.createObjectURL(file)} className="w-full h-full object-cover absolute inset-0" />
+          <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 hover:opacity-100 transition-opacity">
+            <span className="text-white font-medium text-sm">Change</span>
+          </div>
+        </>
+      ) : (
+        <>
+          <ImagePlus className="w-8 h-8 text-neutral-300 mb-2" />
+          <span className="text-xs text-neutral-400 font-medium">{label}</span>
+        </>
+      )}
     </div>
   );
 }

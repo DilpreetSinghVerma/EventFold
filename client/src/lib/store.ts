@@ -4,26 +4,28 @@ import travelCover from '@assets/generated_images/travel_album_cover_art.png';
 import weddingCover from '@assets/generated_images/wedding_album_cover_art.png';
 import birthdayCover from '@assets/generated_images/birthday_album_cover_art.png';
 
-// Mock data types
 export interface Album {
   id: string;
   title: string;
   date: string;
-  cover: string;
-  theme: 'classic' | 'travel' | 'fun';
-  pages: string[]; // URLs to images
+  frontCover: string;
+  backCover: string;
+  theme: 'classic' | 'travel' | 'fun' | 'royal';
+  // We store "sheets" which are the 12x36 panoramic images
+  sheets: string[]; 
 }
 
 interface AlbumStore {
   albums: Album[];
   addAlbum: (album: Album) => void;
   getAlbum: (id: string) => Album | undefined;
+  removeAlbum: (id: string) => void;
 }
 
-// Generate some mock pages (using placeholders for now if we don't have enough real images)
-const generatePages = (count: number, seed: string) => {
+// Helper to generate mock sheets (panoramic)
+const generateMockSheets = (count: number, seed: string) => {
   return Array.from({ length: count }).map((_, i) => 
-    `https://picsum.photos/seed/${seed}-${i}/800/1000`
+    `https://picsum.photos/seed/${seed}-${i}/1200/400` // 3:1 aspect ratio roughly
   );
 };
 
@@ -32,36 +34,25 @@ export const useAlbumStore = create<AlbumStore>()(
     (set, get) => ({
       albums: [
         {
-          id: '1',
-          title: 'Summer in Italy',
-          date: '2024-07-15',
-          cover: travelCover,
-          theme: 'travel',
-          pages: generatePages(8, 'italy'),
-        },
-        {
-          id: '2',
-          title: 'Sarah & James Wedding',
-          date: '2023-09-20',
-          cover: weddingCover,
-          theme: 'classic',
-          pages: generatePages(12, 'wedding'),
-        },
-        {
-          id: '3',
-          title: 'Leo\'s 5th Birthday',
-          date: '2024-11-10',
-          cover: birthdayCover,
-          theme: 'fun',
-          pages: generatePages(6, 'birthday'),
+          id: 'mock-1',
+          title: 'Priya & Rahul',
+          date: '2024-12-10',
+          frontCover: weddingCover,
+          backCover: weddingCover, // using same for mock
+          theme: 'royal',
+          sheets: generateMockSheets(5, 'wedding'),
         },
       ],
-      addAlbum: (album) => set((state) => ({ albums: [...state.albums, album] })),
+      addAlbum: (album) => set((state) => ({ albums: [album, ...state.albums] })),
       getAlbum: (id) => get().albums.find((a) => a.id === id),
+      removeAlbum: (id) => set((state) => ({ albums: state.albums.filter(a => a.id !== id) })),
     }),
     {
-      name: 'album-storage',
+      name: 'album-storage-v2',
       storage: createJSONStorage(() => localStorage),
+      // Note: Storing large base64 strings in localStorage will hit limits (5MB).
+      // For a real app, we'd use IndexedDB or a backend.
+      // For this prototype, we'll just warn if it fails or rely on session URLs for new uploads.
     }
   )
 );
