@@ -1,8 +1,8 @@
-import React, { useState } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { ChevronLeft, ChevronRight } from 'lucide-react';
+import React, { useRef, useState, useEffect } from 'react';
+import HTMLFlipBook from 'react-pageflip';
+import { ChevronLeft, ChevronRight, Volume2, VolumeX } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { cn } from '@/lib/utils';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 interface FlipbookProps {
   pages: string[];
@@ -10,135 +10,165 @@ interface FlipbookProps {
 }
 
 export function Flipbook({ pages, cover }: FlipbookProps) {
-  // currentPage represents the index of the page displayed on the RIGHT side.
-  // 0 means cover is closed (or front cover).
-  // If pages array is [p1, p2, p3, p4]
-  // Index 0: Front Cover (Right side)
-  // Index 1: Inside Front Cover (Left) | Page 1 (Right) -> but simpler:
-  // Let's map pages linearly.
-  // -1: Closed Front Cover (Viewable)
-  // 0: Page 1 (Left), Page 2 (Right)
-  
-  // Simplified model for prototype:
-  // Single Page View on Mobile
-  // Double Page View on Desktop
-  
-  const [currentIndex, setCurrentIndex] = useState(0);
+  const book = useRef<any>(null);
+  const [isMuted, setIsMuted] = useState(false);
+  const isMobile = useIsMobile();
+  const [dimensions, setDimensions] = useState({ width: 400, height: 600 });
 
-  // We'll treat 'pages' as just the inner content. 
-  // Cover is handled separately or as index -1.
-  
-  const totalPages = pages.length;
-  
-  const goNext = () => {
-    if (currentIndex < totalPages - 1) {
-      setCurrentIndex(prev => prev + 1);
-    }
+  // Adjust dimensions based on screen size
+  useEffect(() => {
+    const handleResize = () => {
+      if (window.innerWidth < 768) {
+        // Mobile: Single page view, almost full width
+        const width = Math.min(window.innerWidth - 40, 400);
+        setDimensions({ width: width, height: width * 1.4 });
+      } else {
+        // Desktop: Double page view
+        setDimensions({ width: 450, height: 600 });
+      }
+    };
+
+    handleResize();
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
+  const playFlipSound = () => {
+    if (isMuted) return;
+    // Using a publicly available sound effect URL
+    const audio = new Audio('https://www.soundjay.com/misc/sounds/page-flip-01a.mp3');
+    audio.volume = 0.4;
+    audio.play().catch(e => console.log("Audio play failed (interaction needed first)", e));
   };
 
-  const goPrev = () => {
-    if (currentIndex > 0) {
-      setCurrentIndex(prev => prev - 1);
-    }
+  const onFlip = (e: any) => {
+    playFlipSound();
   };
 
-  // 3D Flip Effect logic is complex to get perfect in a quick prototype without a library.
-  // We will use a high-quality "stack" transition or a simplified 3D flip using AnimatePresence.
+  const next = () => {
+    book.current?.pageFlip().flipNext();
+  };
+
+  const prev = () => {
+    book.current?.pageFlip().flipPrev();
+  };
+
+  // Combine cover and pages
+  // HTMLFlipBook treats each child as a page.
+  // Index 0 = Cover
+  // Index 1 = Inside Cover (Left)
+  // Index 2 = Page 1 (Right)
+  // ...
   
+  const allPages = [cover, ...pages];
+
   return (
-    <div className="relative w-full max-w-4xl mx-auto aspect-[3/2] perspective-1000 select-none">
-      {/* Book Container */}
-      <div className="relative w-full h-full flex items-center justify-center">
-        
-        {/* Pages Container */}
-        <div className="relative w-[90%] h-[90%] bg-white shadow-2xl rounded-r-md border-l-4 border-l-neutral-200 flex overflow-hidden">
-            {/* Left Page (Previous) */}
-            <div className="w-1/2 h-full bg-neutral-50 relative overflow-hidden border-r border-neutral-100 hidden md:block">
-               {currentIndex > 0 && (
-                 <img 
-                   src={pages[currentIndex - 1]} 
-                   alt={`Page ${currentIndex}`}
-                   className="w-full h-full object-cover opacity-90"
-                 />
-               )}
-               {/* Paper shadow gradient */}
-               <div className="absolute inset-0 bg-gradient-to-r from-black/5 to-transparent pointer-events-none" />
-               
-               {/* Page Number */}
-               {currentIndex > 0 && (
-                 <span className="absolute bottom-4 left-4 text-neutral-400 text-xs font-mono">
-                   {currentIndex}
-                 </span>
-               )}
+    <div className="relative flex flex-col items-center justify-center w-full h-full">
+      <div className="relative shadow-2xl rounded-sm">
+        {/* @ts-ignore - react-pageflip types are sometimes tricky */}
+        <HTMLFlipBook
+          width={dimensions.width}
+          height={dimensions.height}
+          size="fixed"
+          minWidth={300}
+          maxWidth={1000}
+          minHeight={400}
+          maxHeight={1533}
+          maxShadowOpacity={0.5}
+          showCover={true}
+          mobileScrollSupport={true}
+          className="bg-transparent"
+          ref={book}
+          onFlip={onFlip}
+          usePortrait={isMobile}
+          startZIndex={0}
+          autoSize={true}
+          clickEventForward={true}
+          useMouseEvents={true}
+          swipeDistance={30}
+          showPageCorners={true}
+          disableFlipByClick={false}
+        >
+          {/* Cover Page */}
+          <div className="page page-cover" data-density="hard">
+            <div className="w-full h-full overflow-hidden bg-neutral-100 border-r border-neutral-300">
+               <img 
+                 src={cover} 
+                 alt="Cover" 
+                 className="w-full h-full object-cover"
+               />
+               <div className="absolute inset-0 bg-gradient-to-l from-black/10 to-transparent pointer-events-none" />
             </div>
+          </div>
 
-            {/* Right Page (Current) */}
-            <div className="w-full md:w-1/2 h-full bg-white relative overflow-hidden">
-              <AnimatePresence mode="wait">
-                <motion.div
-                  key={currentIndex}
-                  initial={{ opacity: 0, rotateY: -15 }}
-                  animate={{ opacity: 1, rotateY: 0 }}
-                  exit={{ opacity: 0, rotateY: 15 }}
-                  transition={{ duration: 0.4, ease: "easeOut" }}
-                  className="w-full h-full origin-left"
-                >
-                   {currentIndex < totalPages ? (
-                     <img 
-                       src={pages[currentIndex]} 
-                       alt={`Page ${currentIndex + 1}`}
-                       className="w-full h-full object-cover"
-                     />
-                   ) : (
-                     <div className="w-full h-full flex items-center justify-center bg-neutral-100 text-neutral-400">
-                       <span className="font-display italic">End of Album</span>
-                     </div>
-                   )}
-                   {/* Paper shadow gradient */}
-                   <div className="absolute inset-0 bg-gradient-to-l from-transparent to-black/5 pointer-events-none" />
-                   
-                   {/* Page Number */}
-                   {currentIndex < totalPages && (
-                     <span className="absolute bottom-4 right-4 text-neutral-400 text-xs font-mono">
-                       {currentIndex + 1}
-                     </span>
-                   )}
-                </motion.div>
-              </AnimatePresence>
+          {/* Inner Pages */}
+          {pages.map((pageUrl, index) => (
+            <div key={index} className="page bg-white">
+              <div className="w-full h-full relative overflow-hidden border-l border-neutral-100">
+                <img 
+                  src={pageUrl} 
+                  alt={`Page ${index + 1}`} 
+                  className="w-full h-full object-cover"
+                />
+                
+                {/* Shadow/Depth overlay */}
+                <div className="absolute inset-0 bg-gradient-to-r from-black/5 via-transparent to-black/5 pointer-events-none" />
+                
+                {/* Page Number */}
+                <div className="absolute bottom-4 right-4 text-xs text-neutral-400 font-mono">
+                  {index + 1}
+                </div>
+              </div>
             </div>
-            
-            {/* Center Spine Highlight */}
-            <div className="absolute left-1/2 top-0 bottom-0 w-px bg-gradient-to-b from-transparent via-black/10 to-transparent hidden md:block" />
-        </div>
-
-        {/* Controls */}
-        <div className="absolute inset-y-0 -left-12 flex items-center">
-          <Button 
-            variant="ghost" 
-            size="icon" 
-            onClick={goPrev} 
-            disabled={currentIndex === 0}
-            className="rounded-full hover:bg-white/50 hover:text-primary"
-          >
-            <ChevronLeft className="h-8 w-8" />
-          </Button>
-        </div>
-        <div className="absolute inset-y-0 -right-12 flex items-center">
-          <Button 
-            variant="ghost" 
-            size="icon" 
-            onClick={goNext} 
-            disabled={currentIndex >= totalPages}
-            className="rounded-full hover:bg-white/50 hover:text-primary"
-          >
-            <ChevronRight className="h-8 w-8" />
-          </Button>
-        </div>
+          ))}
+          
+          {/* Back Cover */}
+          <div className="page page-cover" data-density="hard">
+            <div className="w-full h-full bg-[#FDFBF7] flex items-center justify-center border-l border-neutral-200">
+              <div className="text-center opacity-50">
+                <span className="font-display italic text-xl">The End</span>
+                <div className="mt-2 w-8 h-px bg-neutral-400 mx-auto" />
+              </div>
+            </div>
+          </div>
+        </HTMLFlipBook>
       </div>
-      
-      {/* Mobile Hint */}
-      <div className="md:hidden absolute -bottom-8 left-0 right-0 text-center text-xs text-neutral-400">
-        Swipe or tap arrows to flip
+
+      {/* Controls */}
+      <div className="mt-8 flex items-center gap-6">
+        <Button 
+          variant="outline" 
+          size="icon" 
+          onClick={prev}
+          className="rounded-full hover:bg-white hover:text-primary transition-colors"
+        >
+          <ChevronLeft className="w-6 h-6" />
+        </Button>
+
+        <div className="text-sm text-neutral-500 font-medium">
+          Flip or Swipe
+        </div>
+
+        <Button 
+          variant="outline" 
+          size="icon" 
+          onClick={next}
+          className="rounded-full hover:bg-white hover:text-primary transition-colors"
+        >
+          <ChevronRight className="w-6 h-6" />
+        </Button>
+      </div>
+
+      {/* Sound Toggle */}
+      <div className="absolute bottom-4 right-4 md:bottom-8 md:right-8">
+        <Button
+          variant="ghost"
+          size="icon"
+          onClick={() => setIsMuted(!isMuted)}
+          className="bg-white/80 backdrop-blur-sm rounded-full shadow-sm hover:bg-white"
+        >
+          {isMuted ? <VolumeX className="w-5 h-5 text-neutral-400" /> : <Volume2 className="w-5 h-5 text-primary" />}
+        </Button>
       </div>
     </div>
   );
