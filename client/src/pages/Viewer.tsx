@@ -2,7 +2,7 @@ import { useParams, Link } from 'wouter';
 import { useAlbumStore } from '@/lib/store';
 import { Flipbook } from '@/components/Flipbook';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft, Share2 } from 'lucide-react';
+import { ArrowLeft, Share2, Home } from 'lucide-react';
 
 export default function Viewer() {
   const { id } = useParams();
@@ -31,17 +31,27 @@ export default function Viewer() {
       <header className="px-6 py-4 flex items-center justify-between bg-white/5 backdrop-blur-md border-b border-white/10 sticky top-0 z-50">
         <div className="flex items-center gap-4">
           <Link href="/dashboard">
-            <Button variant="ghost" size="icon" className="rounded-full text-white hover:bg-white/10 hover:text-primary">
+            <Button variant="ghost" className="rounded-full text-white hover:bg-white/10 hover:text-primary flex gap-2 items-center pl-2 pr-4">
               <ArrowLeft className="w-5 h-5" />
+              <span className="hidden sm:inline">Back to Menu</span>
             </Button>
           </Link>
+          <div className="h-6 w-px bg-white/20 mx-2 hidden sm:block"></div>
           <div>
             <h1 className="font-display font-bold text-lg text-white tracking-widest">{album.title}</h1>
           </div>
         </div>
-        <Button variant="outline" size="sm" className="rounded-full border-primary/50 text-primary hover:bg-primary hover:text-white bg-transparent">
-          <Share2 className="w-4 h-4 mr-2" /> Share
-        </Button>
+        
+        <div className="flex gap-3">
+           <Link href="/dashboard">
+             <Button variant="outline" size="sm" className="rounded-full border-white/20 text-white hover:bg-white hover:text-neutral-900 bg-transparent sm:hidden">
+               <Home className="w-4 h-4" />
+             </Button>
+           </Link>
+           <Button variant="outline" size="sm" className="rounded-full border-primary/50 text-primary hover:bg-primary hover:text-white bg-transparent">
+             <Share2 className="w-4 h-4 mr-2" /> Share
+           </Button>
+        </div>
       </header>
 
       {/* Viewer Area */}
