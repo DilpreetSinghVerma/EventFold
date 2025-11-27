@@ -1,11 +1,11 @@
 import { useState, useCallback } from 'react';
-import { useLocation } from 'wouter';
+import { useLocation, Link } from 'wouter';
 import { useAlbumStore, ImageStorage } from '@/lib/store';
 import { useDropzone } from 'react-dropzone';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Upload, X, Loader2, ImagePlus } from 'lucide-react';
+import { Upload, X, Loader2, ImagePlus, ArrowLeft } from 'lucide-react';
 import { motion } from 'framer-motion';
 
 export default function CreateAlbum() {
@@ -99,18 +99,28 @@ export default function CreateAlbum() {
   };
 
   return (
-    <div className="min-h-screen bg-[#FDFBF7] flex items-center justify-center p-6 py-12">
-      <div className="w-full max-w-3xl bg-white rounded-2xl shadow-xl overflow-hidden border border-neutral-100">
-        <div className="bg-primary p-6 text-primary-foreground relative overflow-hidden">
-          <div className="absolute inset-0 opacity-10 bg-[url('https://www.transparenttextures.com/patterns/batik-ramp.png')] mix-blend-overlay"></div>
-          <div className="relative z-10 flex items-center justify-between">
-            <div>
-              <h1 className="font-display text-3xl font-bold">Create Royal Album</h1>
-              <p className="opacity-80 text-sm">High Quality Storage Enabled</p>
+    <div className="min-h-screen bg-[#FDFBF7] flex flex-col">
+      {/* Back Button Header */}
+      <div className="sticky top-0 z-50 px-6 py-4 bg-white/50 backdrop-blur-md border-b border-neutral-200">
+        <Link href="/dashboard">
+          <Button variant="ghost" className="gap-2 text-primary hover:bg-primary/10">
+            <ArrowLeft className="w-4 h-4" /> Back
+          </Button>
+        </Link>
+      </div>
+
+      <div className="flex-1 flex items-center justify-center p-6 py-12">
+        <div className="w-full max-w-3xl bg-white rounded-2xl shadow-xl overflow-hidden border border-neutral-100">
+          <div className="bg-primary p-6 text-primary-foreground relative overflow-hidden">
+            <div className="absolute inset-0 opacity-10 bg-[url('https://www.transparenttextures.com/patterns/batik-ramp.png')] mix-blend-overlay"></div>
+            <div className="relative z-10 flex items-center justify-between">
+              <div>
+                <h1 className="font-display text-3xl font-bold">Create Royal Album</h1>
+                <p className="opacity-80 text-sm">High Quality Storage Enabled</p>
+              </div>
+              <span className="text-sm font-mono bg-white/20 px-3 py-1 rounded-full">Step {step} of 2</span>
             </div>
-            <span className="text-sm font-mono bg-white/20 px-3 py-1 rounded-full">Step {step} of 2</span>
           </div>
-        </div>
 
         <div className="p-8">
           {step === 1 ? (
@@ -249,6 +259,7 @@ export default function CreateAlbum() {
               </div>
             </motion.div>
           )}
+          </div>
         </div>
       </div>
     </div>

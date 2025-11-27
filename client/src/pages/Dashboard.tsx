@@ -61,7 +61,6 @@ export default function Dashboard() {
           <CardContent className="pt-6">
             <h3 className="font-display text-xl font-bold mb-1 text-neutral-800">{album.title}</h3>
             <p className="text-sm text-primary font-medium">{album.date}</p>
-            <p className="text-xs text-neutral-400 mt-1">{album.sheets.length} Sheets ({(album.sheets.length * 2)} Pages)</p>
           </CardContent>
           <CardFooter className="flex justify-between border-t border-neutral-50 pt-4 pb-4">
             <Dialog>

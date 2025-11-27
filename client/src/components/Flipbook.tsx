@@ -26,39 +26,37 @@ export function Flipbook({ sheets, frontCover, backCover }: FlipbookProps) {
       const screenW = window.innerWidth;
       const screenH = window.innerHeight;
       
-      // We prioritize showing the SPREAD (Double Page) whenever possible.
-      // Only use single page on very narrow portrait phones.
+      // Mobile-first responsive design
       const isPortrait = screenH > screenW;
-      const isVerySmall = screenW < 600;
+      const isMobileScreen = screenW < 768;
 
-      if (isPortrait && isVerySmall) {
-        // Mobile Portrait: Single Page View
-        // Page Aspect: 1.5 (Landscape page)
-        // We fit width.
-        const width = Math.min(screenW - 20, 500);
-        const height = width / 1.5; 
-        setDimensions({ width, height });
+      if (isMobileScreen) {
+        // Mobile: Show single-page or very compact spread
+        if (isPortrait) {
+          // Portrait mobile: single page fitted to screen
+          const width = Math.min(screenW - 30, 400);
+          const height = width / 0.66; // Taller aspect for mobile
+          setDimensions({ width, height });
+        } else {
+          // Landscape mobile: full spread but compact
+          const totalW = screenW - 30;
+          const totalH = Math.min(screenH - 180, totalW / 2.5);
+          const pageW = totalW / 2;
+          setDimensions({ width: pageW, height: totalH });
+        }
       } else {
-        // Desktop / Landscape Tablet: Double Page View
-        // We want to show the full 12x36 spread.
-        // Total Aspect Ratio: 36/12 = 3.0.
-        // Available Width constraint: screenW - 40.
-        // Available Height constraint: screenH - 100.
+        // Desktop / Tablet: Double Page Spread View
+        // Total Aspect Ratio: 36/12 = 3.0
+        let totalW = Math.min(screenW - 60, 1200);
+        let totalH = totalW / 2.8;
         
-        let totalW = Math.min(screenW - 40, 1600);
-        let totalH = totalW / 3; // Maintain 1:3 ratio for the spread
-        
-        // Check height constraint
-        if (totalH > (screenH - 150)) {
-           totalH = screenH - 150;
-           totalW = totalH * 3;
+        if (totalH > screenH - 200) {
+          totalH = screenH - 200;
+          totalW = totalH * 2.8;
         }
         
-        // Single Page dimensions
         const pageW = totalW / 2;
-        const pageH = totalH;
-        
-        setDimensions({ width: pageW, height: pageH });
+        setDimensions({ width: pageW, height: totalH });
       }
     };
 
@@ -138,35 +136,51 @@ export function Flipbook({ sheets, frontCover, backCover }: FlipbookProps) {
                      </div>
 
                      {/* Inner Sheets */}
-                     {sheets.map((sheetUrl, index) => (
-                       <React.Fragment key={index}>
-                         {/* Left Page */}
-                         <div className="page bg-white border-r border-neutral-200">
-                           <div className="w-full h-full relative overflow-hidden">
-                             <img 
-                               src={sheetUrl} 
-                               alt={`Sheet ${index + 1} Left`} 
-                               className="w-[200%] h-full max-w-none object-cover object-left" 
-                             />
-                             {/* Inner Shadow for Gutter */}
-                             <div className="absolute right-0 top-0 bottom-0 w-8 bg-gradient-to-l from-black/20 to-transparent pointer-events-none" />
+                     {sheets && sheets.length > 0 ? (
+                       sheets.map((sheetUrl, index) => (
+                         <React.Fragment key={index}>
+                           {/* Left Page */}
+                           <div className="page bg-white border-r border-neutral-200">
+                             <div className="w-full h-full relative overflow-hidden bg-neutral-50">
+                               {sheetUrl ? (
+                                 <img 
+                                   src={sheetUrl} 
+                                   alt={`Sheet ${index + 1} Left`} 
+                                   className="absolute inset-0 w-full h-full object-cover" 
+                                   style={{ objectPosition: '0% 50%' }}
+                                   onError={(e) => { console.error("Image failed to load:", sheetUrl); }}
+                                 />
+                               ) : (
+                                 <div className="w-full h-full flex items-center justify-center text-neutral-400">No image</div>
+                               )}
+                               {/* Inner Shadow for Gutter */}
+                               <div className="absolute right-0 top-0 bottom-0 w-8 bg-gradient-to-l from-black/20 to-transparent pointer-events-none" />
+                             </div>
                            </div>
-                         </div>
-                         
-                         {/* Right Page */}
-                         <div className="page bg-white border-l border-neutral-200">
-                           <div className="w-full h-full relative overflow-hidden">
-                             <img 
-                               src={sheetUrl} 
-                               alt={`Sheet ${index + 1} Right`} 
-                               className="w-[200%] h-full max-w-none object-cover object-right" 
-                             />
-                             {/* Inner Shadow for Gutter */}
-                             <div className="absolute left-0 top-0 bottom-0 w-8 bg-gradient-to-r from-black/20 to-transparent pointer-events-none" />
+                           
+                           {/* Right Page */}
+                           <div className="page bg-white border-l border-neutral-200">
+                             <div className="w-full h-full relative overflow-hidden bg-neutral-50">
+                               {sheetUrl ? (
+                                 <img 
+                                   src={sheetUrl} 
+                                   alt={`Sheet ${index + 1} Right`} 
+                                   className="absolute inset-0 w-full h-full object-cover" 
+                                   style={{ objectPosition: '100% 50%' }}
+                                   onError={(e) => { console.error("Image failed to load:", sheetUrl); }}
+                                 />
+                               ) : (
+                                 <div className="w-full h-full flex items-center justify-center text-neutral-400">No image</div>
+                               )}
+                               {/* Inner Shadow for Gutter */}
+                               <div className="absolute left-0 top-0 bottom-0 w-8 bg-gradient-to-r from-black/20 to-transparent pointer-events-none" />
+                             </div>
                            </div>
-                         </div>
-                       </React.Fragment>
-                     ))}
+                         </React.Fragment>
+                       ))
+                     ) : (
+                       <div className="page bg-white"><div className="w-full h-full flex items-center justify-center text-neutral-400">No sheets</div></div>
+                     )}
 
                      {/* Back Cover */}
                      <div className="page" data-density="hard">
