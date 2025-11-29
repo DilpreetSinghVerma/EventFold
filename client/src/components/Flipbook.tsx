@@ -12,30 +12,20 @@ interface FlipbookProps {
 export function Flipbook({ sheets, frontCover, backCover }: FlipbookProps) {
   const book = useRef<any>(null);
   const [isMuted, setIsMuted] = useState(false);
-  const [dimensions, setDimensions] = useState({ width: 300, height: 480 });
+  const [pageWidth, setPageWidth] = useState(280);
+  const [pageHeight, setPageHeight] = useState(420);
+  const [ready, setReady] = useState(false);
 
   useEffect(() => {
     const handleResize = () => {
-      const screenW = window.innerWidth;
-      const screenH = window.innerHeight;
-      
-      const isMobile = screenW < 768;
-
-      if (isMobile) {
-        // Mobile: compact but still showing 2-page spread
-        const w = Math.min(screenW - 30, 280);
-        const h = w * 1.4; // Height ratio for book
-        setDimensions({ width: w, height: h });
-      } else {
-        // Desktop: larger spread
-        const w = Math.min(screenW - 100, 500);
-        const h = w * 1.3;
-        setDimensions({ width: w, height: h });
-      }
+      const w = Math.min(window.innerWidth - 40, 450);
+      const h = w * 1.5;
+      setPageWidth(w);
+      setPageHeight(h);
     };
-
     handleResize();
     window.addEventListener('resize', handleResize);
+    setReady(true);
     return () => window.removeEventListener('resize', handleResize);
   }, []);
 
@@ -46,174 +36,175 @@ export function Flipbook({ sheets, frontCover, backCover }: FlipbookProps) {
     audio.play().catch(() => {});
   };
 
-  const next = () => {
-    playFlipSound();
-    book.current?.pageFlip().flipNext();
-  };
-
-  const prev = () => {
-    playFlipSound();
-    book.current?.pageFlip().flipPrev();
-  };
+  if (!ready) return null;
 
   return (
-    <div className="relative w-full h-full flex flex-col items-center justify-center gap-6">
-      {/* Sound Control */}
+    <div className="relative w-full h-full flex flex-col items-center justify-center gap-8">
+      {/* Volume Control */}
       <div className="absolute top-4 right-4 z-50">
         <Button 
           variant="ghost" 
           size="icon" 
           onClick={() => setIsMuted(!isMuted)} 
           className="rounded-full bg-black/40 text-white hover:bg-white/20"
-          data-testid="button-mute-volume"
         >
           {isMuted ? <VolumeX className="w-4 h-4" /> : <Volume2 className="w-4 h-4" />}
         </Button>
       </div>
 
-      {/* Flipbook Container */}
-      <div className="flex items-center justify-center" style={{ perspective: '1500px' }}>
-        {/* @ts-ignore */}
-        <HTMLFlipBook
-          ref={book}
-          width={dimensions.width}
-          height={dimensions.height}
-          size="fixed"
-          minWidth={150}
-          maxWidth={800}
-          minHeight={200}
-          maxHeight={1000}
-          maxShadowOpacity={0.7}
-          showCover={true}
-          mobileScrollSupport={false}
-          usePortrait={false}
-          autoSize={false}
-          clickEventForward={true}
-          useMouseEvents={true}
-          swipeDistance={50}
-          showPageCorners={true}
-          disableFlipByClick={false}
-          startPage={0}
-          drawShadow={true}
-          flippingTime={1000}
-          startZIndex={0}
-          onFlip={playFlipSound}
-          style={{ margin: '0 auto' }}
-          className="shadow-2xl"
-        >
-          {/* Front Cover */}
-          <div className="page flex items-center justify-center" data-density="hard">
-            <div className="w-full h-full relative bg-gradient-to-br from-[#3d0000] via-[#5c1a1a] to-[#2a0000] shadow-inner overflow-hidden">
-              {frontCover ? (
-                <img 
-                  src={frontCover} 
-                  alt="Front Cover" 
-                  className="w-full h-full object-cover" 
-                  onError={(e) => { (e.target as HTMLImageElement).style.backgroundColor = '#3d0000'; }}
-                />
-              ) : (
-                <div className="w-full h-full bg-gradient-to-br from-[#4a0e0e] to-[#2a0000]" />
-              )}
-              <div className="absolute inset-0 bg-gradient-to-r from-black/30 via-transparent to-black/20" />
-              <div className="absolute right-0 top-0 bottom-0 w-4 bg-gradient-to-l from-[#D4AF37] to-[#AA8C2C]" style={{ boxShadow: 'inset -3px 0 8px rgba(0,0,0,0.5)' }} />
-            </div>
+      {/* Flipbook */}
+      <HTMLFlipBook
+        ref={book}
+        width={pageWidth}
+        height={pageHeight}
+        size="fixed"
+        minWidth={200}
+        maxWidth={600}
+        minHeight={300}
+        maxHeight={800}
+        maxShadowOpacity={0.5}
+        showCover={true}
+        mobileScrollSupport={false}
+        usePortrait={false}
+        autoSize={false}
+        clickEventForward={false}
+        useMouseEvents={true}
+        swipeDistance={50}
+        showPageCorners={true}
+        disableFlipByClick={false}
+        startPage={0}
+        drawShadow={true}
+        flippingTime={900}
+        startZIndex={0}
+        onFlip={playFlipSound}
+      >
+        {/* Front Cover */}
+        <div key="cover-front" style={{ width: '100%', height: '100%' }}>
+          <div style={{
+            width: '100%',
+            height: '100%',
+            backgroundColor: '#3d0000',
+            backgroundImage: frontCover ? `url(${frontCover})` : 'none',
+            backgroundSize: 'cover',
+            backgroundPosition: 'center',
+            boxShadow: 'inset 0 0 20px rgba(0,0,0,0.5)',
+            position: 'relative',
+          }}>
+            <div style={{
+              position: 'absolute',
+              right: 0,
+              top: 0,
+              bottom: 0,
+              width: '8px',
+              background: 'linear-gradient(to left, #D4AF37, #AA8C2C)',
+              boxShadow: 'inset -4px 0 8px rgba(0,0,0,0.5)',
+            }} />
           </div>
+        </div>
 
-          {/* Inner Front Cover (usually blank/cream) */}
-          <div className="page flex items-center justify-center">
-            <div className="w-full h-full bg-[#FDFBF7] relative border-l border-[#D4AF37]/20 shadow-inner">
-              <div className="absolute inset-0 opacity-20 bg-[url('https://www.transparenttextures.com/patterns/light-wool.png')]" />
+        {/* Inner front cover */}
+        <div key="inner-front" style={{ width: '100%', height: '100%' }}>
+          <div style={{
+            width: '100%',
+            height: '100%',
+            backgroundColor: '#FDFBF7',
+            backgroundImage: 'url("https://www.transparenttextures.com/patterns/light-wool.png")',
+            backgroundOpacity: 0.3,
+          }} />
+        </div>
+
+        {/* All sheets */}
+        {sheets && sheets.length > 0 ? sheets.map((sheetUrl, idx) => (
+          <React.Fragment key={`pages-${idx}`}>
+            {/* Left page */}
+            <div style={{ width: '100%', height: '100%', backgroundColor: '#fff' }}>
+              <img 
+                src={sheetUrl} 
+                style={{
+                  width: '100%',
+                  height: '100%',
+                  objectFit: 'cover',
+                  objectPosition: 'center',
+                  display: 'block',
+                }}
+                alt={`Page ${idx * 2 + 1}`}
+                onError={() => console.log('Image load error')}
+              />
             </div>
+            {/* Right page */}
+            <div style={{ width: '100%', height: '100%', backgroundColor: '#fff' }}>
+              <img 
+                src={sheetUrl} 
+                style={{
+                  width: '100%',
+                  height: '100%',
+                  objectFit: 'cover',
+                  objectPosition: 'center',
+                  display: 'block',
+                }}
+                alt={`Page ${idx * 2 + 2}`}
+                onError={() => console.log('Image load error')}
+              />
+            </div>
+          </React.Fragment>
+        )) : (
+          <div key="no-sheets" style={{ width: '100%', height: '100%', backgroundColor: '#f0f0f0', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <span>No sheets</span>
           </div>
+        )}
 
-          {/* Content Sheets */}
-          {sheets && sheets.length > 0 ? (
-            sheets.filter(Boolean).map((sheetUrl, idx) => (
-              <React.Fragment key={`sheet-pair-${idx}`}>
-                {/* Left Page of Spread */}
-                <div className="page flex items-center justify-center">
-                  <div className="w-full h-full relative bg-white shadow-inner overflow-hidden">
-                    <img 
-                      src={sheetUrl} 
-                      alt={`Page ${idx * 2 + 1}`}
-                      className="w-full h-full object-cover"
-                      onError={(e) => { (e.target as HTMLImageElement).style.backgroundColor = '#f5f5f5'; }}
-                    />
-                    <div className="absolute right-0 top-0 bottom-0 w-4 bg-gradient-to-l from-black/10 to-transparent pointer-events-none" />
-                  </div>
-                </div>
+        {/* Inner back cover */}
+        <div key="inner-back" style={{ width: '100%', height: '100%' }}>
+          <div style={{
+            width: '100%',
+            height: '100%',
+            backgroundColor: '#FDFBF7',
+            backgroundImage: 'url("https://www.transparenttextures.com/patterns/light-wool.png")',
+            backgroundOpacity: 0.3,
+          }} />
+        </div>
 
-                {/* Right Page of Spread */}
-                <div className="page flex items-center justify-center">
-                  <div className="w-full h-full relative bg-white shadow-inner overflow-hidden">
-                    <img 
-                      src={sheetUrl} 
-                      alt={`Page ${idx * 2 + 2}`}
-                      className="w-full h-full object-cover"
-                      onError={(e) => { (e.target as HTMLImageElement).style.backgroundColor = '#f5f5f5'; }}
-                    />
-                    <div className="absolute left-0 top-0 bottom-0 w-4 bg-gradient-to-r from-black/10 to-transparent pointer-events-none" />
-                  </div>
-                </div>
-              </React.Fragment>
-            ))
-          ) : (
-            <div className="page flex items-center justify-center">
-              <div className="w-full h-full bg-neutral-100 flex items-center justify-center text-neutral-400">
-                No sheets available
-              </div>
-            </div>
-          )}
-
-          {/* Inner Back Cover (usually blank/cream) */}
-          <div className="page flex items-center justify-center">
-            <div className="w-full h-full bg-[#FDFBF7] relative border-r border-[#D4AF37]/20 shadow-inner">
-              <div className="absolute inset-0 opacity-20 bg-[url('https://www.transparenttextures.com/patterns/light-wool.png')]" />
-            </div>
+        {/* Back Cover */}
+        <div key="cover-back" style={{ width: '100%', height: '100%' }}>
+          <div style={{
+            width: '100%',
+            height: '100%',
+            backgroundColor: '#3d0000',
+            backgroundImage: backCover ? `url(${backCover})` : 'none',
+            backgroundSize: 'cover',
+            backgroundPosition: 'center',
+            boxShadow: 'inset 0 0 20px rgba(0,0,0,0.5)',
+            position: 'relative',
+          }}>
+            <div style={{
+              position: 'absolute',
+              left: 0,
+              top: 0,
+              bottom: 0,
+              width: '8px',
+              background: 'linear-gradient(to right, #D4AF37, #AA8C2C)',
+              boxShadow: 'inset 4px 0 8px rgba(0,0,0,0.5)',
+            }} />
           </div>
+        </div>
+      </HTMLFlipBook>
 
-          {/* Back Cover */}
-          <div className="page flex items-center justify-center" data-density="hard">
-            <div className="w-full h-full relative bg-gradient-to-bl from-[#3d0000] via-[#5c1a1a] to-[#2a0000] shadow-inner overflow-hidden">
-              {backCover ? (
-                <img 
-                  src={backCover} 
-                  alt="Back Cover" 
-                  className="w-full h-full object-cover" 
-                  onError={(e) => { (e.target as HTMLImageElement).style.backgroundColor = '#3d0000'; }}
-                />
-              ) : (
-                <div className="w-full h-full bg-gradient-to-bl from-[#4a0e0e] to-[#2a0000]" />
-              )}
-              <div className="absolute inset-0 bg-gradient-to-l from-black/30 via-transparent to-black/20" />
-              <div className="absolute left-0 top-0 bottom-0 w-4 bg-gradient-to-r from-[#D4AF37] to-[#AA8C2C]" style={{ boxShadow: 'inset 3px 0 8px rgba(0,0,0,0.5)' }} />
-            </div>
-          </div>
-        </HTMLFlipBook>
-      </div>
-
-      {/* Navigation Controls */}
+      {/* Navigation */}
       <div className="flex gap-6 items-center z-40">
         <Button 
-          variant="outline" 
           size="icon" 
-          onClick={prev}
-          className="rounded-full w-12 h-12 border-white/30 bg-black/60 text-white hover:bg-white hover:text-primary backdrop-blur-sm shadow-lg transition-all hover:scale-110"
-          data-testid="button-prev-page"
+          onClick={() => { playFlipSound(); book.current?.pageFlip().flipPrev(); }}
+          className="rounded-full w-12 h-12 bg-primary text-white hover:bg-primary/90 shadow-lg"
         >
           <ChevronLeft className="w-6 h-6" />
         </Button>
-
-        <span className="text-white text-sm font-mono bg-black/60 px-4 py-2 rounded-full backdrop-blur-sm">
-          Tap to flip
-        </span>
+        
+        <span className="text-white text-sm font-mono bg-black/60 px-4 py-2 rounded-full">Flip Pages</span>
 
         <Button 
-          variant="outline" 
           size="icon" 
-          onClick={next}
-          className="rounded-full w-12 h-12 border-white/30 bg-black/60 text-white hover:bg-white hover:text-primary backdrop-blur-sm shadow-lg transition-all hover:scale-110"
-          data-testid="button-next-page"
+          onClick={() => { playFlipSound(); book.current?.pageFlip().flipNext(); }}
+          className="rounded-full w-12 h-12 bg-primary text-white hover:bg-primary/90 shadow-lg"
         >
           <ChevronRight className="w-6 h-6" />
         </Button>
