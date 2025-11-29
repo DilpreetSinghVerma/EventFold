@@ -18,8 +18,8 @@ export function Flipbook({ sheets, frontCover, backCover }: FlipbookProps) {
 
   useEffect(() => {
     const handleResize = () => {
-      const w = Math.min(window.innerWidth - 40, 450);
-      const h = w * 1.5;
+      const w = Math.min(window.innerWidth - 40, 500);
+      const h = w * 1.4;
       setPageWidth(w);
       setPageHeight(h);
     };
@@ -31,16 +31,63 @@ export function Flipbook({ sheets, frontCover, backCover }: FlipbookProps) {
 
   const playFlipSound = () => {
     if (isMuted) return;
-    const audio = new Audio('https://www.soundjay.com/misc/sounds/page-flip-01a.mp3');
-    audio.volume = 0.3;
-    audio.play().catch(() => {});
+    try {
+      const audio = new Audio('https://www.soundjay.com/misc/sounds/page-flip-01a.mp3');
+      audio.volume = 0.3;
+      audio.play().catch(() => {});
+    } catch (e) {}
   };
 
   if (!ready) return null;
 
+  // Build pages array
+  const pages = [];
+  
+  // Front cover
+  pages.push({
+    type: 'cover',
+    image: frontCover,
+    key: 'cover-front',
+  });
+
+  // Inner front
+  pages.push({
+    type: 'inner',
+    key: 'inner-front',
+  });
+
+  // Sheets
+  if (sheets && sheets.length > 0) {
+    sheets.forEach((sheet, idx) => {
+      pages.push({
+        type: 'sheet',
+        image: sheet,
+        key: `sheet-${idx}`,
+      });
+    });
+  } else {
+    pages.push({
+      type: 'empty',
+      key: 'no-sheets',
+    });
+  }
+
+  // Inner back
+  pages.push({
+    type: 'inner',
+    key: 'inner-back',
+  });
+
+  // Back cover
+  pages.push({
+    type: 'cover',
+    image: backCover,
+    key: 'cover-back',
+  });
+
   return (
-    <div className="relative w-full h-full flex flex-col items-center justify-center gap-8">
-      {/* Volume Control */}
+    <div className="relative w-full h-full flex flex-col items-center justify-center gap-6">
+      {/* Volume */}
       <div className="absolute top-4 right-4 z-50">
         <Button 
           variant="ghost" 
@@ -53,143 +100,115 @@ export function Flipbook({ sheets, frontCover, backCover }: FlipbookProps) {
       </div>
 
       {/* Flipbook */}
-      <HTMLFlipBook
-        ref={book}
-        width={pageWidth}
-        height={pageHeight}
-        size="fixed"
-        minWidth={200}
-        maxWidth={600}
-        minHeight={300}
-        maxHeight={800}
-        maxShadowOpacity={0.5}
-        showCover={true}
-        mobileScrollSupport={false}
-        usePortrait={false}
-        autoSize={false}
-        clickEventForward={false}
-        useMouseEvents={true}
-        swipeDistance={50}
-        showPageCorners={true}
-        disableFlipByClick={false}
-        startPage={0}
-        drawShadow={true}
-        flippingTime={900}
-        startZIndex={0}
-        onFlip={playFlipSound}
-      >
-        {/* Front Cover */}
-        <div key="cover-front" style={{ width: '100%', height: '100%' }}>
-          <div style={{
-            width: '100%',
-            height: '100%',
-            backgroundColor: '#3d0000',
-            backgroundImage: frontCover ? `url(${frontCover})` : 'none',
-            backgroundSize: 'cover',
-            backgroundPosition: 'center',
-            boxShadow: 'inset 0 0 20px rgba(0,0,0,0.5)',
-            position: 'relative',
-          }}>
-            <div style={{
-              position: 'absolute',
-              right: 0,
-              top: 0,
-              bottom: 0,
-              width: '8px',
-              background: 'linear-gradient(to left, #D4AF37, #AA8C2C)',
-              boxShadow: 'inset -4px 0 8px rgba(0,0,0,0.5)',
-            }} />
-          </div>
-        </div>
-
-        {/* Inner front cover */}
-        <div key="inner-front" style={{ width: '100%', height: '100%' }}>
-          <div style={{
-            width: '100%',
-            height: '100%',
-            backgroundColor: '#FDFBF7',
-            backgroundImage: 'url("https://www.transparenttextures.com/patterns/light-wool.png")',
-            backgroundOpacity: 0.3,
-          }} />
-        </div>
-
-        {/* All sheets */}
-        {sheets && sheets.length > 0 ? sheets.map((sheetUrl, idx) => (
-          <React.Fragment key={`pages-${idx}`}>
-            {/* Left page */}
-            <div style={{ width: '100%', height: '100%', backgroundColor: '#fff' }}>
-              <img 
-                src={sheetUrl} 
-                style={{
+      <div style={{ perspective: '1500px' }}>
+        <HTMLFlipBook
+          ref={book}
+          width={pageWidth}
+          height={pageHeight}
+          size="fixed"
+          minWidth={200}
+          maxWidth={700}
+          minHeight={250}
+          maxHeight={900}
+          maxShadowOpacity={0.5}
+          showCover={true}
+          mobileScrollSupport={false}
+          usePortrait={false}
+          autoSize={false}
+          clickEventForward={false}
+          useMouseEvents={true}
+          swipeDistance={50}
+          showPageCorners={true}
+          disableFlipByClick={false}
+          startPage={0}
+          drawShadow={true}
+          flippingTime={800}
+          startZIndex={0}
+          onFlip={playFlipSound}
+          className="shadow-2xl"
+          style={{ margin: '0 auto' }}
+        >
+          {pages.map((page) => {
+            if (page.type === 'cover') {
+              return (
+                <div key={page.key} className="page flex items-center justify-center" style={{
                   width: '100%',
                   height: '100%',
-                  objectFit: 'cover',
-                  objectPosition: 'center',
-                  display: 'block',
-                }}
-                alt={`Page ${idx * 2 + 1}`}
-                onError={() => console.log('Image load error')}
-              />
-            </div>
-            {/* Right page */}
-            <div style={{ width: '100%', height: '100%', backgroundColor: '#fff' }}>
-              <img 
-                src={sheetUrl} 
-                style={{
+                  backgroundColor: '#3d0000',
+                  overflow: 'hidden',
+                }}>
+                  {page.image ? (
+                    <img 
+                      src={page.image} 
+                      alt="Cover"
+                      style={{
+                        width: '100%',
+                        height: '100%',
+                        objectFit: 'cover',
+                        display: 'block',
+                      }}
+                    />
+                  ) : (
+                    <div style={{ width: '100%', height: '100%', backgroundColor: '#3d0000' }} />
+                  )}
+                </div>
+              );
+            }
+
+            if (page.type === 'inner') {
+              return (
+                <div key={page.key} className="page flex items-center justify-center" style={{
                   width: '100%',
                   height: '100%',
-                  objectFit: 'cover',
-                  objectPosition: 'center',
-                  display: 'block',
-                }}
-                alt={`Page ${idx * 2 + 2}`}
-                onError={() => console.log('Image load error')}
-              />
-            </div>
-          </React.Fragment>
-        )) : (
-          <div key="no-sheets" style={{ width: '100%', height: '100%', backgroundColor: '#f0f0f0', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-            <span>No sheets</span>
-          </div>
-        )}
+                  backgroundColor: '#FDFBF7',
+                  overflow: 'hidden',
+                }}>
+                  <div style={{
+                    width: '100%',
+                    height: '100%',
+                    backgroundColor: '#FDFBF7',
+                  }} />
+                </div>
+              );
+            }
 
-        {/* Inner back cover */}
-        <div key="inner-back" style={{ width: '100%', height: '100%' }}>
-          <div style={{
-            width: '100%',
-            height: '100%',
-            backgroundColor: '#FDFBF7',
-            backgroundImage: 'url("https://www.transparenttextures.com/patterns/light-wool.png")',
-            backgroundOpacity: 0.3,
-          }} />
-        </div>
+            if (page.type === 'sheet') {
+              return (
+                <div key={page.key} className="page flex items-center justify-center" style={{
+                  width: '100%',
+                  height: '100%',
+                  backgroundColor: '#f0f0f0',
+                  overflow: 'hidden',
+                }}>
+                  <img 
+                    src={page.image} 
+                    alt="Sheet"
+                    style={{
+                      width: '100%',
+                      height: '100%',
+                      objectFit: 'cover',
+                      display: 'block',
+                    }}
+                  />
+                </div>
+              );
+            }
 
-        {/* Back Cover */}
-        <div key="cover-back" style={{ width: '100%', height: '100%' }}>
-          <div style={{
-            width: '100%',
-            height: '100%',
-            backgroundColor: '#3d0000',
-            backgroundImage: backCover ? `url(${backCover})` : 'none',
-            backgroundSize: 'cover',
-            backgroundPosition: 'center',
-            boxShadow: 'inset 0 0 20px rgba(0,0,0,0.5)',
-            position: 'relative',
-          }}>
-            <div style={{
-              position: 'absolute',
-              left: 0,
-              top: 0,
-              bottom: 0,
-              width: '8px',
-              background: 'linear-gradient(to right, #D4AF37, #AA8C2C)',
-              boxShadow: 'inset 4px 0 8px rgba(0,0,0,0.5)',
-            }} />
-          </div>
-        </div>
-      </HTMLFlipBook>
+            return (
+              <div key={page.key} className="page flex items-center justify-center" style={{
+                width: '100%',
+                height: '100%',
+                backgroundColor: '#f0f0f0',
+                overflow: 'hidden',
+              }}>
+                <span style={{ color: '#999' }}>No sheets</span>
+              </div>
+            );
+          })}
+        </HTMLFlipBook>
+      </div>
 
-      {/* Navigation */}
+      {/* Controls */}
       <div className="flex gap-6 items-center z-40">
         <Button 
           size="icon" 
@@ -199,7 +218,7 @@ export function Flipbook({ sheets, frontCover, backCover }: FlipbookProps) {
           <ChevronLeft className="w-6 h-6" />
         </Button>
         
-        <span className="text-white text-sm font-mono bg-black/60 px-4 py-2 rounded-full">Flip Pages</span>
+        <span className="text-white text-sm font-mono bg-black/60 px-4 py-2 rounded-full">Flip to browse</span>
 
         <Button 
           size="icon" 
