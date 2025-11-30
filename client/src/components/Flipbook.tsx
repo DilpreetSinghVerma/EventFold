@@ -113,23 +113,13 @@ export function Flipbook({ sheets, frontCover, backCover }: FlipbookProps) {
     key: 'inner-front',
   });
 
-  // Each 12x36 sheet is split into two 12x18 pages
+  // Each 12x36 sheet shown as one spread with both halves visible
   if (sheets && sheets.length > 0) {
     sheets.forEach((sheet, idx) => {
-      // Left page (12x18) - shows left half of panoramic image
       pages.push({
-        type: 'sheet',
+        type: 'spread',
         image: sheet,
-        position: 'left',
-        key: `sheet-${idx}-left`,
-      });
-      
-      // Right page (12x18) - shows right half of panoramic image
-      pages.push({
-        type: 'sheet',
-        image: sheet,
-        position: 'right',
-        key: `sheet-${idx}-right`,
+        key: `sheet-spread-${idx}`,
       });
     });
   } else {
@@ -314,6 +304,42 @@ export function Flipbook({ sheets, frontCover, backCover }: FlipbookProps) {
                 );
               }
 
+              if (page.type === 'spread') {
+                return (
+                  <div key={page.key} className="page" style={{
+                    width: '100%',
+                    height: '100%',
+                    backgroundColor: '#fff',
+                    overflow: 'hidden',
+                    display: 'flex',
+                    alignItems: 'stretch',
+                    justifyContent: 'stretch',
+                  }}>
+                    {/* Left half - Left page (12x18) */}
+                    <div style={{
+                      width: '50%',
+                      height: '100%',
+                      overflow: 'hidden',
+                      backgroundImage: `url(${page.image})`,
+                      backgroundSize: '200% 100%',
+                      backgroundPosition: '0% center',
+                      backgroundRepeat: 'no-repeat',
+                      borderRight: '1px solid #e0e0e0',
+                    }} />
+                    {/* Right half - Right page (12x18) */}
+                    <div style={{
+                      width: '50%',
+                      height: '100%',
+                      overflow: 'hidden',
+                      backgroundImage: `url(${page.image})`,
+                      backgroundSize: '200% 100%',
+                      backgroundPosition: '100% center',
+                      backgroundRepeat: 'no-repeat',
+                    }} />
+                  </div>
+                );
+              }
+              
               if (page.type === 'sheet') {
                 return (
                   <div key={page.key} className="page" style={{
@@ -324,18 +350,14 @@ export function Flipbook({ sheets, frontCover, backCover }: FlipbookProps) {
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
-                    position: 'relative',
                   }}>
                     <img 
                       src={page.image} 
-                      alt={`Sheet ${page.position}`}
+                      alt="Sheet"
                       style={{
-                        position: 'absolute',
-                        width: '200%',
+                        width: '100%',
                         height: '100%',
-                        left: page.position === 'left' ? '0' : '-100%',
-                        top: '0',
-                        objectFit: 'cover',
+                        objectFit: 'contain',
                         display: 'block',
                       }}
                     />
