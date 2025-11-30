@@ -184,7 +184,13 @@ export function Flipbook({ sheets, frontCover, backCover }: FlipbookProps) {
               };
               
               if (page.type === 'cover') {
-                return <div key={page.key} className="page" style={baseStyle}><img src={page.image} alt="cover" className="w-full h-full object-cover" /></div>;
+                return (
+                  <div key={page.key} className="page" style={{ ...baseStyle, backgroundColor: '#2a2a2a', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                    <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px' }}>
+                      <img src={page.image} alt="cover" style={{ maxWidth: '90%', maxHeight: '90%', objectFit: 'contain' }} />
+                    </div>
+                  </div>
+                );
               }
 
               // Left Inner (Wedding Album Text)
