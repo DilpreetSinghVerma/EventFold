@@ -14,7 +14,7 @@ export function Flipbook({ sheets, frontCover, backCover }: FlipbookProps) {
   const container = useRef<HTMLDivElement>(null);
   const [isMuted, setIsMuted] = useState(false);
   const [pageWidth, setPageWidth] = useState(400);
-  const [pageHeight, setPageHeight] = useState(300);
+  const [pageHeight, setPageHeight] = useState(600);
   const [ready, setReady] = useState(false);
   const [zoom, setZoom] = useState(1);
   const [panX, setPanX] = useState(0);
@@ -27,20 +27,21 @@ export function Flipbook({ sheets, frontCover, backCover }: FlipbookProps) {
       const screenW = window.innerWidth;
       const screenH = window.innerHeight;
       
-      const maxWidth = Math.min(screenW - 60, 600);
-      const maxHeight = Math.min(screenH - 250, 350);
+      const maxHeight = Math.min(screenH - 100, 800);
+      const maxWidth = Math.min((screenW - 40) / 2, 600);
       
-      let w = maxWidth;
-      let h = w * 0.6;
+      let h = maxHeight;
+      let w = h * (2/3);
       
-      if (h > maxHeight) {
-        h = maxHeight;
-        w = h / 0.6;
+      if (w > maxWidth) {
+        w = maxWidth;
+        h = w / (2/3);
       }
       
       setPageWidth(w);
       setPageHeight(h);
     };
+
     handleResize();
     window.addEventListener('resize', handleResize);
     setReady(true);
@@ -56,26 +57,15 @@ export function Flipbook({ sheets, frontCover, backCover }: FlipbookProps) {
     } catch (e) {}
   };
 
-  const handleZoomIn = () => {
-    setZoom(prev => Math.min(prev + 0.2, 3));
-  };
-
-  const handleZoomOut = () => {
-    setZoom(prev => Math.max(prev - 0.2, 1));
-  };
-
-  const handleZoomReset = () => {
-    setZoom(1);
-    setPanX(0);
-    setPanY(0);
-  };
+  const handleZoomIn = () => setZoom(prev => Math.min(prev + 0.2, 3));
+  const handleZoomOut = () => setZoom(prev => Math.max(prev - 0.2, 1));
+  const handleZoomReset = () => { setZoom(1); setPanX(0); setPanY(0); };
 
   const handleMouseWheel = (e: React.WheelEvent) => {
-    e.preventDefault();
-    if (e.deltaY < 0) {
-      handleZoomIn();
-    } else {
-      handleZoomOut();
+    if (e.ctrlKey) {
+        e.preventDefault();
+        if (e.deltaY < 0) handleZoomIn();
+        else handleZoomOut();
     }
   };
 
@@ -93,102 +83,44 @@ export function Flipbook({ sheets, frontCover, backCover }: FlipbookProps) {
     }
   };
 
-  const handleMouseUp = () => {
-    setIsDragging(false);
-  };
+  const handleMouseUp = () => setIsDragging(false);
 
   if (!ready) return null;
 
-  // Build pages array
   const pages = [];
   
-  pages.push({
-    type: 'cover',
-    image: frontCover,
-    key: 'cover-front',
-  });
+  pages.push({ type: 'cover', image: frontCover, key: 'cover-front' });
+  pages.push({ type: 'inner', key: 'inner-front' });
 
-  pages.push({
-    type: 'inner',
-    key: 'inner-front',
-  });
-
-  // Each 12x36 sheet shown as one spread with both halves visible
   if (sheets && sheets.length > 0) {
     sheets.forEach((sheet, idx) => {
-      pages.push({
-        type: 'spread',
-        image: sheet,
-        key: `sheet-spread-${idx}`,
-      });
+      pages.push({ type: 'spread-left', image: sheet, key: `sheet-${idx}-left` });
+      pages.push({ type: 'spread-right', image: sheet, key: `sheet-${idx}-right` });
     });
   } else {
-    pages.push({
-      type: 'empty',
-      key: 'no-sheets',
-    });
+    pages.push({ type: 'empty', key: 'empty-1' });
+    pages.push({ type: 'empty', key: 'empty-2' });
   }
 
-  pages.push({
-    type: 'inner',
-    key: 'inner-back',
-  });
-
-  pages.push({
-    type: 'cover',
-    image: backCover,
-    key: 'cover-back',
-  });
+  pages.push({ type: 'inner', key: 'inner-back' });
+  pages.push({ type: 'cover', image: backCover, key: 'cover-back' });
 
   return (
-    <div className="relative w-full h-full flex flex-col items-center justify-center gap-6">
-      {/* Top Controls */}
-      <div className="absolute top-4 left-4 right-4 z-50 flex items-center justify-between">
-        <div className="flex gap-2 bg-black/60 backdrop-blur-md rounded-full p-2">
-          <Button 
-            variant="ghost" 
-            size="icon" 
-            onClick={handleZoomOut}
-            className="rounded-full w-9 h-9 text-white hover:bg-white/20"
-            title="Zoom out"
-          >
-            <ZoomOut className="w-4 h-4" />
+    <div className="relative w-full h-screen flex flex-col items-center justify-center bg-[#1a1a1a] overflow-hidden">
+      
+      {/* Controls Bar */}
+      <div className="absolute top-4 z-50 flex gap-2 bg-black/60 backdrop-blur-md rounded-full p-2">
+          <Button variant="ghost" size="icon" onClick={handleZoomOut} className="text-white hover:bg-white/20 rounded-full w-8 h-8"><ZoomOut className="w-4 h-4" /></Button>
+          <div className="flex items-center px-2 text-white text-xs font-mono">{Math.round(zoom * 100)}%</div>
+          <Button variant="ghost" size="icon" onClick={handleZoomIn} className="text-white hover:bg-white/20 rounded-full w-8 h-8"><ZoomIn className="w-4 h-4" /></Button>
+          <div className="w-px h-4 bg-white/20 mx-1" />
+          <Button variant="ghost" size="icon" onClick={handleZoomReset} className="text-white hover:bg-white/20 rounded-full w-8 h-8"><RotateCcw className="w-4 h-4" /></Button>
+          <Button variant="ghost" size="icon" onClick={() => setIsMuted(!isMuted)} className="text-white hover:bg-white/20 rounded-full w-8 h-8">
+            {isMuted ? <VolumeX className="w-4 h-4" /> : <Volume2 className="w-4 h-4" />}
           </Button>
-          <div className="flex items-center px-2 text-white text-xs font-mono">
-            {Math.round(zoom * 100)}%
-          </div>
-          <Button 
-            variant="ghost" 
-            size="icon" 
-            onClick={handleZoomIn}
-            className="rounded-full w-9 h-9 text-white hover:bg-white/20"
-            title="Zoom in"
-          >
-            <ZoomIn className="w-4 h-4" />
-          </Button>
-          <div className="w-px h-4 bg-white/20" />
-          <Button 
-            variant="ghost" 
-            size="icon" 
-            onClick={handleZoomReset}
-            className="rounded-full w-9 h-9 text-white hover:bg-white/20"
-            title="Reset zoom"
-          >
-            <RotateCcw className="w-4 h-4" />
-          </Button>
-        </div>
-
-        <Button 
-          variant="ghost" 
-          size="icon" 
-          onClick={() => setIsMuted(!isMuted)} 
-          className="rounded-full bg-black/40 text-white hover:bg-white/20"
-        >
-          {isMuted ? <VolumeX className="w-4 h-4" /> : <Volume2 className="w-4 h-4" />}
-        </Button>
       </div>
 
-      {/* Flipbook Container */}
+      {/* Book Container */}
       <div 
         ref={container}
         onWheel={handleMouseWheel}
@@ -196,236 +128,77 @@ export function Flipbook({ sheets, frontCover, backCover }: FlipbookProps) {
         onMouseMove={handleMouseMove}
         onMouseUp={handleMouseUp}
         onMouseLeave={handleMouseUp}
-        style={{ 
-          perspective: '2500px',
-          perspectiveOrigin: 'center center',
-          cursor: zoom > 1 ? (isDragging ? 'grabbing' : 'grab') : 'default',
-          overflow: 'hidden',
-          width: '100%',
-          height: '100%',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          background: 'radial-gradient(ellipse at center, rgba(0,0,0,0) 0%, rgba(0,0,0,0.3) 100%)',
-        }}
+        className="flex items-center justify-center w-full h-full"
+        style={{ cursor: zoom > 1 ? (isDragging ? 'grabbing' : 'grab') : 'default' }}
       >
-        <div
-          style={{
-            transform: `scale(${zoom}) translate(${panX / zoom}px, ${panY / zoom}px) rotateX(0deg) rotateY(0deg)`,
-            transformOrigin: 'center',
+        <div style={{
+            transform: `scale(${zoom}) translate(${panX / zoom}px, ${panY / zoom}px)`,
             transition: isDragging ? 'none' : 'transform 0.3s ease-out',
             transformStyle: 'preserve-3d' as any,
-            filter: 'drop-shadow(0 50px 100px rgba(0, 0, 0, 0.6)) drop-shadow(0 20px 40px rgba(0, 0, 0, 0.4))',
-          }}
-        >
+        }}>
           <HTMLFlipBook
             ref={book}
             width={pageWidth}
             height={pageHeight}
             size="fixed"
-            minWidth={300}
-            maxWidth={1000}
-            minHeight={200}
-            maxHeight={800}
-            maxShadowOpacity={0.1}
+            minWidth={200}
+            maxWidth={800}
+            minHeight={300}
+            maxHeight={1000}
+            maxShadowOpacity={0.5}
             showCover={true}
             mobileScrollSupport={false}
+            className="shadow-2xl"
+            startPage={0}
+            drawShadow={true}
+            flippingTime={1000}
             usePortrait={false}
-            autoSize={false}
-            clickEventForward={false}
+            startZIndex={0}
+            autoSize={true}
+            clickEventForward={true}
             useMouseEvents={true}
-            swipeDistance={50}
+            swipeDistance={30}
             showPageCorners={false}
             disableFlipByClick={false}
-            startPage={0}
-            drawShadow={false}
-            flippingTime={800}
-            startZIndex={0}
             onFlip={playFlipSound}
-            className="shadow-2xl"
-            style={{ 
-              margin: '0 auto',
-              transformStyle: 'preserve-3d' as any,
-              boxShadow: `
-                0 0 40px rgba(0, 0, 0, 0.4),
-                0 20px 60px rgba(0, 0, 0, 0.5),
-                inset 0 1px 0 rgba(255, 255, 255, 0.2),
-                inset 0 -1px 0 rgba(0, 0, 0, 0.5)
-              `,
-            }}
           >
             {pages.map((page: any) => {
+              const baseStyle: React.CSSProperties = { width: '100%', height: '100%', overflow: 'hidden', backgroundColor: '#fff', position: 'relative' };
+              
               if (page.type === 'cover') {
-                return (
-                  <div key={page.key} className="page" style={{
-                    width: '100%',
-                    height: '100%',
-                    backgroundColor: '#3d0000',
-                    overflow: 'hidden',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                  }}>
-                    {page.image ? (
-                      <img 
-                        src={page.image} 
-                        alt="Cover"
-                        style={{
-                          width: '100%',
-                          height: '100%',
-                          objectFit: 'cover',
-                          display: 'block',
-                        }}
-                      />
-                    ) : (
-                      <div style={{ width: '100%', height: '100%', backgroundColor: '#3d0000' }} />
-                    )}
-                  </div>
-                );
+                return <div key={page.key} className="page" style={baseStyle}><img src={page.image} alt="cover" className="w-full h-full object-cover" /></div>;
               }
 
-              if (page.type === 'inner') {
+              if (page.type === 'spread-left') {
                 return (
-                  <div key={page.key} className="page" style={{
-                    width: '100%',
-                    height: '100%',
-                    backgroundColor: '#FDFBF7',
-                    overflow: 'hidden',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                  }}>
-                    <div style={{
-                      width: '100%',
-                      height: '100%',
-                      backgroundColor: '#FDFBF7',
-                    }} />
-                  </div>
-                );
-              }
-
-              if (page.type === 'spread') {
-                return (
-                  <div key={page.key} className="page" style={{
-                    width: '100%',
-                    height: '100%',
-                    backgroundColor: '#fff',
-                    overflow: 'hidden',
-                    display: 'grid',
-                    gridTemplateColumns: '1fr 1fr',
-                    alignItems: 'stretch',
-                    justifyItems: 'stretch',
-                    gap: '2px',
-                  }}>
-                    {/* Left half - Left page (12x18) */}
-                    <div style={{
-                      width: '100%',
-                      height: '100%',
-                      overflow: 'hidden',
-                      position: 'relative',
-                      borderRight: '1px solid #d0d0d0',
-                    }}>
-                      <img 
-                        src={page.image} 
-                        alt="Left half"
-                        style={{
-                          position: 'absolute',
-                          width: '200%',
-                          height: '100%',
-                          left: '0',
-                          top: '0',
-                          objectFit: 'cover',
-                          objectPosition: 'left center',
-                        }}
-                      />
-                    </div>
-                    {/* Right half - Right page (12x18) */}
-                    <div style={{
-                      width: '100%',
-                      height: '100%',
-                      overflow: 'hidden',
-                      position: 'relative',
-                    }}>
-                      <img 
-                        src={page.image} 
-                        alt="Right half"
-                        style={{
-                          position: 'absolute',
-                          width: '200%',
-                          height: '100%',
-                          right: '0',
-                          top: '0',
-                          objectFit: 'cover',
-                          objectPosition: 'right center',
-                        }}
-                      />
+                  <div key={page.key} className="page" style={{ ...baseStyle, borderRight: '1px solid rgba(0,0,0,0.1)' }}>
+                    <div style={{ width: '200%', height: '100%', position: 'absolute', left: 0, top: 0 }}>
+                        <img src={page.image} className="w-full h-full object-cover" style={{ objectPosition: 'left center' }} alt="left-spread" />
                     </div>
                   </div>
                 );
               }
               
-              if (page.type === 'sheet') {
+              if (page.type === 'spread-right') {
                 return (
-                  <div key={page.key} className="page" style={{
-                    width: '100%',
-                    height: '100%',
-                    backgroundColor: '#f0f0f0',
-                    overflow: 'hidden',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                  }}>
-                    <img 
-                      src={page.image} 
-                      alt="Sheet"
-                      style={{
-                        width: '100%',
-                        height: '100%',
-                        objectFit: 'contain',
-                        display: 'block',
-                      }}
-                    />
+                  <div key={page.key} className="page" style={baseStyle}>
+                    <div style={{ width: '200%', height: '100%', position: 'absolute', left: '-100%', top: 0 }}>
+                         <img src={page.image} className="w-full h-full object-cover" style={{ objectPosition: 'right center' }} alt="right-spread" />
+                    </div>
                   </div>
                 );
               }
 
-              return (
-                <div key={page.key} className="page" style={{
-                  width: '100%',
-                  height: '100%',
-                  backgroundColor: '#f0f0f0',
-                  overflow: 'hidden',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                }}>
-                  <span style={{ color: '#999' }}>No sheets</span>
-                </div>
-              );
+              return <div key={page.key} className="page" style={{ ...baseStyle, backgroundColor: '#fdfbf7' }} />;
             })}
           </HTMLFlipBook>
         </div>
       </div>
 
-      {/* Bottom Controls */}
-      <div className="flex gap-6 items-center z-40">
-        <Button 
-          size="icon" 
-          onClick={() => { playFlipSound(); book.current?.pageFlip().flipPrev(); }}
-          className="rounded-full w-12 h-12 bg-primary text-white hover:bg-primary/90 shadow-lg"
-        >
-          <ChevronLeft className="w-6 h-6" />
-        </Button>
-        
-        <span className="text-white text-sm font-mono bg-black/60 px-4 py-2 rounded-full">Flip • Scroll to zoom • Drag to pan</span>
-
-        <Button 
-          size="icon" 
-          onClick={() => { playFlipSound(); book.current?.pageFlip().flipNext(); }}
-          className="rounded-full w-12 h-12 bg-primary text-white hover:bg-primary/90 shadow-lg"
-        >
-          <ChevronRight className="w-6 h-6" />
-        </Button>
+      {/* Navigation Buttons */}
+      <div className="absolute bottom-6 z-40 flex gap-8">
+        <Button onClick={() => { playFlipSound(); book.current?.pageFlip().flipPrev(); }} className="rounded-full w-12 h-12 bg-white/10 hover:bg-white/20 backdrop-blur-md text-white border border-white/10 p-0"><ChevronLeft /></Button>
+        <Button onClick={() => { playFlipSound(); book.current?.pageFlip().flipNext(); }} className="rounded-full w-12 h-12 bg-white/10 hover:bg-white/20 backdrop-blur-md text-white border border-white/10 p-0"><ChevronRight /></Button>
       </div>
     </div>
   );
