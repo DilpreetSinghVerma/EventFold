@@ -76,7 +76,7 @@ export default function Dashboard() {
                 <div className="flex flex-col items-center justify-center p-6 space-y-4">
                   <div className="p-4 bg-white rounded-xl shadow-inner border-4 border-double border-primary/20">
                     <QRCodeSVG 
-                      value={`${origin}/album/${album.id}`} 
+                      value={`${origin}/album/${album.id}?shared=true`} 
                       size={200}
                       level="H"
                       fgColor="#8B0000"
