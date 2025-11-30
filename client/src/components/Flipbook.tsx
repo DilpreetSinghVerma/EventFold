@@ -196,7 +196,8 @@ export function Flipbook({ sheets, frontCover, backCover }: FlipbookProps) {
         onMouseUp={handleMouseUp}
         onMouseLeave={handleMouseUp}
         style={{ 
-          perspective: '2000px',
+          perspective: '2500px',
+          perspectiveOrigin: 'center center',
           cursor: zoom > 1 ? (isDragging ? 'grabbing' : 'grab') : 'default',
           overflow: 'hidden',
           width: '100%',
@@ -204,13 +205,16 @@ export function Flipbook({ sheets, frontCover, backCover }: FlipbookProps) {
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
+          background: 'radial-gradient(ellipse at center, rgba(0,0,0,0) 0%, rgba(0,0,0,0.3) 100%)',
         }}
       >
         <div
           style={{
-            transform: `scale(${zoom}) translate(${panX / zoom}px, ${panY / zoom}px)`,
+            transform: `scale(${zoom}) translate(${panX / zoom}px, ${panY / zoom}px) rotateX(0deg) rotateY(0deg)`,
             transformOrigin: 'center',
             transition: isDragging ? 'none' : 'transform 0.3s ease-out',
+            transformStyle: 'preserve-3d' as any,
+            filter: 'drop-shadow(0 50px 100px rgba(0, 0, 0, 0.6)) drop-shadow(0 20px 40px rgba(0, 0, 0, 0.4))',
           }}
         >
           <HTMLFlipBook
@@ -238,7 +242,16 @@ export function Flipbook({ sheets, frontCover, backCover }: FlipbookProps) {
             startZIndex={0}
             onFlip={playFlipSound}
             className="shadow-2xl"
-            style={{ margin: '0 auto' }}
+            style={{ 
+              margin: '0 auto',
+              transformStyle: 'preserve-3d' as any,
+              boxShadow: `
+                0 0 40px rgba(0, 0, 0, 0.4),
+                0 20px 60px rgba(0, 0, 0, 0.5),
+                inset 0 1px 0 rgba(255, 255, 255, 0.2),
+                inset 0 -1px 0 rgba(0, 0, 0, 0.5)
+              `,
+            }}
           >
             {pages.map((page) => {
               if (page.type === 'cover') {
