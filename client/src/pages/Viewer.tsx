@@ -21,24 +21,34 @@ export default function Viewer() {
       
       try {
         // Check if images are URLs (mock data) or IDs (real data)
-        // Mock data URLs usually start with http
-        const isMock = album.frontCover.startsWith('http') || album.frontCover.startsWith('/src');
+        // URLs usually start with http, /, or data:
+        const isMockFront = album.frontCover.startsWith('http') || album.frontCover.startsWith('/') || album.frontCover.startsWith('data:');
+        const isMockBack = album.backCover.startsWith('http') || album.backCover.startsWith('/') || album.backCover.startsWith('data:');
         
-        if (isMock) {
+        if (isMockFront) {
           setLoadedFrontCover(album.frontCover);
-          setLoadedBackCover(album.backCover);
-          setLoadedSheets(album.sheets);
         } else {
-          // Load from IDB
           const front = await ImageStorage.load(album.frontCover);
-          const back = await ImageStorage.load(album.backCover);
-          
-          const sheets = await Promise.all(album.sheets.map(id => ImageStorage.load(id)));
-          
-          setLoadedFrontCover(front || '');
-          setLoadedBackCover(back || '');
-          setLoadedSheets(sheets.filter(Boolean) as string[]);
+          setLoadedFrontCover(front || album.frontCover);
         }
+        
+        if (isMockBack) {
+          setLoadedBackCover(album.backCover);
+        } else {
+          const back = await ImageStorage.load(album.backCover);
+          setLoadedBackCover(back || album.backCover);
+        }
+        
+        // Load sheets
+        const loadedSheetData = await Promise.all(
+          album.sheets.map(async (sheet) => {
+            const isMockSheet = sheet.startsWith('http') || sheet.startsWith('/') || sheet.startsWith('data:');
+            if (isMockSheet) return sheet;
+            const loaded = await ImageStorage.load(sheet);
+            return loaded || sheet;
+          })
+        );
+        setLoadedSheets(loadedSheetData.filter(Boolean) as string[]);
       } catch (e) {
         console.error("Failed to load images", e);
       } finally {

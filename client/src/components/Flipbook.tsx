@@ -27,11 +27,11 @@ export function Flipbook({ sheets, frontCover, backCover }: FlipbookProps) {
       const screenW = window.innerWidth;
       const screenH = window.innerHeight;
       
-      const maxHeight = Math.min(screenH - 120, 500);
-      const maxWidth = Math.min((screenW - 40) / 2, 350);
+      const maxHeight = Math.min(screenH - 120, 600);
+      const maxWidth = Math.min((screenW - 40) / 2, 450);
       
       let h = maxHeight;
-      let w = h * (2/3);
+      let w = h * (2/3); // Aspect ratio for a SINGLE page (half a sheet)
       
       if (w > maxWidth) {
         w = maxWidth;
@@ -87,14 +87,25 @@ export function Flipbook({ sheets, frontCover, backCover }: FlipbookProps) {
 
   if (!ready) return null;
 
+  // --- BUILD PAGES ---
   const pages = [];
   
+  // 1. Front Cover (Right)
   pages.push({ type: 'cover', image: frontCover, key: 'cover-front' });
+  
+  // 2. Inner Front (Left)
   pages.push({ type: 'inner', key: 'inner-front' });
 
+  // 3. Title Page (Right) - THIS FIXES THE GLITCH
+  // We need this filler page so the first spread starts on the Left side
+  pages.push({ type: 'title', key: 'title-page' });
+
+  // 4. The Spreads
   if (sheets && sheets.length > 0) {
     sheets.forEach((sheet, idx) => {
+      // Left Page
       pages.push({ type: 'spread-left', image: sheet, key: `sheet-${idx}-left` });
+      // Right Page
       pages.push({ type: 'spread-right', image: sheet, key: `sheet-${idx}-right` });
     });
   } else {
@@ -102,6 +113,7 @@ export function Flipbook({ sheets, frontCover, backCover }: FlipbookProps) {
     pages.push({ type: 'empty', key: 'empty-2' });
   }
 
+  // 5. Back Cover
   pages.push({ type: 'inner', key: 'inner-back' });
   pages.push({ type: 'cover', image: backCover, key: 'cover-back' });
 
@@ -109,7 +121,7 @@ export function Flipbook({ sheets, frontCover, backCover }: FlipbookProps) {
     <div className="relative w-full h-screen flex flex-col items-center justify-center bg-[#1a1a1a] overflow-hidden">
       
       {/* Controls Bar */}
-      <div className="absolute top-4 z-50 flex gap-2 bg-black/60 backdrop-blur-md rounded-full p-2">
+      <div className="absolute top-4 z-50 flex gap-2 bg-black/60 backdrop-blur-md rounded-full p-2 border border-white/10">
           <Button variant="ghost" size="icon" onClick={handleZoomOut} className="text-white hover:bg-white/20 rounded-full w-8 h-8"><ZoomOut className="w-4 h-4" /></Button>
           <div className="flex items-center px-2 text-white text-xs font-mono">{Math.round(zoom * 100)}%</div>
           <Button variant="ghost" size="icon" onClick={handleZoomIn} className="text-white hover:bg-white/20 rounded-full w-8 h-8"><ZoomIn className="w-4 h-4" /></Button>
@@ -163,15 +175,38 @@ export function Flipbook({ sheets, frontCover, backCover }: FlipbookProps) {
             onFlip={playFlipSound}
           >
             {pages.map((page: any) => {
-              const baseStyle: React.CSSProperties = { width: '100%', height: '100%', overflow: 'hidden', backgroundColor: '#fff', position: 'relative' };
+              // Standard styling
+              const baseStyle: React.CSSProperties = { 
+                width: '100%', 
+                height: '100%', 
+                overflow: 'hidden', 
+                backgroundColor: '#fff', 
+                position: 'relative' 
+              };
               
               if (page.type === 'cover') {
+                if (!page.image) {
+                  return <div key={page.key} className="page" style={{ ...baseStyle, backgroundColor: '#fdfbf7' }} />;
+                }
                 return <div key={page.key} className="page" style={baseStyle}><img src={page.image} alt="cover" className="w-full h-full object-cover" /></div>;
+              }
+
+              // TITLE PAGE (The Fix)
+              if (page.type === 'title') {
+                return (
+                    <div key={page.key} className="page" style={{ ...baseStyle, backgroundColor: '#fdfbf7', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                         <div className="text-gray-400 font-serif italic">Wedding Album</div>
+                    </div>
+                );
               }
 
               if (page.type === 'spread-left') {
                 return (
-                  <div key={page.key} className="page" style={{ ...baseStyle, borderRight: '1px solid rgba(0,0,0,0.1)' }}>
+                  <div key={page.key} className="page" style={{ ...baseStyle }}>
+                    {/* Shadow on right edge to create spine effect */}
+                    <div className="absolute top-0 right-0 w-8 h-full z-10" 
+                         style={{ background: 'linear-gradient(to left, rgba(0,0,0,0.2), transparent)' }} />
+                    
                     <div style={{ width: '200%', height: '100%', position: 'absolute', left: 0, top: 0 }}>
                         <img src={page.image} className="w-full h-full object-cover" style={{ objectPosition: 'left center' }} alt="left-spread" />
                     </div>
@@ -182,8 +217,12 @@ export function Flipbook({ sheets, frontCover, backCover }: FlipbookProps) {
               if (page.type === 'spread-right') {
                 return (
                   <div key={page.key} className="page" style={baseStyle}>
+                    {/* Shadow on left edge to create spine effect */}
+                    <div className="absolute top-0 left-0 w-8 h-full z-10" 
+                         style={{ background: 'linear-gradient(to right, rgba(0,0,0,0.2), transparent)' }} />
+
                     <div style={{ width: '200%', height: '100%', position: 'absolute', left: '-100%', top: 0 }}>
-                         <img src={page.image} className="w-full h-full object-cover" style={{ objectPosition: 'right center' }} alt="right-spread" />
+                          <img src={page.image} className="w-full h-full object-cover" style={{ objectPosition: 'right center' }} alt="right-spread" />
                     </div>
                   </div>
                 );
