@@ -213,7 +213,7 @@ export function Flipbook({ sheets, frontCover, backCover }: FlipbookProps) {
                   <div key={page.key} className="page" style={{ ...baseStyle }}>
                     <div className="absolute top-0 right-0 w-8 h-full z-10" style={{ background: 'linear-gradient(to left, rgba(0,0,0,0.25), transparent)' }} />
                     <div style={{ width: '200%', height: '100%', position: 'absolute', left: 0, top: 0 }}>
-                        <img src={page.image} className="w-full h-full" style={{ objectFit: 'fill' }} alt="left-spread" />
+                        <img src={page.image} className="w-full h-full" style={{ objectFit: 'contain', objectPosition: 'left center' }} alt="left-spread" />
                     </div>
                   </div>
                 );
@@ -224,7 +224,7 @@ export function Flipbook({ sheets, frontCover, backCover }: FlipbookProps) {
                   <div key={page.key} className="page" style={baseStyle}>
                     <div className="absolute top-0 left-0 w-8 h-full z-10" style={{ background: 'linear-gradient(to right, rgba(0,0,0,0.25), transparent)' }} />
                     <div style={{ width: '200%', height: '100%', position: 'absolute', left: '-100%', top: 0 }}>
-                          <img src={page.image} className="w-full h-full" style={{ objectFit: 'fill' }} alt="right-spread" />
+                          <img src={page.image} className="w-full h-full" style={{ objectFit: 'contain', objectPosition: 'right center' }} alt="right-spread" />
                     </div>
                   </div>
                 );
