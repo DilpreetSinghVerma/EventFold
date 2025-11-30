@@ -113,12 +113,23 @@ export function Flipbook({ sheets, frontCover, backCover }: FlipbookProps) {
     key: 'inner-front',
   });
 
+  // Each 12x36 sheet is split into two 12x18 pages
   if (sheets && sheets.length > 0) {
     sheets.forEach((sheet, idx) => {
+      // Left page (12x18) - shows left half of panoramic image
       pages.push({
         type: 'sheet',
         image: sheet,
-        key: `sheet-${idx}`,
+        position: 'left',
+        key: `sheet-${idx}-left`,
+      });
+      
+      // Right page (12x18) - shows right half of panoramic image
+      pages.push({
+        type: 'sheet',
+        image: sheet,
+        position: 'right',
+        key: `sheet-${idx}-right`,
       });
     });
   } else {
@@ -253,7 +264,7 @@ export function Flipbook({ sheets, frontCover, backCover }: FlipbookProps) {
               `,
             }}
           >
-            {pages.map((page) => {
+            {pages.map((page: any) => {
               if (page.type === 'cover') {
                 return (
                   <div key={page.key} className="page" style={{
@@ -316,11 +327,12 @@ export function Flipbook({ sheets, frontCover, backCover }: FlipbookProps) {
                   }}>
                     <img 
                       src={page.image} 
-                      alt="Sheet"
+                      alt={`Sheet ${page.position}`}
                       style={{
-                        width: '100%',
+                        width: '200%',
                         height: '100%',
-                        objectFit: 'contain',
+                        objectFit: 'cover',
+                        objectPosition: page.position === 'left' ? '0% center' : '100% center',
                         display: 'block',
                       }}
                     />
