@@ -27,8 +27,8 @@ export function Flipbook({ sheets, frontCover, backCover }: FlipbookProps) {
       const screenW = window.innerWidth;
       const screenH = window.innerHeight;
       
-      const maxWidth = Math.min(screenW - 60, 800);
-      const maxHeight = screenH - 200;
+      const maxWidth = Math.min(screenW - 60, 600);
+      const maxHeight = Math.min(screenH - 250, 350);
       
       let w = maxWidth;
       let h = w * 0.6;
