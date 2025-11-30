@@ -222,7 +222,7 @@ export function Flipbook({ sheets, frontCover, backCover }: FlipbookProps) {
             maxWidth={1000}
             minHeight={200}
             maxHeight={800}
-            maxShadowOpacity={0.6}
+            maxShadowOpacity={0.1}
             showCover={true}
             mobileScrollSupport={false}
             usePortrait={false}
@@ -230,10 +230,10 @@ export function Flipbook({ sheets, frontCover, backCover }: FlipbookProps) {
             clickEventForward={false}
             useMouseEvents={true}
             swipeDistance={50}
-            showPageCorners={true}
+            showPageCorners={false}
             disableFlipByClick={false}
             startPage={0}
-            drawShadow={true}
+            drawShadow={false}
             flippingTime={800}
             startZIndex={0}
             onFlip={playFlipSound}
