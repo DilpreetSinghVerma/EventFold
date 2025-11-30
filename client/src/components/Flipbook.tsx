@@ -12,14 +12,29 @@ interface FlipbookProps {
 export function Flipbook({ sheets, frontCover, backCover }: FlipbookProps) {
   const book = useRef<any>(null);
   const [isMuted, setIsMuted] = useState(false);
-  const [pageWidth, setPageWidth] = useState(280);
-  const [pageHeight, setPageHeight] = useState(420);
+  const [pageWidth, setPageWidth] = useState(400);
+  const [pageHeight, setPageHeight] = useState(300);
   const [ready, setReady] = useState(false);
 
   useEffect(() => {
     const handleResize = () => {
-      const w = Math.min(window.innerWidth - 40, 500);
-      const h = w * 1.4;
+      // Landscape mode - width > height
+      const screenW = window.innerWidth;
+      const screenH = window.innerHeight;
+      
+      // Make it landscape: wider than tall
+      const maxWidth = Math.min(screenW - 60, 800);
+      const maxHeight = screenH - 200;
+      
+      // Aspect ratio for landscape: 16:9
+      let w = maxWidth;
+      let h = w * 0.6;
+      
+      if (h > maxHeight) {
+        h = maxHeight;
+        w = h / 0.6;
+      }
+      
       setPageWidth(w);
       setPageHeight(h);
     };
@@ -56,7 +71,7 @@ export function Flipbook({ sheets, frontCover, backCover }: FlipbookProps) {
     key: 'inner-front',
   });
 
-  // Sheets
+  // Sheets - each sheet becomes one page
   if (sheets && sheets.length > 0) {
     sheets.forEach((sheet, idx) => {
       pages.push({
@@ -99,18 +114,18 @@ export function Flipbook({ sheets, frontCover, backCover }: FlipbookProps) {
         </Button>
       </div>
 
-      {/* Flipbook */}
-      <div style={{ perspective: '1500px' }}>
+      {/* Flipbook - Landscape */}
+      <div style={{ perspective: '2000px' }}>
         <HTMLFlipBook
           ref={book}
           width={pageWidth}
           height={pageHeight}
           size="fixed"
-          minWidth={200}
-          maxWidth={700}
-          minHeight={250}
-          maxHeight={900}
-          maxShadowOpacity={0.5}
+          minWidth={300}
+          maxWidth={1000}
+          minHeight={200}
+          maxHeight={800}
+          maxShadowOpacity={0.6}
           showCover={true}
           mobileScrollSupport={false}
           usePortrait={false}
@@ -131,11 +146,14 @@ export function Flipbook({ sheets, frontCover, backCover }: FlipbookProps) {
           {pages.map((page) => {
             if (page.type === 'cover') {
               return (
-                <div key={page.key} className="page flex items-center justify-center" style={{
+                <div key={page.key} className="page" style={{
                   width: '100%',
                   height: '100%',
                   backgroundColor: '#3d0000',
                   overflow: 'hidden',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
                 }}>
                   {page.image ? (
                     <img 
@@ -157,11 +175,14 @@ export function Flipbook({ sheets, frontCover, backCover }: FlipbookProps) {
 
             if (page.type === 'inner') {
               return (
-                <div key={page.key} className="page flex items-center justify-center" style={{
+                <div key={page.key} className="page" style={{
                   width: '100%',
                   height: '100%',
                   backgroundColor: '#FDFBF7',
                   overflow: 'hidden',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
                 }}>
                   <div style={{
                     width: '100%',
@@ -174,11 +195,14 @@ export function Flipbook({ sheets, frontCover, backCover }: FlipbookProps) {
 
             if (page.type === 'sheet') {
               return (
-                <div key={page.key} className="page flex items-center justify-center" style={{
+                <div key={page.key} className="page" style={{
                   width: '100%',
                   height: '100%',
                   backgroundColor: '#f0f0f0',
                   overflow: 'hidden',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
                 }}>
                   <img 
                     src={page.image} 
@@ -186,7 +210,7 @@ export function Flipbook({ sheets, frontCover, backCover }: FlipbookProps) {
                     style={{
                       width: '100%',
                       height: '100%',
-                      objectFit: 'cover',
+                      objectFit: 'contain',
                       display: 'block',
                     }}
                   />
@@ -195,11 +219,14 @@ export function Flipbook({ sheets, frontCover, backCover }: FlipbookProps) {
             }
 
             return (
-              <div key={page.key} className="page flex items-center justify-center" style={{
+              <div key={page.key} className="page" style={{
                 width: '100%',
                 height: '100%',
                 backgroundColor: '#f0f0f0',
                 overflow: 'hidden',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
               }}>
                 <span style={{ color: '#999' }}>No sheets</span>
               </div>
