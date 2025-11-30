@@ -311,31 +311,55 @@ export function Flipbook({ sheets, frontCover, backCover }: FlipbookProps) {
                     height: '100%',
                     backgroundColor: '#fff',
                     overflow: 'hidden',
-                    display: 'flex',
+                    display: 'grid',
+                    gridTemplateColumns: '1fr 1fr',
                     alignItems: 'stretch',
-                    justifyContent: 'stretch',
+                    justifyItems: 'stretch',
+                    gap: '2px',
                   }}>
                     {/* Left half - Left page (12x18) */}
                     <div style={{
-                      width: '50%',
+                      width: '100%',
                       height: '100%',
                       overflow: 'hidden',
-                      backgroundImage: `url(${page.image})`,
-                      backgroundSize: '200% 100%',
-                      backgroundPosition: '0% center',
-                      backgroundRepeat: 'no-repeat',
-                      borderRight: '1px solid #e0e0e0',
-                    }} />
+                      position: 'relative',
+                      borderRight: '1px solid #d0d0d0',
+                    }}>
+                      <img 
+                        src={page.image} 
+                        alt="Left half"
+                        style={{
+                          position: 'absolute',
+                          width: '200%',
+                          height: '100%',
+                          left: '0',
+                          top: '0',
+                          objectFit: 'cover',
+                          objectPosition: 'left center',
+                        }}
+                      />
+                    </div>
                     {/* Right half - Right page (12x18) */}
                     <div style={{
-                      width: '50%',
+                      width: '100%',
                       height: '100%',
                       overflow: 'hidden',
-                      backgroundImage: `url(${page.image})`,
-                      backgroundSize: '200% 100%',
-                      backgroundPosition: '100% center',
-                      backgroundRepeat: 'no-repeat',
-                    }} />
+                      position: 'relative',
+                    }}>
+                      <img 
+                        src={page.image} 
+                        alt="Right half"
+                        style={{
+                          position: 'absolute',
+                          width: '200%',
+                          height: '100%',
+                          right: '0',
+                          top: '0',
+                          objectFit: 'cover',
+                          objectPosition: 'right center',
+                        }}
+                      />
+                    </div>
                   </div>
                 );
               }
