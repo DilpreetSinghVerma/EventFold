@@ -12,7 +12,7 @@ export default function Home() {
       <nav className="flex items-center justify-between px-6 py-6 max-w-7xl mx-auto">
         <div className="flex items-center gap-2">
           <BookOpen className="w-6 h-6 text-primary" />
-          <span className="font-display text-2xl font-bold tracking-tight">FlipiX</span>
+          <span className="font-display text-2xl font-bold tracking-tight">EventFold</span>
         </div>
         <div className="flex items-center gap-6">
           <Link href="/dashboard" className="text-sm font-medium hover:text-primary transition-colors">My Albums</Link>
@@ -21,7 +21,6 @@ export default function Home() {
           </Link>
         </div>
       </nav>
-
       {/* Hero Section */}
       <header className="relative pt-20 pb-32 px-6">
         <div className="max-w-7xl mx-auto grid lg:grid-cols-2 gap-12 items-center">
@@ -76,7 +75,6 @@ export default function Home() {
           </motion.div>
         </div>
       </header>
-
       {/* Features Section */}
       <section className="py-24 bg-white">
         <div className="max-w-7xl mx-auto px-6">
