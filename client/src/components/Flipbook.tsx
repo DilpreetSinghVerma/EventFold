@@ -196,8 +196,8 @@ export function Flipbook({ sheets, frontCover, backCover }: FlipbookProps) {
               // Left Inner (Wedding Album Text)
               if (page.type === 'intro-left') {
                 return (
-                    <div key={page.key} className="page" style={{ ...baseStyle, backgroundColor: '#2a2a2a', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                         <div className="text-white/60 font-serif italic text-xl tracking-widest">Wedding Album</div>
+                    <div key={page.key} className="page" style={{ ...baseStyle, backgroundColor: '#FDFBF7', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                         <div style={{ color: '#A17C6B', fontSize: '24px', fontFamily: 'serif', fontStyle: 'italic', letterSpacing: '0.1em' }}>Wedding Album</div>
                     </div>
                 );
               }
@@ -205,10 +205,10 @@ export function Flipbook({ sheets, frontCover, backCover }: FlipbookProps) {
               // Right Inner (Filler Page)
               if (page.type === 'intro-right') {
                 return (
-                    <div key={page.key} className="page" style={{ ...baseStyle, backgroundColor: '#2a2a2a' }}>
+                    <div key={page.key} className="page" style={{ ...baseStyle, backgroundColor: '#FDFBF7' }}>
                          <div className="w-full h-full flex items-center justify-center">
                             {/* Decorative element to make the blank page look nice */}
-                            <div className="w-32 h-32 border border-white/10 rounded-full" />
+                            <div style={{ width: '80px', height: '80px', border: '2px solid #D4A574', borderRadius: '50%' }} />
                          </div>
                     </div>
                 );
