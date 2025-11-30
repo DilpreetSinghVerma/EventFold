@@ -93,16 +93,10 @@ export function Flipbook({ sheets, frontCover, backCover }: FlipbookProps) {
   // 0. Front Cover (Right side)
   pages.push({ type: 'cover', image: frontCover, key: 'cover-front' });
   
-  // 1. Inner Left (Back of cover - Left side)
-  // This is where your "Wedding Album" text will go
-  pages.push({ type: 'intro-left', key: 'intro-left' });
+  // 1. Inner Left (Back of cover - Left side) - BLANK
+  pages.push({ type: 'blank-left', key: 'blank-left' });
 
-  // 2. Inner Right (Filler - Right side)
-  // *** THIS IS THE FIX ***
-  // We add this blank/decorative page so the photos start on the NEXT Left page
-  pages.push({ type: 'intro-right', key: 'intro-right' });
-
-  // 3+ Spreads (Left then Right)
+  // 2. Spreads (Left then Right) - First sheet starts on Right (index 2)
   if (sheets && sheets.length > 0) {
     sheets.forEach((sheet, idx) => {
       pages.push({ type: 'spread-left', image: sheet, key: `sheet-${idx}-left` });
@@ -114,7 +108,7 @@ export function Flipbook({ sheets, frontCover, backCover }: FlipbookProps) {
   }
 
   // Back Cover sequence
-  pages.push({ type: 'inner', key: 'inner-back' });
+  pages.push({ type: 'blank-left', key: 'inner-back' });
   pages.push({ type: 'cover', image: backCover, key: 'cover-back' });
 
   return (
@@ -193,23 +187,10 @@ export function Flipbook({ sheets, frontCover, backCover }: FlipbookProps) {
                 );
               }
 
-              // Left Inner (Wedding Album Text)
-              if (page.type === 'intro-left') {
-                return (
-                    <div key={page.key} className="page" style={{ ...baseStyle, backgroundColor: '#FDFBF7', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                         <div style={{ color: '#A17C6B', fontSize: '24px', fontFamily: 'serif', fontStyle: 'italic', letterSpacing: '0.1em' }}>Wedding Album</div>
-                    </div>
-                );
-              }
-
-              // Right Inner (Filler Page)
-              if (page.type === 'intro-right') {
+              // Blank pages
+              if (page.type === 'blank-left') {
                 return (
                     <div key={page.key} className="page" style={{ ...baseStyle, backgroundColor: '#FDFBF7' }}>
-                         <div className="w-full h-full flex items-center justify-center">
-                            {/* Decorative element to make the blank page look nice */}
-                            <div style={{ width: '80px', height: '80px', border: '2px solid #D4A574', borderRadius: '50%' }} />
-                         </div>
                     </div>
                 );
               }
