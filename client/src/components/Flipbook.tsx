@@ -324,18 +324,11 @@ export function Flipbook({ sheets, frontCover, backCover }: FlipbookProps) {
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
+                    backgroundImage: `url(${page.image})`,
+                    backgroundSize: '200% 100%',
+                    backgroundPosition: page.position === 'left' ? '0% center' : '100% center',
+                    backgroundRepeat: 'no-repeat',
                   }}>
-                    <img 
-                      src={page.image} 
-                      alt={`Sheet ${page.position}`}
-                      style={{
-                        width: '200%',
-                        height: '100%',
-                        objectFit: 'cover',
-                        objectPosition: page.position === 'left' ? '0% center' : '100% center',
-                        display: 'block',
-                      }}
-                    />
                   </div>
                 );
               }
