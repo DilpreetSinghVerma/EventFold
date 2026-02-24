@@ -14,38 +14,57 @@ import {
 } from "@/components/ui/dialog";
 
 export default function Dashboard() {
-  const { albums, removeAlbum } = useAlbumStore();
+  const [albums, setAlbums] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
   const origin = window.location.origin;
+
+  const fetchAlbums = async () => {
+    try {
+      const response = await fetch('/api/albums');
+      if (!response.ok) throw new Error('Failed to fetch');
+      const data = await response.json();
+      setAlbums(data);
+    } catch (e) {
+      console.error(e);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchAlbums();
+  }, []);
+
+  const handleDelete = async (id: string, title: string) => {
+    if (!window.confirm(`Delete "${title}"? This cannot be undone.`)) return;
+    try {
+      const response = await fetch(`/api/albums/${id}`, { method: 'DELETE' });
+      if (response.ok) {
+        setAlbums(albums.filter(a => a.id !== id));
+      }
+    } catch (e) {
+      alert('Failed to delete album');
+    }
+  };
 
   // Component to load cover image async
   const AlbumCard = ({ album }: { album: any }) => {
-    const [coverUrl, setCoverUrl] = useState<string>('');
-
-    useEffect(() => {
-      const loadCover = async () => {
-        if (album.frontCover.startsWith('http') || album.frontCover.startsWith('/src')) {
-          setCoverUrl(album.frontCover);
-        } else {
-          const url = await ImageStorage.load(album.frontCover);
-          if (url) setCoverUrl(url);
-        }
-      };
-      loadCover();
-    }, [album.frontCover]);
+    const frontCover = album.files?.find((f: any) => f.fileType === 'cover_front')?.filePath;
+    const coverUrl = frontCover ? (frontCover.startsWith('/') ? frontCover : `/${frontCover}`) : '';
 
     return (
       <div className="group relative">
         <Card className="overflow-hidden border-none shadow-md hover:shadow-xl transition-all duration-300 bg-white">
           <div className="relative aspect-[3/4] overflow-hidden bg-neutral-100">
             {coverUrl ? (
-              <img 
-                src={coverUrl} 
-                alt={album.title} 
+              <img
+                src={coverUrl}
+                alt={album.title}
                 className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
               />
             ) : (
               <div className="w-full h-full flex items-center justify-center bg-neutral-200 text-neutral-400">
-                Loading...
+                No Cover
               </div>
             )}
             <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors duration-300 flex items-center justify-center opacity-0 group-hover:opacity-100">
@@ -60,7 +79,7 @@ export default function Dashboard() {
           </div>
           <CardContent className="pt-6">
             <h3 className="font-display text-xl font-bold mb-1 text-neutral-800">{album.title}</h3>
-            <p className="text-sm text-primary font-medium">{album.date}</p>
+            <p className="text-sm text-primary font-medium">{new Date(album.date).toLocaleDateString()}</p>
           </CardContent>
           <CardFooter className="flex justify-between border-t border-neutral-50 pt-4 pb-4">
             <Dialog>
@@ -71,12 +90,12 @@ export default function Dashboard() {
               </DialogTrigger>
               <DialogContent className="sm:max-w-md">
                 <DialogHeader>
-                  <DialogTitle className="font-display text-center text-2xl text-primary">Royal Invitation</DialogTitle>
+                  <DialogTitle className="font-display text-center text-2xl text-primary">Album Invitation</DialogTitle>
                 </DialogHeader>
                 <div className="flex flex-col items-center justify-center p-6 space-y-4">
                   <div className="p-4 bg-white rounded-xl shadow-inner border-4 border-double border-primary/20">
-                    <QRCodeSVG 
-                      value={`${origin}/album/${album.id}?shared=true`} 
+                    <QRCodeSVG
+                      value={`${origin}/album/${album.id}?shared=true`}
                       size={200}
                       level="H"
                       fgColor="#8B0000"
@@ -96,30 +115,38 @@ export default function Dashboard() {
                 </div>
               </DialogContent>
             </Dialog>
-            <Button 
-              variant="ghost" 
-              size="sm" 
+            <Button
+              variant="ghost"
+              size="sm"
               className="text-neutral-400 hover:text-destructive"
-              onClick={() => removeAlbum(album.id)}
+              onClick={() => handleDelete(album.id, album.title)}
             >
-               <Trash2 className="w-4 h-4" />
+              <Trash2 className="w-4 h-4" />
             </Button>
           </CardFooter>
         </Card>
-        
+
         {/* Decorative stack effect */}
         <div className="absolute -z-10 top-2 left-2 right-[-4px] bottom-[-4px] bg-[#E6D5AC] rounded-lg border border-[#D4C49A]" />
       </div>
     );
   };
 
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-[#FDFBF7]">
+        <p className="text-neutral-400 animate-pulse">Loading albums from server...</p>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-[#FDFBF7] p-8">
       <div className="max-w-7xl mx-auto">
         <div className="flex items-center justify-between mb-12">
           <div>
-            <h1 className="text-4xl font-display font-bold mb-2 text-primary-foreground mix-blend-difference text-neutral-800">My Royal Albums</h1>
-            <p className="text-neutral-500">Manage your wedding collection.</p>
+            <h1 className="text-4xl font-display font-bold mb-2 text-neutral-800">Album Management</h1>
+            <p className="text-neutral-500">Manage your wedding collection live on server.</p>
           </div>
           <Link href="/create">
             <Button size="lg" className="rounded-full shadow-lg hover:shadow-xl transition-all bg-primary text-primary-foreground hover:bg-primary/90">
