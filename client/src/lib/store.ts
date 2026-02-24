@@ -8,20 +8,20 @@ export interface Album {
   id: string;
   title: string;
   date: string;
-  frontCover: string; // Base64 or ID
-  backCover: string;  // Base64 or ID
+  frontCover: string; // IDB key or URL
+  backCover: string;  // IDB key or URL
   theme: 'classic' | 'travel' | 'fun' | 'royal';
-  sheets: string[];   // IDs of the sheets in IDB
+  sheets: string[];   // IDB keys or URLs
 }
 
 interface AlbumStore {
   albums: Album[];
   addAlbum: (album: Album) => void;
   getAlbum: (id: string) => Album | undefined;
-  removeAlbum: (id: string) => void;
+  removeAlbum: (id: string) => Promise<void>;
 }
 
-// Image Storage Helper (Direct Blob Storage)
+// Image Storage Helper (Direct Blob Storage in IndexedDB)
 export const ImageStorage = {
   save: async (id: string, file: File | Blob) => {
     await set(`img_${id}`, file);
@@ -35,13 +35,24 @@ export const ImageStorage = {
   },
   delete: async (id: string) => {
     await del(`img_${id}`);
-  }
+  },
+  deleteAlbumImages: async (album: Album) => {
+    // Only delete IDB-stored images (not mock http/src URLs)
+    const isIdbKey = (s: string) =>
+      !s.startsWith('http') && !s.startsWith('/') && !s.startsWith('data:');
+
+    if (isIdbKey(album.frontCover)) await del(`img_${album.frontCover}`);
+    if (isIdbKey(album.backCover)) await del(`img_${album.backCover}`);
+    for (const sheet of album.sheets) {
+      if (isIdbKey(sheet)) await del(`img_${sheet}`);
+    }
+  },
 };
 
 // Helper to generate mock sheets (panoramic)
 const generateMockSheets = (count: number, seed: string) => {
-  return Array.from({ length: count }).map((_, i) => 
-    `https://picsum.photos/seed/${seed}-${i}/1200/400` 
+  return Array.from({ length: count }).map((_, i) =>
+    `https://picsum.photos/seed/${seed}-${i}/1200/400`
   );
 };
 
@@ -61,11 +72,18 @@ export const useAlbumStore = create<AlbumStore>()(
       ],
       addAlbum: (album) => set((state) => ({ albums: [album, ...state.albums] })),
       getAlbum: (id) => get().albums.find((a) => a.id === id),
-      removeAlbum: (id) => set((state) => ({ albums: state.albums.filter(a => a.id !== id) })),
+      removeAlbum: async (id) => {
+        const album = get().albums.find((a) => a.id === id);
+        if (album) {
+          // Clean up IndexedDB blobs before removing metadata
+          await ImageStorage.deleteAlbumImages(album);
+        }
+        set((state) => ({ albums: state.albums.filter((a) => a.id !== id) }));
+      },
     }),
     {
       name: 'album-metadata-v3',
-      storage: createJSONStorage(() => localStorage), // Metadata is small, localStorage is fine
+      storage: createJSONStorage(() => localStorage),
     }
   )
 );
