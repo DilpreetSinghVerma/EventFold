@@ -4,7 +4,7 @@ import { storage } from "./storage";
 import multer from "multer";
 import path from "path";
 import fs from "fs";
-import { insertAlbumSchema, insertFileSchema } from "@shared/schema";
+import { insertAlbumSchema, insertFileSchema } from "../shared/schema";
 import { ZodError } from "zod";
 
 // Use /tmp for uploads on Vercel, as the rest of the filesystem is read-only
