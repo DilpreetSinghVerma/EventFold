@@ -85,7 +85,9 @@ export default function CreateAlbum() {
 
       if (!albumResponse.ok) {
         const errorData = await albumResponse.json().catch(() => ({}));
-        throw new Error(errorData.error || 'Failed to initialize project on server');
+        // Prioritize the server's detailed error message
+        const serverErrorMessage = errorData.message || errorData.error || 'Unspecified Server Error';
+        throw new Error(serverErrorMessage);
       }
       const album = await albumResponse.json();
 
