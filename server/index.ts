@@ -81,7 +81,14 @@ app.use((req, res, next) => {
   }
 
   const port = parseInt(process.env.PORT || "3000", 10);
-  httpServer.listen(port, () => {
-    log(`serving on port ${port}`);
-  });
-})();
+  if (!process.env.VERCEL) {
+    httpServer.listen(port, () => {
+      log(`serving on port ${port}`);
+    });
+  }
+})().catch(err => {
+  console.error("Initialization error:", err);
+  process.exit(1);
+});
+
+export default app;

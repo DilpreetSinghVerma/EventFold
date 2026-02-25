@@ -3,11 +3,14 @@ import fs from "fs";
 import path from "path";
 
 export function serveStatic(app: Express) {
-  const distPath = path.resolve(__dirname, "public");
+  const distPath = path.resolve(process.cwd(), "dist", "public");
   if (!fs.existsSync(distPath)) {
-    throw new Error(
-      `Could not find the build directory: ${distPath}, make sure to build the client first`,
-    );
+    // Fallback for some local environments
+    const localDist = path.resolve(process.cwd(), "server", "public");
+    if (!fs.existsSync(localDist)) {
+      console.warn(`Static directory not found at ${distPath} or ${localDist}`);
+      return;
+    }
   }
 
   app.use(express.static(distPath));
