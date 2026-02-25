@@ -4,7 +4,9 @@ import { Flipbook } from '@/components/Flipbook';
 import { Button } from '@/components/ui/button';
 import { ArrowLeft, Share2, Home, Loader2, Check } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
+import { QRCodeSVG } from 'qrcode.react';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogTrigger } from '@/components/ui/dialog';
 
 // ─────────────────────────────────────────────────────────────────
 // Split a panoramic 12×36 image into [leftHalf, rightHalf] blobs.
@@ -55,14 +57,12 @@ export default function Viewer() {
   const [loadedFrontCover, setLoadedFrontCover] = useState<string>('');
   const [loadedBackCover, setLoadedBackCover] = useState<string>('');
   const [loading, setLoading] = useState(true);
-  const [loadStatus, setLoadStatus] = useState('Connecting to server…');
+  const [loadStatus, setLoadStatus] = useState('Establishing connection…');
   const [copied, setCopied] = useState(false);
 
-  // Track split blob URLs so we can revoke them on unmount (memory cleanup)
   const splitUrlsRef = useRef<string[]>([]);
 
   useEffect(() => {
-    // Revoke all split blob URLs when viewer unmounts
     return () => {
       splitUrlsRef.current.forEach((u) => URL.revokeObjectURL(u));
     };
@@ -73,29 +73,27 @@ export default function Viewer() {
       if (!id) return;
 
       try {
-        setLoadStatus('Fetching album data…');
+        setLoadStatus('Decrypting project metadata…');
         const response = await fetch(`/api/albums/${id}`);
         if (!response.ok) throw new Error('Album not found on server');
         const albumData = await response.json();
         setAlbum(albumData);
 
-        // Find covers and sheets from the files array
         const frontFile = albumData.files.find((f: any) => f.fileType === 'cover_front');
         const backFile = albumData.files.find((f: any) => f.fileType === 'cover_back');
         const sheetFiles = albumData.files
           .filter((f: any) => f.fileType === 'sheet')
           .sort((a: any, b: any) => a.orderIndex - b.orderIndex);
 
-        const getUrl = (path: string) => path.startsWith('/') ? path : `/${path}`;
+        const getUrl = (path: string) => (path.startsWith('/') || path.startsWith('http')) ? path : `/${path}`;
 
         setLoadedFrontCover(getUrl(frontFile?.filePath || ''));
         setLoadedBackCover(getUrl(backFile?.filePath || ''));
 
-        // --- Load and split panoramic sheets ---
-        setLoadStatus(`Splitting ${sheetFiles.length} panoramic sheets…`);
+        setLoadStatus(`Processing ${sheetFiles.length} cinematic spreads…`);
         const halves: string[] = [];
         for (let i = 0; i < sheetFiles.length; i++) {
-          setLoadStatus(`Processing sheet ${i + 1} of ${sheetFiles.length}…`);
+          setLoadStatus(`Rendering spread ${i + 1}/${sheetFiles.length}…`);
           const url = getUrl(sheetFiles[i].filePath);
           const [left, right] = await splitPanoramicSheet(url);
           halves.push(left, right);
@@ -105,7 +103,7 @@ export default function Viewer() {
         setLoadedSheets(halves);
       } catch (e) {
         console.error('Failed to load album', e);
-        setLoadStatus('Error: Could not load album. It may have been deleted.');
+        setLoadStatus('Terminal Error: Project unavailable or deleted.');
       } finally {
         setLoading(false);
       }
@@ -113,6 +111,9 @@ export default function Viewer() {
 
     fetchAndLoad();
   }, [id]);
+
+  const [shareModalOpen, setShareModalOpen] = useState(false);
+  const shareUrl = `${window.location.origin}/album/${id}?shared=true`;
 
   const handleShare = async () => {
     const url = `${window.location.origin}/album/${id}?shared=true`;
@@ -124,15 +125,15 @@ export default function Viewer() {
         setCopied(true);
         setTimeout(() => setCopied(false), 2000);
       }
-    } catch (e) { /* user cancelled */ }
+    } catch (e) { }
   };
 
   if (!album) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-[#FDFBF7]">
-        <div className="text-center">
-          <h2 className="text-2xl font-display mb-4">Album not found</h2>
-          <Link href="/dashboard"><Button>Return Home</Button></Link>
+      <div className="min-h-screen flex items-center justify-center bg-background">
+        <div className="text-center glass p-12 rounded-[2rem] border-white/5">
+          <h2 className="text-2xl font-bold mb-6">Project Missing</h2>
+          <Link href="/dashboard"><Button className="rounded-xl">Return to Terminal</Button></Link>
         </div>
       </div>
     );
@@ -140,65 +141,104 @@ export default function Viewer() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-neutral-900 text-white">
-        <div className="text-center">
-          <Loader2 className="w-8 h-8 animate-spin mx-auto mb-4 text-primary" />
-          <p className="font-display text-lg mb-2">Preparing Your Album</p>
-          <p className="text-white/50 text-sm">{loadStatus}</p>
+      <div className="min-h-screen flex items-center justify-center bg-background text-white overflow-hidden">
+        <div className="fixed inset-0 bg-primary/5 blur-[120px] rounded-full -z-10 animate-pulse" />
+        <div className="text-center relative">
+          <div className="w-20 h-20 mb-8 mx-auto relative">
+            <Loader2 className="w-20 h-20 animate-spin text-primary opacity-20" />
+            <div className="absolute inset-0 flex items-center justify-center">
+              <div className="w-3 h-3 bg-primary rounded-full animate-ping" />
+            </div>
+          </div>
+          <p className="font-display font-bold text-2xl mb-3 tracking-tight">Initializing Cinematic Feed</p>
+          <p className="text-white/40 text-sm font-mono uppercase tracking-[0.2em]">{loadStatus}</p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-neutral-900 flex flex-col relative overflow-hidden">
-      {/* Background Pattern */}
-      <div className="absolute inset-0 opacity-20 bg-[url('https://www.transparenttextures.com/patterns/dark-matter.png')] pointer-events-none" />
+    <div className="min-h-screen bg-background flex flex-col relative overflow-hidden selection:bg-primary/30">
+      {/* Background Orbs */}
+      <div className="fixed top-0 left-0 w-[600px] h-[600px] bg-primary/5 rounded-full blur-[140px] pointer-events-none" />
+      <div className="fixed bottom-0 right-0 w-[600px] h-[600px] bg-indigo-500/5 rounded-full blur-[140px] pointer-events-none" />
 
-      {/* Header - Only shown for Admins (not shared) */}
+      {/* Header - Glassmorphism */}
       {!isShared && (
-        <header className="px-6 py-4 flex items-center justify-between bg-white/5 backdrop-blur-md border-b border-white/10 sticky top-0 z-50">
-          <div className="flex items-center gap-4">
+        <header className="px-8 h-20 flex items-center justify-between glass border-none border-b border-white/5 sticky top-0 z-50">
+          <div className="flex items-center gap-6">
             <Link href="/dashboard">
-              <Button variant="ghost" className="rounded-full text-white hover:bg-white/10 hover:text-primary flex gap-2 items-center pl-2 pr-4">
+              <Button variant="ghost" className="rounded-xl transition-all hover:bg-white/5 pl-3 pr-5 gap-3">
                 <ArrowLeft className="w-5 h-5" />
-                <span className="hidden sm:inline">Back to Menu</span>
+                <span className="hidden sm:inline font-bold">Close Project</span>
               </Button>
             </Link>
-            <div className="h-6 w-px bg-white/20 mx-2 hidden sm:block" />
-            <h1 className="font-display font-bold text-lg text-white tracking-widest">{album.title}</h1>
+            <div className="h-4 w-px bg-white/10 hidden sm:block" />
+            <h1 className="font-display font-bold text-lg text-white/90 tracking-tight truncate max-w-[200px] md:max-w-md">{album.title}</h1>
           </div>
 
-          <div className="flex gap-3">
-            <Button
-              variant="outline"
-              size="sm"
-              className="rounded-full border-primary/50 text-primary hover:bg-primary hover:text-white bg-transparent transition-all"
-              onClick={handleShare}
-            >
-              {copied
-                ? <><Check className="w-4 h-4 mr-2" /> Copied!</>
-                : <><Share2 className="w-4 h-4 mr-2" /> Share</>}
-            </Button>
+          <div className="flex gap-4">
+            <Dialog open={shareModalOpen} onOpenChange={setShareModalOpen}>
+              <DialogTrigger asChild>
+                <Button
+                  variant="outline"
+                  className="rounded-xl border-white/10 glass transition-all duration-500 font-bold px-6"
+                >
+                  <Share2 className="w-4 h-4 mr-2" /> Share Feed
+                </Button>
+              </DialogTrigger>
+              <DialogContent className="glass-dark border-white/5 rounded-[2.5rem] sm:max-w-md p-8 overflow-hidden">
+                <div className="absolute inset-0 bg-primary/5 blur-[80px] -z-10" />
+                <DialogHeader>
+                  <DialogTitle className="font-display text-2xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-white to-white/60 mb-2">Cinematic Sharing</DialogTitle>
+                  <DialogDescription className="text-white/40 font-mono text-xs uppercase tracking-[0.2em] mb-6">
+                    Scan to view on any mobile device
+                  </DialogDescription>
+                </DialogHeader>
+                <div className="flex flex-col items-center gap-8 py-4">
+                  <div className="p-6 bg-white rounded-[2rem] shadow-[0_0_50px_rgba(139,92,246,0.3)] relative group transition-transform hover:scale-105 duration-500">
+                    <QRCodeSVG
+                      value={shareUrl}
+                      size={200}
+                      level="H"
+                      includeMargin={false}
+                    />
+                  </div>
+
+                  <div className="w-full space-y-4">
+                    <p className="text-center text-white/60 text-sm px-4">
+                      Share this unique QR code with your clients. They can experience the full cinematic flipbook directly on their smartphones.
+                    </p>
+
+                    <Button
+                      onClick={handleShare}
+                      className="w-full h-14 rounded-2xl bg-primary hover:bg-primary/90 transition-all font-bold gap-3 text-lg"
+                    >
+                      {copied ? <><Check className="w-5 h-5" /> Copied Secure Link</> : <><Share2 className="w-5 h-5" /> Copy Shareable Link</>}
+                    </Button>
+                  </div>
+                </div>
+              </DialogContent>
+            </Dialog>
           </div>
         </header>
       )}
 
-      {/* Floating Album Title for Customers (Shared View) */}
+      {/* Customer Title */}
       {isShared && (
-        <div className="absolute top-6 left-0 right-0 z-50 flex justify-center pointer-events-none">
+        <div className="absolute top-8 left-0 right-0 z-50 flex justify-center pointer-events-none">
           <motion.div
-            initial={{ opacity: 0, y: -20 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="bg-black/40 backdrop-blur-xl px-6 py-2 rounded-full border border-white/10"
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className="glass-dark px-8 py-3 rounded-2xl border-white/5 flex items-center gap-4"
           >
-            <h1 className="font-display font-bold text-sm text-white/90 tracking-[0.3em] uppercase">{album.title}</h1>
+            <div className="w-2 h-2 rounded-full bg-primary animate-pulse" />
+            <h1 className="font-display font-bold text-xs text-white/90 tracking-[0.4em] uppercase">{album.title}</h1>
           </motion.div>
         </div>
       )}
 
-      {/* Flipbook Viewer — sheets[] are already split 12×18 halves */}
-      <main className="flex-1 flex flex-col items-center justify-center overflow-hidden">
+      <main className="flex-1 flex flex-col items-center justify-center relative">
         <Flipbook
           sheets={loadedSheets}
           frontCover={loadedFrontCover}

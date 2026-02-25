@@ -4,87 +4,117 @@
 @custom-variant dark (&:is(.dark *));
 
 @theme inline {
-  --font-display: "Cinzel", serif;
-  --font-script: "Great Vibes", cursive;
-  --font-sans: "Lato", sans-serif;
+  --font-display: "Outfit", sans-serif;
+  --font-sans: "Inter", sans-serif;
+  --font-mono: "JetBrains Mono", monospace;
 
-  --radius-sm: 0.25rem;
-  --radius-md: 0.5rem;
-  --radius-lg: 0.75rem;
-  --radius-xl: 1rem;
+  --radius-sm: 0.5rem;
+  --radius-md: 0.75rem;
+  --radius-lg: 1rem;
+  --radius-xl: 1.5rem;
+  --radius-2xl: 2rem;
 
-  /* Royal Indian Wedding Theme - H S% L% */
-  
-  /* Backgrounds: Warm Creams and Rich Reds */
-  --color-background: 36 30% 96%; /* Warm Cream */
-  --color-foreground: 355 65% 25%; /* Deep Maroon Text */
+  /* Modern Dark Slate Theme */
+  --color-background: #020609;
+  --color-foreground: #f8fafc;
 
-  --color-card: 0 0% 100%;
-  --color-card-foreground: 355 65% 25%;
+  --color-card: #030711;
+  --color-card-foreground: #f8fafc;
 
-  --color-popover: 0 0% 100%;
-  --color-popover-foreground: 355 65% 25%;
+  --color-popover: #020609;
+  --color-popover-foreground: #f8fafc;
 
-  /* Primary: Royal Gold */
-  --color-primary: 45 90% 50%; /* Gold */
-  --color-primary-foreground: 355 65% 25%; /* Maroon on Gold */
+  /* Primary: Electric Indigo */
+  --color-primary: #8b5cf6;
+  --color-primary-foreground: #f8fafc;
 
-  /* Secondary: Deep Maroon */
-  --color-secondary: 355 70% 35%; /* Rich Maroon */
-  --color-secondary-foreground: 45 90% 85%; /* Pale Gold on Maroon */
+  /* Secondary: Slate */
+  --color-secondary: #334155;
+  --color-secondary-foreground: #f8fafc;
 
-  --color-muted: 36 20% 90%;
-  --color-muted-foreground: 355 40% 40%;
+  --color-muted: #1e293b;
+  --color-muted-foreground: #94a3b8;
 
-  --color-accent: 45 60% 90%; /* Pale Gold */
-  --color-accent-foreground: 355 70% 30%;
+  --color-accent: rgba(139, 92, 246, 0.1);
+  --color-accent-foreground: #a78bfa;
 
-  --color-destructive: 0 60% 50%;
-  --color-destructive-foreground: 0 0% 98%;
+  --color-destructive: #ef4444;
+  --color-destructive-foreground: #f8fafc;
 
-  --color-border: 45 50% 80%; /* Gold Border */
-  --color-input: 36 20% 90%;
-  --color-ring: 45 90% 50%;
+  --color-border: #1e293b;
+  --color-input: #0f172a;
+  --color-ring: #8b5cf6;
 
-  --color-sidebar: 355 70% 98%;
-  --color-sidebar-foreground: 355 65% 25%;
-  --color-sidebar-primary: 355 70% 35%;
-  --color-sidebar-primary-foreground: 45 90% 85%;
-  --color-sidebar-accent: 45 60% 90%;
-  --color-sidebar-accent-foreground: 355 70% 30%;
-  --color-sidebar-border: 45 50% 80%;
-  --color-sidebar-ring: 45 90% 50%;
+  --color-sidebar: #020609;
+  --color-sidebar-foreground: #94a3b8;
+  --color-sidebar-primary: #8b5cf6;
+  --color-sidebar-primary-foreground: #ffffff;
+  --color-sidebar-accent: #1e293b;
+  --color-sidebar-accent-foreground: #94a3b8;
+  --color-sidebar-border: #0f172a;
+  --color-sidebar-ring: #8b5cf6;
 }
 
 @layer base {
   * {
-    @apply border-border;
+    @apply border-border outline-ring/50;
   }
+
   body {
-    @apply font-sans antialiased bg-background text-foreground;
-    background-image: radial-gradient(circle at center, transparent 0%, rgba(217, 4, 41, 0.03) 100%);
+    @apply font-sans antialiased;
+    background-color: var(--color-background, #020609);
+    color: var(--color-foreground, #f8fafc);
+    background-image:
+      radial-gradient(circle at 10% 20%, rgba(99, 102, 241, 0.05) 0%, transparent 40%),
+      radial-gradient(circle at 90% 80%, rgba(139, 92, 246, 0.05) 0%, transparent 40%);
   }
-  h1, h2, h3, h4, h5, h6 {
-    @apply font-display font-bold tracking-wide;
+
+  ::selection {
+    background-color: rgba(139, 92, 246, 0.3);
+    color: #ffffff;
+  }
+
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
+    @apply font-display font-semibold tracking-tight;
   }
 }
 
-/* Custom Flipbook Styles */
-.perspective-1000 {
-  perspective: 1000px;
+@layer utilities {
+  .glass {
+    @apply bg-white/5 backdrop-blur-xl border border-white/10;
+  }
+
+  .glass-dark {
+    @apply bg-black/40 backdrop-blur-2xl border border-white/5;
+  }
+
+  .text-glow {
+    text-shadow: 0 0 20px rgba(167, 139, 250, 0.3);
+  }
+
+  .glow-primary {
+    box-shadow: 0 0 40px -10px rgba(139, 92, 246, 0.5);
+  }
+
+  .perspective-2000 {
+    perspective: 2000px;
+  }
 }
 
-.transform-style-3d {
-  transform-style: preserve-3d;
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+  width: 10px;
 }
 
-.backface-hidden {
-  backface-visibility: hidden;
+::-webkit-scrollbar-track {
+  @apply bg-background;
 }
 
-.ornate-border {
-  border: 2px solid hsl(45 90% 50%);
-  box-shadow: 
-    0 0 0 4px hsl(36 30% 96%),
-    0 0 0 6px hsl(45 90% 50%);
+::-webkit-scrollbar-thumb {
+  @apply bg-muted-foreground/10 rounded-full border-4 border-solid border-background hover:bg-muted-foreground/20 transition-colors;
 }

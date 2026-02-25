@@ -1,10 +1,10 @@
 import { Link } from 'wouter';
-import { useAlbumStore, ImageStorage } from '@/lib/store';
 import { Card, CardContent, CardFooter } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Plus, QrCode, Eye, Trash2 } from 'lucide-react';
+import { Plus, QrCode, Eye, Trash2, LayoutGrid, Calendar, LogOut } from 'lucide-react';
 import { QRCodeSVG } from 'qrcode.react';
 import { useState, useEffect } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 import {
   Dialog,
   DialogContent,
@@ -47,130 +47,151 @@ export default function Dashboard() {
     }
   };
 
-  // Component to load cover image async
-  const AlbumCard = ({ album }: { album: any }) => {
+  const AlbumCard = ({ album, index }: { album: any, index: number }) => {
     const frontCover = album.files?.find((f: any) => f.fileType === 'cover_front')?.filePath;
-    const coverUrl = frontCover ? (frontCover.startsWith('/') ? frontCover : `/${frontCover}`) : '';
+    const coverUrl = frontCover ? ((frontCover.startsWith('/') || frontCover.startsWith('http')) ? frontCover : `/${frontCover}`) : '';
 
     return (
-      <div className="group relative">
-        <Card className="overflow-hidden border-none shadow-md hover:shadow-xl transition-all duration-300 bg-white">
-          <div className="relative aspect-[3/4] overflow-hidden bg-neutral-100">
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: index * 0.1 }}
+        className="group relative"
+      >
+        <Card className="overflow-hidden border-white/5 bg-white/5 backdrop-blur-md hover:bg-white/10 transition-all duration-500 shadow-2xl rounded-3xl group">
+          <div className="relative aspect-[4/5] overflow-hidden">
             {coverUrl ? (
               <img
                 src={coverUrl}
                 alt={album.title}
-                className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
+                className="w-full h-full object-cover grayscale-[0.2] group-hover:grayscale-0 transition-all duration-700 group-hover:scale-110"
               />
             ) : (
-              <div className="w-full h-full flex items-center justify-center bg-neutral-200 text-neutral-400">
-                No Cover
+              <div className="w-full h-full flex items-center justify-center bg-white/5 text-white/20">
+                <LayoutGrid className="w-12 h-12" />
               </div>
             )}
-            <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors duration-300 flex items-center justify-center opacity-0 group-hover:opacity-100">
-              <Link href={`/album/${album.id}`}>
-                <Button variant="secondary" className="rounded-full">
-                  <Eye className="w-4 h-4 mr-2" /> Open Album
-                </Button>
-              </Link>
+
+            {/* Overlay */}
+            <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent opacity-60 group-hover:opacity-80 transition-opacity" />
+
+            <div className="absolute inset-0 flex flex-col justify-end p-6 translate-y-4 group-hover:translate-y-0 transition-transform duration-500">
+              <div className="flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300 delay-100">
+                <Link href={`/album/${album.id}`} className="flex-1">
+                  <Button className="w-full rounded-xl bg-white text-black hover:bg-white/90">
+                    <Eye className="w-4 h-4 mr-2" /> Open
+                  </Button>
+                </Link>
+                <Dialog>
+                  <DialogTrigger asChild>
+                    <Button variant="secondary" size="icon" className="rounded-xl glass border-none">
+                      <QrCode className="w-4 h-4" />
+                    </Button>
+                  </DialogTrigger>
+                  <DialogContent className="sm:max-w-md bg-[#0a0a0b] border-white/10 text-white rounded-3xl">
+                    <DialogHeader>
+                      <DialogTitle className="font-display text-center text-3xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-primary to-indigo-400">Share Memories</DialogTitle>
+                    </DialogHeader>
+                    <div className="flex flex-col items-center justify-center p-8 space-y-6">
+                      <div className="p-6 bg-white rounded-[2rem] shadow-2xl shadow-primary/20">
+                        <QRCodeSVG
+                          value={`${origin}/album/${album.id}?shared=true`}
+                          size={240}
+                          level="H"
+                          fgColor="#000000"
+                        />
+                      </div>
+                      <div className="text-center space-y-2">
+                        <p className="text-lg font-bold">{album.title}</p>
+                        <p className="text-sm text-white/40 max-w-[240px]">
+                          Scan this code to view the cinematic flipbook on any mobile device.
+                        </p>
+                      </div>
+                    </div>
+                  </DialogContent>
+                </Dialog>
+              </div>
             </div>
-            {/* Gold Border Inset */}
-            <div className="absolute inset-2 border border-white/30 pointer-events-none" />
           </div>
-          <CardContent className="pt-6">
-            <h3 className="font-display text-xl font-bold mb-1 text-neutral-800">{album.title}</h3>
-            <p className="text-sm text-primary font-medium">{new Date(album.date).toLocaleDateString()}</p>
+
+          <CardContent className="pt-6 relative">
+            <h3 className="text-xl font-bold mb-2 group-hover:text-primary transition-colors truncate">{album.title}</h3>
+            <div className="flex items-center text-xs text-white/40 uppercase tracking-widest font-medium">
+              <Calendar className="w-3 h-3 mr-2" />
+              {new Date(album.date).toLocaleDateString(undefined, { month: 'long', year: 'numeric' })}
+            </div>
           </CardContent>
-          <CardFooter className="flex justify-between border-t border-neutral-50 pt-4 pb-4">
-            <Dialog>
-              <DialogTrigger asChild>
-                <Button variant="ghost" size="sm" className="text-neutral-500 hover:text-primary">
-                  <QrCode className="w-4 h-4 mr-2" /> Share QR
-                </Button>
-              </DialogTrigger>
-              <DialogContent className="sm:max-w-md">
-                <DialogHeader>
-                  <DialogTitle className="font-display text-center text-2xl text-primary">Album Invitation</DialogTitle>
-                </DialogHeader>
-                <div className="flex flex-col items-center justify-center p-6 space-y-4">
-                  <div className="p-4 bg-white rounded-xl shadow-inner border-4 border-double border-primary/20">
-                    <QRCodeSVG
-                      value={`${origin}/album/${album.id}?shared=true`}
-                      size={200}
-                      level="H"
-                      fgColor="#8B0000"
-                      imageSettings={{
-                        src: "/favicon.png",
-                        x: undefined,
-                        y: undefined,
-                        height: 24,
-                        width: 24,
-                        excavate: true,
-                      }}
-                    />
-                  </div>
-                  <p className="text-center text-sm text-neutral-500 max-w-[80%]">
-                    Scan to view <strong>{album.title}</strong> on any device.
-                  </p>
-                </div>
-              </DialogContent>
-            </Dialog>
+
+          <CardFooter className="pt-0 pb-6">
             <Button
               variant="ghost"
               size="sm"
-              className="text-neutral-400 hover:text-destructive"
+              className="ml-auto text-white/20 hover:text-destructive hover:bg-destructive/10 rounded-lg"
               onClick={() => handleDelete(album.id, album.title)}
             >
               <Trash2 className="w-4 h-4" />
             </Button>
           </CardFooter>
         </Card>
-
-        {/* Decorative stack effect */}
-        <div className="absolute -z-10 top-2 left-2 right-[-4px] bottom-[-4px] bg-[#E6D5AC] rounded-lg border border-[#D4C49A]" />
-      </div>
+      </motion.div>
     );
   };
 
-  if (loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-[#FDFBF7]">
-        <p className="text-neutral-400 animate-pulse">Loading albums from server...</p>
-      </div>
-    );
-  }
-
   return (
-    <div className="min-h-screen bg-[#FDFBF7] p-8">
-      <div className="max-w-7xl mx-auto">
-        <div className="flex items-center justify-between mb-12">
-          <div>
-            <h1 className="text-4xl font-display font-bold mb-2 text-neutral-800">Album Management</h1>
-            <p className="text-neutral-500">Manage your wedding collection live on server.</p>
-          </div>
+    <div className="min-h-screen bg-background text-foreground pb-20">
+      {/* Decorative Orbs */}
+      <div className="fixed top-0 right-0 w-[500px] h-[500px] bg-primary/5 rounded-full blur-[120px] pointer-events-none" />
+
+      {/* Navbar Overlay */}
+      <nav className="sticky top-0 z-50 w-full border-b border-white/5 bg-background/80 backdrop-blur-xl">
+        <div className="max-w-7xl mx-auto px-8 h-20 flex items-center justify-between">
+          <Link href="/" className="flex items-center gap-2 group">
+            <div className="w-8 h-8 rounded-lg bg-primary flex items-center justify-center group-hover:rotate-12 transition-transform">
+              <LogOut className="w-4 h-4 text-white rotate-180" />
+            </div>
+            <span className="font-display font-bold text-xl tracking-tight">Gallery</span>
+          </Link>
           <Link href="/create">
-            <Button size="lg" className="rounded-full shadow-lg hover:shadow-xl transition-all bg-primary text-primary-foreground hover:bg-primary/90">
-              <Plus className="w-4 h-4 mr-2" /> Create Album
+            <Button className="rounded-xl px-6 bg-primary hover:bg-primary/90 text-white shadow-lg shadow-primary/20">
+              <Plus className="w-4 h-4 mr-2" /> New Album
             </Button>
           </Link>
         </div>
+      </nav>
 
-        {albums.length === 0 ? (
-          <div className="text-center py-20 bg-white rounded-2xl border border-dashed border-neutral-200">
-            <h3 className="text-xl font-display mb-4">No albums yet</h3>
-            <p className="text-neutral-500 mb-8">Create your first digital flipbook to get started.</p>
+      <main className="max-w-7xl mx-auto px-8 pt-12">
+        <div className="mb-12">
+          <h1 className="text-4xl font-bold mb-2">My Collections</h1>
+          <p className="text-white/40">Manage and share your digital storytelling projects.</p>
+        </div>
+
+        {loading ? (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+            {[1, 2, 3].map(i => (
+              <div key={i} className="aspect-[4/6] rounded-3xl bg-white/5 animate-pulse" />
+            ))}
+          </div>
+        ) : albums.length === 0 ? (
+          <div className="flex flex-col items-center justify-center py-32 glass rounded-[3rem] border-dashed border-white/10">
+            <div className="w-20 h-20 rounded-full bg-white/5 flex items-center justify-center mb-6">
+              <LayoutGrid className="w-10 h-10 text-white/20" />
+            </div>
+            <h3 className="text-2xl font-bold mb-2">Workspace Empty</h3>
+            <p className="text-white/40 mb-8 max-w-sm text-center">Your digital shelf is waiting for its first masterpiece. Start your journey now.</p>
             <Link href="/create">
-              <Button>Create Album</Button>
+              <Button size="lg" className="rounded-2xl px-10">Create First Album</Button>
             </Link>
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {albums.map((album) => (
-              <AlbumCard key={album.id} album={album} />
-            ))}
+            <AnimatePresence>
+              {albums.map((album, i) => (
+                <AlbumCard key={album.id} album={album} index={i} />
+              ))}
+            </AnimatePresence>
           </div>
         )}
-      </div>
+      </main>
     </div>
   );
 }
