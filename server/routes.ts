@@ -51,6 +51,16 @@ export function registerRoutes(
   httpServer: Server,
   app: Express
 ) {
+  // Health check for cloud debugging
+  app.get("/api/health", async (_req, res) => {
+    try {
+      await storage.getAlbums();
+      res.json({ status: "ok", database: "connected", env: process.env.NODE_ENV });
+    } catch (e) {
+      res.status(500).json({ status: "error", database: "disconnected", error: String(e) });
+    }
+  });
+
   // Create album (Metadata only)
   app.post("/api/albums", async (req, res) => {
     try {

@@ -70,7 +70,7 @@ app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
   throw err;
 });
 
-if (process.env.NODE_ENV === "production") {
+if (process.env.NODE_ENV === "production" || process.env.VERCEL) {
   serveStatic(app);
 } else {
   // Logic for development/Vite remains in an IIFE to allow async imports
