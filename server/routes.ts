@@ -47,10 +47,10 @@ const streamUpload = (buffer: Buffer) => {
   });
 };
 
-export async function registerRoutes(
+export function registerRoutes(
   httpServer: Server,
   app: Express
-): Promise<Server> {
+) {
   // Create album (Metadata only)
   app.post("/api/albums", async (req, res) => {
     try {
@@ -197,5 +197,4 @@ export async function registerRoutes(
     res.sendFile(filePath);
   });
 
-  return httpServer;
 }
