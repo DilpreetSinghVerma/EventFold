@@ -121,7 +121,12 @@ export default function CreateAlbum() {
       console.error('Submission Error:', error);
       setLoading(false);
       setStatus('');
-      alert(`Critical Failure: ${error.message}. Please check your connection and ensuring API keys are configured.`);
+
+      const serverMessage = error.message.includes('Refused') || error.message.includes('failed')
+        ? error.message
+        : `Diagnostic: ${error.message}`;
+
+      alert(`Project Initialization Failure: ${serverMessage}. \n\nCheck your Vercel logs or ensure your Database URL in Vercel settings is correctly configured without extra parameters.`);
     }
   };
 
