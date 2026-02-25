@@ -7,9 +7,14 @@ import fs from "fs";
 import { insertAlbumSchema, insertFileSchema } from "@shared/schema";
 import { ZodError } from "zod";
 
-const uploadDir = path.join(process.cwd(), "uploads");
+// Use /tmp for uploads on Vercel, as the rest of the filesystem is read-only
+const uploadDir = path.join(process.platform === 'win32' ? process.cwd() : '/tmp', "uploads");
 if (!fs.existsSync(uploadDir)) {
-  fs.mkdirSync(uploadDir, { recursive: true });
+  try {
+    fs.mkdirSync(uploadDir, { recursive: true });
+  } catch (e) {
+    console.error("Warning: Could not create upload directory:", e);
+  }
 }
 
 import { v2 as cloudinary } from "cloudinary";
@@ -114,7 +119,6 @@ export async function registerRoutes(
       }
 
       const useCloudinary = !!(process.env.CLOUDINARY_CLOUD_NAME && process.env.CLOUDINARY_API_KEY && process.env.CLOUDINARY_API_SECRET);
-      const sharp = (await import('sharp')).default;
       const startTime = Date.now();
 
       // Parallel processing with Concurrency Control (Batches of 5)
@@ -131,15 +135,16 @@ export async function registerRoutes(
             const fileType = req.body[`fileType_${globalIndex}`] || "sheet";
             let bufferToUpload = file.buffer;
 
-            // Optional Compression
+            // Optional Compression (Lazy-loaded to prevent Vercel startup crashes)
             if (file.size > 5 * 1024 * 1024) {
               try {
+                const sharp = (await import('sharp')).default;
                 bufferToUpload = await sharp(file.buffer)
                   .resize(4000, 4000, { fit: 'inside', withoutEnlargement: true })
                   .jpeg({ quality: 80, progressive: true })
                   .toBuffer();
               } catch (sharpError) {
-                console.error(`Sharp error for file ${globalIndex}:`, sharpError);
+                console.error(`Sharp compression failed for file ${globalIndex}:`, sharpError);
               }
             }
 
