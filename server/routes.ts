@@ -59,8 +59,8 @@ export async function registerRoutes(
       }
       console.error("Server error creating album:", e);
       res.status(500).json({
-        error: "Failed to create album",
-        message: e instanceof Error ? e.message : "Unknown error occurred"
+        message: e instanceof Error ? e.message : "Internal server failure during album creation",
+        originalError: String(e)
       });
     }
   });

@@ -124,11 +124,8 @@ export default function CreateAlbum() {
       setLoading(false);
       setStatus('');
 
-      const serverMessage = error.message.includes('Refused') || error.message.includes('failed')
-        ? error.message
-        : `Diagnostic: ${error.message}`;
-
-      alert(`Project Initialization Failure: ${serverMessage}. \n\nCheck your Vercel logs or ensure your Database URL in Vercel settings is correctly configured without extra parameters.`);
+      const serverMessage = error.message || 'Unknown Server Error';
+      alert(`[SERVER ERROR] ${serverMessage}\n\nTechnical Tip: This usually means the database connection failed or the Cloudinary keys have expired. Please verify your Vercel Environment Variables.`);
     }
   };
 
