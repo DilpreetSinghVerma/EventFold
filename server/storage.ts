@@ -16,6 +16,7 @@ export interface IStorage {
 
 export class DatabaseStorage implements IStorage {
   async createAlbum(insertAlbum: InsertAlbum): Promise<Album> {
+    if (!db) throw new Error("Database connection not established. Check your DATABASE_URL.");
     const [album] = await db.insert(albums).values(insertAlbum).returning();
     return album;
   }

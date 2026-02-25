@@ -84,10 +84,15 @@ export default function CreateAlbum() {
       });
 
       if (!albumResponse.ok) {
-        const errorData = await albumResponse.json().catch(() => ({}));
-        // Prioritize the server's detailed error message
-        const serverErrorMessage = errorData.message || errorData.error || 'Unspecified Server Error';
-        throw new Error(serverErrorMessage);
+        const text = await albumResponse.text();
+        let errorMessage = 'Unspecified Server Error';
+        try {
+          const errorData = JSON.parse(text);
+          errorMessage = errorData.message || errorData.originalError || errorData.error || errorMessage;
+        } catch (e) {
+          errorMessage = `HTTP ${albumResponse.status}: ${text.slice(0, 100)}...`;
+        }
+        throw new Error(errorMessage);
       }
       const album = await albumResponse.json();
 
