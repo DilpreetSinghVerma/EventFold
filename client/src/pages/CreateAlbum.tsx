@@ -70,9 +70,10 @@ export default function CreateAlbum() {
     if (!formData.frontCover || !formData.backCover || formData.sheets.length === 0) return;
 
     setLoading(true);
-    setStatus('Initializing secure workspace...');
+    setStatus('Initializing project workspace...');
 
     try {
+      // 1. Create the Album metadata in our database
       const albumResponse = await fetch('/api/albums', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -83,54 +84,80 @@ export default function CreateAlbum() {
         }),
       });
 
-      if (!albumResponse.ok) {
-        const text = await albumResponse.text();
-        let errorMessage = 'Unspecified Server Error';
-        try {
-          const errorData = JSON.parse(text);
-          errorMessage = errorData.message || errorData.originalError || errorData.error || errorMessage;
-        } catch (e) {
-          errorMessage = `HTTP ${albumResponse.status}: ${text.slice(0, 100)}...`;
-        }
-        throw new Error(errorMessage);
-      }
+      if (!albumResponse.ok) throw new Error('Could not create album record');
       const album = await albumResponse.json();
 
-      setStatus('Syncing assets to high-speed cloud storage...');
-      const uploadFormData = new FormData();
+      // 2. Get Secure Signature from our server for Cloudinary
+      setStatus('Securing cloud connection...');
+      const sigResponse = await fetch('/api/cloudinary-signature');
+      if (!sigResponse.ok) throw new Error('Cloudinary security handshake failed');
+      const { signature, timestamp, cloud_name, api_key, folder } = await sigResponse.json();
 
-      uploadFormData.append('files', formData.frontCover);
-      uploadFormData.append('fileType_0', 'cover_front');
+      // Helper to upload a single file to Cloudinary
+      const uploadToCloudinary = async (file: File) => {
+        const cloudFormData = new FormData();
+        cloudFormData.append('file', file);
+        cloudFormData.append('signature', signature);
+        cloudFormData.append('timestamp', timestamp);
+        cloudFormData.append('api_key', api_key);
+        cloudFormData.append('folder', folder);
 
-      uploadFormData.append('files', formData.backCover);
-      uploadFormData.append('fileType_1', 'cover_back');
+        const res = await fetch(`https://api.cloudinary.com/v1_1/${cloud_name}/image/upload`, {
+          method: 'POST',
+          body: cloudFormData,
+        });
 
-      formData.sheets.forEach((sheet, index) => {
-        uploadFormData.append('files', sheet);
-        uploadFormData.append(`fileType_${index + 2}`, 'sheet');
-      });
+        if (!res.ok) throw new Error(`Cloudinary upload failed: ${res.statusText}`);
+        const data = await res.json();
+        return data.secure_url;
+      };
 
-      const uploadResponse = await fetch(`/api/albums/${album.id}/files`, {
-        method: 'POST',
-        body: uploadFormData,
-      });
+      // 3. Upload all files directly from Browser to Cloudinary (Parallel)
+      setStatus('Streaming assets to cloud storage...');
 
-      if (!uploadResponse.ok) {
-        const errorData = await uploadResponse.json().catch(() => ({}));
-        throw new Error(errorData.error || 'Asset synchronization failed');
+      const filesToUpload = [
+        { file: formData.frontCover, type: 'cover_front', order: 0 },
+        { file: formData.backCover, type: 'cover_back', order: 1 },
+        ...formData.sheets.map((s, i) => ({ file: s, type: 'sheet', order: i + 2 }))
+      ];
+
+      const uploadedFiles = [];
+      const total = filesToUpload.length;
+
+      for (let i = 0; i < filesToUpload.length; i++) {
+        const item = filesToUpload[i];
+        setStatus(`Syncing asset ${i + 1} of ${total}...`);
+        const url = await uploadToCloudinary(item.file);
+        uploadedFiles.push({
+          filePath: url,
+          fileType: item.type,
+          orderIndex: item.order
+        });
       }
 
-      setStatus('Finalizing generation...');
+      // 4. Send the URLs to our server to link them to the album
+      setStatus('Finalizing architecture...');
+      const batchResponse = await fetch(`/api/albums/${album.id}/files`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ files: uploadedFiles }),
+      });
+
+      if (!batchResponse.ok) throw new Error('Metadata synchronization failed');
+
+      setStatus('Deployment successful!');
       addAlbum(album);
-      setLoading(false);
-      setLocation('/dashboard');
+
+      setTimeout(() => {
+        setLoading(false);
+        setLocation('/dashboard');
+      }, 1000);
+
     } catch (error: any) {
       console.error('Submission Error:', error);
       setLoading(false);
       setStatus('');
-
-      const serverMessage = error.message || 'Unknown Server Error';
-      alert(`[SERVER ERROR] ${serverMessage}\n\nTechnical Tip: This usually means the database connection failed or the Cloudinary keys have expired. Please verify your Vercel Environment Variables.`);
+      alert(`[BROWSER ERROR] ${error.message}\n\nTechnical Tip: Check your internet connection or ensure your Cloudinary account hasn't reached its storage limit.`);
     }
   };
 

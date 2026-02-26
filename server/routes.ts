@@ -51,6 +51,29 @@ export function registerRoutes(
   httpServer: Server,
   app: Express
 ) {
+  // Get Cloudinary signature for client-side upload
+  app.get("/api/cloudinary-signature", async (req, res) => {
+    try {
+      const timestamp = Math.round(new Date().getTime() / 1000);
+      const signature = cloudinary.utils.api_sign_request(
+        {
+          timestamp: timestamp,
+          folder: "flipbook_albums",
+        },
+        process.env.CLOUDINARY_API_SECRET!
+      );
+      res.json({
+        signature,
+        timestamp,
+        cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+        api_key: process.env.CLOUDINARY_API_KEY,
+        folder: "flipbook_albums"
+      });
+    } catch (e) {
+      res.status(500).json({ error: "Failed to generate Cloudinary signature" });
+    }
+  });
+
   // Health check for cloud debugging
   app.get("/api/health", async (_req, res) => {
     try {
@@ -124,12 +147,29 @@ export function registerRoutes(
     }
   });
 
-  // Upload files (Cloudinary or Local Fallback)
+  // Upload files (Supports both Direct Binary Upload & Meta-only Metadata)
   app.post("/api/albums/:albumId/files", upload.array("files", 100), async (req, res) => {
     try {
+      // HANDLE JSON BATCH UPLOAD (From Client-side direct Cloudinary uploads)
+      if (req.body && req.body.files && Array.isArray(req.body.files)) {
+        const results = await Promise.all(
+          req.body.files.map(async (f: any) => {
+            return await storage.createFile({
+              albumId: req.params.albumId,
+              filePath: f.filePath,
+              fileType: f.fileType || "sheet",
+              orderIndex: f.orderIndex ?? 0,
+            });
+          })
+        );
+        return res.json(results);
+      }
+
+      // FALLBACK TO MULTIPART UPLOAD (Old way, might time out on Vercel)
       const multerFiles = req.files as Express.Multer.File[];
+      // ... rest of logic for binary upload remains as fallback ...
       if (!multerFiles || multerFiles.length === 0) {
-        return res.status(400).json({ error: "No files provided" });
+        return res.status(400).json({ error: "No files provided. Send binary files or a JSON files array." });
       }
 
       const useCloudinary = !!(process.env.CLOUDINARY_CLOUD_NAME && process.env.CLOUDINARY_API_KEY && process.env.CLOUDINARY_API_SECRET);

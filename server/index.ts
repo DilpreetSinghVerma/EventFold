@@ -79,7 +79,7 @@ if (process.env.NODE_ENV === "production" || process.env.VERCEL) {
     await setupVite(httpServer, app);
 
     const port = parseInt(process.env.PORT || "3000", 10);
-    httpServer.listen(port, () => {
+    httpServer.listen(port, "0.0.0.0", () => {
       log(`serving on port ${port}`);
     });
   })().catch(err => {
@@ -90,7 +90,7 @@ if (process.env.NODE_ENV === "production" || process.env.VERCEL) {
 // In Vercel, we export the app without calling listen
 if (!process.env.VERCEL && process.env.NODE_ENV === "production") {
   const port = parseInt(process.env.PORT || "3000", 10);
-  httpServer.listen(port, () => {
+  httpServer.listen(port, "0.0.0.0", () => {
     log(`serving on port ${port}`);
   });
 }
