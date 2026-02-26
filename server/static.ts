@@ -3,8 +3,9 @@ import fs from "fs";
 import path from "path";
 import { fileURLToPath } from "url";
 
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
+// Workaround for Vercel/Node ESM vs CJS
+const getFilename = () => typeof __filename !== 'undefined' ? __filename : fileURLToPath(import.meta?.url || `file://${process.cwd()}/server/static.ts`);
+const getDirname = () => typeof __dirname !== 'undefined' ? __dirname : path.dirname(getFilename());
 
 export function serveStatic(app: Express) {
   // In Vercel, the dist output is usually at project root/dist/public
@@ -13,7 +14,7 @@ export function serveStatic(app: Express) {
 
   if (!fs.existsSync(distPath)) {
     // Try relative to this file (useful for different build structures)
-    distPath = path.resolve(__dirname, "..", "dist", "public");
+    distPath = path.resolve(getDirname(), "..", "dist", "public");
   }
 
   if (!fs.existsSync(distPath)) {

@@ -72,10 +72,14 @@ export function registerRoutes(
         console.error("Validation error creating album:", e.errors);
         return res.status(400).json({ error: "Invalid album data provided", details: e.errors });
       }
-      console.error("Server error creating album:", e);
+      console.error("Server error creating album details:", {
+        message: e instanceof Error ? e.message : "Unknown error",
+        stack: e instanceof Error ? e.stack : undefined,
+        raw: e
+      });
       res.status(500).json({
         message: e instanceof Error ? e.message : "Internal server failure during album creation",
-        details: typeof e === 'object' ? JSON.stringify(e) : String(e)
+        details: e instanceof Error ? e.stack : String(e)
       });
     }
   });
