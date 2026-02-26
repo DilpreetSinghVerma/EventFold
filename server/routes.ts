@@ -190,10 +190,15 @@ export function registerRoutes(
       console.log(`Sync complete: ${uploadResults.length} assets in ${totalDuration}s`);
       res.json(uploadResults);
     } catch (e) {
-      console.error("Upload error:", e);
+      console.error("Upload error details:", {
+        message: e instanceof Error ? e.message : "Unknown error",
+        stack: e instanceof Error ? e.stack : undefined,
+        raw: e
+      });
       res.status(500).json({
         error: "Upload failed",
-        message: e instanceof Error ? e.message : "Internal error"
+        message: e instanceof Error ? e.message : "Internal error",
+        details: e instanceof Error ? e.stack : String(e)
       });
     }
   });
