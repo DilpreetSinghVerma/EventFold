@@ -84,17 +84,23 @@ export default function CreateAlbum() {
         }),
       });
 
-      if (!albumResponse.ok) throw new Error('Could not create album record');
+      if (!albumResponse.ok) {
+        const errBody = await albumResponse.json().catch(() => ({}));
+        throw new Error(errBody.message || errBody.error || 'Could not create album record. Check DATABASE_URL on Vercel.');
+      }
       const album = await albumResponse.json();
 
       // 2. Get Secure Signature from our server for Cloudinary
       setStatus('Securing cloud connection...');
       const sigResponse = await fetch('/api/cloudinary-signature');
-      if (!sigResponse.ok) throw new Error('Cloudinary security handshake failed');
+      if (!sigResponse.ok) {
+        const errBody = await sigResponse.json().catch(() => ({}));
+        throw new Error(errBody.error || 'Cloudinary handshake failed. Ensure CLOUDINARY_CLOUD_NAME, CLOUDINARY_API_KEY, CLOUDINARY_API_SECRET are set on Vercel.');
+      }
       const { signature, timestamp, cloud_name, api_key, folder } = await sigResponse.json();
 
       // Helper to upload a single file to Cloudinary
-      const uploadToCloudinary = async (file: File) => {
+      const uploadToCloudinary = async (file: File, label: string) => {
         const cloudFormData = new FormData();
         cloudFormData.append('file', file);
         cloudFormData.append('signature', signature);
@@ -107,8 +113,11 @@ export default function CreateAlbum() {
           body: cloudFormData,
         });
 
-        if (!res.ok) throw new Error(`Cloudinary upload failed: ${res.statusText}`);
-        const data = await res.json();
+        const data = await res.json().catch(() => ({}));
+        if (!res.ok) {
+          const msg = data.error?.message || data.error || res.statusText;
+          throw new Error(`${label}: ${msg} (Cloudinary free tier: 10MB max per file)`);
+        }
         return data.secure_url;
       };
 
@@ -127,7 +136,8 @@ export default function CreateAlbum() {
       for (let i = 0; i < filesToUpload.length; i++) {
         const item = filesToUpload[i];
         setStatus(`Syncing asset ${i + 1} of ${total}...`);
-        const url = await uploadToCloudinary(item.file);
+        const label = item.type === 'cover_front' ? 'Front cover' : item.type === 'cover_back' ? 'Back cover' : `Sheet ${i - 1}`;
+        const url = await uploadToCloudinary(item.file, label);
         uploadedFiles.push({
           filePath: url,
           fileType: item.type,
@@ -143,7 +153,10 @@ export default function CreateAlbum() {
         body: JSON.stringify({ files: uploadedFiles }),
       });
 
-      if (!batchResponse.ok) throw new Error('Metadata synchronization failed');
+      if (!batchResponse.ok) {
+        const errBody = await batchResponse.json().catch(() => ({}));
+        throw new Error(errBody.message || errBody.error || 'Metadata synchronization failed');
+      }
 
       setStatus('Deployment successful!');
       addAlbum(album);

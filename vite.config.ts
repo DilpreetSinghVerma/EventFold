@@ -5,10 +5,11 @@ import path from "path";
 import runtimeErrorOverlay from "@replit/vite-plugin-runtime-error-modal";
 import { metaImagesPlugin } from "./vite-plugin-meta-images";
 
-export default defineConfig({
+export default defineConfig(({ mode }) => ({
   plugins: [
     react(),
-    runtimeErrorOverlay(),
+    // Runtime error overlay only in dev — production users see friendly alert instead of scary modal
+    ...(mode === "development" ? [runtimeErrorOverlay()] : []),
     tailwindcss(),
     metaImagesPlugin(),
   ],
@@ -37,4 +38,4 @@ export default defineConfig({
       deny: ["**/.*"],
     },
   },
-});
+}));
