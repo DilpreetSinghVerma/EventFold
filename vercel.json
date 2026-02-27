@@ -2,7 +2,7 @@
     "version": 2,
     "builds": [
         {
-            "src": "api/index.cjs",
+            "src": "api/index.ts",
             "use": "@vercel/node"
         },
         {
@@ -14,14 +14,14 @@
         }
     ],
     "functions": {
-        "api/**/*.cjs": {
+        "api/**/*.ts": {
             "maxDuration": 60
         }
     },
     "rewrites": [
         {
             "source": "/api/(.*)",
-            "destination": "/api/index.cjs"
+            "destination": "/api/index"
         },
         {
             "source": "/(.*)",
