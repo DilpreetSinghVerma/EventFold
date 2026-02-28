@@ -2,16 +2,11 @@ import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react";
 import tailwindcss from "@tailwindcss/vite";
 import path from "path";
-import runtimeErrorOverlay from "@replit/vite-plugin-runtime-error-modal";
-import { metaImagesPlugin } from "./vite-plugin-meta-images";
 
 export default defineConfig(({ mode }) => ({
   plugins: [
     react(),
-    // Runtime error overlay only in dev — production users see friendly alert instead of scary modal
-    ...(mode === "development" ? [runtimeErrorOverlay()] : []),
     tailwindcss(),
-    metaImagesPlugin(),
   ],
   resolve: {
     alias: {

@@ -113,10 +113,13 @@ export default function Viewer() {
   }, [id]);
 
   const [shareModalOpen, setShareModalOpen] = useState(false);
-  const shareUrl = `${window.location.origin}/album/${id}?shared=true`;
+
+  // Always use the live internet viewer (Vercel) for Customer links
+  const origin = import.meta.env.VITE_PUBLIC_VIEWER_URL || 'https://eventfold.vercel.app';
+  const shareUrl = `${origin}/album/${id}?shared=true`;
 
   const handleShare = async () => {
-    const url = `${window.location.origin}/album/${id}?shared=true`;
+    const url = `${origin}/album/${id}?shared=true`;
     try {
       if (navigator.share) {
         await navigator.share({ title: album?.title, url });

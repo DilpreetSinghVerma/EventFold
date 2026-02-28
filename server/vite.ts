@@ -33,6 +33,16 @@ export async function setupVite(server: Server, app: Express) {
   app.use("*", async (req, res, next) => {
     const url = req.originalUrl;
 
+    // Don't serve index.html for API requests
+    if (url.startsWith('/api')) {
+      return next();
+    }
+
+    // Let Vite handle source files and assets (e.g. /src/main.tsx or .js/.css)
+    if (url.startsWith('/src') || url.startsWith('/@') || url.match(/\.(js|css|tsx|ts|svg|png|jpg|jpeg|gif|json|map|woff|woff2)$/)) {
+      return next();
+    }
+
     try {
       const clientTemplate = path.resolve(
         __dirname,

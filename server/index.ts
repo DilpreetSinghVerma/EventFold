@@ -2,6 +2,10 @@ import express, { type Request, Response, NextFunction } from "express";
 import { registerRoutes } from "./routes";
 import { serveStatic } from "./static";
 import { createServer } from "http";
+import dotenv from "dotenv";
+
+// Load environment variables locally
+dotenv.config();
 
 const app = express();
 const httpServer = createServer(app);
@@ -74,17 +78,12 @@ app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
 if (process.env.NODE_ENV === "production" || process.env.VERCEL) {
   serveStatic(app);
 } else {
-  // Logic for development/Vite remains in an IIFE to allow async imports
-  (async () => {
-    const { setupVite } = await import("./vite");
-    await setupVite(httpServer, app);
+  // Use static serving for local Electron dev as well to avoid Vite hook crashes (Exit Code 3221226356)
+  serveStatic(app);
 
-    const port = parseInt(process.env.PORT || "5000", 10);
-    httpServer.listen(port, "0.0.0.0", () => {
-      log(`serving on port ${port}`);
-    });
-  })().catch(err => {
-    console.error("Vite setup error:", err);
+  const port = parseInt(process.env.PORT || "5000", 10);
+  httpServer.listen(port, "0.0.0.0", () => {
+    log(`serving compiled static assets on port ${port}`);
   });
 }
 

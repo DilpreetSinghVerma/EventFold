@@ -16,7 +16,9 @@ import {
 export default function Dashboard() {
   const [albums, setAlbums] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
-  const origin = window.location.origin;
+
+  // Use the live Vercel viewer URL globally for standard share links
+  const origin = import.meta.env.VITE_PUBLIC_VIEWER_URL || 'https://eventfold.vercel.app';
 
   const fetchAlbums = async () => {
     try {

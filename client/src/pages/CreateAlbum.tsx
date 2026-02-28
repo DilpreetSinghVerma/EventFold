@@ -90,6 +90,56 @@ export default function CreateAlbum() {
       }
       const album = await albumResponse.json();
 
+      // --- Helper: Compress image to drastically reduce upload size ---
+      const compressImage = async (file: File): Promise<File> => {
+        return new Promise((resolve, reject) => {
+          const img = new Image();
+          img.onload = () => {
+            const canvas = document.createElement("canvas");
+            // Standardize extremely large sheets to a maximum practical dimension
+            const MAX_WIDTH = 2500;
+            const MAX_HEIGHT = 2500;
+            let width = img.width;
+            let height = img.height;
+
+            if (width > height) {
+              if (width > MAX_WIDTH) {
+                height *= MAX_WIDTH / width;
+                width = MAX_WIDTH;
+              }
+            } else {
+              if (height > MAX_HEIGHT) {
+                width *= MAX_HEIGHT / height;
+                height = MAX_HEIGHT;
+              }
+            }
+            canvas.width = width;
+            canvas.height = height;
+
+            const ctx = canvas.getContext("2d");
+            if (!ctx) return resolve(file); // Fallback to original
+
+            ctx.drawImage(img, 0, 0, width, height);
+
+            // Compress to 85% JPEG
+            canvas.toBlob(
+              (blob) => {
+                if (!blob) return resolve(file); // Fallback
+                const compressedFile = new File([blob], file.name.replace(/\.[^/.]+$/, ".jpg"), {
+                  type: "image/jpeg",
+                  lastModified: Date.now(),
+                });
+                resolve(compressedFile);
+              },
+              "image/jpeg",
+              0.85
+            );
+          };
+          img.onerror = () => resolve(file); // If unparseable, skip compression
+          img.src = URL.createObjectURL(file);
+        });
+      };
+
       // 2. Get Secure Signature from our server for Cloudinary
       setStatus('Securing cloud connection...');
       const sigResponse = await fetch('/api/cloudinary-signature');
@@ -121,29 +171,33 @@ export default function CreateAlbum() {
         return data.secure_url;
       };
 
-      // 3. Upload all files directly from Browser to Cloudinary (Parallel)
-      setStatus('Streaming assets to cloud storage...');
+      // 3. Compress and Upload all files directly from Browser to Cloudinary (Parallel)
+      setStatus('Compressing and streaming assets to cloud storage...');
 
-      const filesToUpload = [
+      const filesToProcess = [
         { file: formData.frontCover, type: 'cover_front', order: 0 },
         { file: formData.backCover, type: 'cover_back', order: 1 },
         ...formData.sheets.map((s, i) => ({ file: s, type: 'sheet', order: i + 2 }))
       ];
 
-      const uploadedFiles = [];
-      const total = filesToUpload.length;
+      // Execute all uploads concurrently
+      const uploadPromises = filesToProcess.map(async (item, index) => {
+        const label = item.type === 'cover_front' ? 'Front cover' : item.type === 'cover_back' ? 'Back cover' : `Sheet ${index - 1}`;
 
-      for (let i = 0; i < filesToUpload.length; i++) {
-        const item = filesToUpload[i];
-        setStatus(`Syncing asset ${i + 1} of ${total}...`);
-        const label = item.type === 'cover_front' ? 'Front cover' : item.type === 'cover_back' ? 'Back cover' : `Sheet ${i - 1}`;
-        const url = await uploadToCloudinary(item.file, label);
-        uploadedFiles.push({
+        // Compress the raw >10MB file down to <1MB
+        const compressed = await compressImage(item.file);
+
+        // Upload the compressed fast file
+        const url = await uploadToCloudinary(compressed, label);
+
+        return {
           filePath: url,
           fileType: item.type,
           orderIndex: item.order
-        });
-      }
+        };
+      });
+
+      const uploadedFiles = await Promise.all(uploadPromises);
 
       // 4. Send the URLs to our server to link them to the album
       setStatus('Finalizing architecture...');
