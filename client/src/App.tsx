@@ -9,6 +9,7 @@ import Home from "@/pages/Home";
 import Dashboard from "@/pages/Dashboard";
 import CreateAlbum from "@/pages/CreateAlbum";
 import Viewer from "@/pages/Viewer";
+import Settings from "@/pages/Settings";
 
 function Router() {
   const isStudio = !!(window as any).electron;
@@ -18,6 +19,7 @@ function Router() {
       <Route path="/" component={Home} />
       <Route path="/dashboard" component={Dashboard} />
       <Route path="/create" component={CreateAlbum} />
+      <Route path="/settings" component={Settings} />
       <Route path="/album/:id" component={Viewer} />
       <Route component={NotFound} />
     </Switch>

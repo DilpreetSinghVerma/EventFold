@@ -2,7 +2,23 @@ import { useParams, Link } from 'wouter';
 import { useAlbumStore, ImageStorage } from '@/lib/store';
 import { Flipbook } from '@/components/Flipbook';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft, Share2, Home, Loader2, Check } from 'lucide-react';
+import {
+  ChevronLeft,
+  ChevronRight,
+  Maximize2,
+  Minimize2,
+  Music,
+  Volume2,
+  VolumeX,
+  Share2,
+  ArrowLeft,
+  Smartphone,
+  MessageCircle,
+  Building2,
+  Home,
+  Loader2,
+  Check
+} from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { QRCodeSVG } from 'qrcode.react';
@@ -45,6 +61,8 @@ export default function Viewer() {
   const [loading, setLoading] = useState(true);
   const [loadStatus, setLoadStatus] = useState('Establishing connection…');
   const [copied, setCopied] = useState(false);
+  const [zoom, setZoom] = useState(1);
+  const [settings, setSettings] = useState<any>(null);
 
   const splitUrlsRef = useRef<string[]>([]);
 
@@ -59,6 +77,7 @@ export default function Viewer() {
       if (!id) return;
 
       try {
+        // Fetch album data
         setLoadStatus('Decrypting project metadata…');
         const response = await fetch(`/api/albums/${id}`);
         if (!response.ok) throw new Error('Album not found on server');
@@ -95,8 +114,15 @@ export default function Viewer() {
 
         splitUrlsRef.current = halves;
         setLoadedSheets(halves);
+
+        // Fetch business settings for branding
+        setLoadStatus('Fetching studio settings...');
+        const settingsResponse = await fetch('/api/settings');
+        const settingsData = await settingsResponse.json();
+        setSettings(settingsData);
+
       } catch (e) {
-        console.error('Failed to load album', e);
+        console.error('Failed to load album or settings', e);
         setLoadStatus('Terminal Error: Project unavailable or deleted.');
       } finally {
         setLoading(false);
@@ -110,6 +136,8 @@ export default function Viewer() {
 
   // Always use the live internet viewer (Vercel) for Customer links
   const origin = import.meta.env.VITE_PUBLIC_VIEWER_URL || 'https://eventfold.vercel.app';
+  // Use the shared music URL
+  const musicUrl = album?.theme === 'royal' ? 'https://res.cloudinary.com/dzp0f9u5u/video/upload/v1740393962/royalty_wedding_bg_music_oc9z3p.mp3' : 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3';
   const shareUrl = `${origin}/album/${id}?shared=true`;
 
   const handleShare = async () => {
@@ -136,16 +164,47 @@ export default function Viewer() {
     );
   }
 
+  const BrandingHeader = () => (
+    <div className="absolute top-0 left-0 right-0 p-6 z-[60] flex items-center justify-between pointer-events-none">
+      <div className="flex items-center gap-4 bg-black/40 backdrop-blur-md px-5 py-2.5 rounded-2xl border border-white/5 pointer-events-auto shadow-2xl">
+        {settings?.businessLogo ? (
+          <img src={settings.businessLogo} alt="Logo" className="w-8 h-8 rounded-lg object-cover" />
+        ) : (
+          <div className="w-8 h-8 rounded-lg bg-primary/20 flex items-center justify-center text-primary border border-primary/20">
+            <Building2 className="w-4 h-4" />
+          </div>
+        )}
+        <div className="flex flex-col">
+          <span className="text-[10px] text-white/40 font-bold uppercase tracking-widest leading-none mb-1">{album?.theme || 'Project'}</span>
+          <span className="text-sm font-bold text-white tracking-tight leading-none">{settings?.businessName || 'EventFold Studio'}</span>
+        </div>
+      </div>
+
+      <div className="flex items-center gap-2 pointer-events-auto">
+        {settings?.contactWhatsApp && (
+          <Button
+            onClick={() => window.open(`https://wa.me/${settings.contactWhatsApp.replace(/[^0-9]/g, '')}`, '_blank')}
+            className="rounded-xl h-11 bg-green-500 hover:bg-green-600 text-white border-none shadow-lg shadow-green-500/20 px-5 font-bold"
+          >
+            <MessageCircle className="w-4 h-4 mr-2" />
+            <span className="hidden sm:inline">Contact Studio</span>
+          </Button>
+        )}
+      </div>
+    </div>
+  );
+
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-background text-white overflow-hidden">
+      <div className="min-h-screen flex items-center justify-center bg-background text-white overflow-hidden relative">
         <div className="fixed inset-0 bg-primary/5 blur-[120px] rounded-full -z-10 animate-pulse" />
-        <div className="text-center relative">
-          <div className="w-20 h-20 mb-8 mx-auto relative">
-            <Loader2 className="w-20 h-20 animate-spin text-primary opacity-20" />
-            <div className="absolute inset-0 flex items-center justify-center">
-              <div className="w-3 h-3 bg-primary rounded-full animate-ping" />
-            </div>
+
+        <BrandingHeader />
+
+        <div className="text-center relative pt-20">
+          <div className="w-20 h-20 mb-8 mx-auto relative flex items-center justify-center">
+            <Loader2 className="w-20 h-20 animate-spin text-primary opacity-20 absolute" />
+            <div className="w-4 h-4 bg-primary rounded-full animate-ping" />
           </div>
           <p className="font-display font-bold text-2xl mb-3 tracking-tight">Initializing Cinematic Feed</p>
           <p className="text-white/40 text-sm font-mono uppercase tracking-[0.2em]">{loadStatus}</p>
@@ -159,6 +218,9 @@ export default function Viewer() {
       {/* Background Orbs */}
       <div className="fixed top-0 left-0 w-[600px] h-[600px] bg-primary/5 rounded-full blur-[140px] pointer-events-none" />
       <div className="fixed bottom-0 right-0 w-[600px] h-[600px] bg-indigo-500/5 rounded-full blur-[140px] pointer-events-none" />
+
+      {/* Floating Brand Header (Only in shared view) */}
+      {isShared && <BrandingHeader />}
 
       {/* Header - Glassmorphism */}
       {!isShared && (

@@ -19,6 +19,14 @@ export const files = pgTable("files", {
   orderIndex: integer("order_index").notNull().default(0),
 });
 
+export const settings = pgTable("settings", {
+  id: integer("id").primaryKey().default(1),
+  businessName: text("business_name").notNull().default("EventFold Studio"),
+  businessLogo: text("business_logo"),
+  contactWhatsApp: text("contact_whatsapp"),
+  adminPassword: text("admin_password").notNull().default("admin123"),
+});
+
 export const insertAlbumSchema = createInsertSchema(albums).omit({
   id: true,
   createdAt: true,

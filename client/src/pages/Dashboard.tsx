@@ -1,7 +1,8 @@
 import { Link } from 'wouter';
 import { Card, CardContent, CardFooter } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Plus, QrCode, Eye, Trash2, LayoutGrid, Calendar, LogOut } from 'lucide-react';
+import { Input } from '@/components/ui/input';
+import { Plus, QrCode, Eye, Trash2, LayoutGrid, Calendar, LogOut, Settings as SettingsIcon, Lock, Loader2 } from 'lucide-react';
 import { QRCodeSVG } from 'qrcode.react';
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -17,6 +18,9 @@ export default function Dashboard() {
   const [albums, setAlbums] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [dbConnected, setDbConnected] = useState<boolean | null>(null);
+  const [settings, setSettings] = useState<any>(null);
+  const [isAuthorized, setIsAuthorized] = useState(false);
+  const [passcode, setPasscode] = useState('');
 
   // Use the current URL as the origin for QR codes
   const origin = typeof window !== 'undefined' ? window.location.origin : (import.meta.env.VITE_PUBLIC_VIEWER_URL || 'https://eventfold.vercel.app');
@@ -44,8 +48,17 @@ export default function Dashboard() {
     }
   };
 
+  const fetchSettings = async () => {
+    try {
+      const res = await fetch('/api/settings');
+      const data = await res.json();
+      setSettings(data);
+    } catch (e) { }
+  };
+
   useEffect(() => {
     fetchAlbums();
+    fetchSettings();
   }, []);
 
   const handleDelete = async (id: string, title: string) => {
@@ -150,6 +163,46 @@ export default function Dashboard() {
     );
   };
 
+  if (!isAuthorized && settings?.adminPassword) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center p-8">
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="w-full max-w-md glass p-10 rounded-[2.5rem] border-white/5 space-y-8"
+        >
+          <div className="text-center space-y-2">
+            <div className="w-16 h-16 bg-primary/20 rounded-2xl flex items-center justify-center mx-auto mb-6 text-primary">
+              <Lock className="w-8 h-8" />
+            </div>
+            <h1 className="text-3xl font-bold tracking-tight">Studio Access</h1>
+            <p className="text-muted-foreground">Enter your passcode to manage {settings?.businessName || 'your studio'}.</p>
+          </div>
+
+          <div className="space-y-4">
+            <Input
+              type="password"
+              placeholder="Passcode"
+              value={passcode}
+              onChange={e => setPasscode(e.target.value)}
+              onKeyDown={e => e.key === 'Enter' && passcode === settings.adminPassword && setIsAuthorized(true)}
+              className="h-14 bg-white/5 border-white/10 rounded-2xl px-6 text-center text-2xl tracking-[0.3em]"
+            />
+            <Button
+              onClick={() => passcode === settings.adminPassword ? setIsAuthorized(true) : alert('Incorrect passcode')}
+              className="w-full h-14 rounded-2xl bg-primary hover:bg-primary/90 text-white font-bold"
+            >
+              Unlock Dashboard
+            </Button>
+          </div>
+          <p className="text-[10px] text-center text-white/20 uppercase tracking-widest font-mono">Default: admin123 · Change in Settings</p>
+        </motion.div>
+      </div>
+    );
+  }
+
+  if (loading) return <div className="min-h-screen bg-background flex items-center justify-center"><Loader2 className="w-10 h-10 animate-spin text-primary opacity-20" /></div>;
+
   return (
     <div className="min-h-screen bg-background text-foreground pb-20">
       {/* Decorative Orbs */}
@@ -158,12 +211,15 @@ export default function Dashboard() {
       {/* Navbar Overlay */}
       <nav className="sticky top-0 z-50 w-full border-b border-white/5 bg-background/80 backdrop-blur-xl">
         <div className="max-w-7xl mx-auto px-8 h-20 flex items-center justify-between">
-          <Link href="/" className="flex items-center gap-2 group">
-            <div className="w-8 h-8 rounded-lg bg-primary flex items-center justify-center group-hover:rotate-12 transition-transform">
-              <LogOut className="w-4 h-4 text-white rotate-180" />
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-xl bg-primary/20 flex items-center justify-center">
+              <LayoutGrid className="w-5 h-5 text-primary" />
             </div>
-            <span className="font-display font-bold text-xl tracking-tight">Gallery</span>
-          </Link>
+            <div>
+              <h1 className="text-2xl font-bold tracking-tight">{settings?.businessName || 'EventFold Studio'}</h1>
+              <p className="text-xs text-muted-foreground uppercase tracking-widest font-bold">Project Management Center</p>
+            </div>
+          </div>
 
           <div className="flex items-center gap-6">
             {dbConnected === false && (
@@ -184,6 +240,11 @@ export default function Dashboard() {
                 <span className="text-[10px] text-white/20 mt-1 uppercase">Ready for Mobile QR Sharing</span>
               </div>
             )}
+            <Link href="/settings">
+              <Button variant="ghost" className="rounded-xl text-white/40 hover:text-white glass border-none">
+                <SettingsIcon className="w-4 h-4 mr-2" /> Settings
+              </Button>
+            </Link>
             <Link href="/create">
               <Button className="rounded-xl px-6 bg-primary hover:bg-primary/90 text-white shadow-lg shadow-primary/20">
                 <Plus className="w-4 h-4 mr-2" /> New Album
@@ -199,13 +260,7 @@ export default function Dashboard() {
           <p className="text-white/40">Manage and share your digital storytelling projects.</p>
         </div>
 
-        {loading ? (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {[1, 2, 3].map(i => (
-              <div key={i} className="aspect-[4/6] rounded-3xl bg-white/5 animate-pulse" />
-            ))}
-          </div>
-        ) : albums.length === 0 ? (
+        {albums.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-32 glass rounded-[3rem] border-dashed border-white/10">
             <div className="w-20 h-20 rounded-full bg-white/5 flex items-center justify-center mb-6">
               <LayoutGrid className="w-10 h-10 text-white/20" />

@@ -1,5 +1,5 @@
 import crypto from "crypto";
-import { type InsertAlbum, type Album, type InsertFile, type File, albums, files } from "../shared/schema";
+import { type InsertAlbum, type Album, type InsertFile, type File, albums, files, settings } from "../shared/schema";
 import { db } from "./db";
 import { eq, asc } from "drizzle-orm";
 
@@ -13,6 +13,9 @@ export interface IStorage {
   getFilesByAlbum(albumId: string): Promise<File[]>;
   getFile(id: string): Promise<File | undefined>;
   deleteFilesByAlbum(albumId: string): Promise<void>;
+
+  getSettings(): Promise<any>;
+  updateSettings(data: any): Promise<void>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -56,17 +59,35 @@ export class DatabaseStorage implements IStorage {
   async deleteFilesByAlbum(albumId: string): Promise<void> {
     await db.delete(files).where(eq(files.albumId, albumId));
   }
+
+  async getSettings(): Promise<any> {
+    if (!db) return { businessName: "EventFold Studio" };
+    const [row] = await db.select().from(settings).where(eq(settings.id, 1));
+    return row || { businessName: "EventFold Studio" };
+  }
+
+  async updateSettings(data: any): Promise<void> {
+    if (!db) return;
+    await db.insert(settings)
+      .values({ ...data, id: 1 })
+      .onConflictDoUpdate({
+        target: settings.id,
+        set: data
+      });
+  }
 }
 
 export class MemStorage implements IStorage {
   private albums: Map<string, Album>;
   private files: Map<string, File>;
+  private settings: any;
   private albumIdCounter: number;
   private fileIdCounter: number;
 
   constructor() {
     this.albums = new Map();
     this.files = new Map();
+    this.settings = { id: 1, businessName: "EventFold Studio", adminPassword: "admin123" };
     this.albumIdCounter = 1;
     this.fileIdCounter = 1;
   }
@@ -123,6 +144,14 @@ export class MemStorage implements IStorage {
     for (const file of filesToDelete) {
       this.files.delete(file.id);
     }
+  }
+
+  async getSettings(): Promise<any> {
+    return this.settings;
+  }
+
+  async updateSettings(data: any): Promise<void> {
+    this.settings = { ...this.settings, ...data, id: 1 };
   }
 }
 

@@ -74,6 +74,26 @@ export function registerRoutes(
     }
   });
 
+  // Get Business Settings
+  app.get("/api/settings", async (_req, res) => {
+    try {
+      const s = await storage.getSettings();
+      res.json(s);
+    } catch (e) {
+      res.status(500).json({ error: "Failed to fetch settings" });
+    }
+  });
+
+  // Update Business Settings
+  app.patch("/api/settings", async (req, res) => {
+    try {
+      await storage.updateSettings(req.body);
+      res.json({ success: true });
+    } catch (e) {
+      res.status(500).json({ error: "Failed to update settings" });
+    }
+  });
+
   // Health check for cloud debugging
   app.get("/api/health", async (_req, res) => {
     try {

@@ -47,13 +47,13 @@ export default function Home() {
               <Sparkles className="w-3 h-3" /> Digital Storytelling
             </div>
             <h1 className="text-6xl md:text-8xl font-display font-bold leading-[1.05] mb-8 tracking-tighter">
-              Memories <br />
+              Premium <br />
               <span className="bg-clip-text text-transparent bg-gradient-to-r from-primary via-indigo-400 to-cyan-400">
-                In Motion.
+                Storytelling.
               </span>
             </h1>
             <p className="text-xl text-muted-foreground mb-10 max-w-lg leading-relaxed font-sans">
-              Experience the next generation of photo albums. Transform static memories into interactive, cinematic flipbooks designed for the digital age.
+              Transform your professional photography into immersive, cloud-secured cinematic experiences. The elite standard for modern business-to-client album delivery.
             </p>
             <div className="flex flex-col sm:flex-row gap-5">
               <Link href="/create">
@@ -145,8 +145,8 @@ export default function Home() {
             />
             <FeatureCard
               icon={<Share2 className="w-6 h-6" />}
-              title="Universal Sharing"
-              description="A single scan connects your physical and digital worlds. No apps required, just pure, instant accessibility."
+              title="Business-to-Client Delivery"
+              description="A single QR scan connects your studio with the physical world. No apps required—just instant, premium access for your elite clients."
               gradient="from-primary to-rose-400"
             />
           </div>
