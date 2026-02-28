@@ -112,8 +112,8 @@ export function Flipbook({ sheets, frontCover, backCover, title = 'Photo Album' 
 
   useEffect(() => {
     const handleResize = () => {
-      const screenW = window.innerWidth;
-      const screenH = window.innerHeight;
+      const screenW = Math.min(window.innerWidth, document.documentElement.clientWidth);
+      const screenH = Math.min(window.innerHeight, document.documentElement.clientHeight);
       const isMobile = screenW < 768;
 
       // Each page is landscape 18:12 = 1.5:1
@@ -122,13 +122,14 @@ export function Flipbook({ sheets, frontCover, backCover, title = 'Photo Album' 
       // Fit two pages (spread) 
       const multiplier = 2;
 
-      const verticalPadding = isMobile ? 120 : 220;
-      const horizontalPadding = 40;
+      const verticalPadding = isMobile ? 80 : 200;
+      const horizontalPadding = isMobile ? 20 : 60;
 
       const availH = screenH - verticalPadding;
       const availW = screenW - horizontalPadding;
 
-      let h = Math.min(availH, isMobile ? 300 : 500);
+      // Maximize height on mobile
+      let h = isMobile ? availH : Math.min(availH, 500);
       let w = h * PAGE_RATIO;
 
       if (w * multiplier > availW) {
@@ -136,8 +137,8 @@ export function Flipbook({ sheets, frontCover, backCover, title = 'Photo Album' 
         h = w / PAGE_RATIO;
       }
 
-      setPageWidth(Math.max(Math.floor(w), 140));
-      setPageHeight(Math.max(Math.floor(h), 93));
+      setPageWidth(Math.floor(w));
+      setPageHeight(Math.floor(h));
     };
 
     handleResize();
@@ -335,10 +336,9 @@ export function Flipbook({ sheets, frontCover, backCover, title = 'Photo Album' 
               opacity: 1,
               y: 0,
               scale: 1,
-              // Cover: tilt like a real album resting on a table
-              // Opened: spring straight
-              rotateZ: isOpened ? 0 : -3,
-              rotateX: isOpened ? 0 : 4,
+              // Disable tilt on mobile for better touch alignment
+              rotateZ: (isOpened || window.innerWidth < 768) ? 0 : -3,
+              rotateX: (isOpened || window.innerWidth < 768) ? 0 : 4,
             }}
             transition={{
               opacity: { duration: 0.5, ease: 'easeOut' },
@@ -392,13 +392,13 @@ export function Flipbook({ sheets, frontCover, backCover, title = 'Photo Album' 
               style={{ display: 'block', margin: '0 auto', touchAction: 'none' }}
               startPage={0}
               drawShadow={true}
-              flippingTime={1000}
+              flippingTime={800}
               usePortrait={false}
               startZIndex={0}
               autoSize={false}
               clickEventForward={true}
               useMouseEvents={true}
-              swipeDistance={50}
+              swipeDistance={30}
               showPageCorners={true}
               disableFlipByClick={false}
               onChangeState={(e: any) => {
@@ -449,7 +449,7 @@ export function Flipbook({ sheets, frontCover, backCover, title = 'Photo Album' 
                       <img
                         src={page.image}
                         alt="cover"
-                        style={{ width: '100%', height: '100%', objectFit: 'contain', backgroundColor: '#1a1a1a', display: 'block' }}
+                        style={{ width: '100%', height: '100%', objectFit: 'fill', backgroundColor: '#1a1a1a', display: 'block' }}
                       />
                       {/* Subtle vignette on cover edges */}
                       <div style={{ position: 'absolute', inset: 0, boxShadow: 'inset 0 0 40px rgba(0,0,0,0.4)', pointerEvents: 'none' }} />
@@ -495,7 +495,7 @@ export function Flipbook({ sheets, frontCover, backCover, title = 'Photo Album' 
                         style={{
                           width: '100%',
                           height: '100%',
-                          objectFit: 'contain',
+                          objectFit: 'fill',
                           objectPosition: 'center',
                           display: 'block',
                           backgroundColor: '#0a0a0a'
