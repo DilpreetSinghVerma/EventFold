@@ -16,8 +16,8 @@ function Router() {
   return (
     <Switch>
       <Route path="/" component={Home} />
-      {isStudio && <Route path="/dashboard" component={Dashboard} />}
-      {isStudio && <Route path="/create" component={CreateAlbum} />}
+      <Route path="/dashboard" component={Dashboard} />
+      <Route path="/create" component={CreateAlbum} />
       <Route path="/album/:id" component={Viewer} />
       <Route component={NotFound} />
     </Switch>

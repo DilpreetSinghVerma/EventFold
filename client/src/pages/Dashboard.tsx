@@ -18,8 +18,8 @@ export default function Dashboard() {
   const [loading, setLoading] = useState(true);
   const [dbConnected, setDbConnected] = useState<boolean | null>(null);
 
-  // Use the live Vercel viewer URL globally for standard share links
-  const origin = import.meta.env.VITE_PUBLIC_VIEWER_URL || 'https://eventfold.vercel.app';
+  // Use the current URL as the origin for QR codes
+  const origin = typeof window !== 'undefined' ? window.location.origin : (import.meta.env.VITE_PUBLIC_VIEWER_URL || 'https://eventfold.vercel.app');
 
   const fetchAlbums = async () => {
     try {
