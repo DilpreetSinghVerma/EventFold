@@ -121,8 +121,8 @@ export function Flipbook({ sheets, frontCover, backCover, title = 'Photo Album' 
       const multiplier = 2;
 
       // Vertical space usage: be more aggressive on mobile
-      const verticalPadding = isMobile ? 100 : 180;
-      const horizontalPadding = isMobile ? 16 : 120;
+      const verticalPadding = isMobile ? 120 : 180;
+      const horizontalPadding = isMobile ? 10 : 120; // Thinner padding for mobile to fit side buttons
 
       let availW = screenW - horizontalPadding;
       let availH = screenH - verticalPadding;
@@ -383,14 +383,14 @@ export function Flipbook({ sheets, frontCover, backCover, title = 'Photo Album' 
               maxWidth={3000}
               minHeight={50}
               maxHeight={3000}
-              maxShadowOpacity={0.4}
+              maxShadowOpacity={window.innerWidth < 768 ? 0 : 0.4}
               showCover={true}
               mobileScrollSupport={false}
               className="shadow-2xl"
               style={{ display: 'block' }}
               startPage={0}
-              drawShadow={true}
-              flippingTime={1000}
+              drawShadow={window.innerWidth >= 768}
+              flippingTime={window.innerWidth < 768 ? 400 : 800}
               usePortrait={false}
               startZIndex={0}
               autoSize={false}
@@ -443,7 +443,7 @@ export function Flipbook({ sheets, frontCover, backCover, title = 'Photo Album' 
                 // ── Cover (front & back) ──
                 if (page.type === 'cover') {
                   return (
-                    <div key={page.key} className="page" style={{ ...pageBase, backgroundColor: '#000' }}>
+                    <div key={page.key} className="page" style={{ ...pageBase, backgroundColor: '#000', willChange: 'transform' }}>
                       <img
                         src={page.image}
                         alt="cover"
@@ -486,7 +486,7 @@ export function Flipbook({ sheets, frontCover, backCover, title = 'Photo Album' 
                   const isLeftHalf = (pageIndex - 1) % 2 === 0;
 
                   return (
-                    <div key={page.key} className="page" style={{ ...pageBase, backgroundColor: '#000' }}>
+                    <div key={page.key} className="page" style={{ ...pageBase, backgroundColor: '#000', willChange: 'transform' }}>
                       <img
                         src={page.image}
                         alt="sheet"
@@ -519,6 +519,24 @@ export function Flipbook({ sheets, frontCover, backCover, title = 'Photo Album' 
             </HTMLFlipBook>
           </motion.div>  {/* end album tilt wrapper */}
         </div>          {/* end zoom/pan wrapper */}
+
+        {/* ── Mobile Side Navigation ── */}
+        <div className="md:hidden absolute inset-y-0 left-0 w-16 flex items-center justify-start pl-2 z-50 pointer-events-none">
+          <Button
+            onClick={() => { playFlipSound(); book.current?.pageFlip().flipPrev(); }}
+            className="rounded-full w-10 h-10 bg-black/40 backdrop-blur-md text-white border border-white/10 p-0 pointer-events-auto"
+          >
+            <ChevronLeft className="w-6 h-6" />
+          </Button>
+        </div>
+        <div className="md:hidden absolute inset-y-0 right-0 w-16 flex items-center justify-end pr-2 z-50 pointer-events-none">
+          <Button
+            onClick={() => { playFlipSound(); book.current?.pageFlip().flipNext(); }}
+            className="rounded-full w-10 h-10 bg-black/40 backdrop-blur-md text-white border border-white/10 p-0 pointer-events-auto"
+          >
+            <ChevronRight className="w-6 h-6" />
+          </Button>
+        </div>
       </div>            {/* end container */}
 
       {/* ── Navigation ── */}
