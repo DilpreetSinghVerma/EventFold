@@ -119,17 +119,16 @@ export function Flipbook({ sheets, frontCover, backCover, title = 'Photo Album' 
       // Each page is landscape 18:12 = 1.5:1
       const PAGE_RATIO = 18 / 12;
 
-      // Available space: subtract sticky header and controls
-      // On mobile, we use more of the screen height
+      // Fit two pages (spread) 
+      const multiplier = 2;
+
       const verticalPadding = isMobile ? 120 : 220;
+      const horizontalPadding = 40;
+
       const availH = screenH - verticalPadding;
-      const availW = screenW - 40;
+      const availW = screenW - horizontalPadding;
 
-      // In portrait/mobile mode, we show 1 page at a time.
-      // In landscape/desktop mode, we show 2 pages.
-      const multiplier = isMobile ? 1 : 2;
-
-      let h = availH;
+      let h = Math.min(availH, isMobile ? 300 : 500);
       let w = h * PAGE_RATIO;
 
       if (w * multiplier > availW) {
@@ -137,9 +136,8 @@ export function Flipbook({ sheets, frontCover, backCover, title = 'Photo Album' 
         h = w / PAGE_RATIO;
       }
 
-      // Final bounded sizes
-      setPageWidth(Math.max(Math.floor(w), 160));
-      setPageHeight(Math.max(Math.floor(h), 107));
+      setPageWidth(Math.max(Math.floor(w), 140));
+      setPageHeight(Math.max(Math.floor(h), 93));
     };
 
     handleResize();
@@ -313,7 +311,11 @@ export function Flipbook({ sheets, frontCover, backCover, title = 'Photo Album' 
         onMouseUp={handleMouseUp}
         onMouseLeave={handleMouseUp}
         className="flex items-center justify-center w-full h-full"
-        style={{ cursor: zoom > 1 ? (isDragging ? 'grabbing' : 'grab') : 'default', perspective: '1400px' }}
+        style={{
+          cursor: zoom > 1 ? (isDragging ? 'grabbing' : 'grab') : 'default',
+          perspective: '1400px',
+          touchAction: zoom > 1 ? 'none' : 'auto'
+        }}
       >
         {/* Zoom / pan wrapper */}
         <div style={{
@@ -387,16 +389,16 @@ export function Flipbook({ sheets, frontCover, backCover, title = 'Photo Album' 
               showCover={true}
               mobileScrollSupport={true}
               className="shadow-2xl"
-              style={{ display: 'block', margin: '0 auto' }}
+              style={{ display: 'block', margin: '0 auto', touchAction: 'none' }}
               startPage={0}
               drawShadow={true}
-              flippingTime={800}
-              usePortrait={window.innerWidth < 768}
+              flippingTime={1000}
+              usePortrait={false}
               startZIndex={0}
               autoSize={false}
               clickEventForward={true}
               useMouseEvents={true}
-              swipeDistance={20}
+              swipeDistance={50}
               showPageCorners={true}
               disableFlipByClick={false}
               onChangeState={(e: any) => {
@@ -447,7 +449,7 @@ export function Flipbook({ sheets, frontCover, backCover, title = 'Photo Album' 
                       <img
                         src={page.image}
                         alt="cover"
-                        style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
+                        style={{ width: '100%', height: '100%', objectFit: 'contain', backgroundColor: '#1a1a1a', display: 'block' }}
                       />
                       {/* Subtle vignette on cover edges */}
                       <div style={{ position: 'absolute', inset: 0, boxShadow: 'inset 0 0 40px rgba(0,0,0,0.4)', pointerEvents: 'none' }} />
@@ -493,9 +495,10 @@ export function Flipbook({ sheets, frontCover, backCover, title = 'Photo Album' 
                         style={{
                           width: '100%',
                           height: '100%',
-                          objectFit: 'cover',
+                          objectFit: 'contain',
                           objectPosition: 'center',
                           display: 'block',
+                          backgroundColor: '#0a0a0a'
                         }}
                       />
                       {/* Spine-side gradient shadow for depth */}
@@ -541,6 +544,6 @@ export function Flipbook({ sheets, frontCover, backCover, title = 'Photo Album' 
           <ChevronRight className="w-5 h-5" />
         </Button>
       </div>
-    </div>
+    </div >
   );
 }
