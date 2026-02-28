@@ -114,24 +114,30 @@ export function Flipbook({ sheets, frontCover, backCover, title = 'Photo Album' 
     const handleResize = () => {
       const screenW = window.innerWidth;
       const screenH = window.innerHeight;
+      const isMobile = screenW < 768;
 
       // Each page is landscape 18:12 = 1.5:1
-      // Open book = two pages = 3:1 ratio
-      const PAGE_RATIO = 18 / 12; // 1.5
+      const PAGE_RATIO = 18 / 12;
 
-      // Available space: subtract sticky header (~65px), controls (~56px), nav (~80px)
-      const availH = Math.min(screenH - 220, 460);
-      const availW = screenW - 80;
+      // Available space: subtract sticky header and controls
+      // On mobile, we use more of the screen height
+      const verticalPadding = isMobile ? 120 : 220;
+      const availH = screenH - verticalPadding;
+      const availW = screenW - 40;
 
-      // Fit two landscape pages side by side
+      // In portrait/mobile mode, we show 1 page at a time.
+      // In landscape/desktop mode, we show 2 pages.
+      const multiplier = isMobile ? 1 : 2;
+
       let h = availH;
-      let w = h * PAGE_RATIO; // single page width
+      let w = h * PAGE_RATIO;
 
-      if (w * 2 > availW) {
-        w = availW / 2;
+      if (w * multiplier > availW) {
+        w = availW / multiplier;
         h = w / PAGE_RATIO;
       }
 
+      // Final bounded sizes
       setPageWidth(Math.max(Math.floor(w), 160));
       setPageHeight(Math.max(Math.floor(h), 107));
     };
@@ -381,22 +387,27 @@ export function Flipbook({ sheets, frontCover, backCover, title = 'Photo Album' 
               showCover={true}
               mobileScrollSupport={true}
               className="shadow-2xl"
-              style={{}}
+              style={{ display: 'block', margin: '0 auto' }}
               startPage={0}
               drawShadow={true}
-              flippingTime={900}
-              usePortrait={false}   /* Always landscape — two pages side by side */
+              flippingTime={800}
+              usePortrait={window.innerWidth < 768}
               startZIndex={0}
               autoSize={false}
               clickEventForward={true}
               useMouseEvents={true}
-              swipeDistance={30}
+              swipeDistance={20}
               showPageCorners={true}
               disableFlipByClick={false}
+              onChangeState={(e: any) => {
+                if (e.data === 'read') {
+                  // Wait for the animation to finish before updating current page
+                  // but we mainly rely on onFlip for the exact page index.
+                }
+              }}
               onFlip={(e: any) => {
                 playFlipSound();
                 const pg = e.data;
-                setCurrentPage(pg);
 
                 // Browser unblock: try to play sounds on interaction
                 if (pg > 0 && !isOpened) {

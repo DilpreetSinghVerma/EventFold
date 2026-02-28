@@ -83,7 +83,14 @@ if (process.env.NODE_ENV === "production" || process.env.VERCEL) {
   const port = parseInt(process.env.PORT || "5000", 10);
   httpServer.listen(port, "0.0.0.0", () => {
     log(`serving compiled static assets on port ${port}`);
-  });
+  })
+    .on('error', (err: any) => {
+      if (err.code === 'EADDRINUSE') {
+        log(`Port ${port} is already in use. The server might already be running.`, 'warning');
+      } else {
+        log(`Server error: ${err.message}`);
+      }
+    });
 }
 
 // In Vercel, we export the app without calling listen

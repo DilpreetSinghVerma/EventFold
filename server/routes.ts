@@ -79,8 +79,14 @@ export function registerRoutes(
     try {
       await storage.getAlbums();
       res.json({ status: "ok", database: "connected", env: process.env.NODE_ENV });
-    } catch (e) {
-      res.status(500).json({ status: "error", database: "disconnected", error: String(e) });
+    } catch (e: any) {
+      console.error("Health check database failure:", e);
+      res.status(500).json({
+        status: "error",
+        database: "disconnected",
+        error: e.message || String(e),
+        stack: process.env.NODE_ENV === "development" ? e.stack : undefined
+      });
     }
   });
 

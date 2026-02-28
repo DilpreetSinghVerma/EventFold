@@ -16,12 +16,22 @@ import {
 export default function Dashboard() {
   const [albums, setAlbums] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [dbConnected, setDbConnected] = useState<boolean | null>(null);
 
   // Use the live Vercel viewer URL globally for standard share links
   const origin = import.meta.env.VITE_PUBLIC_VIEWER_URL || 'https://eventfold.vercel.app';
 
   const fetchAlbums = async () => {
     try {
+      // Check health first to see if cloud sync is active
+      const healthRes = await fetch('/api/health').catch(() => null);
+      if (healthRes && healthRes.ok) {
+        const health = await healthRes.json();
+        setDbConnected(health.status === 'ok');
+      } else {
+        setDbConnected(false);
+      }
+
       const response = await fetch('/api/albums');
       if (!response.ok) throw new Error('Failed to fetch');
       const data = await response.json();
@@ -153,11 +163,26 @@ export default function Dashboard() {
             </div>
             <span className="font-display font-bold text-xl tracking-tight">Gallery</span>
           </Link>
-          <Link href="/create">
-            <Button className="rounded-xl px-6 bg-primary hover:bg-primary/90 text-white shadow-lg shadow-primary/20">
-              <Plus className="w-4 h-4 mr-2" /> New Album
-            </Button>
-          </Link>
+
+          <div className="flex items-center gap-6">
+            {dbConnected === false && (
+              <div className="hidden md:flex items-center gap-2 px-4 py-2 bg-destructive/10 border border-destructive/20 rounded-full text-destructive text-xs font-bold animate-pulse">
+                <div className="w-2 h-2 rounded-full bg-destructive" />
+                CLOUD SYNC OFFLINE (DNS ERROR)
+              </div>
+            )}
+            {dbConnected === true && (
+              <div className="hidden md:flex items-center gap-2 px-4 py-2 bg-primary/10 border border-primary/20 rounded-full text-primary text-xs font-bold">
+                <div className="w-2 h-2 rounded-full bg-primary animate-pulse" />
+                CLOUD SYNC ACTIVE
+              </div>
+            )}
+            <Link href="/create">
+              <Button className="rounded-xl px-6 bg-primary hover:bg-primary/90 text-white shadow-lg shadow-primary/20">
+                <Plus className="w-4 h-4 mr-2" /> New Album
+              </Button>
+            </Link>
+          </div>
         </div>
       </nav>
 

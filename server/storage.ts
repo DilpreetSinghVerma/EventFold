@@ -1,3 +1,4 @@
+import crypto from "crypto";
 import { type InsertAlbum, type Album, type InsertFile, type File, albums, files } from "../shared/schema";
 import { db } from "./db";
 import { eq, asc } from "drizzle-orm";
@@ -71,7 +72,7 @@ export class MemStorage implements IStorage {
   }
 
   async createAlbum(insertAlbum: InsertAlbum): Promise<Album> {
-    const id = (this.albumIdCounter++).toString();
+    const id = crypto.randomUUID();
     const album: Album = {
       ...insertAlbum,
       id,
@@ -95,7 +96,7 @@ export class MemStorage implements IStorage {
   }
 
   async createFile(insertFile: InsertFile): Promise<File> {
-    const id = (this.fileIdCounter++).toString();
+    const id = crypto.randomUUID();
     const file: File = {
       ...insertFile,
       id,
@@ -125,6 +126,24 @@ export class MemStorage implements IStorage {
   }
 }
 
-export const storage = process.env.DATABASE_URL && process.env.DATABASE_URL !== "dummy_url"
-  ? new DatabaseStorage()
-  : new MemStorage();
+let _storage: IStorage | null = null;
+
+function getStorage(): IStorage {
+  if (_storage) return _storage;
+
+  const url = process.env.DATABASE_URL;
+  if (url && url !== "dummy_url") {
+    console.log("STORAGE: Initializing DatabaseStorage (DATABASE_URL detected)");
+    _storage = new DatabaseStorage();
+  } else {
+    console.log("STORAGE: Initializing MemStorage (DATABASE_URL missing or empty)");
+    _storage = new MemStorage();
+  }
+  return _storage;
+}
+
+export const storage = new Proxy({}, {
+  get: (_target, prop) => {
+    return (getStorage() as any)[prop];
+  }
+}) as IStorage;

@@ -2,6 +2,21 @@ const { app, BrowserWindow, session } = require('electron');
 const path = require('path');
 const isDev = !app.isPackaged;
 
+// Start the background server in production
+if (!isDev) {
+    // Set environment variables for the packaged server
+    process.env.NODE_ENV = 'production';
+    process.env.PORT = '5000'; // Keep port consistent with development
+
+    try {
+        // Require the bundled server logic
+        // It will call httpServer.listen() automatically
+        require(path.join(__dirname, 'dist/index.cjs'));
+    } catch (e) {
+        console.error("Failed to start background server:", e);
+    }
+}
+
 function createWindow() {
     const win = new BrowserWindow({
         width: 1280,
@@ -34,7 +49,9 @@ function createWindow() {
         win.loadURL('http://127.0.0.1:5000');
         win.webContents.openDevTools();
     } else {
-        win.loadFile(path.join(__dirname, 'dist/public/index.html'));
+        // In production, we still load from the local loopback server 
+        // that we started at the top of this file.
+        win.loadURL('http://127.0.0.1:5000');
     }
 
     win.once('ready-to-show', () => {

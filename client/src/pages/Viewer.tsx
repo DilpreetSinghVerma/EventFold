@@ -12,39 +12,25 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, Di
 // Split a panoramic 12×36 image into [leftHalf, rightHalf] blobs.
 // Each half is 12×18 and forms one page in the flipbook spread.
 // ─────────────────────────────────────────────────────────────────
-function splitPanoramicSheet(url: string): Promise<[string, string]> {
-  return new Promise((resolve, reject) => {
-    const img = new Image();
-    // Allow cross-origin for external URLs (picsum, etc.) — not needed for blob:
-    if (!url.startsWith('blob:') && !url.startsWith('data:')) {
-      img.crossOrigin = 'anonymous';
-    }
-    img.onload = () => {
-      const W = img.naturalWidth;
-      const H = img.naturalHeight;
-      const halfW = Math.floor(W / 2);
+// Helper to get split halves via Cloudinary transformations for instant mobile loading
+function getCloudinaryHalves(url: string): [string, string] | null {
+  if (!url.includes('res.cloudinary.com')) return null;
+  const parts = url.split('/upload/');
+  if (parts.length !== 2) return null;
 
-      const leftCanvas = document.createElement('canvas');
-      leftCanvas.width = halfW;
-      leftCanvas.height = H;
-      leftCanvas.getContext('2d')!.drawImage(img, 0, 0, halfW, H, 0, 0, halfW, H);
+  // c_crop,g_west,w_0.5 = crop left half
+  // q_auto,f_auto = automatic quality and modern format (WebP/AVIF)
+  const left = `${parts[0]}/upload/c_crop,g_west,w_0.5,q_auto,f_auto/${parts[1]}`;
+  const right = `${parts[0]}/upload/c_crop,g_east,w_0.5,q_auto,f_auto/${parts[1]}`;
+  return [left, right];
+}
 
-      const rightCanvas = document.createElement('canvas');
-      rightCanvas.width = W - halfW;
-      rightCanvas.height = H;
-      rightCanvas.getContext('2d')!.drawImage(img, halfW, 0, W - halfW, H, 0, 0, W - halfW, H);
-
-      leftCanvas.toBlob((lb) => {
-        if (!lb) { reject(new Error('left blob failed')); return; }
-        rightCanvas.toBlob((rb) => {
-          if (!rb) { reject(new Error('right blob failed')); return; }
-          resolve([URL.createObjectURL(lb), URL.createObjectURL(rb)]);
-        }, 'image/jpeg', 0.95);
-      }, 'image/jpeg', 0.95);
-    };
-    img.onerror = () => reject(new Error('Image load failed: ' + url));
-    img.src = url;
-  });
+// Simple optimization for single images (covers)
+function optimizeCloudinary(url: string): string {
+  if (!url.includes('res.cloudinary.com')) return url;
+  const parts = url.split('/upload/');
+  if (parts.length !== 2) return url;
+  return `${parts[0]}/upload/q_auto,f_auto/${parts[1]}`;
 }
 
 export default function Viewer() {
@@ -87,16 +73,24 @@ export default function Viewer() {
 
         const getUrl = (path: string) => (path.startsWith('/') || path.startsWith('http')) ? path : `/${path}`;
 
-        setLoadedFrontCover(getUrl(frontFile?.filePath || ''));
-        setLoadedBackCover(getUrl(backFile?.filePath || ''));
+        setLoadedFrontCover(optimizeCloudinary(getUrl(frontFile?.filePath || '')));
+        setLoadedBackCover(optimizeCloudinary(getUrl(backFile?.filePath || '')));
 
         setLoadStatus(`Processing ${sheetFiles.length} cinematic spreads…`);
         const halves: string[] = [];
         for (let i = 0; i < sheetFiles.length; i++) {
-          setLoadStatus(`Rendering spread ${i + 1}/${sheetFiles.length}…`);
           const url = getUrl(sheetFiles[i].filePath);
-          const [left, right] = await splitPanoramicSheet(url);
-          halves.push(left, right);
+
+          // TRY CLOUDINARY SPLIT FIRST (Instant)
+          const cloudHalves = getCloudinaryHalves(url);
+          if (cloudHalves) {
+            halves.push(...cloudHalves);
+          } else {
+            // Fallback for local blobs/manual uploads (Slow)
+            setLoadStatus(`Rendering spread ${i + 1}/${sheetFiles.length}…`);
+            const [left, right] = await splitPanoramicSheet(url);
+            halves.push(left, right);
+          }
         }
 
         splitUrlsRef.current = halves;
@@ -251,4 +245,35 @@ export default function Viewer() {
       </main>
     </div>
   );
+}
+// Keep fallback for local dev
+function splitPanoramicSheet(url: string): Promise<[string, string]> {
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    if (!url.startsWith('blob:') && !url.startsWith('data:')) {
+      img.crossOrigin = 'anonymous';
+    }
+    img.onload = () => {
+      const W = img.naturalWidth;
+      const H = img.naturalHeight;
+      const halfW = Math.floor(W / 2);
+      const leftCanvas = document.createElement('canvas');
+      leftCanvas.width = halfW;
+      leftCanvas.height = H;
+      leftCanvas.getContext('2d')!.drawImage(img, 0, 0, halfW, H, 0, 0, halfW, H);
+      const rightCanvas = document.createElement('canvas');
+      rightCanvas.width = W - halfW;
+      rightCanvas.height = H;
+      rightCanvas.getContext('2d')!.drawImage(img, halfW, 0, W - halfW, H, 0, 0, W - halfW, H);
+      leftCanvas.toBlob((lb) => {
+        if (!lb) { reject(new Error('left blob failed')); return; }
+        rightCanvas.toBlob((rb) => {
+          if (!rb) { reject(new Error('right blob failed')); return; }
+          resolve([URL.createObjectURL(lb), URL.createObjectURL(rb)]);
+        }, 'image/jpeg', 0.9);
+      }, 'image/jpeg', 0.9);
+    };
+    img.onerror = () => reject(new Error('Image load failed: ' + url));
+    img.src = url;
+  });
 }
