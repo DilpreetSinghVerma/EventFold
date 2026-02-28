@@ -1,14 +1,33 @@
 {
   "name": "rest-express",
   "version": "1.0.0",
+  "main": "main.js",
   "license": "MIT",
   "scripts": {
     "dev:client": "vite dev --port 5000",
-    "dev": "cross-env NODE_ENV=development tsx server/index.ts",
+    "dev:server": "cross-env NODE_ENV=development tsx server/index.ts",
+    "dev": "concurrently \"npm run dev:server\" \"wait-on http://127.0.0.1:5000 && electron .\"",
     "build": "tsx script/build.ts",
+    "build:studio": "npm run build && electron-builder",
     "start": "cross-env NODE_ENV=production node dist/index.cjs",
     "check": "tsc",
     "db:push": "drizzle-kit push"
+  },
+  "build": {
+    "appId": "com.eventfold.studio",
+    "productName": "EventFold Studio",
+    "directories": {
+      "output": "build-studio"
+    },
+    "files": [
+      "dist/**/*",
+      "main.js",
+      "preload.js",
+      "package.json"
+    ],
+    "win": {
+      "target": "portable"
+    }
   },
   "dependencies": {
     "@hookform/resolvers": "^3.10.0",
@@ -101,14 +120,18 @@
     "@types/ws": "^8.5.13",
     "@vitejs/plugin-react": "^5.0.4",
     "autoprefixer": "^10.4.21",
+    "concurrently": "^9.2.1",
     "cross-env": "^10.1.0",
     "drizzle-kit": "^0.31.4",
+    "electron": "^40.6.1",
+    "electron-builder": "^26.8.1",
     "esbuild": "^0.25.0",
     "postcss": "^8.5.6",
     "tailwindcss": "^4.1.14",
     "tsx": "^4.21.0",
     "typescript": "5.6.3",
-    "vite": "^7.1.9"
+    "vite": "^7.1.9",
+    "wait-on": "^9.0.4"
   },
   "optionalDependencies": {
     "bufferutil": "^4.0.8"

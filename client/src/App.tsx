@@ -11,11 +11,13 @@ import CreateAlbum from "@/pages/CreateAlbum";
 import Viewer from "@/pages/Viewer";
 
 function Router() {
+  const isStudio = !!(window as any).electron;
+
   return (
     <Switch>
       <Route path="/" component={Home} />
-      <Route path="/dashboard" component={Dashboard} />
-      <Route path="/create" component={CreateAlbum} />
+      {isStudio && <Route path="/dashboard" component={Dashboard} />}
+      {isStudio && <Route path="/create" component={CreateAlbum} />}
       <Route path="/album/:id" component={Viewer} />
       <Route component={NotFound} />
     </Switch>
