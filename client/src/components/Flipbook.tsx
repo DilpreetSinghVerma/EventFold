@@ -383,20 +383,20 @@ export function Flipbook({ sheets, frontCover, backCover, title = 'Photo Album' 
               maxWidth={3000}
               minHeight={50}
               maxHeight={3000}
-              maxShadowOpacity={window.innerWidth < 768 ? 0 : 0.4}
+              maxShadowOpacity={window.innerWidth < 768 ? 0.2 : 0.4}
               showCover={true}
-              mobileScrollSupport={false}
+              mobileScrollSupport={true}
               className="shadow-2xl"
               style={{ display: 'block' }}
               startPage={0}
-              drawShadow={window.innerWidth >= 768}
-              flippingTime={window.innerWidth < 768 ? 400 : 800}
+              drawShadow={true}
+              flippingTime={window.innerWidth < 768 ? 600 : 800}
               usePortrait={false}
               startZIndex={0}
               autoSize={false}
               clickEventForward={true}
               useMouseEvents={true}
-              swipeDistance={0}
+              swipeDistance={15}
               showPageCorners={true}
               disableFlipByClick={false}
               onChangeState={(e: any) => {
