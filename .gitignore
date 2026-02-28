@@ -9,3 +9,4 @@ vite.config.ts.*
 uploads
 server_log.txt
 server_log_live.txt
+build-studio
