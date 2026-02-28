@@ -1,27 +1,37 @@
-const { app, BrowserWindow } = require('electron');
+const { app, BrowserWindow, session } = require('electron');
 const path = require('path');
 const isDev = !app.isPackaged;
 
 function createWindow() {
     const win = new BrowserWindow({
-        width: 1200,
-        height: 800,
+        width: 1280,
+        height: 820,
         webPreferences: {
             nodeIntegration: false,
             contextIsolation: true,
             preload: path.join(__dirname, 'preload.js'),
+            webSecurity: false, // Allow Vite dev server scripts in development
         },
         title: "EventFold Studio",
         backgroundColor: '#000000',
         show: false
     });
 
-    // Center window on screen
     win.center();
 
-    // Load the app
+    // Allow all content in dev mode (fixes CSP blocking React/Vite)
     if (isDev) {
-        win.loadURL('http://localhost:5000');
+        session.defaultSession.webRequest.onHeadersReceived((details, callback) => {
+            callback({
+                responseHeaders: {
+                    ...details.responseHeaders,
+                    'Content-Security-Policy': [
+                        "default-src * 'unsafe-inline' 'unsafe-eval' data: blob:; connect-src * ws: wss:;"
+                    ]
+                }
+            });
+        });
+        win.loadURL('http://127.0.0.1:5000');
         win.webContents.openDevTools();
     } else {
         win.loadFile(path.join(__dirname, 'dist/public/index.html'));
@@ -29,6 +39,14 @@ function createWindow() {
 
     win.once('ready-to-show', () => {
         win.show();
+    });
+
+    win.webContents.on('did-fail-load', (event, errorCode, errorDescription, validatedURL) => {
+        console.error(`Failed to load: ${validatedURL} — ${errorDescription} (${errorCode})`);
+        // Retry after 2 seconds if server isn't ready yet
+        setTimeout(() => {
+            if (isDev) win.loadURL('http://127.0.0.1:5000');
+        }, 2000);
     });
 }
 
