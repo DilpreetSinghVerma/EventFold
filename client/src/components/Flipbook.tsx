@@ -116,19 +116,17 @@ export function Flipbook({ sheets, frontCover, backCover, title = 'Photo Album' 
       const screenH = window.innerHeight;
       const isMobile = screenW < 768;
 
-      // The exact aspect ratio of a single 12x18 page
+      // Single page ratio is 1.5. Spread is 3.0.
       const PAGE_RATIO = 1.5;
-
-      // Always show two pages (spread) unless screen is extremely narrow
       const multiplier = 2;
 
-      const verticalPadding = isMobile ? 120 : 180;
-      const horizontalPadding = isMobile ? 20 : 100;
+      // Vertical space usage: be more aggressive on mobile
+      const verticalPadding = isMobile ? 100 : 180;
+      const horizontalPadding = isMobile ? 16 : 120;
 
       let availW = screenW - horizontalPadding;
       let availH = screenH - verticalPadding;
 
-      // Calculate sizes that prevent any stretching
       let w = availW / multiplier;
       let h = w / PAGE_RATIO;
 
@@ -381,15 +379,15 @@ export function Flipbook({ sheets, frontCover, backCover, title = 'Photo Album' 
               width={pageWidth}
               height={pageHeight}
               size="fixed"
-              minWidth={100}
-              maxWidth={2000}
-              minHeight={100}
-              maxHeight={2000}
+              minWidth={50}
+              maxWidth={3000}
+              minHeight={50}
+              maxHeight={3000}
               maxShadowOpacity={0.4}
               showCover={true}
-              mobileScrollSupport={true}
+              mobileScrollSupport={false}
               className="shadow-2xl"
-              style={{ display: 'block', margin: '0 auto' }}
+              style={{ display: 'block' }}
               startPage={0}
               drawShadow={true}
               flippingTime={1000}
@@ -398,7 +396,7 @@ export function Flipbook({ sheets, frontCover, backCover, title = 'Photo Album' 
               autoSize={false}
               clickEventForward={true}
               useMouseEvents={true}
-              swipeDistance={10}
+              swipeDistance={0}
               showPageCorners={true}
               disableFlipByClick={false}
               onChangeState={(e: any) => {

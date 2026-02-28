@@ -18,10 +18,10 @@ function getCloudinaryHalves(url: string): [string, string] | null {
   const parts = url.split('/upload/');
   if (parts.length !== 2) return null;
 
-  // c_crop,g_west,w_0.5 = crop left half
+  // c_crop,g_west,w_0.5,h_1.0 = crop exactly left 50% with full height
   // q_auto,f_auto = automatic quality and modern format (WebP/AVIF)
-  const left = `${parts[0]}/upload/c_crop,g_west,w_0.5,q_auto,f_auto/${parts[1]}`;
-  const right = `${parts[0]}/upload/c_crop,g_east,w_0.5,q_auto,f_auto/${parts[1]}`;
+  const left = `${parts[0]}/upload/c_crop,g_west,w_0.5,h_1.0,q_auto,f_auto/${parts[1]}`;
+  const right = `${parts[0]}/upload/c_crop,g_east,w_0.5,h_1.0,q_auto,f_auto/${parts[1]}`;
   return [left, right];
 }
 
