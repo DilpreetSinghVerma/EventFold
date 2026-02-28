@@ -30,8 +30,13 @@ export function serveStatic(app: Express) {
   console.log(`Serving static files from: ${distPath}`);
   app.use(express.static(distPath));
 
-  // Fall through to index.html for SPA routing
-  app.use("*", (_req, res) => {
+  // Fall through to index.html for SPA routing, but EXCLUDE /api routes
+  // This ensures that if /api/health isn't matched by Express routes, 
+  // it doesn't return the SPA's index.html
+  app.get("*", (req, res, next) => {
+    if (req.path.startsWith("/api")) {
+      return next();
+    }
     const indexPath = path.resolve(distPath, "index.html");
     if (fs.existsSync(indexPath)) {
       res.sendFile(indexPath);
