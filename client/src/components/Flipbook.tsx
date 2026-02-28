@@ -390,13 +390,13 @@ export function Flipbook({ sheets, frontCover, backCover, title = 'Photo Album' 
               style={{ display: 'block' }}
               startPage={0}
               drawShadow={true}
-              flippingTime={window.innerWidth < 768 ? 600 : 800}
+              flippingTime={800}
               usePortrait={false}
               startZIndex={0}
               autoSize={false}
-              clickEventForward={true}
+              clickEventForward={window.innerWidth >= 768}
               useMouseEvents={true}
-              swipeDistance={15}
+              swipeDistance={30}
               showPageCorners={true}
               disableFlipByClick={false}
               onChangeState={(e: any) => {
@@ -521,7 +521,7 @@ export function Flipbook({ sheets, frontCover, backCover, title = 'Photo Album' 
         </div>          {/* end zoom/pan wrapper */}
 
         {/* ── Mobile Side Navigation ── */}
-        <div className="md:hidden absolute inset-y-0 left-0 w-16 flex items-center justify-start pl-2 z-50 pointer-events-none">
+        <div className="md:hidden absolute inset-y-0 left-0 w-12 flex items-center justify-start pl-2 z-50 pointer-events-none">
           <Button
             onClick={() => { playFlipSound(); book.current?.pageFlip().flipPrev(); }}
             className="rounded-full w-10 h-10 bg-black/40 backdrop-blur-md text-white border border-white/10 p-0 pointer-events-auto"
@@ -529,7 +529,7 @@ export function Flipbook({ sheets, frontCover, backCover, title = 'Photo Album' 
             <ChevronLeft className="w-6 h-6" />
           </Button>
         </div>
-        <div className="md:hidden absolute inset-y-0 right-0 w-16 flex items-center justify-end pr-2 z-50 pointer-events-none">
+        <div className="md:hidden absolute inset-y-0 right-0 w-12 flex items-center justify-end pr-2 z-50 pointer-events-none">
           <Button
             onClick={() => { playFlipSound(); book.current?.pageFlip().flipNext(); }}
             className="rounded-full w-10 h-10 bg-black/40 backdrop-blur-md text-white border border-white/10 p-0 pointer-events-auto"
