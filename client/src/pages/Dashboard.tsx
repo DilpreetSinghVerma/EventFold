@@ -38,6 +38,7 @@ export default function Dashboard() {
       setAlbums(data);
     } catch (e) {
       console.error(e);
+      setDbConnected(false);
     } finally {
       setLoading(false);
     }
@@ -166,15 +167,21 @@ export default function Dashboard() {
 
           <div className="flex items-center gap-6">
             {dbConnected === false && (
-              <div className="hidden md:flex items-center gap-2 px-4 py-2 bg-destructive/10 border border-destructive/20 rounded-full text-destructive text-xs font-bold animate-pulse">
-                <div className="w-2 h-2 rounded-full bg-destructive" />
-                CLOUD SYNC OFFLINE (DNS ERROR)
+              <div className="hidden md:flex flex-col items-end">
+                <div className="flex items-center gap-2 px-4 py-2 bg-destructive/10 border border-destructive/20 rounded-full text-destructive text-[10px] font-bold">
+                  <div className="w-2 h-2 rounded-full bg-destructive" />
+                  OFFLINE MODE
+                </div>
+                <span className="text-[10px] text-white/20 mt-1 uppercase">Local only · Add DATABASE_URL for Mobile</span>
               </div>
             )}
             {dbConnected === true && (
-              <div className="hidden md:flex items-center gap-2 px-4 py-2 bg-primary/10 border border-primary/20 rounded-full text-primary text-xs font-bold">
-                <div className="w-2 h-2 rounded-full bg-primary animate-pulse" />
-                CLOUD SYNC ACTIVE
+              <div className="hidden md:flex flex-col items-end">
+                <div className="flex items-center gap-2 px-4 py-2 bg-primary/10 border border-primary/20 rounded-full text-primary text-[10px] font-bold">
+                  <div className="w-2 h-2 rounded-full bg-primary animate-pulse" />
+                  CLOUD SYNC ACTIVE
+                </div>
+                <span className="text-[10px] text-white/20 mt-1 uppercase">Ready for Mobile QR Sharing</span>
               </div>
             )}
             <Link href="/create">

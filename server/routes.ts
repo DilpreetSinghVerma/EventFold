@@ -77,15 +77,27 @@ export function registerRoutes(
   // Health check for cloud debugging
   app.get("/api/health", async (_req, res) => {
     try {
-      await storage.getAlbums();
-      res.json({ status: "ok", database: "connected", env: process.env.NODE_ENV });
+      const dbConnected = !!process.env.DATABASE_URL;
+      const cloudSync = dbConnected && (process.env.DATABASE_URL !== "dummy_url");
+
+      // Test the database if theoretically connected
+      if (cloudSync) {
+        await storage.getAlbums();
+      }
+
+      res.json({
+        status: "ok",
+        database: cloudSync ? "connected" : "local_only",
+        env: process.env.NODE_ENV || (process.env.VERCEL ? "production-vercel" : "development"),
+        cloudinary: !!process.env.CLOUDINARY_CLOUD_NAME
+      });
     } catch (e: any) {
-      console.error("Health check database failure:", e);
+      console.error("Health check failure:", e);
       res.status(500).json({
         status: "error",
         database: "disconnected",
         error: e.message || String(e),
-        stack: process.env.NODE_ENV === "development" ? e.stack : undefined
+        isVercel: !!process.env.VERCEL
       });
     }
   });
@@ -94,21 +106,23 @@ export function registerRoutes(
   app.post("/api/albums", async (req, res) => {
     try {
       const data = insertAlbumSchema.parse(req.body);
+      const isVercel = !!process.env.VERCEL;
+      const dbUrl = process.env.DATABASE_URL;
+
+      if (isVercel && (!dbUrl || dbUrl === "dummy_url")) {
+        console.error("Vercel Deployment Error: DATABASE_URL is not set.");
+      }
+
       const album = await storage.createAlbum(data);
       res.json(album);
     } catch (e) {
       if (e instanceof ZodError) {
-        console.error("Validation error creating album:", e.errors);
         return res.status(400).json({ error: "Invalid album data provided", details: e.errors });
       }
-      console.error("Server error creating album details:", {
-        message: e instanceof Error ? e.message : "Unknown error",
-        stack: e instanceof Error ? e.stack : undefined,
-        raw: e
-      });
+      console.error("Album creation failed:", e);
       res.status(500).json({
-        message: e instanceof Error ? e.message : "Internal server failure during album creation",
-        details: e instanceof Error ? e.stack : String(e)
+        message: "Album record creation failed",
+        error: e instanceof Error ? e.message : String(e)
       });
     }
   });
@@ -154,10 +168,19 @@ export function registerRoutes(
   });
 
   // Upload files (Supports both Direct Binary Upload & Meta-only Metadata)
-  app.post("/api/albums/:albumId/files", upload.array("files", 100), async (req, res) => {
+  // We move multer INSIDE to allow JSON requests to pass through without being blocked
+  app.post("/api/albums/:albumId/files", (req, res, next) => {
+    // If it's a JSON batch from the client uploader, skip Multer
+    if (req.headers["content-type"]?.includes("application/json")) {
+      return next();
+    }
+    // Otherwise, use Multer for binary fallback
+    upload.array("files", 100)(req, res, next);
+  }, async (req, res) => {
     try {
       // HANDLE JSON BATCH UPLOAD (From Client-side direct Cloudinary uploads)
       if (req.body && req.body.files && Array.isArray(req.body.files)) {
+        console.log(`Syncing ${req.body.files.length} remote assets from client for album ${req.params.albumId}`);
         const results = await Promise.all(
           req.body.files.map(async (f: any) => {
             return await storage.createFile({
@@ -171,13 +194,13 @@ export function registerRoutes(
         return res.json(results);
       }
 
-      // FALLBACK TO MULTIPART UPLOAD (Old way, might time out on Vercel)
+      // FALLBACK TO MULTIPART BINARY UPLOAD 
       const multerFiles = req.files as Express.Multer.File[];
-      // ... rest of logic for binary upload remains as fallback ...
       if (!multerFiles || multerFiles.length === 0) {
-        return res.status(400).json({ error: "No files provided. Send binary files or a JSON files array." });
+        return res.status(400).json({ error: "Sync Error: No data received. Use application/json for batch sync or multipart for direct upload." });
       }
 
+      console.log(`Processing direct binary upload: ${multerFiles.length} files`);
       const useCloudinary = !!(process.env.CLOUDINARY_CLOUD_NAME && process.env.CLOUDINARY_API_KEY && process.env.CLOUDINARY_API_SECRET);
       const startTime = Date.now();
 
@@ -187,37 +210,27 @@ export function registerRoutes(
 
       for (let i = 0; i < multerFiles.length; i += CONCURRENCY_LIMIT) {
         const chunk = multerFiles.slice(i, i + CONCURRENCY_LIMIT);
-        console.log(`Processing batch ${Math.floor(i / CONCURRENCY_LIMIT) + 1}...`);
-
         const chunkResults = await Promise.all(
           chunk.map(async (file, indexInChunk) => {
             const globalIndex = i + indexInChunk;
             const fileType = req.body[`fileType_${globalIndex}`] || "sheet";
             let bufferToUpload = file.buffer;
 
-            // Optional Compression (Lazy-loaded to prevent Vercel startup crashes)
+            // Optional Compression logic (Safe import for serverless)
             if (file.size > 5 * 1024 * 1024) {
               try {
                 const sharp = (await import('sharp')).default;
                 bufferToUpload = await sharp(file.buffer)
-                  .resize(4000, 4000, { fit: 'inside', withoutEnlargement: true })
-                  .jpeg({ quality: 80, progressive: true })
+                  .resize(3000, 3000, { fit: 'inside', withoutEnlargement: true })
+                  .jpeg({ quality: 80 })
                   .toBuffer();
-              } catch (sharpError) {
-                console.error(`Sharp compression failed for file ${globalIndex}:`, sharpError);
-              }
+              } catch (se) { /* skip compression */ }
             }
 
             let filePath = "";
             if (useCloudinary) {
-              try {
-                const cloudinaryResult = await streamUpload(bufferToUpload);
-                filePath = cloudinaryResult.secure_url;
-                console.log(`Uploaded asset ${globalIndex + 1}/${multerFiles.length}`);
-              } catch (uploadError) {
-                console.error(`Upload error for file ${globalIndex}:`, uploadError);
-                throw new Error(`Cloudinary error at index ${globalIndex}`);
-              }
+              const cloudinaryResult = await streamUpload(bufferToUpload);
+              filePath = cloudinaryResult.secure_url;
             } else {
               const filename = `${req.params.albumId}_${Date.now()}_${globalIndex}${path.extname(file.originalname)}`;
               const localPath = path.join(uploadDir, filename);
@@ -236,19 +249,12 @@ export function registerRoutes(
         uploadResults.push(...chunkResults);
       }
 
-      const totalDuration = ((Date.now() - startTime) / 1000).toFixed(2);
-      console.log(`Sync complete: ${uploadResults.length} assets in ${totalDuration}s`);
       res.json(uploadResults);
     } catch (e) {
-      console.error("Upload error details:", {
-        message: e instanceof Error ? e.message : "Unknown error",
-        stack: e instanceof Error ? e.stack : undefined,
-        raw: e
-      });
+      console.error("Critical upload failure:", e);
       res.status(500).json({
-        error: "Upload failed",
-        message: e instanceof Error ? e.message : "Internal error",
-        details: e instanceof Error ? e.stack : String(e)
+        error: "Server synchronization failed",
+        message: e instanceof Error ? e.message : "Internal error"
       });
     }
   });

@@ -66,10 +66,34 @@ export default function CreateAlbum() {
 
   const step1Valid = !!formData.title.trim() && !!formData.date && !!formData.frontCover && !!formData.backCover;
 
+  // Helper check for cloud connectivity
+  const checkCloudSync = async () => {
+    try {
+      const res = await fetch('/api/health');
+      if (!res.ok) return false;
+      const data = await res.json();
+      return data.database === 'connected';
+    } catch { return false; }
+  };
+
   const handleSubmit = async () => {
     if (!formData.frontCover || !formData.backCover || formData.sheets.length === 0) return;
 
     setLoading(true);
+    setStatus('Analyzing cloud connectivity...');
+
+    const isSynced = await checkCloudSync();
+    if (!isSynced) {
+      const proceed = window.confirm(
+        "⚠️ CLOUD SYNC INACTIVE\n\nYour DATABASE_URL is not set. This album will only exist on this machine and WILL NOT be visible on mobile via QR code.\n\nDo you want to continue in OFFLINE MODE?"
+      );
+      if (!proceed) {
+        setLoading(false);
+        setStatus('');
+        return;
+      }
+    }
+
     setStatus('Initializing project workspace...');
 
     try {
@@ -96,7 +120,6 @@ export default function CreateAlbum() {
           const img = new Image();
           img.onload = () => {
             const canvas = document.createElement("canvas");
-            // Standardize extremely large sheets to a maximum practical dimension
             const MAX_WIDTH = 2500;
             const MAX_HEIGHT = 2500;
             let width = img.width;
@@ -117,14 +140,13 @@ export default function CreateAlbum() {
             canvas.height = height;
 
             const ctx = canvas.getContext("2d");
-            if (!ctx) return resolve(file); // Fallback to original
+            if (!ctx) return resolve(file);
 
             ctx.drawImage(img, 0, 0, width, height);
 
-            // Compress to 85% JPEG
             canvas.toBlob(
               (blob) => {
-                if (!blob) return resolve(file); // Fallback
+                if (!blob) return resolve(file);
                 const compressedFile = new File([blob], file.name.replace(/\.[^/.]+$/, ".jpg"), {
                   type: "image/jpeg",
                   lastModified: Date.now(),
@@ -135,7 +157,7 @@ export default function CreateAlbum() {
               0.85
             );
           };
-          img.onerror = () => resolve(file); // If unparseable, skip compression
+          img.onerror = () => resolve(file);
           img.src = URL.createObjectURL(file);
         });
       };
@@ -183,11 +205,7 @@ export default function CreateAlbum() {
       // Execute all uploads concurrently
       const uploadPromises = filesToProcess.map(async (item, index) => {
         const label = item.type === 'cover_front' ? 'Front cover' : item.type === 'cover_back' ? 'Back cover' : `Sheet ${index - 1}`;
-
-        // Compress the raw >10MB file down to <1MB
-        const compressed = await compressImage(item.file);
-
-        // Upload the compressed fast file
+        const compressed = await compressImage(item.file!);
         const url = await uploadToCloudinary(compressed, label);
 
         return {
