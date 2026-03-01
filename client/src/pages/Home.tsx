@@ -1,13 +1,18 @@
-import { Link } from 'wouter';
+import { Link, useLocation } from 'wouter';
 import { Button } from '@/components/ui/button';
 import { motion } from 'framer-motion';
-import { ArrowRight, BookOpen, Upload, Share2, Sparkles, Zap, ShieldCheck } from 'lucide-react';
+import { Sparkles, ImagePlus, Eye, Smartphone, Zap, ArrowRight, LayoutGrid, CheckCircle2, ShoppingCart, ShieldCheck, Upload, Share2, BookOpen } from "lucide-react";
+import { useAuth } from "@/lib/auth";
+import { useEffect } from "react";
 import travelCover from '@assets/generated_images/travel_album_cover_art.png';
 import weddingCover from '@assets/generated_images/wedding_album_cover_art.png';
 
 export default function Home() {
+  const { user } = useAuth();
+  const [, setLocation] = useLocation();
+
   return (
-    <div className="min-h-screen bg-background text-foreground overflow-x-hidden selection:bg-primary/30">
+    <div className="min-h-screen bg-[#030303] text-white selection:bg-primary/30 selection:text-white">
       {/* Decorative Blur Orbs */}
       <div className="absolute top-0 -left-20 w-96 h-96 bg-primary/20 rounded-full blur-[120px] pointer-events-none" />
       <div className="absolute top-1/2 -right-20 w-96 h-96 bg-indigo-500/10 rounded-full blur-[120px] pointer-events-none" />
@@ -16,7 +21,7 @@ export default function Home() {
       <nav className="relative z-50 flex items-center justify-between px-8 py-6 max-w-7xl mx-auto backdrop-blur-sm">
         <div className="flex items-center gap-3 group cursor-pointer">
           <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-primary to-indigo-600 flex items-center justify-center shadow-lg shadow-primary/20 group-hover:scale-110 transition-transform duration-300">
-            <BookOpen className="w-5 h-5 text-white" />
+            <ImagePlus className="w-5 h-5 text-white" />
           </div>
           <span className="font-display text-2xl font-bold tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-white to-white/60">
             EventFold
@@ -56,16 +61,18 @@ export default function Home() {
               Transform your professional photography into immersive, cloud-secured cinematic experiences. The elite standard for modern business-to-client album delivery.
             </p>
             <div className="flex flex-col sm:flex-row gap-5">
-              <Link href="/create">
-                <Button size="lg" className="rounded-2xl h-16 px-10 text-lg bg-primary hover:bg-primary/90 text-white glow-primary border-none">
-                  Get Started <ArrowRight className="ml-2 w-5 h-5" />
+              <Link href={user ? "/dashboard" : "/login"}>
+                <Button size="lg" className="rounded-2xl h-16 px-10 text-lg bg-primary hover:bg-primary/90 text-white glow-primary border-none font-bold">
+                  {user ? "View My Projects" : "Get Started for Free"} <ArrowRight className="w-5 h-5 ml-2" />
                 </Button>
               </Link>
-              <Link href="/dashboard">
-                <Button variant="outline" size="lg" className="rounded-2xl h-16 px-10 text-lg border-white/10 hover:bg-white/5 backdrop-blur-md">
-                  Browse Gallery
-                </Button>
-              </Link>
+              {!user && (
+                <Link href="/login">
+                  <Button size="lg" variant="outline" className="rounded-2xl h-16 px-10 text-lg glass border-none font-bold">
+                    Studio Login
+                  </Button>
+                </Link>
+              )}
             </div>
 
             {/* Quick Stats */}
@@ -175,7 +182,7 @@ function FeatureCard({ icon, title, description, gradient }: { icon: React.React
       whileHover={{ y: -8 }}
       className="group p-10 rounded-[2.5rem] glass hover:bg-white/[0.08] transition-all duration-500 relative overflow-hidden"
     >
-      <div className={`absolute top-0 right-0 w-32 h-32 bg-gradient-to-br ${gradient} opacity-[0.03] group-hover:opacity-10 transition-opacity blur-3xl`} />
+      <div className={`absolute -top-10 -right-10 w-32 h-32 bg-gradient-to-br ${gradient} opacity-[0.03] group-hover:opacity-10 transition-opacity blur-3xl`} />
       <div className={`w-14 h-14 rounded-2xl bg-gradient-to-br ${gradient} flex items-center justify-center mb-8 shadow-lg shadow-black/20 group-hover:scale-110 transition-transform`}>
         <div className="text-white">
           {icon}

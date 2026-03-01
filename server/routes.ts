@@ -4,8 +4,14 @@ import { storage } from "./storage";
 import multer from "multer";
 import path from "path";
 import fs from "fs";
-import { insertAlbumSchema, insertFileSchema } from "../shared/schema";
+import { insertAlbumSchema, insertFileSchema, users } from "../shared/schema";
 import { ZodError } from "zod";
+import Stripe from "stripe";
+
+const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || "sk_test_51", {
+  // @ts-ignore - version mismatch in types
+  apiVersion: "2025-02-24-preview",
+});
 
 // Use /tmp for uploads on Vercel, as the rest of the filesystem is read-only
 const uploadDir = path.join(process.platform === 'win32' ? process.cwd() : '/tmp', "uploads");
@@ -125,14 +131,12 @@ export function registerRoutes(
   // Create album (Metadata only)
   app.post("/api/albums", async (req, res) => {
     try {
-      const data = insertAlbumSchema.parse(req.body);
-      const isVercel = !!process.env.VERCEL;
-      const dbUrl = process.env.DATABASE_URL;
+      if (!req.isAuthenticated()) return res.status(401).json({ error: "Unauthorized" });
 
-      if (isVercel && (!dbUrl || dbUrl === "dummy_url")) {
-        console.error("Vercel Deployment Error: DATABASE_URL is not set.");
-      }
-
+      const data = insertAlbumSchema.parse({
+        ...req.body,
+        userId: (req.user as any).id
+      });
       const album = await storage.createAlbum(data);
       res.json(album);
     } catch (e) {
@@ -150,9 +154,12 @@ export function registerRoutes(
   // Get all albums with their files
   app.get("/api/albums", async (req, res) => {
     try {
-      const albums = await storage.getAlbums();
+      if (!req.isAuthenticated()) return res.status(401).json({ error: "Unauthorized" });
+
+      const userAlbums = await storage.getAlbumsByUser((req.user as any).id);
+
       const albumsWithFiles = await Promise.all(
-        albums.map(async (album: any) => {
+        userAlbums.map(async (album: any) => {
           const files = await storage.getFilesByAlbum(album.id);
           return { ...album, files };
         })
@@ -288,4 +295,76 @@ export function registerRoutes(
     res.sendFile(filePath);
   });
 
+  // --- Stripe Payments ---
+
+  // Create Checkout Session
+  app.post("/api/create-checkout-session", async (req, res) => {
+    if (!req.isAuthenticated()) return res.status(401).json({ error: "Unauthorized" });
+    const user = req.user as any;
+
+    try {
+      const session = await stripe.checkout.sessions.create({
+        payment_method_types: ["card"],
+        line_items: [
+          {
+            price_data: {
+              currency: "usd",
+              product_data: {
+                name: "EventFold Pro Plan",
+                description: "Unlimited Cinematic Albums & Premium Features",
+              },
+              unit_amount: 999, // $9.99
+              recurring: { interval: "month" },
+            },
+            quantity: 1,
+          },
+        ],
+        mode: "subscription",
+        success_url: `${process.env.VITE_PUBLIC_VIEWER_URL || req.headers.origin}/dashboard?success=true`,
+        cancel_url: `${process.env.VITE_PUBLIC_VIEWER_URL || req.headers.origin}/dashboard?canceled=true`,
+        metadata: {
+          userId: user.id
+        },
+        customer_email: user.email,
+      });
+
+      res.json({ url: session.url });
+    } catch (e: any) {
+      res.status(500).json({ error: e.message });
+    }
+  });
+
+  // Stripe Webhook (Handle as raw body)
+  app.post("/api/webhook/stripe", async (req, res) => {
+    const sig = req.headers["stripe-signature"];
+    let event;
+
+    try {
+      event = stripe.webhooks.constructEvent(
+        (req as any).rawBody || req.body,
+        sig as string,
+        process.env.STRIPE_WEBHOOK_SECRET || ""
+      );
+    } catch (err: any) {
+      return res.status(400).send(`Webhook Error: ${err.message}`);
+    }
+
+    // Handle the event
+    if (event.type === "checkout.session.completed") {
+      const session = event.data.object as any;
+      const userId = session.metadata.userId;
+      const stripeCustomerId = session.customer;
+      const subscriptionId = session.subscription;
+
+      // Update user to PRO
+      await storage.updateUser(userId, {
+        plan: 'pro',
+        stripeCustomerId,
+        subscriptionId
+      });
+      console.log(`User ${userId} upgraded to PRO`);
+    }
+
+    res.json({ received: true });
+  });
 }

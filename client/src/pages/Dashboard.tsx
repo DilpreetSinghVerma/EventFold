@@ -2,7 +2,7 @@ import { Link } from 'wouter';
 import { Card, CardContent, CardFooter } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Plus, QrCode, Eye, Trash2, LayoutGrid, Calendar, LogOut, Settings as SettingsIcon, Lock, Loader2 } from 'lucide-react';
+import { Plus, QrCode, Eye, Trash2, LayoutGrid, Calendar, LogOut, Settings as SettingsIcon, Lock, Loader2, Sparkles, User as UserIcon } from 'lucide-react';
 import { QRCodeSVG } from 'qrcode.react';
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -11,19 +11,20 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
+  DialogDescription,
   DialogTrigger,
 } from "@/components/ui/dialog";
+import { useAuth } from '@/lib/auth';
 
 export default function Dashboard() {
+  const { user, logout, startStripeCheckout } = useAuth();
   const [albums, setAlbums] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [dbConnected, setDbConnected] = useState<boolean | null>(null);
   const [settings, setSettings] = useState<any>(null);
-  const [isAuthorized, setIsAuthorized] = useState(false);
-  const [passcode, setPasscode] = useState('');
 
   // Use the current URL as the origin for QR codes
-  const origin = typeof window !== 'undefined' ? window.location.origin : (import.meta.env.VITE_PUBLIC_VIEWER_URL || 'https://eventfold.vercel.app');
+  const origin = typeof window !== 'undefined' ? window.location.origin : ((import.meta as any).env.VITE_PUBLIC_VIEWER_URL || 'https://eventfold.vercel.app');
 
   const fetchAlbums = async () => {
     try {
@@ -163,44 +164,6 @@ export default function Dashboard() {
     );
   };
 
-  if (!isAuthorized && settings?.adminPassword) {
-    return (
-      <div className="min-h-screen bg-background flex items-center justify-center p-8">
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="w-full max-w-md glass p-10 rounded-[2.5rem] border-white/5 space-y-8"
-        >
-          <div className="text-center space-y-2">
-            <div className="w-16 h-16 bg-primary/20 rounded-2xl flex items-center justify-center mx-auto mb-6 text-primary">
-              <Lock className="w-8 h-8" />
-            </div>
-            <h1 className="text-3xl font-bold tracking-tight">Studio Access</h1>
-            <p className="text-muted-foreground">Enter your passcode to manage {settings?.businessName || 'your studio'}.</p>
-          </div>
-
-          <div className="space-y-4">
-            <Input
-              type="password"
-              placeholder="Passcode"
-              value={passcode}
-              onChange={e => setPasscode(e.target.value)}
-              onKeyDown={e => e.key === 'Enter' && passcode === settings.adminPassword && setIsAuthorized(true)}
-              className="h-14 bg-white/5 border-white/10 rounded-2xl px-6 text-center text-2xl tracking-[0.3em]"
-            />
-            <Button
-              onClick={() => passcode === settings.adminPassword ? setIsAuthorized(true) : alert('Incorrect passcode')}
-              className="w-full h-14 rounded-2xl bg-primary hover:bg-primary/90 text-white font-bold"
-            >
-              Unlock Dashboard
-            </Button>
-          </div>
-          <p className="text-[10px] text-center text-white/20 uppercase tracking-widest font-mono">Default: admin123 · Change in Settings</p>
-        </motion.div>
-      </div>
-    );
-  }
-
   if (loading) return <div className="min-h-screen bg-background flex items-center justify-center"><Loader2 className="w-10 h-10 animate-spin text-primary opacity-20" /></div>;
 
   return (
@@ -245,6 +208,9 @@ export default function Dashboard() {
                 <SettingsIcon className="w-4 h-4 mr-2" /> Settings
               </Button>
             </Link>
+            <Button onClick={() => logout()} variant="ghost" className="rounded-xl text-white/40 hover:text-red-400 glass border-none group">
+              <LogOut className="w-4 h-4 mr-2 group-hover:rotate-180 transition-transform" /> Sign Out
+            </Button>
             <Link href="/create">
               <Button className="rounded-xl px-6 bg-primary hover:bg-primary/90 text-white shadow-lg shadow-primary/20">
                 <Plus className="w-4 h-4 mr-2" /> New Album
@@ -253,6 +219,35 @@ export default function Dashboard() {
           </div>
         </div>
       </nav>
+
+      <header className="max-w-7xl mx-auto px-8 pt-16 pb-12">
+        <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-8">
+          <div className="space-y-4">
+            <div className="flex items-center gap-3 mb-2">
+              <div className="w-10 h-10 rounded-2xl bg-primary/10 flex items-center justify-center border border-primary/20">
+                <Sparkles className="w-5 h-5 text-primary" />
+              </div>
+              <span className="text-xs font-bold font-mono text-primary uppercase tracking-[0.2em]">Dashboard Terminal</span>
+            </div>
+            <h2 className="text-5xl font-display font-bold tracking-tight">Welcome back, <span className="text-primary">{user?.name?.split(' ')[0]}</span></h2>
+            <div className="flex items-center gap-4 pt-2">
+              <div className="flex items-center gap-2 px-4 py-1.5 bg-white/5 border border-white/10 rounded-full text-xs font-bold text-white/60">
+                <UserIcon className="w-3.5 h-3.5" />
+                {user?.plan === 'pro' ? 'PRO PLAN ACTIVE' : 'FREE PLAN'}
+              </div>
+              {user?.plan !== 'pro' && (
+                <Button
+                  onClick={startStripeCheckout}
+                  variant="outline"
+                  className="h-8 rounded-full border-primary/20 bg-primary/5 hover:bg-primary/20 text-primary text-[10px] font-bold px-4"
+                >
+                  UPGRADE TO PRO
+                </Button>
+              )}
+            </div>
+          </div>
+        </div>
+      </header>
 
       <main className="max-w-7xl mx-auto px-8 pt-12">
         <div className="mb-12">

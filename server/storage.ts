@@ -1,11 +1,12 @@
 import crypto from "crypto";
-import { type InsertAlbum, type Album, type InsertFile, type File, albums, files, settings } from "../shared/schema";
+import { type InsertAlbum, type Album, type InsertFile, type File, type User, type InsertUser, albums, files, settings, users } from "../shared/schema";
 import { db } from "./db";
 import { eq, asc } from "drizzle-orm";
 
 export interface IStorage {
   createAlbum(album: InsertAlbum): Promise<Album>;
   getAlbums(): Promise<Album[]>;
+  getAlbumsByUser(userId: string): Promise<Album[]>;
   getAlbum(id: string): Promise<Album | undefined>;
   deleteAlbum(id: string): Promise<void>;
 
@@ -16,6 +17,12 @@ export interface IStorage {
 
   getSettings(): Promise<any>;
   updateSettings(data: any): Promise<void>;
+
+  getUser(id: string): Promise<User | undefined>;
+  getUserByEmail(email: string): Promise<User | undefined>;
+  getUserByGoogleId(googleId: string): Promise<User | undefined>;
+  createUser(user: InsertUser): Promise<User>;
+  updateUser(id: string, data: Partial<User>): Promise<User>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -27,6 +34,10 @@ export class DatabaseStorage implements IStorage {
 
   async getAlbums(): Promise<Album[]> {
     return await db.select().from(albums).orderBy(asc(albums.createdAt));
+  }
+
+  async getAlbumsByUser(userId: string): Promise<Album[]> {
+    return await db.select().from(albums).where(eq(albums.userId, userId)).orderBy(asc(albums.createdAt));
   }
 
   async getAlbum(id: string): Promise<Album | undefined> {
@@ -75,21 +86,56 @@ export class DatabaseStorage implements IStorage {
         set: data
       });
   }
+
+  async getUser(id: string): Promise<User | undefined> {
+    if (!db) return;
+    const [row] = await db.select().from(users).where(eq(users.id, id));
+    return row;
+  }
+
+  async getUserByEmail(email: string): Promise<User | undefined> {
+    if (!db) return;
+    const [row] = await db.select().from(users).where(eq(users.email, email));
+    return row;
+  }
+
+  async getUserByGoogleId(googleId: string): Promise<User | undefined> {
+    if (!db) return;
+    const [row] = await db.select().from(users).where(eq(users.googleId, googleId));
+    return row;
+  }
+
+  async createUser(insertUser: InsertUser): Promise<User> {
+    if (!db) throw new Error("DB not connected");
+    const [row] = await db.insert(users).values(insertUser).returning();
+    return row;
+  }
+
+  async updateUser(id: string, data: Partial<User>): Promise<User> {
+    if (!db) throw new Error("DB not connected");
+    const [row] = await db.update(users).set(data).where(eq(users.id, id)).returning();
+    if (!row) throw new Error("User not found");
+    return row;
+  }
 }
 
 export class MemStorage implements IStorage {
   private albums: Map<string, Album>;
   private files: Map<string, File>;
+  private users: Map<string, User>;
   private settings: any;
   private albumIdCounter: number;
   private fileIdCounter: number;
+  private userIdCounter: number;
 
   constructor() {
     this.albums = new Map();
     this.files = new Map();
+    this.users = new Map();
     this.settings = { id: 1, businessName: "EventFold Studio", adminPassword: "admin123" };
     this.albumIdCounter = 1;
     this.fileIdCounter = 1;
+    this.userIdCounter = 1;
   }
 
   async createAlbum(insertAlbum: InsertAlbum): Promise<Album> {
@@ -97,7 +143,8 @@ export class MemStorage implements IStorage {
     const album: Album = {
       ...insertAlbum,
       id,
-      theme: insertAlbum.theme ?? 'modern',
+      userId: insertAlbum.userId || null,
+      theme: insertAlbum.theme || 'royal',
       createdAt: new Date(),
     };
     this.albums.set(id, album);
@@ -106,6 +153,10 @@ export class MemStorage implements IStorage {
 
   async getAlbums(): Promise<Album[]> {
     return Array.from(this.albums.values());
+  }
+
+  async getAlbumsByUser(userId: string): Promise<Album[]> {
+    return Array.from(this.albums.values()).filter(a => a.userId === userId);
   }
 
   async getAlbum(id: string): Promise<Album | undefined> {
@@ -152,6 +203,43 @@ export class MemStorage implements IStorage {
 
   async updateSettings(data: any): Promise<void> {
     this.settings = { ...this.settings, ...data, id: 1 };
+  }
+
+  async getUser(id: string): Promise<User | undefined> {
+    return this.users.get(id);
+  }
+
+  async getUserByEmail(email: string): Promise<User | undefined> {
+    return Array.from(this.users.values()).find(u => u.email === email);
+  }
+
+  async getUserByGoogleId(googleId: string): Promise<User | undefined> {
+    return Array.from(this.users.values()).find(u => u.googleId === googleId);
+  }
+
+  async createUser(insertUser: InsertUser): Promise<User> {
+    const id = String(this.userIdCounter++);
+    const user: User = {
+      ...insertUser,
+      id,
+      name: insertUser.name || null,
+      avatar: insertUser.avatar || null,
+      googleId: insertUser.googleId || null,
+      stripeCustomerId: insertUser.stripeCustomerId || null,
+      subscriptionId: insertUser.subscriptionId || null,
+      plan: insertUser.plan || 'free',
+      createdAt: new Date()
+    };
+    this.users.set(id, user);
+    return user;
+  }
+
+  async updateUser(id: string, data: Partial<User>): Promise<User> {
+    const user = this.users.get(id);
+    if (!user) throw new Error("User not found");
+    const updatedUser = { ...user, ...data };
+    this.users.set(id, updatedUser);
+    return updatedUser;
   }
 }
 

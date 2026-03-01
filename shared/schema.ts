@@ -3,8 +3,21 @@ import { pgTable, text, varchar, integer, timestamp } from "drizzle-orm/pg-core"
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 
+export const users = pgTable("users", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  googleId: text("google_id").unique(),
+  email: text("email").notNull().unique(),
+  name: text("name"),
+  avatar: text("avatar"),
+  plan: varchar("plan", { length: 20 }).notNull().default('free'), // 'free', 'pro'
+  stripeCustomerId: text("stripe_customer_id"),
+  subscriptionId: text("subscription_id"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
 export const albums = pgTable("albums", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: varchar("user_id").references(() => users.id, { onDelete: 'cascade' }),
   title: text("title").notNull(),
   date: text("date").notNull(),
   theme: varchar("theme", { length: 20 }).notNull().default('royal'),
@@ -36,7 +49,14 @@ export const insertFileSchema = createInsertSchema(files).omit({
   id: true,
 });
 
+export const insertUserSchema = createInsertSchema(users).omit({
+  id: true,
+  createdAt: true,
+});
+
 export type InsertAlbum = z.infer<typeof insertAlbumSchema>;
 export type Album = typeof albums.$inferSelect;
 export type InsertFile = z.infer<typeof insertFileSchema>;
 export type File = typeof files.$inferSelect;
+export type User = typeof users.$inferSelect;
+export type InsertUser = z.infer<typeof insertUserSchema>;
