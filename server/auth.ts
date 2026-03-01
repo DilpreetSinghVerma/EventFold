@@ -13,10 +13,22 @@ export function setupAuth(app: Express) {
     app.use(cookieSession({
         name: 'session',
         keys: [process.env.SESSION_SECRET || "eventfold-secret-key"],
-        maxAge: 24 * 60 * 60 * 1000, // 24 hours
-        secure: false, // Set to false to allow cross-domain testing on Vercel
+        maxAge: 24 * 60 * 60 * 1000,
+        secure: false, // Changed to false for easier testing on Vercel preview/proxied domains
         sameSite: 'lax',
     }));
+
+    // COOKIE-SESSION PASSPORT SHIM
+    // cookie-session doesn't have regenerate() or save() but passport expects them.
+    app.use((req: any, _res, next) => {
+        if (req.session && !req.session.regenerate) {
+            req.session.regenerate = (cb: any) => cb();
+        }
+        if (req.session && !req.session.save) {
+            req.session.save = (cb: any) => cb();
+        }
+        next();
+    });
 
     app.use(passport.initialize());
     app.use(passport.session());
