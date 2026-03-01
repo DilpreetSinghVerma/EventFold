@@ -6,7 +6,7 @@ interface AuthContextType {
     user: User | null;
     isLoading: boolean;
     logout: () => void;
-    startStripeCheckout: () => Promise<void>;
+    startStripeCheckout: (plan?: string) => Promise<void>;
     buyAlbumCredit: () => Promise<void>;
 }
 
@@ -29,15 +29,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         },
     });
 
-    const startStripeCheckout = async () => {
+    const startStripeCheckout = async (plan: string = 'monthly') => {
         try {
-            const res = await fetch("/api/create-checkout-session", { method: "POST" });
+            const res = await fetch(`/api/billing/subscribe/${plan}`, { method: "POST" });
             const data = await res.json();
             if (data.url) {
                 window.location.href = data.url;
             }
         } catch (e) {
-            console.error("Checkout failed", e);
+            console.error("Subscription failed", e);
         }
     };
 

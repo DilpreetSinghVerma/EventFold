@@ -2,7 +2,7 @@ import { Link } from 'wouter';
 import { Card, CardContent, CardFooter } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Plus, QrCode, Eye, Trash2, LayoutGrid, Calendar, LogOut, Settings as SettingsIcon, Lock, Loader2, Sparkles, User as UserIcon } from 'lucide-react';
+import { Plus, QrCode, Eye, Trash2, LayoutGrid, Calendar, LogOut, Settings as SettingsIcon, Lock, Loader2, Sparkles, User as UserIcon, Crown } from 'lucide-react';
 import { QRCodeSVG } from 'qrcode.react';
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -17,7 +17,7 @@ import {
 import { useAuth } from '@/lib/auth';
 
 export default function Dashboard() {
-  const { user, logout, buyAlbumCredit } = useAuth();
+  const { user, logout, buyAlbumCredit, startStripeCheckout } = useAuth();
   const [albums, setAlbums] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [dbConnected, setDbConnected] = useState<boolean | null>(null);
@@ -254,10 +254,20 @@ export default function Dashboard() {
               </div>
               <Button
                 onClick={buyAlbumCredit}
-                className="h-10 rounded-full bg-white text-black hover:bg-white/90 font-bold px-6 shadow-xl shadow-black/20 group"
+                className="h-10 rounded-full bg-white/5 backdrop-blur-md text-white hover:bg-white/10 border border-white/10 font-bold px-6 group"
               >
                 <Plus className="w-4 h-4 mr-2 group-hover:rotate-90 transition-transform" /> BUY 1 CREDIT (₹199)
               </Button>
+              {user?.plan !== 'pro' && (
+                <Button
+                  onClick={() => startStripeCheckout('monthly')}
+                  className="h-10 rounded-full bg-primary hover:bg-primary/90 text-white font-bold px-6 shadow-xl shadow-primary/20 relative group overflow-hidden"
+                >
+                  <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:animate-[shimmer_2s_infinite]" />
+                  <Crown className="w-4 h-4 mr-2" /> UPGRADE TO UNLIMITED (₹499)
+                  <span className="absolute -top-1 -right-1 px-2 py-0.5 bg-cyan-400 text-black text-[8px] font-black rounded-full">HOT</span>
+                </Button>
+              )}
             </div>
           </div>
         </div>

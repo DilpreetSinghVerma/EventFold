@@ -7,8 +7,16 @@ import { Flipbook } from '@/components/Flipbook';
 import weddingCover from '@assets/generated_images/wedding_album_cover_art.png';
 
 export default function Home() {
-  const { user } = useAuth();
+  const { user, startStripeCheckout } = useAuth();
   const [, setLocation] = useLocation();
+
+  const handleSubscribe = (plan: string) => {
+    if (user) {
+      startStripeCheckout(plan);
+    } else {
+      setLocation('/login');
+    }
+  };
 
   // Demo album data
   const demoSheets = [
@@ -146,7 +154,7 @@ export default function Home() {
                   <span className="text-sm font-medium text-white/20">/month</span>
                 </div>
                 <p className="text-sm text-white/60 leading-relaxed">Create as many wedding projects as you want. Full studio branding included.</p>
-                <Button onClick={() => setLocation('/login')} className="w-full h-14 rounded-xl bg-primary hover:bg-primary/90 text-white font-bold shadow-lg shadow-primary/20 transition-transform hover:scale-105">
+                <Button onClick={() => handleSubscribe('monthly')} className="w-full h-14 rounded-xl bg-primary hover:bg-primary/90 text-white font-bold shadow-lg shadow-primary/20 transition-transform hover:scale-105">
                   Get Unlimited Now
                 </Button>
                 <ul className="space-y-3 pt-4">
@@ -169,7 +177,7 @@ export default function Home() {
                   <span className="text-sm font-medium text-white/20">/year</span>
                 </div>
                 <p className="text-sm text-white/40 leading-relaxed">Save 33% compared to monthly. Professional standard for top wedding photographers.</p>
-                <Button onClick={() => setLocation('/login')} className="w-full h-12 rounded-xl bg-white/5 hover:bg-white/10 text-white border border-white/10 font-bold">
+                <Button onClick={() => handleSubscribe('yearly')} className="w-full h-12 rounded-xl bg-white/5 hover:bg-white/10 text-white border border-white/10 font-bold">
                   Choose Yearly
                 </Button>
                 <ul className="space-y-3 pt-4">

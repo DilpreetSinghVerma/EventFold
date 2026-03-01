@@ -114,14 +114,13 @@ export function registerRoutes(
     }
   });
 
-  // Stripe Billing: Buy 1 Album Credit
+  // Stripe Billing: Buy 1 Album Credit (One-time)
   app.post("/api/billing/buy-credit", async (req, res) => {
     try {
       if (!req.isAuthenticated()) return res.status(401).json({ error: "Unauthorized" });
       const userId = (req.user as any).id;
 
       const session = await stripe.checkout.sessions.create({
-        payment_method_types: ["card"],
         mode: "payment",
         line_items: [
           {
@@ -138,7 +137,7 @@ export function registerRoutes(
         ],
         success_url: `${req.headers.origin}/dashboard?success=true`,
         cancel_url: `${req.headers.origin}/dashboard?canceled=true`,
-        metadata: { userId },
+        metadata: { userId, type: 'credit' },
       });
 
       res.json({ url: session.url });
@@ -147,14 +146,53 @@ export function registerRoutes(
     }
   });
 
-  // Stripe Webhook (Simplified for demonstration - usually needs a separate non-JSON route)
+  // Stripe Billing: Monthly & Yearly Subscriptions
+  app.post("/api/billing/subscribe/:plan", async (req, res) => {
+    try {
+      if (!req.isAuthenticated()) return res.status(401).json({ error: "Unauthorized" });
+      const user = req.user as any;
+      const { plan } = req.params; // 'monthly' or 'yearly'
+
+      const isYearly = plan === 'yearly';
+      const amount = isYearly ? 399900 : 49900; // ₹3999 or ₹499
+      const interval = isYearly ? "year" : "month";
+
+      const session = await stripe.checkout.sessions.create({
+        mode: "subscription",
+        line_items: [
+          {
+            price_data: {
+              currency: "inr",
+              product_data: {
+                name: isYearly ? "EventFold Elite (Yearly)" : "EventFold Pro (Monthly)",
+                description: "Unlimited Cinematic Albums & Premium Branding",
+              },
+              unit_amount: amount,
+              recurring: { interval: interval as any },
+            },
+            quantity: 1,
+          },
+        ],
+        success_url: `${req.headers.origin}/dashboard?success=true`,
+        cancel_url: `${req.headers.origin}/dashboard?canceled=true`,
+        metadata: { userId: user.id, type: 'subscription', plan },
+        customer_email: user.email,
+      });
+
+      res.json({ url: session.url });
+    } catch (e: any) {
+      res.status(500).json({ error: "Stripe error", details: e.message });
+    }
+  });
+
+  // Consolidated Stripe Webhook
   app.post("/api/billing/webhook", async (req, res) => {
     const sig = req.headers["stripe-signature"];
     let event;
 
     try {
       event = stripe.webhooks.constructEvent(
-        (req as any).rawBody,
+        (req as any).rawBody || req.body,
         sig!,
         process.env.STRIPE_WEBHOOK_SECRET || ""
       );
@@ -163,11 +201,19 @@ export function registerRoutes(
     }
 
     if (event.type === "checkout.session.completed") {
-      const session = event.data.object as Stripe.Checkout.Session;
-      const userId = session.metadata?.userId;
-      if (userId) {
+      const session = event.data.object as any;
+      const { userId, type } = session.metadata;
+
+      if (type === 'credit') {
         await storage.addCredit(userId, 1);
         console.log(`Credits added for user ${userId}`);
+      } else if (type === 'subscription') {
+        await storage.updateUser(userId, {
+          plan: 'pro',
+          stripeCustomerId: session.customer,
+          subscriptionId: session.subscription
+        });
+        console.log(`User ${userId} upgraded to PRO Subscription`);
       }
     }
 
@@ -442,76 +488,5 @@ export function registerRoutes(
     res.sendFile(filePath);
   });
 
-  // --- Stripe Payments ---
-
-  // Create Checkout Session
-  app.post("/api/create-checkout-session", async (req, res) => {
-    if (!req.isAuthenticated()) return res.status(401).json({ error: "Unauthorized" });
-    const user = req.user as any;
-
-    try {
-      const session = await stripe.checkout.sessions.create({
-        payment_method_types: ["card"],
-        line_items: [
-          {
-            price_data: {
-              currency: "usd",
-              product_data: {
-                name: "EventFold Pro Plan",
-                description: "Unlimited Cinematic Albums & Premium Features",
-              },
-              unit_amount: 999, // $9.99
-              recurring: { interval: "month" },
-            },
-            quantity: 1,
-          },
-        ],
-        mode: "subscription",
-        success_url: `${process.env.VITE_PUBLIC_VIEWER_URL || req.headers.origin}/dashboard?success=true`,
-        cancel_url: `${process.env.VITE_PUBLIC_VIEWER_URL || req.headers.origin}/dashboard?canceled=true`,
-        metadata: {
-          userId: user.id
-        },
-        customer_email: user.email,
-      });
-
-      res.json({ url: session.url });
-    } catch (e: any) {
-      res.status(500).json({ error: e.message });
-    }
-  });
-
-  // Stripe Webhook (Handle as raw body)
-  app.post("/api/webhook/stripe", async (req, res) => {
-    const sig = req.headers["stripe-signature"];
-    let event;
-
-    try {
-      event = stripe.webhooks.constructEvent(
-        (req as any).rawBody || req.body,
-        sig as string,
-        process.env.STRIPE_WEBHOOK_SECRET || ""
-      );
-    } catch (err: any) {
-      return res.status(400).send(`Webhook Error: ${err.message}`);
-    }
-
-    // Handle the event
-    if (event.type === "checkout.session.completed") {
-      const session = event.data.object as any;
-      const userId = session.metadata.userId;
-      const stripeCustomerId = session.customer;
-      const subscriptionId = session.subscription;
-
-      // Update user to PRO
-      await storage.updateUser(userId, {
-        plan: 'pro',
-        stripeCustomerId,
-        subscriptionId
-      });
-      console.log(`User ${userId} upgraded to PRO`);
-    }
-
-    res.json({ received: true });
-  });
+  // (Legacy Stripe Methods removed - now using /api/billing routes)
 }
