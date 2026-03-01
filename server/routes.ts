@@ -101,6 +101,66 @@ export function registerRoutes(
     }
   });
 
+  // Stripe Billing: Buy 1 Album Credit
+  app.post("/api/billing/buy-credit", async (req, res) => {
+    try {
+      if (!req.isAuthenticated()) return res.status(401).json({ error: "Unauthorized" });
+      const userId = (req.user as any).id;
+
+      const session = await stripe.checkout.sessions.create({
+        payment_method_types: ["card"],
+        mode: "payment",
+        line_items: [
+          {
+            price_data: {
+              currency: "inr",
+              product_data: {
+                name: "1 Album Credit",
+                description: "Allows you to create one full 3D flipbook album.",
+              },
+              unit_amount: 19900, // ₹199
+            },
+            quantity: 1,
+          },
+        ],
+        success_url: `${req.headers.origin}/dashboard?success=true`,
+        cancel_url: `${req.headers.origin}/dashboard?canceled=true`,
+        metadata: { userId },
+      });
+
+      res.json({ url: session.url });
+    } catch (e: any) {
+      res.status(500).json({ error: "Stripe error", details: e.message });
+    }
+  });
+
+  // Stripe Webhook (Simplified for demonstration - usually needs a separate non-JSON route)
+  app.post("/api/billing/webhook", async (req, res) => {
+    const sig = req.headers["stripe-signature"];
+    let event;
+
+    try {
+      event = stripe.webhooks.constructEvent(
+        (req as any).rawBody,
+        sig!,
+        process.env.STRIPE_WEBHOOK_SECRET || ""
+      );
+    } catch (err: any) {
+      return res.status(400).send(`Webhook Error: ${err.message}`);
+    }
+
+    if (event.type === "checkout.session.completed") {
+      const session = event.data.object as Stripe.Checkout.Session;
+      const userId = session.metadata?.userId;
+      if (userId) {
+        await storage.addCredit(userId, 1);
+        console.log(`Credits added for user ${userId}`);
+      }
+    }
+
+    res.json({ received: true });
+  });
+
   // Health check for cloud debugging
   app.get("/api/health", async (_req, res) => {
     try {
@@ -149,10 +209,25 @@ export function registerRoutes(
     try {
       if (!req.isAuthenticated()) return res.status(401).json({ error: "Unauthorized" });
 
+      const userId = (req.user as any).id;
+      const user = await storage.getUser(userId);
+      if (!user) return res.status(404).json({ error: "User not found" });
+
+      // Check if user has enough credits
+      if (user.credits <= 0) {
+        return res.status(403).json({
+          error: "No credits remaining",
+          message: "Please purchase an album credit to continue."
+        });
+      }
+
       const data = insertAlbumSchema.parse({
         ...req.body,
-        userId: (req.user as any).id
+        userId: userId
       });
+
+      // Deduct credit and create album
+      await storage.deductCredit(userId);
       const album = await storage.createAlbum(data);
       res.json(album);
     } catch (e) {

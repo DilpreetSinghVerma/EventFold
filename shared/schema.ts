@@ -10,6 +10,7 @@ export const users = pgTable("users", {
   name: text("name"),
   avatar: text("avatar"),
   plan: varchar("plan", { length: 20 }).notNull().default('free'), // 'free', 'pro'
+  credits: integer("credits").notNull().default(1), // Starts with 1 free album
   stripeCustomerId: text("stripe_customer_id"),
   subscriptionId: text("subscription_id"),
   createdAt: timestamp("created_at").defaultNow().notNull(),

@@ -1,195 +1,199 @@
 import { Link, useLocation } from 'wouter';
 import { Button } from '@/components/ui/button';
 import { motion } from 'framer-motion';
-import { Sparkles, ImagePlus, Eye, Smartphone, Zap, ArrowRight, LayoutGrid, CheckCircle2, ShoppingCart, ShieldCheck, Upload, Share2, BookOpen } from "lucide-react";
+import { Sparkles, ImagePlus, Eye, Smartphone, Zap, ArrowRight, LayoutGrid, CheckCircle2, ShoppingCart, ShieldCheck, Upload, Share2, BookOpen, Crown, CreditCard, Rocket } from "lucide-react";
 import { useAuth } from "@/lib/auth";
-import { useEffect } from "react";
-import travelCover from '@assets/generated_images/travel_album_cover_art.png';
+import { Flipbook } from '@/components/Flipbook';
 import weddingCover from '@assets/generated_images/wedding_album_cover_art.png';
 
 export default function Home() {
   const { user } = useAuth();
   const [, setLocation] = useLocation();
 
+  // Demo album data
+  const demoSheets = [
+    "https://res.cloudinary.com/dzp0f9u5u/image/upload/v1740393962/demo_sheet_1_lh.jpg",
+    "https://res.cloudinary.com/dzp0f9u5u/image/upload/v1740393962/demo_sheet_1_rh.jpg",
+    "https://res.cloudinary.com/dzp0f9u5u/image/upload/v1740393962/demo_sheet_2_lh.jpg",
+    "https://res.cloudinary.com/dzp0f9u5u/image/upload/v1740393962/demo_sheet_2_rh.jpg",
+  ];
+
   return (
-    <div className="min-h-screen bg-[#030303] text-white selection:bg-primary/30 selection:text-white">
+    <div className="min-h-screen bg-[#030303] text-white selection:bg-primary/30 selection:text-white overflow-x-hidden">
       {/* Decorative Blur Orbs */}
       <div className="absolute top-0 -left-20 w-96 h-96 bg-primary/20 rounded-full blur-[120px] pointer-events-none" />
       <div className="absolute top-1/2 -right-20 w-96 h-96 bg-indigo-500/10 rounded-full blur-[120px] pointer-events-none" />
 
       {/* Navigation */}
-      <nav className="relative z-50 flex items-center justify-between px-8 py-6 max-w-7xl mx-auto backdrop-blur-sm">
-        <div className="flex items-center gap-3 group cursor-pointer">
-          <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-primary to-indigo-600 flex items-center justify-center shadow-lg shadow-primary/20 group-hover:scale-110 transition-transform duration-300">
+      <nav className="relative z-50 flex items-center justify-between px-8 py-6 max-w-7xl mx-auto">
+        <div className="flex items-center gap-3">
+          <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-primary to-indigo-600 flex items-center justify-center shadow-lg shadow-primary/20">
             <ImagePlus className="w-5 h-5 text-white" />
           </div>
-          <span className="font-display text-2xl font-bold tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-white to-white/60">
+          <span className="font-display text-2xl font-bold tracking-tight text-white">
             EventFold
           </span>
         </div>
-        <div className="flex items-center gap-8">
-          <Link href="/dashboard" className="text-sm font-medium text-muted-foreground hover:text-primary transition-colors">
-            My Gallery
+        <div className="flex items-center gap-6">
+          <Link href="/dashboard" className="text-sm font-medium text-white/50 hover:text-white transition-colors">
+            {user ? "Dashboard" : "Studio Log In"}
           </Link>
           <Link href="/create">
-            <Button className="rounded-full px-6 bg-primary hover:bg-primary/90 text-white border-none shadow-lg shadow-primary/20">
-              Create Now
+            <Button className="rounded-2xl px-6 bg-primary hover:bg-primary/90 text-white border-none shadow-lg shadow-primary/20 font-bold">
+              {user ? "New Project" : "Start Free"}
             </Button>
           </Link>
         </div>
       </nav>
 
       {/* Hero Section */}
-      <main className="relative pt-16 pb-32 px-8">
-        <div className="max-w-7xl mx-auto grid lg:grid-cols-2 gap-16 items-center">
+      <main className="relative pt-12 pb-24 px-8">
+        <div className="max-w-7xl mx-auto flex flex-col items-center text-center">
           <motion.div
-            initial={{ opacity: 0, x: -30 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ duration: 0.8, ease: "easeOut" }}
-            className="z-10"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8 }}
+            className="max-w-3xl"
           >
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary/10 border border-primary/20 text-primary text-xs font-bold tracking-widest uppercase mb-8">
-              <Sparkles className="w-3 h-3" /> Digital Storytelling
+            <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-primary/10 border border-primary/20 text-primary text-[10px] font-bold tracking-[0.2em] uppercase mb-8">
+              <Sparkles className="w-3 h-3" /> The Modern Standard for Wedding Studios
             </div>
-            <h1 className="text-6xl md:text-8xl font-display font-bold leading-[1.05] mb-8 tracking-tighter">
-              Premium <br />
-              <span className="bg-clip-text text-transparent bg-gradient-to-r from-primary via-indigo-400 to-cyan-400">
-                Storytelling.
-              </span>
+            <h1 className="text-5xl md:text-7xl lg:text-8xl font-display font-bold leading-[1.0] mb-8 tracking-tighter">
+              Breathtaking <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary to-indigo-400">3D Digital</span> Albums.
             </h1>
-            <p className="text-xl text-muted-foreground mb-10 max-w-lg leading-relaxed font-sans">
-              Transform your professional photography into immersive, cloud-secured cinematic experiences. The elite standard for modern business-to-client album delivery.
+            <p className="text-lg md:text-xl text-white/50 mb-12 leading-relaxed max-w-2xl mx-auto">
+              Transform your paper albums into a stunning interactive 3D experience. Upload your first album for <strong>free</strong> and wow your clients today.
             </p>
-            <div className="flex flex-col sm:flex-row gap-5">
-              <Link href={user ? "/dashboard" : "/login"}>
-                <Button size="lg" className="rounded-2xl h-16 px-10 text-lg bg-primary hover:bg-primary/90 text-white glow-primary border-none font-bold">
-                  {user ? "View My Projects" : "Get Started for Free"} <ArrowRight className="w-5 h-5 ml-2" />
+
+            <div className="flex flex-col sm:flex-row gap-5 justify-center mb-24">
+              <Link href="/create">
+                <Button size="lg" className="rounded-[1.25rem] h-16 px-10 text-lg bg-primary hover:bg-primary/90 text-white font-bold group">
+                  Upload Your Free 1st Album <ArrowRight className="w-5 h-5 ml-2 group-hover:translate-x-1 transition-transform" />
                 </Button>
               </Link>
-              {!user && (
-                <Link href="/login">
-                  <Button size="lg" variant="outline" className="rounded-2xl h-16 px-10 text-lg glass border-none font-bold">
-                    Studio Login
-                  </Button>
-                </Link>
-              )}
-            </div>
-
-            {/* Quick Stats */}
-            <div className="mt-16 flex items-center gap-12 border-t border-white/5 pt-10">
-              <div>
-                <div className="text-3xl font-bold text-white">4K+</div>
-                <div className="text-xs uppercase tracking-widest text-muted-foreground mt-1">Resolution</div>
-              </div>
-              <div className="w-px h-8 bg-white/10" />
-              <div>
-                <div className="text-3xl font-bold text-white">0s</div>
-                <div className="text-xs uppercase tracking-widest text-muted-foreground mt-1">Hosting Cost</div>
-              </div>
-              <div className="w-px h-8 bg-white/10" />
-              <div>
-                <div className="text-3xl font-bold text-white">∞</div>
-                <div className="text-xs uppercase tracking-widest text-muted-foreground mt-1">Storage</div>
-              </div>
             </div>
           </motion.div>
 
+          {/* Interactive Demo Section */}
           <motion.div
-            initial={{ opacity: 0, scale: 0.9, rotateY: 15 }}
-            animate={{ opacity: 1, scale: 1, rotateY: 0 }}
-            transition={{ duration: 1.2, delay: 0.2 }}
-            className="relative perspective-2000 hidden lg:block"
+            initial={{ opacity: 0, y: 40 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            className="w-full relative py-20"
           >
-            {/* Main Showcase Album */}
-            <div className="relative z-20 transform-style-3d rotate-[-5deg] hover:rotate-0 transition-all duration-700 ease-out group">
-              <div className="absolute -inset-1 bg-gradient-to-r from-primary/30 to-indigo-500/30 rounded-2xl blur-2xl opacity-50 group-hover:opacity-100 transition-opacity duration-700" />
-              <img
-                src={weddingCover}
-                alt="Wedding Album"
-                className="relative w-[480px] h-[600px] object-cover rounded-2xl shadow-[0_32px_64px_-16px_rgba(0,0,0,0.6)] border border-white/10"
-              />
-              {/* Floating Badge */}
-              <div className="absolute bottom-10 -right-10 glass rounded-2xl p-6 shadow-2xl animate-bounce-subtle">
-                <div className="flex items-center gap-4 text-white">
-                  <div className="w-12 h-12 rounded-full bg-green-500/20 flex items-center justify-center text-green-400">
-                    <ShieldCheck className="w-6 h-6" />
-                  </div>
-                  <div>
-                    <div className="text-sm font-bold uppercase tracking-widest">Permanent</div>
-                    <div className="text-xs text-white/60">Cloud Secured</div>
-                  </div>
-                </div>
-              </div>
+            <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[120%] h-full bg-gradient-to-b from-primary/5 to-transparent blur-[120px] -z-10" />
+
+            <div className="text-center mb-16 px-4">
+              <h2 className="text-3xl font-display font-bold mb-4">Interactive Preview</h2>
+              <p className="text-white/40 uppercase tracking-[0.3em] text-xs font-mono">Try flipping the pages below</p>
             </div>
 
-            {/* Back Album */}
-            <div className="absolute top-20 left-20 -z-10 rotate-[10deg] opacity-40 blur-[2px] hover:blur-none transition-all duration-700">
-              <img
-                src={travelCover}
-                alt="Travel Album"
-                className="w-[400px] h-[500px] object-cover rounded-2xl border border-white/5 shadow-2xl"
+            <div className="h-[500px] w-full max-w-5xl mx-auto flex items-center justify-center">
+              <Flipbook
+                sheets={demoSheets}
+                frontCover={weddingCover}
+                backCover={weddingCover}
+                title="Cinematic Wedding Demo"
               />
             </div>
           </motion.div>
         </div>
       </main>
 
-      {/* Features Section */}
-      <section className="py-32 relative bg-black/20">
-        <div className="max-w-7xl mx-auto px-8 overflow-visible">
-          <div className="grid md:grid-cols-3 gap-8">
-            <FeatureCard
-              icon={<Upload className="w-6 h-6" />}
-              title="Seamless Cloud Upload"
-              description="High-fidelity image processing with direct cloud integration. Your albums are preserved in full resolution forever."
-              gradient="from-blue-500 to-cyan-400"
-            />
-            <FeatureCard
-              icon={<Zap className="w-6 h-6" />}
-              title="Physics-Based Interaction"
-              description="Our custom engine delivers a tactile page-flipping experience that mimics the weight and feel of high-end paper."
-              gradient="from-indigo-500 to-purple-500"
-            />
-            <FeatureCard
-              icon={<Share2 className="w-6 h-6" />}
-              title="Business-to-Client Delivery"
-              description="A single QR scan connects your studio with the physical world. No apps required—just instant, premium access for your elite clients."
-              gradient="from-primary to-rose-400"
-            />
+      {/* Pricing / Plan Section */}
+      <section className="py-32 relative">
+        <div className="max-w-7xl mx-auto px-8">
+          <div className="text-center mb-20">
+            <h2 className="text-4xl md:text-5xl font-display font-bold mb-6 tracking-tight">Simple Studio Pricing</h2>
+            <p className="text-white/40 text-lg max-w-xl mx-auto leading-relaxed">
+              Start for free, then only pay for what you use. No monthly base fees, ever.
+            </p>
+          </div>
+
+          <div className="grid md:grid-cols-2 gap-8 max-w-4xl mx-auto">
+            {/* Free Tier */}
+            <div className="glass p-10 rounded-[3rem] border-white/5 relative overflow-hidden group">
+              <div className="absolute top-0 right-0 p-8 opacity-10 group-hover:rotate-12 transition-transform duration-500">
+                <Rocket className="w-20 h-20 text-primary" />
+              </div>
+              <div className="space-y-6">
+                <span className="text-[10px] font-bold uppercase tracking-[0.3em] text-primary">New Studios</span>
+                <h3 className="text-3xl font-bold">1st Album Free</h3>
+                <p className="text-white/40 leading-relaxed">Full premium features, QR sharing, and cloud hosting for your first project.</p>
+                <div className="text-4xl font-display font-bold">₹0<span className="text-sm font-medium text-white/20 ml-2">Lifetime</span></div>
+                <Link href="/create">
+                  <Button className="w-full h-14 rounded-2xl bg-white/5 hover:bg-white/10 text-white border border-white/10 font-bold mt-4">
+                    Get Started Free
+                  </Button>
+                </Link>
+                <ul className="space-y-4 pt-6">
+                  {['3D Page Flip Engine', 'Cloud Image Hosting', 'Permanent QR Code', 'Cinematic Background Music'].map((f) => (
+                    <li key={f} className="flex items-center gap-3 text-sm text-white/60">
+                      <CheckCircle2 className="w-4 h-4 text-primary" /> {f}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            </div>
+
+            {/* Paid Tier */}
+            <div className={`p-10 rounded-[3rem] bg-gradient-to-b from-primary/20 to-indigo-600/10 border border-primary/20 relative shadow-2xl overflow-hidden`}>
+              <div className="absolute top-0 right-0 p-8 opacity-20">
+                <Crown className="w-20 h-20 text-primary" />
+              </div>
+              <div className="space-y-6">
+                <span className="text-[10px] font-bold uppercase tracking-[0.3em] text-cyan-400">Professional</span>
+                <h3 className="text-3xl font-bold">Pay-Per-Album</h3>
+                <p className="text-white/40 leading-relaxed">Scale your business easily. Buy credits for new wedding projects as needed.</p>
+                <div className="text-4xl font-display font-bold">₹199<span className="text-sm font-medium text-white/20 ml-2">Per Credit</span></div>
+                <Link href="/create">
+                  <Button className="w-full h-14 rounded-2xl bg-primary hover:bg-primary/90 text-white font-bold mt-4 shadow-lg shadow-primary/20">
+                    Buy Album Credits
+                  </Button>
+                </Link>
+                <ul className="space-y-4 pt-6">
+                  {['Unlimited Hosting Time', 'Private Password Access', 'Studio Branding Logo', 'Priority Cloud Sync'].map((f) => (
+                    <li key={f} className="flex items-center gap-3 text-sm text-white/80">
+                      <CheckCircle2 className="w-4 h-4 text-primary" /> {f}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            </div>
           </div>
         </div>
       </section>
 
-      {/* Footer Backdrop */}
-      <footer className="py-12 px-8 border-t border-white/5 bg-black/40">
-        <div className="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-center gap-8">
-          <div className="flex items-center gap-2 opacity-50">
-            <BookOpen className="w-5 h-5" />
-            <span className="font-display font-bold tracking-tight">EventFold</span>
-          </div>
-          <div className="text-muted-foreground text-sm uppercase tracking-[0.2em]">
-            &copy; 2026 Crafted with Precision
+      {/* Custom Feature Grids */}
+      <section className="py-32 bg-black/40 border-t border-white/5">
+        <div className="max-w-7xl mx-auto px-8">
+          <div className="grid md:grid-cols-3 gap-12">
+            <div className="space-y-4">
+              <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center text-primary"><CreditCard className="w-6 h-6" /></div>
+              <h4 className="text-xl font-bold">Easy Billing</h4>
+              <p className="text-white/40 leading-relaxed text-sm">Pay securely via Stripe or UPI. No hidden subscriptions or contracts.</p>
+            </div>
+            <div className="space-y-4">
+              <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center text-primary"><ShieldCheck className="w-6 h-6" /></div>
+              <h4 className="text-xl font-bold">Secure Delivery</h4>
+              <p className="text-white/40 leading-relaxed text-sm">Every album can be protected with a unique password for the client.</p>
+            </div>
+            <div className="space-y-4">
+              <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center text-primary"><LayoutGrid className="w-6 h-6" /></div>
+              <h4 className="text-xl font-bold">Studio Dashboard</h4>
+              <p className="text-white/40 leading-relaxed text-sm">Manage all your client projects from one centralized, elite portal.</p>
+            </div>
           </div>
         </div>
+      </section>
+
+      <footer className="py-20 border-t border-white/5 text-center">
+        <div className="flex items-center justify-center gap-3 mb-8">
+          <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center text-primary"><BookOpen className="w-4 h-4" /></div>
+          <span className="font-display font-bold tracking-tight">EventFold Studio</span>
+        </div>
+        <p className="text-white/20 text-xs uppercase tracking-[0.4em]">Crafted for the World's Best Photographers</p>
       </footer>
     </div>
-  );
-}
-
-function FeatureCard({ icon, title, description, gradient }: { icon: React.ReactNode, title: string, description: string, gradient: string }) {
-  return (
-    <motion.div
-      whileHover={{ y: -8 }}
-      className="group p-10 rounded-[2.5rem] glass hover:bg-white/[0.08] transition-all duration-500 relative overflow-hidden"
-    >
-      <div className={`absolute -top-10 -right-10 w-32 h-32 bg-gradient-to-br ${gradient} opacity-[0.03] group-hover:opacity-10 transition-opacity blur-3xl`} />
-      <div className={`w-14 h-14 rounded-2xl bg-gradient-to-br ${gradient} flex items-center justify-center mb-8 shadow-lg shadow-black/20 group-hover:scale-110 transition-transform`}>
-        <div className="text-white">
-          {icon}
-        </div>
-      </div>
-      <h3 className="text-2xl font-bold mb-4 text-white group-hover:text-primary transition-colors">{title}</h3>
-      <p className="text-muted-foreground leading-relaxed text-lg">{description}</p>
-    </motion.div>
   );
 }

@@ -7,6 +7,7 @@ interface AuthContextType {
     isLoading: boolean;
     logout: () => void;
     startStripeCheckout: () => Promise<void>;
+    buyAlbumCredit: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -16,7 +17,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     const { data: user, isLoading, error } = useQuery<User>({
         queryKey: ["/api/auth/me"],
-        retry: false,
     });
 
     const logoutMutation = useMutation({
@@ -41,6 +41,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         }
     };
 
+    const buyAlbumCredit = async () => {
+        try {
+            const res = await fetch("/api/billing/buy-credit", { method: "POST" });
+            const data = await res.json();
+            if (data.url) {
+                window.location.href = data.url;
+            }
+        } catch (e) {
+            console.error("Credit purchase failed", e);
+        }
+    };
+
     return (
         <AuthContext.Provider
             value={{
@@ -48,6 +60,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
                 isLoading,
                 logout: () => logoutMutation.mutate(),
                 startStripeCheckout,
+                buyAlbumCredit,
             }}
         >
             {children}

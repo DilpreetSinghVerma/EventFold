@@ -22,9 +22,7 @@ function Router() {
 
   return (
     <Switch>
-      <Route path="/">
-        {user ? <Home /> : <Redirect to="/login" />}
-      </Route>
+      <Route path="/" component={Home} />
       <Route path="/login">
         {user ? <Redirect to="/dashboard" /> : <Login />}
       </Route>

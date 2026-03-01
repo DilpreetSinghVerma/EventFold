@@ -17,14 +17,16 @@ import {
 import { useAuth } from '@/lib/auth';
 
 export default function Dashboard() {
-  const { user, logout, startStripeCheckout } = useAuth();
+  const { user, logout, buyAlbumCredit } = useAuth();
   const [albums, setAlbums] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [dbConnected, setDbConnected] = useState<boolean | null>(null);
   const [settings, setSettings] = useState<any>(null);
 
-  // Use the current URL as the origin for QR codes
-  const origin = typeof window !== 'undefined' ? window.location.origin : ((import.meta as any).env.VITE_PUBLIC_VIEWER_URL || 'https://eventfold.vercel.app');
+  // Parse URL for success/cancel params
+  const { search } = typeof window !== 'undefined' ? window.location : { search: '' };
+  const params = new URLSearchParams(search);
+  const success = params.get('success');
 
   const fetchAlbums = async () => {
     try {
@@ -38,10 +40,7 @@ export default function Dashboard() {
       }
 
       const response = await fetch('/api/albums');
-      if (response.status === 401) {
-        // User is not authenticated, let auth.tsx handle redirect
-        return;
-      }
+      if (response.status === 401) return;
       if (!response.ok) throw new Error('Failed to fetch albums');
       const data = await response.json();
       setAlbums(data);
@@ -64,6 +63,11 @@ export default function Dashboard() {
   useEffect(() => {
     fetchAlbums();
     fetchSettings();
+    if (success === 'true') {
+      setTimeout(() => {
+        window.history.replaceState({}, '', '/dashboard');
+      }, 3000);
+    }
   }, []);
 
   const handleDelete = async (id: string, title: string) => {
@@ -126,7 +130,7 @@ export default function Dashboard() {
                     <div className="flex flex-col items-center justify-center p-8 space-y-6">
                       <div className="p-6 bg-white rounded-[2rem] shadow-2xl shadow-primary/20">
                         <QRCodeSVG
-                          value={`${origin}/album/${album.id}?shared=true`}
+                          value={`${window.location.origin}/album/${album.id}?shared=true`}
                           size={240}
                           level="H"
                           fgColor="#000000"
@@ -224,6 +228,15 @@ export default function Dashboard() {
         </div>
       </nav>
 
+      {success === 'true' && (
+        <div className="max-w-7xl mx-auto px-8 py-4">
+          <div className="bg-green-500/10 border border-green-500/20 text-green-400 p-4 rounded-2xl flex items-center justify-between">
+            <span className="font-bold">Payment Successful! Your credit has been added.</span>
+            <Button variant="ghost" size="sm" onClick={() => window.history.replaceState({}, '', '/dashboard')}>Dismiss</Button>
+          </div>
+        </div>
+      )}
+
       <header className="max-w-7xl mx-auto px-8 pt-16 pb-12">
         <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-8">
           <div className="space-y-4">
@@ -234,20 +247,17 @@ export default function Dashboard() {
               <span className="text-xs font-bold font-mono text-primary uppercase tracking-[0.2em]">Dashboard Terminal</span>
             </div>
             <h2 className="text-5xl font-display font-bold tracking-tight">Welcome back, <span className="text-primary">{user?.name?.split(' ')[0]}</span></h2>
-            <div className="flex items-center gap-4 pt-2">
-              <div className="flex items-center gap-2 px-4 py-1.5 bg-white/5 border border-white/10 rounded-full text-xs font-bold text-white/60">
-                <UserIcon className="w-3.5 h-3.5" />
-                {user?.plan === 'pro' ? 'PRO PLAN ACTIVE' : 'FREE PLAN'}
+            <div className="flex items-center gap-4 pt-4">
+              <div className="flex items-center gap-2 px-6 py-2 bg-primary/10 border border-primary/20 rounded-full text-sm font-bold text-primary shadow-xl shadow-primary/10">
+                <LayoutGrid className="w-4 h-4" />
+                {user?.credits || 0} ALBUM CREDITS AVAILABLE
               </div>
-              {user?.plan !== 'pro' && (
-                <Button
-                  onClick={startStripeCheckout}
-                  variant="outline"
-                  className="h-8 rounded-full border-primary/20 bg-primary/5 hover:bg-primary/20 text-primary text-[10px] font-bold px-4"
-                >
-                  UPGRADE TO PRO
-                </Button>
-              )}
+              <Button
+                onClick={buyAlbumCredit}
+                className="h-10 rounded-full bg-white text-black hover:bg-white/90 font-bold px-6 shadow-xl shadow-black/20 group"
+              >
+                <Plus className="w-4 h-4 mr-2 group-hover:rotate-90 transition-transform" /> BUY 1 CREDIT (₹199)
+              </Button>
             </div>
           </div>
         </div>

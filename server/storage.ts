@@ -23,6 +23,8 @@ export interface IStorage {
   getUserByGoogleId(googleId: string): Promise<User | undefined>;
   createUser(user: InsertUser): Promise<User>;
   updateUser(id: string, data: Partial<User>): Promise<User>;
+  deductCredit(userId: string): Promise<User>;
+  addCredit(userId: string, amount: number): Promise<User>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -116,6 +118,31 @@ export class DatabaseStorage implements IStorage {
     const [row] = await db.update(users).set(data).where(eq(users.id, id)).returning();
     if (!row) throw new Error("User not found");
     return row;
+  }
+
+  async deductCredit(userId: string): Promise<User> {
+    if (!db) throw new Error("DB not connected");
+    const [user] = await db.select().from(users).where(eq(users.id, userId));
+    if (!user) throw new Error("User not found");
+    if (user.credits <= 0) throw new Error("No credits left. Please purchase an album credit.");
+
+    const [updated] = await db.update(users)
+      .set({ credits: user.credits - 1 })
+      .where(eq(users.id, userId))
+      .returning();
+    return updated;
+  }
+
+  async addCredit(userId: string, amount: number): Promise<User> {
+    if (!db) throw new Error("DB not connected");
+    const [user] = await db.select().from(users).where(eq(users.id, userId));
+    if (!user) throw new Error("User not found");
+
+    const [updated] = await db.update(users)
+      .set({ credits: user.credits + amount })
+      .where(eq(users.id, userId))
+      .returning();
+    return updated;
   }
 }
 
@@ -229,10 +256,28 @@ export class MemStorage implements IStorage {
       stripeCustomerId: insertUser.stripeCustomerId || null,
       subscriptionId: insertUser.subscriptionId || null,
       plan: insertUser.plan || 'free',
+      credits: insertUser.credits ?? 1,
       createdAt: new Date()
     };
     this.users.set(id, user);
     return user;
+  }
+
+  async deductCredit(userId: string): Promise<User> {
+    const user = this.users.get(userId);
+    if (!user) throw new Error("User not found");
+    if (user.credits <= 0) throw new Error("No credits left");
+    const updated = { ...user, credits: user.credits - 1 };
+    this.users.set(userId, updated);
+    return updated;
+  }
+
+  async addCredit(userId: string, amount: number): Promise<User> {
+    const user = this.users.get(userId);
+    if (!user) throw new Error("User not found");
+    const updated = { ...user, credits: user.credits + amount };
+    this.users.set(userId, updated);
+    return updated;
   }
 
   async updateUser(id: string, data: Partial<User>): Promise<User> {
