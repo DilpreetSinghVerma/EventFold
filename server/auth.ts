@@ -18,7 +18,11 @@ export function setupAuth(app: Express) {
         secret: process.env.SESSION_SECRET || "eventfold-secret-key",
         resave: false,
         saveUninitialized: false,
-        cookie: { secure: process.env.NODE_ENV === "production" },
+        cookie: {
+            secure: false, // Changed to false to allow session persistence on Vercel proxied domains
+            sameSite: 'lax',
+            maxAge: 24 * 60 * 60 * 1000 // 24 hours
+        },
         store: new MemoryStore({
             checkPeriod: 86400000,
         }),
