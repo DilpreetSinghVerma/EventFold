@@ -103,27 +103,42 @@ export function registerRoutes(
   // Health check for cloud debugging
   app.get("/api/health", async (_req, res) => {
     try {
-      const dbConnected = !!process.env.DATABASE_URL;
-      const cloudSync = dbConnected && (process.env.DATABASE_URL !== "dummy_url");
+      const url = process.env.DATABASE_URL;
+      const isDummy = !url || url === "dummy_url" || url === "";
 
-      // Test the database if theoretically connected
-      if (cloudSync) {
-        await storage.getAlbums();
+      let dbStatus = "connected";
+      let error = null;
+
+      if (isDummy) {
+        dbStatus = "local_only";
+      } else {
+        try {
+          // Verify actual table access
+          await storage.getAlbums().catch(e => {
+            console.error("DB SELECT FAILED:", e);
+            dbStatus = "disconnected";
+            error = e.message;
+          });
+        } catch (e: any) {
+          dbStatus = "disconnected";
+          error = e.message;
+        }
       }
 
-      res.json({
-        status: "ok",
-        database: cloudSync ? "connected" : "local_only",
-        env: process.env.NODE_ENV || (process.env.VERCEL ? "production-vercel" : "development"),
-        cloudinary: !!process.env.CLOUDINARY_CLOUD_NAME
+      res.status(dbStatus === "disconnected" ? 500 : 200).json({
+        status: dbStatus === "disconnected" ? "error" : "ok",
+        database: dbStatus,
+        error: error,
+        isVercel: !!process.env.VERCEL,
+        env: process.env.NODE_ENV
       });
     } catch (e: any) {
-      console.error("Health check failure:", e);
+      console.error("System health check crashed:", e);
       res.status(500).json({
         status: "error",
         database: "disconnected",
-        error: e.message || String(e),
-        isVercel: !!process.env.VERCEL
+        error: "System crash during health check",
+        details: e.message
       });
     }
   });

@@ -32,17 +32,21 @@ export default function Dashboard() {
       const healthRes = await fetch('/api/health').catch(() => null);
       if (healthRes && healthRes.ok) {
         const health = await healthRes.json();
-        setDbConnected(health.status === 'ok');
+        setDbConnected(health.database === 'connected');
       } else {
         setDbConnected(false);
       }
 
       const response = await fetch('/api/albums');
-      if (!response.ok) throw new Error('Failed to fetch');
+      if (response.status === 401) {
+        // User is not authenticated, let auth.tsx handle redirect
+        return;
+      }
+      if (!response.ok) throw new Error('Failed to fetch albums');
       const data = await response.json();
       setAlbums(data);
     } catch (e) {
-      console.error(e);
+      console.error("Dashboard Sync Error:", e);
       setDbConnected(false);
     } finally {
       setLoading(false);
