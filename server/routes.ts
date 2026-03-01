@@ -60,6 +60,7 @@ export function registerRoutes(
   // Get Cloudinary signature for client-side upload
   app.get("/api/cloudinary-signature", async (req, res) => {
     try {
+      if (!req.isAuthenticated()) return res.status(401).json({ error: "Unauthorized" });
       const timestamp = Math.round(new Date().getTime() / 1000);
       const signature = cloudinary.utils.api_sign_request(
         {
@@ -220,6 +221,7 @@ export function registerRoutes(
     upload.array("files", 100)(req, res, next);
   }, async (req, res) => {
     try {
+      if (!req.isAuthenticated()) return res.status(401).json({ error: "Unauthorized" });
       // HANDLE JSON BATCH UPLOAD (From Client-side direct Cloudinary uploads)
       if (req.body && req.body.files && Array.isArray(req.body.files)) {
         console.log(`Syncing ${req.body.files.length} remote assets from client for album ${req.params.albumId}`);
