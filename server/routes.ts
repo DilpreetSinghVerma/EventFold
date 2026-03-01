@@ -177,8 +177,18 @@ export function registerRoutes(
   // Health check for cloud debugging
   app.get("/api/health", async (_req, res) => {
     try {
-      const url = process.env.DATABASE_URL;
-      const isDummy = !url || url === "dummy_url" || url === "";
+      const dbUrl = process.env.DATABASE_URL;
+      const isDummy = !dbUrl || dbUrl === "dummy_url" || dbUrl === "";
+
+      // Masked Environment Status
+      const envStatus = {
+        DATABASE_URL: dbUrl ? (dbUrl.includes('@') ? '***@***' : 'exists') : 'MISSING',
+        GOOGLE_CLIENT_ID: process.env.GOOGLE_CLIENT_ID ? 'exists' : 'MISSING',
+        GOOGLE_CLIENT_SECRET: process.env.GOOGLE_CLIENT_SECRET ? 'masked' : 'MISSING',
+        STRIPE_SECRET_KEY: process.env.STRIPE_SECRET_KEY ? 'masked' : 'MISSING',
+        SESSION_SECRET: process.env.SESSION_SECRET ? 'masked' : 'MISSING',
+        CLOUDINARY_CLOUD_NAME: process.env.CLOUDINARY_CLOUD_NAME ? 'exists' : 'MISSING'
+      };
 
       let dbStatus = "connected";
       let error = null;
@@ -187,7 +197,6 @@ export function registerRoutes(
         dbStatus = "local_only";
       } else {
         try {
-          // Verify actual table access
           await storage.getAlbums().catch(e => {
             console.error("DB SELECT FAILED:", e);
             dbStatus = "disconnected";
@@ -199,21 +208,17 @@ export function registerRoutes(
         }
       }
 
-      res.status(dbStatus === "disconnected" ? 500 : 200).json({
-        status: dbStatus === "disconnected" ? "error" : "ok",
+      res.status(dbStatus === "disconnected" && !isDummy ? 500 : 200).json({
+        status: dbStatus === "disconnected" && !isDummy ? "error" : "ok",
         database: dbStatus,
         error: error,
-        isVercel: !!process.env.VERCEL,
-        env: process.env.NODE_ENV
+        env: envStatus,
+        vercel: !!process.env.VERCEL,
+        region: process.env.VERCEL_REGION || "local"
       });
     } catch (e: any) {
       console.error("System health check crashed:", e);
-      res.status(500).json({
-        status: "error",
-        database: "disconnected",
-        error: "System crash during health check",
-        details: e.message
-      });
+      res.status(500).json({ status: "error", message: e.message });
     }
   });
 
