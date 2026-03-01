@@ -10,7 +10,8 @@ export const getDb = () => {
 
   const url = process.env.DATABASE_URL;
   if (!url || url === "dummy_url") {
-    throw new Error("DATABASE_URL is missing");
+    console.warn("DATABASE_URL is missing. Database operations will fail with a connection error.");
+    return null;
   }
 
   try {
@@ -19,7 +20,7 @@ export const getDb = () => {
     return _db;
   } catch (err) {
     console.error("Failed to connect to Neon:", err);
-    throw err;
+    return null;
   }
 };
 
@@ -27,6 +28,9 @@ export const getDb = () => {
 export const db = new Proxy({}, {
   get: (_target, prop) => {
     const database = getDb();
+    if (!database) {
+      throw new Error("DATABASE_URL is missing or database is not connected. Use MemStorage for local testing or add DATABASE_URL to your environment.");
+    }
     return database[prop];
   }
 }) as any;

@@ -8,10 +8,23 @@ import { insertAlbumSchema, insertFileSchema, users } from "../shared/schema";
 import { ZodError } from "zod";
 import Stripe from "stripe";
 
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || "", {
-  // @ts-ignore - version mismatch in types
-  apiVersion: "2025-02-24-preview",
-});
+let _stripe: Stripe | null = null;
+const getStripe = () => {
+  if (!_stripe) {
+    _stripe = new Stripe(process.env.STRIPE_SECRET_KEY || "", {
+      // Use standard API version to avoid preview-only crashes
+      // @ts-ignore
+      apiVersion: "2024-12-18.acacia",
+    });
+  }
+  return _stripe;
+};
+
+const stripe = new Proxy({}, {
+  get: (_target, prop) => {
+    return (getStripe() as any)[prop];
+  }
+}) as Stripe;
 
 // Use /tmp for uploads on Vercel, as the rest of the filesystem is read-only
 const uploadDir = path.join(process.platform === 'win32' ? process.cwd() : '/tmp', "uploads");
