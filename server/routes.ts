@@ -8,7 +8,7 @@ import { insertAlbumSchema, insertFileSchema, users } from "../shared/schema";
 import { ZodError } from "zod";
 import Stripe from "stripe";
 
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || "sk_test_51", {
+const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || "", {
   // @ts-ignore - version mismatch in types
   apiVersion: "2025-02-24-preview",
 });

@@ -100,66 +100,92 @@ export default function Home() {
         </div>
       </main>
 
-      {/* Pricing / Plan Section */}
+      {/* Pricing / Plan Section - Competitive Strategy */}
       <section className="py-32 relative">
         <div className="max-w-7xl mx-auto px-8">
           <div className="text-center mb-20">
-            <h2 className="text-4xl md:text-5xl font-display font-bold mb-6 tracking-tight">Simple Studio Pricing</h2>
-            <p className="text-white/40 text-lg max-w-xl mx-auto leading-relaxed">
-              Start for free, then only pay for what you use. No monthly base fees, ever.
+            <h2 className="text-5xl md:text-6xl font-display font-bold mb-6 tracking-tight">The <span className="text-primary">Best Price</span> in the Industry</h2>
+            <p className="text-white/40 text-lg max-w-2xl mx-auto leading-relaxed">
+              Why pay more elsewhere? Get full cinematic 3D features at half the price of Flipix. Switch today and save.
             </p>
           </div>
 
-          <div className="grid md:grid-cols-2 gap-8 max-w-4xl mx-auto">
+          <div className="grid md:grid-cols-3 gap-8 items-start">
             {/* Free Tier */}
-            <div className="glass p-10 rounded-[3rem] border-white/5 relative overflow-hidden group">
-              <div className="absolute top-0 right-0 p-8 opacity-10 group-hover:rotate-12 transition-transform duration-500">
-                <Rocket className="w-20 h-20 text-primary" />
-              </div>
+            <div className="glass p-8 rounded-[2.5rem] border-white/5 relative overflow-hidden group">
               <div className="space-y-6">
-                <span className="text-[10px] font-bold uppercase tracking-[0.3em] text-primary">New Studios</span>
-                <h3 className="text-3xl font-bold">1st Album Free</h3>
-                <p className="text-white/40 leading-relaxed">Full premium features, QR sharing, and cloud hosting for your first project.</p>
-                <div className="text-4xl font-display font-bold">₹0<span className="text-sm font-medium text-white/20 ml-2">Lifetime</span></div>
+                <span className="text-[10px] font-bold uppercase tracking-[0.3em] text-white/40">Starter</span>
+                <h3 className="text-2xl font-bold">1st Album Free</h3>
+                <div className="text-4xl font-display font-bold">₹0</div>
+                <p className="text-sm text-white/40 leading-relaxed">Perfect to test our 3D cinematic engine with your first client.</p>
                 <Link href="/create">
-                  <Button className="w-full h-14 rounded-2xl bg-white/5 hover:bg-white/10 text-white border border-white/10 font-bold mt-4">
-                    Get Started Free
+                  <Button className="w-full h-12 rounded-xl bg-white/5 hover:bg-white/10 text-white border border-white/10 font-bold">
+                    Start Free
                   </Button>
                 </Link>
-                <ul className="space-y-4 pt-6">
-                  {['3D Page Flip Engine', 'Cloud Image Hosting', 'Permanent QR Code', 'Cinematic Background Music'].map((f) => (
-                    <li key={f} className="flex items-center gap-3 text-sm text-white/60">
-                      <CheckCircle2 className="w-4 h-4 text-primary" /> {f}
+                <ul className="space-y-3 pt-4">
+                  {['3D Page Flip', 'QR Sharing', 'Cloud Hosting'].map((f) => (
+                    <li key={f} className="flex items-center gap-3 text-xs text-white/50">
+                      <CheckCircle2 className="w-3.5 h-3.5 text-primary" /> {f}
                     </li>
                   ))}
                 </ul>
               </div>
             </div>
 
-            {/* Paid Tier */}
-            <div className={`p-10 rounded-[3rem] bg-gradient-to-b from-primary/20 to-indigo-600/10 border border-primary/20 relative shadow-2xl overflow-hidden`}>
-              <div className="absolute top-0 right-0 p-8 opacity-20">
-                <Crown className="w-20 h-20 text-primary" />
-              </div>
-              <div className="space-y-6">
-                <span className="text-[10px] font-bold uppercase tracking-[0.3em] text-cyan-400">Professional</span>
-                <h3 className="text-3xl font-bold">Pay-Per-Album</h3>
-                <p className="text-white/40 leading-relaxed">Scale your business easily. Buy credits for new wedding projects as needed.</p>
-                <div className="text-4xl font-display font-bold">₹199<span className="text-sm font-medium text-white/20 ml-2">Per Credit</span></div>
-                <Link href="/create">
-                  <Button className="w-full h-14 rounded-2xl bg-primary hover:bg-primary/90 text-white font-bold mt-4 shadow-lg shadow-primary/20">
-                    Buy Album Credits
-                  </Button>
-                </Link>
-                <ul className="space-y-4 pt-6">
-                  {['Unlimited Hosting Time', 'Private Password Access', 'Studio Branding Logo', 'Priority Cloud Sync'].map((f) => (
-                    <li key={f} className="flex items-center gap-3 text-sm text-white/80">
-                      <CheckCircle2 className="w-4 h-4 text-primary" /> {f}
+            {/* Pro Monthly - The Aggressive Option */}
+            <div className="p-8 rounded-[2.5rem] bg-gradient-to-b from-primary/20 to-indigo-600/10 border border-primary/40 relative shadow-2xl overflow-hidden scale-105 z-10">
+              <div className="absolute top-0 right-0 p-6 opacity-20"><Crown className="w-16 h-16 text-primary" /></div>
+              <div className="absolute top-4 left-1/2 -translate-x-1/2 px-4 py-1 bg-primary rounded-full text-[10px] font-bold uppercase tracking-widest shadow-xl">Best for Studios</div>
+
+              <div className="space-y-6 pt-6">
+                <span className="text-[10px] font-bold uppercase tracking-[0.3em] text-primary">Monthly Elite</span>
+                <h3 className="text-2xl font-bold">Unlimited Albums</h3>
+                <div className="flex items-baseline gap-1">
+                  <span className="text-4xl font-display font-bold">₹499</span>
+                  <span className="text-sm font-medium text-white/20">/month</span>
+                </div>
+                <p className="text-sm text-white/60 leading-relaxed">Create as many wedding projects as you want. Full studio branding included.</p>
+                <Button onClick={() => setLocation('/login')} className="w-full h-14 rounded-xl bg-primary hover:bg-primary/90 text-white font-bold shadow-lg shadow-primary/20 transition-transform hover:scale-105">
+                  Get Unlimited Now
+                </Button>
+                <ul className="space-y-3 pt-4">
+                  {['UNLIMITED Albums', 'Studio Logo Branding', 'Password Protection', 'Background Music', 'Priority Support'].map((f) => (
+                    <li key={f} className="flex items-center gap-3 text-sm text-white/80 font-medium">
+                      <CheckCircle2 className="w-4 h-4 text-cyan-400" /> {f}
                     </li>
                   ))}
                 </ul>
               </div>
             </div>
+
+            {/* Yearly - The Long Term Strategy */}
+            <div className="glass p-8 rounded-[2.5rem] border-white/5 relative overflow-hidden group">
+              <div className="space-y-6">
+                <span className="text-[10px] font-bold uppercase tracking-[0.3em] text-white/40">Power Studio</span>
+                <h3 className="text-2xl font-bold">Elite Yearly</h3>
+                <div className="flex items-baseline gap-1">
+                  <span className="text-4xl font-display font-bold">₹3,999</span>
+                  <span className="text-sm font-medium text-white/20">/year</span>
+                </div>
+                <p className="text-sm text-white/40 leading-relaxed">Save 33% compared to monthly. Professional standard for top wedding photographers.</p>
+                <Button onClick={() => setLocation('/login')} className="w-full h-12 rounded-xl bg-white/5 hover:bg-white/10 text-white border border-white/10 font-bold">
+                  Choose Yearly
+                </Button>
+                <ul className="space-y-3 pt-4">
+                  {['Everything in Pro', 'White-Label Links', 'Early Access Features', 'API Access (Coming Soon)'].map((f) => (
+                    <li key={f} className="flex items-center gap-3 text-xs text-white/50">
+                      <CheckCircle2 className="w-3.5 h-3.5 text-primary" /> {f}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            </div>
+          </div>
+
+          <div className="mt-16 text-center">
+            <p className="text-white/20 text-xs font-bold uppercase tracking-[0.4em] mb-4">Trusted by 500+ Luxury Studios Worldwide</p>
+            <div className="h-px w-20 bg-primary/20 mx-auto" />
           </div>
         </div>
       </section>
