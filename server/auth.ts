@@ -1,38 +1,23 @@
 import passport from "passport";
 import { Strategy as GoogleStrategy } from "passport-google-oauth20";
 import { type Express } from "express";
-import session from "express-session";
-import createMemoryStore from "memorystore";
+import cookieSession from "cookie-session";
 import { storage } from "./storage";
 import { type User } from "../shared/schema";
 
-declare module "express-session" {
-    interface SessionData {
-        userId: string;
-    }
-}
-
 export function setupAuth(app: Express) {
-    const MemoryStore = createMemoryStore(session);
-    const sessionSettings: session.SessionOptions = {
-        secret: process.env.SESSION_SECRET || "eventfold-secret-key",
-        resave: false,
-        saveUninitialized: false,
-        cookie: {
-            secure: false, // Changed to false to allow session persistence on Vercel proxied domains
-            sameSite: 'lax',
-            maxAge: 24 * 60 * 60 * 1000 // 24 hours
-        },
-        store: new MemoryStore({
-            checkPeriod: 86400000,
-        }),
-    };
-
     if (app.get("env") === "production") {
         app.set("trust proxy", 1);
     }
 
-    app.use(session(sessionSettings));
+    app.use(cookieSession({
+        name: 'session',
+        keys: [process.env.SESSION_SECRET || "eventfold-secret-key"],
+        maxAge: 24 * 60 * 60 * 1000, // 24 hours
+        secure: false, // Set to false to allow cross-domain testing on Vercel
+        sameSite: 'lax',
+    }));
+
     app.use(passport.initialize());
     app.use(passport.session());
 
