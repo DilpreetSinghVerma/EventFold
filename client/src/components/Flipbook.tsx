@@ -325,31 +325,40 @@ export function Flipbook({ sheets, frontCover, backCover, title = 'Photo Album' 
           <motion.div
             initial={{
               opacity: 0,
-              y: 60,
-              scale: 0.82,
-              rotateZ: -6,
-              rotateX: 8,
+              y: 100,
+              scale: 0.7,
+              rotateZ: -12,
+              rotateX: 25,
+              perspective: '2000px',
             }}
             animate={{
               opacity: 1,
               y: 0,
               scale: 1,
-              // Disable tilt on mobile for better touch alignment
-              rotateZ: (isOpened || window.innerWidth < 768) ? 0 : -3,
-              rotateX: (isOpened || window.innerWidth < 768) ? 0 : 4,
+              // More premium tilt when closed, flat when opened
+              rotateZ: (isOpened || window.innerWidth < 768) ? 0 : -5,
+              rotateX: (isOpened || window.innerWidth < 768) ? 0 : 8,
+              rotateY: (isOpened || window.innerWidth < 768) ? 0 : 4,
             }}
             transition={{
-              opacity: { duration: 0.5, ease: 'easeOut' },
-              y: { duration: 0.7, ease: [0.22, 1, 0.36, 1] },
-              scale: { duration: 0.7, ease: [0.22, 1, 0.36, 1] },
+              opacity: { duration: 0.8, ease: 'easeOut' },
+              y: { duration: 1.2, ease: [0.16, 1, 0.3, 1] },
+              scale: { duration: 1.2, ease: [0.16, 1, 0.3, 1] },
               rotateZ: isOpened
-                ? { type: 'spring', stiffness: 90, damping: 18 }
-                : { duration: 0.7, ease: [0.22, 1, 0.36, 1] },
+                ? { type: 'spring', stiffness: 60, damping: 20 }
+                : { duration: 1.2, ease: [0.16, 1, 0.3, 1] },
               rotateX: isOpened
-                ? { type: 'spring', stiffness: 90, damping: 18 }
-                : { duration: 0.7, ease: [0.22, 1, 0.36, 1] },
+                ? { type: 'spring', stiffness: 60, damping: 20 }
+                : { duration: 1.2, ease: [0.16, 1, 0.3, 1] },
+              rotateY: isOpened
+                ? { type: 'spring', stiffness: 60, damping: 20 }
+                : { duration: 1.2, ease: [0.16, 1, 0.3, 1] },
             }}
-            style={{ transformStyle: 'preserve-3d', display: 'inline-block' }}
+            style={{
+              transformStyle: 'preserve-3d',
+              display: 'inline-block',
+              filter: 'drop-shadow(0 40px 80px rgba(0,0,0,0.5))'
+            }}
           >
             {/* Drop shadow — shifts with tilt for realism */}
             <motion.div

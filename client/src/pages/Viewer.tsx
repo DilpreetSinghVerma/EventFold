@@ -17,7 +17,9 @@ import {
   Building2,
   Home,
   Loader2,
-  Check
+  Check,
+  Lock,
+  ArrowRight
 } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -194,6 +196,95 @@ export default function Viewer() {
     </div>
   );
 
+  const PasswordWall = () => {
+    const [pwd, setPwd] = useState('');
+    const [err, setErr] = useState(false);
+    const [isUnlocking, setIsUnlocking] = useState(false);
+
+    const submit = async () => {
+      setIsUnlocking(true);
+      setErr(false);
+      try {
+        const res = await fetch(`/api/albums/${id}/unlock`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ password: pwd })
+        });
+        if (res.ok) {
+          window.location.reload(); // Refresh to fetch full data
+        } else {
+          setErr(true);
+        }
+      } catch (e) {
+        setErr(true);
+      } finally {
+        setIsUnlocking(false);
+      }
+    };
+
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-background text-white p-6 relative overflow-hidden">
+        <div className="fixed inset-0 bg-primary/5 blur-[120px] rounded-full -z-10 animate-pulse" />
+        <BrandingHeader />
+
+        <motion.div
+          initial={{ opacity: 0, scale: 0.9, y: 20 }}
+          animate={{ opacity: 1, scale: 1, y: 0 }}
+          className="w-full max-w-md glass p-10 rounded-[3rem] border-white/5 text-center space-y-8 relative overflow-hidden"
+        >
+          <div className="absolute inset-0 bg-primary/5 blur-[80px] -z-10" />
+          <div className="w-20 h-20 bg-primary/20 rounded-[2rem] flex items-center justify-center mx-auto text-primary shadow-2xl shadow-primary/20">
+            <Lock className="w-10 h-10" />
+          </div>
+
+          <div className="space-y-3">
+            <h2 className="text-3xl font-display font-bold tracking-tight">Protected Project</h2>
+            <p className="text-white/40 text-sm font-medium uppercase tracking-[0.2em]">Enter Studio Access Key</p>
+          </div>
+
+          <div className="space-y-4">
+            <div className="relative group">
+              <input
+                type="password"
+                placeholder="••••"
+                value={pwd}
+                onChange={(e) => { setPwd(e.target.value); setErr(false); }}
+                onKeyDown={(e) => e.key === 'Enter' && submit()}
+                className={`w-full h-16 bg-white/[0.03] border-white/10 rounded-2xl px-6 text-2xl text-center font-mono focus:ring-2 focus:ring-primary/40 focus:border-primary/40 transition-all outline-none ${err ? 'border-red-500/50 bg-red-500/5' : ''}`}
+                autoFocus
+              />
+              {err && (
+                <motion.p
+                  initial={{ opacity: 0, y: -10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  className="text-red-400 text-xs font-bold mt-3 uppercase tracking-widest"
+                >
+                  Invalid Access Key
+                </motion.p>
+              )}
+            </div>
+
+            <Button
+              onClick={submit}
+              disabled={!pwd || isUnlocking}
+              className="w-full h-16 rounded-2xl bg-primary hover:bg-primary/90 text-white font-bold text-lg shadow-xl shadow-primary/20 group overflow-hidden relative"
+            >
+              {isUnlocking ? <Loader2 className="w-6 h-6 animate-spin" /> : (
+                <span className="flex items-center gap-2">
+                  Unlock Collection <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
+                </span>
+              )}
+            </Button>
+          </div>
+
+          <p className="text-[10px] text-white/20 font-bold uppercase tracking-[0.3em]">
+            Studio Security · End-to-End Encrypted
+          </p>
+        </motion.div>
+      </div>
+    );
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background text-white overflow-hidden relative">
@@ -211,6 +302,11 @@ export default function Viewer() {
         </div>
       </div>
     );
+  }
+
+  // Show password wall if protected and not unlocked
+  if (album.isProtected && !album.isUnlocked) {
+    return <PasswordWall />;
   }
 
   return (

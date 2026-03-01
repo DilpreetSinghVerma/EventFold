@@ -21,6 +21,7 @@ export const albums = pgTable("albums", {
   title: text("title").notNull(),
   date: text("date").notNull(),
   theme: varchar("theme", { length: 20 }).notNull().default('royal'),
+  password: text("password"), // Optional password for protected albums
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 

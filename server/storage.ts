@@ -145,6 +145,7 @@ export class MemStorage implements IStorage {
       id,
       userId: insertAlbum.userId || null,
       theme: insertAlbum.theme || 'royal',
+      password: insertAlbum.password || null,
       createdAt: new Date(),
     };
     this.albums.set(id, album);

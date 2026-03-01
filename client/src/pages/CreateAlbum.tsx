@@ -32,6 +32,7 @@ export default function CreateAlbum() {
     frontCover: null as File | null,
     backCover: null as File | null,
     sheets: [] as File[],
+    password: '',
   });
 
   const [sheetPreviews, setSheetPreviews] = useState<string[]>([]);
@@ -115,6 +116,7 @@ export default function CreateAlbum() {
           title: formData.title,
           date: formData.date,
           theme: formData.theme,
+          password: formData.password || null,
         }),
       });
 
@@ -311,7 +313,19 @@ export default function CreateAlbum() {
                       type="date"
                       value={formData.date}
                       onChange={(e) => setFormData({ ...formData, date: e.target.value })}
-                      className="h-14 bg-white/[0.03] border-white/5 rounded-2xl px-6 focus:ring-primary/20 transition-all"
+                      className="h-14 bg-white/[0.03] border-white/5 rounded-2xl px-6 focus:ring-primary/20 transition-all font-mono"
+                    />
+                  </div>
+
+                  <div className="space-y-3">
+                    <Label htmlFor="password" className="text-sm font-bold uppercase tracking-[0.15em] text-white/40 ml-1">Client Password (Optional)</Label>
+                    <Input
+                      id="password"
+                      type="text"
+                      placeholder="e.g. 1234"
+                      value={formData.password}
+                      onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+                      className="h-14 bg-white/[0.03] border-white/5 rounded-2xl px-6 focus:ring-primary/20 transition-all font-mono"
                     />
                   </div>
                 </div>

@@ -191,10 +191,47 @@ export function registerRoutes(
     try {
       const album = await storage.getAlbum(req.params.id);
       if (!album) return res.status(404).json({ error: "Album not found" });
+
+      // Check if user is the owner (if authenticated)
+      const isOwner = req.isAuthenticated() && (req.user as any).id === album.userId;
+
+      // If there's a password and user hasn't unlocked it yet (and isn't the owner)
+      const albumSessionKey = `unlocked_${album.id}`;
+      const isUnlocked = (req.session as any)?.[albumSessionKey] || isOwner;
+
+      if (album.password && !isUnlocked) {
+        // Return limited metadata if locked
+        return res.json({
+          id: album.id,
+          title: album.title,
+          isProtected: true,
+          theme: album.theme
+        });
+      }
+
       const files = await storage.getFilesByAlbum(req.params.id);
-      res.json({ ...album, files });
+      // Strip password from the response for security
+      const { password, ...albumSafe } = album as any;
+      res.json({ ...albumSafe, files, isProtected: !!album.password, isUnlocked: true });
     } catch (e) {
       res.status(500).json({ error: "Failed to fetch album" });
+    }
+  });
+
+  // Unlock protected album
+  app.post("/api/albums/:id/unlock", async (req, res) => {
+    try {
+      const album = await storage.getAlbum(req.params.id);
+      if (!album) return res.status(404).json({ error: "Album not found" });
+
+      if (!album.password || req.body.password === album.password) {
+        (req.session as any)[`unlocked_${album.id}`] = true;
+        return res.json({ success: true });
+      }
+
+      res.status(401).json({ error: "Incorrect password" });
+    } catch (e) {
+      res.status(500).json({ error: "Unlock failed" });
     }
   });
 
