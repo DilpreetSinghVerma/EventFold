@@ -43,7 +43,7 @@ export default function Home() {
       {/* Navigation */}
       <nav className="relative z-50 flex items-center justify-between px-8 py-10 max-w-7xl mx-auto">
         <Link href="/">
-          <div className="h-24 cursor-pointer group">
+          <div className="h-40 cursor-pointer group">
             <img
               src="/branding material/without bg version.png"
               alt="EventFold"
