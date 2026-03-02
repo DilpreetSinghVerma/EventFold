@@ -60,6 +60,7 @@ export default function Viewer() {
   const [loadedSheets, setLoadedSheets] = useState<string[]>([]);
   const [loadedFrontCover, setLoadedFrontCover] = useState<string>('');
   const [loadedBackCover, setLoadedBackCover] = useState<string>('');
+  const [loadedVideos, setLoadedVideos] = useState<{ filePath: string; orderIndex: number }[]>([]);
   const [loading, setLoading] = useState(true);
   const [loadStatus, setLoadStatus] = useState('Establishing connection…');
   const [copied, setCopied] = useState(false);
@@ -91,6 +92,15 @@ export default function Viewer() {
         const sheetFiles = albumData.files
           .filter((f: any) => f.fileType === 'sheet')
           .sort((a: any, b: any) => a.orderIndex - b.orderIndex);
+
+        const videoFiles = albumData.files
+          .filter((f: any) => f.fileType === 'video')
+          .map((f: any) => ({
+            filePath: (f.filePath.startsWith('/') || f.filePath.startsWith('http')) ? f.filePath : `/${f.filePath}`,
+            orderIndex: f.orderIndex
+          }));
+
+        setLoadedVideos(videoFiles);
 
         const getUrl = (path: string) => (path.startsWith('/') || path.startsWith('http')) ? path : `/${path}`;
 
@@ -400,6 +410,7 @@ export default function Viewer() {
           title={album.title}
           contactWhatsApp={isShared ? settings?.contactWhatsApp : undefined}
           businessName={settings?.businessName}
+          videos={loadedVideos}
         />
       </main>
     </div>

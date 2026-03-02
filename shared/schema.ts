@@ -23,6 +23,7 @@ export const albums = pgTable("albums", {
   date: text("date").notNull(),
   theme: varchar("theme", { length: 20 }).notNull().default('royal'),
   password: text("password"), // Optional password for protected albums
+  views: integer("views").notNull().default(0), // View tracker for analytics
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 
@@ -30,7 +31,7 @@ export const files = pgTable("files", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   albumId: varchar("album_id").notNull().references(() => albums.id, { onDelete: 'cascade' }),
   filePath: text("file_path").notNull(),
-  fileType: varchar("file_type", { length: 20 }).notNull(), // 'cover_front', 'cover_back', 'sheet'
+  fileType: varchar("file_type", { length: 20 }).notNull(), // 'cover_front', 'cover_back', 'sheet', 'video'
   orderIndex: integer("order_index").notNull().default(0),
 });
 

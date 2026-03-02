@@ -13,9 +13,10 @@ interface FlipbookProps {
   scale?: number;
   contactWhatsApp?: string;
   businessName?: string;
+  videos?: { filePath: string; orderIndex: number }[];
 }
 
-export function Flipbook({ sheets, frontCover, backCover, title = 'Photo Album', scale = 1, contactWhatsApp, businessName }: FlipbookProps) {
+export function Flipbook({ sheets, frontCover, backCover, title = 'Photo Album', scale = 1, contactWhatsApp, businessName, videos = [] }: FlipbookProps) {
   const book = useRef<any>(null);
   const container = useRef<HTMLDivElement>(null);
   const [isMuted, setIsMuted] = useState(false);
@@ -247,13 +248,21 @@ export function Flipbook({ sheets, frontCover, backCover, title = 'Photo Album',
   // sheets.length is always EVEN, so content count is always EVEN ✓
   // ─────────────────────────────────────────────────────────────────
 
-  const pages: { type: string; image?: string; key: string }[] = [];
+  const pages: { type: string; image?: string; video?: string; key: string }[] = [];
 
   pages.push({ type: 'cover', image: frontCover, key: 'cover-front' });
 
   // Panoramic halves — each pair [lh, rh] forms one seamless spread
   sheets.forEach((half, idx) => {
-    pages.push({ type: 'sheet', image: half, key: `half-${idx}` });
+    // Check if this sheet index has an associated video
+    // (We'll assume video corresponds to sheet index for simplicity, or we can use orderIndex)
+    const videoForSheet = videos.find(v => v.orderIndex === idx);
+    pages.push({
+      type: 'sheet',
+      image: half,
+      video: videoForSheet?.filePath,
+      key: `half-${idx}`
+    });
   });
 
   pages.push({ type: 'cover', image: backCover, key: 'cover-back' });
@@ -526,18 +535,36 @@ export function Flipbook({ sheets, frontCover, backCover, title = 'Photo Album',
 
                   return (
                     <div key={page.key} className="page" style={{ ...pageBase, backgroundColor: '#000', willChange: 'transform' }}>
-                      <img
-                        src={page.image}
-                        alt="sheet"
-                        style={{
-                          width: '100%',
-                          height: '100%',
-                          objectFit: 'cover',
-                          objectPosition: isLeftHalf ? 'right' : 'left',
-                          display: 'block',
-                          backgroundColor: '#0a0a0a',
-                        }}
-                      />
+                      {page.video ? (
+                        <video
+                          src={page.video}
+                          autoPlay
+                          loop
+                          muted
+                          playsInline
+                          style={{
+                            width: '100%',
+                            height: '100%',
+                            objectFit: 'cover',
+                            objectPosition: isLeftHalf ? 'right' : 'left',
+                            display: 'block',
+                            backgroundColor: '#0a0a0a',
+                          }}
+                        />
+                      ) : (
+                        <img
+                          src={page.image}
+                          alt="sheet"
+                          style={{
+                            width: '100%',
+                            height: '100%',
+                            objectFit: 'cover',
+                            objectPosition: isLeftHalf ? 'right' : 'left',
+                            display: 'block',
+                            backgroundColor: '#0a0a0a',
+                          }}
+                        />
+                      )}
                       {/* High-end Paper Texture */}
                       <div className="absolute inset-0 opacity-[0.02] pointer-events-none" style={{ backgroundImage: `url("https://www.transparenttextures.com/patterns/paper-fibers.png")` }} />
 

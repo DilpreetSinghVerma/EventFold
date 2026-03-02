@@ -386,6 +386,11 @@ export function registerRoutes(
         });
       }
 
+      // Increment view count for public viewers
+      if (!isOwner) {
+        await storage.incrementAlbumViews(album.id);
+      }
+
       const files = await storage.getFilesByAlbum(req.params.id);
       // Strip password from the response for security
       const { password, ...albumSafe } = album as any;

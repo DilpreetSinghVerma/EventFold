@@ -25,6 +25,7 @@ export interface IStorage {
   updateUser(id: string, data: Partial<User>): Promise<User>;
   deductCredit(userId: string): Promise<User>;
   addCredit(userId: string, amount: number): Promise<User>;
+  incrementAlbumViews(id: string): Promise<void>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -144,6 +145,15 @@ export class DatabaseStorage implements IStorage {
       .returning();
     return updated;
   }
+
+  async incrementAlbumViews(id: string): Promise<void> {
+    if (!db) return;
+    const album = await this.getAlbum(id);
+    if (!album) return;
+    await db.update(albums)
+      .set({ views: (album.views || 0) + 1 })
+      .where(eq(albums.id, id));
+  }
 }
 
 export class MemStorage implements IStorage {
@@ -173,6 +183,7 @@ export class MemStorage implements IStorage {
       userId: insertAlbum.userId || null,
       theme: insertAlbum.theme || 'royal',
       password: insertAlbum.password || null,
+      views: 0,
       createdAt: new Date(),
     };
     this.albums.set(id, album);
@@ -286,6 +297,13 @@ export class MemStorage implements IStorage {
     const updatedUser = { ...user, ...data };
     this.users.set(id, updatedUser);
     return updatedUser;
+  }
+
+  async incrementAlbumViews(id: string): Promise<void> {
+    const album = this.albums.get(id);
+    if (album) {
+      this.albums.set(id, { ...album, views: (album.views || 0) + 1 });
+    }
   }
 }
 

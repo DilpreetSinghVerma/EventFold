@@ -5,7 +5,7 @@ import { useDropzone } from 'react-dropzone';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Upload, X, Loader2, ImagePlus, ArrowLeft, CheckCircle2, CloudUpload, ArrowRight, Lock, Sparkles, Eye } from 'lucide-react';
+import { ChevronLeft, ChevronRight, ImagePlus, X, Loader2, Calendar, Layout, Palette, ArrowRight, Eye, Trash2, Heart, Sparkles, Building2, UploadCloud, Lock, Play, Video, ArrowLeft, CheckCircle2, CloudUpload } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '@/lib/auth';
 import { useQuery } from '@tanstack/react-query';
@@ -28,13 +28,23 @@ export default function CreateAlbum() {
   const isLimitReached = user?.plan === 'free' && (albums?.length || 0) >= 1;
   const isSoftwareMode = user?.plan === 'software_pro';
 
-  const [formData, setFormData] = useState({
+  const [formData, setFormData] = useState<{
+    title: string;
+    date: string;
+    theme: string;
+    frontCover: File | null;
+    backCover: File | null;
+    sheets: File[];
+    sheetVideos: (File | null)[];
+    password: string;
+  }>({
     title: '',
     date: new Date().toISOString().split('T')[0],
-    theme: 'modern', // Default to modern
-    frontCover: null as File | null,
-    backCover: null as File | null,
-    sheets: [] as File[],
+    theme: 'royal',
+    frontCover: null,
+    backCover: null,
+    sheets: [],
+    sheetVideos: [],
     password: '',
   });
 
@@ -70,6 +80,7 @@ export default function CreateAlbum() {
     setFormData((prev) => ({
       ...prev,
       sheets: [...prev.sheets, ...acceptedFiles],
+      sheetVideos: [...prev.sheetVideos, ...acceptedFiles.map(() => null)],
     }));
   }, []);
 
@@ -89,6 +100,7 @@ export default function CreateAlbum() {
     setFormData((prev) => ({
       ...prev,
       sheets: prev.sheets.filter((_, i) => i !== index),
+      sheetVideos: prev.sheetVideos.filter((_, i) => i !== index),
     }));
   };
 
@@ -201,7 +213,7 @@ export default function CreateAlbum() {
       const { signature, timestamp, cloud_name, api_key, folder } = await sigResponse.json();
 
       // Helper to upload a single file to Cloudinary
-      const uploadToCloudinary = async (file: File, label: string) => {
+      const uploadToCloudinary = async (file: File, label: string, isVideo = false) => {
         const cloudFormData = new FormData();
         cloudFormData.append('file', file);
         cloudFormData.append('signature', signature);
@@ -209,7 +221,8 @@ export default function CreateAlbum() {
         cloudFormData.append('api_key', api_key);
         cloudFormData.append('folder', folder);
 
-        const res = await fetch(`https://api.cloudinary.com/v1_1/${cloud_name}/image/upload`, {
+        const resourceType = isVideo ? 'video' : 'image';
+        const res = await fetch(`https://api.cloudinary.com/v1_1/${cloud_name}/${resourceType}/upload`, {
           method: 'POST',
           body: cloudFormData,
         });
@@ -217,7 +230,7 @@ export default function CreateAlbum() {
         const data = await res.json().catch(() => ({}));
         if (!res.ok) {
           const msg = data.error?.message || data.error || res.statusText;
-          throw new Error(`${label}: ${msg} (Cloudinary free tier: 10MB max per file)`);
+          throw new Error(`${label}: ${msg} (Cloudinary free tier: limit may apply)`);
         }
         return data.secure_url;
       };
@@ -228,20 +241,41 @@ export default function CreateAlbum() {
       const filesToProcess = [
         { file: formData.frontCover, type: 'cover_front', order: 0 },
         { file: formData.backCover, type: 'cover_back', order: 1 },
-        ...formData.sheets.map((s, i) => ({ file: s, type: 'sheet', order: i + 2 }))
+        ...formData.sheets.map((s, i) => ({ file: s, type: 'sheet', order: i, video: formData.sheetVideos[i] }))
       ];
 
-      // Execute all uploads concurrently
-      const uploadPromises = filesToProcess.map(async (item, index) => {
-        const label = item.type === 'cover_front' ? 'Front cover' : item.type === 'cover_back' ? 'Back cover' : `Sheet ${index - 1}`;
-        const compressed = await compressImage(item.file!);
-        const url = await uploadToCloudinary(compressed, label);
+      // Build upload tasks
+      const uploadPromises: Promise<any>[] = [];
 
-        return {
-          filePath: url,
-          fileType: item.type,
-          orderIndex: item.order
-        };
+      // Add covers
+      uploadPromises.push((async () => {
+        const compressed = await compressImage(formData.frontCover!);
+        const url = await uploadToCloudinary(compressed, 'Front cover');
+        return { filePath: url, fileType: 'cover_front', orderIndex: 0 };
+      })());
+
+      uploadPromises.push((async () => {
+        const compressed = await compressImage(formData.backCover!);
+        const url = await uploadToCloudinary(compressed, 'Back cover');
+        return { filePath: url, fileType: 'cover_back', orderIndex: 1 };
+      })());
+
+      // Add sheets and their optional videos
+      formData.sheets.forEach((sheet, idx) => {
+        // Sheet image task
+        uploadPromises.push((async () => {
+          const compressed = await compressImage(sheet);
+          const url = await uploadToCloudinary(compressed, `Sheet ${idx + 1}`);
+          return { filePath: url, fileType: 'sheet', orderIndex: idx };
+        })());
+
+        // Optional motion portrait task
+        if (formData.sheetVideos[idx]) {
+          uploadPromises.push((async () => {
+            const url = await uploadToCloudinary(formData.sheetVideos[idx]!, `Motion Portrait ${idx + 1}`, true);
+            return { filePath: url, fileType: 'video', orderIndex: idx };
+          })());
+        }
       });
 
       const uploadedFiles = await Promise.all(uploadPromises);
@@ -512,12 +546,45 @@ export default function CreateAlbum() {
                           )}
                           <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col items-center justify-center p-4">
                             <span className="text-[10px] text-white/60 mb-2 truncate max-w-full font-mono">{file.name}</span>
-                            <button
-                              onClick={(e) => { e.stopPropagation(); removeSheet(idx); }}
-                              className="w-8 h-8 bg-red-500/80 hover:bg-red-500 text-white rounded-lg flex items-center justify-center transition-colors"
-                            >
-                              <X className="w-4 h-4" />
-                            </button>
+                            <div className="flex gap-2">
+                              {/* Motion Portrait Attachment */}
+                              <div className="relative">
+                                <Button
+                                  variant="secondary"
+                                  size="icon"
+                                  className={`w-8 h-8 rounded-lg ${formData.sheetVideos[idx] ? 'bg-primary text-white border-none' : 'bg-white/10 hover:bg-white/20'}`}
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    const input = document.createElement('input');
+                                    input.type = 'file';
+                                    input.accept = 'video/*';
+                                    input.onchange = (ev: any) => {
+                                      const vid = ev.target.files?.[0];
+                                      if (vid) {
+                                        setFormData(p => ({
+                                          ...p,
+                                          sheetVideos: p.sheetVideos.map((v, i) => i === idx ? vid : v)
+                                        }));
+                                      }
+                                    };
+                                    input.click();
+                                  }}
+                                  title={formData.sheetVideos[idx] ? "Video Attached" : "Add Motion Portrait"}
+                                >
+                                  <Video className="w-4 h-4" />
+                                </Button>
+                                {formData.sheetVideos[idx] && (
+                                  <div className="absolute -top-1 -right-1 w-2 h-2 bg-green-500 rounded-full animate-ping" />
+                                )}
+                              </div>
+
+                              <button
+                                onClick={(e) => { e.stopPropagation(); removeSheet(idx); }}
+                                className="w-8 h-8 bg-red-500/80 hover:bg-red-500 text-white rounded-lg flex items-center justify-center transition-colors"
+                              >
+                                <X className="w-4 h-4" />
+                              </button>
+                            </div>
                           </div>
                           <div className="absolute top-2 left-2 px-2 py-0.5 rounded-md glass text-[10px] font-bold text-white/80">#{idx + 1}</div>
                         </motion.div>

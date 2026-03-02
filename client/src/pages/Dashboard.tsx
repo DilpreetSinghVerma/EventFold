@@ -136,11 +136,69 @@ export default function Dashboard() {
                           fgColor="#000000"
                         />
                       </div>
-                      <div className="text-center space-y-2">
-                        <p className="text-lg font-bold">{album.title}</p>
-                        <p className="text-sm text-white/40 max-w-[240px]">
-                          Scan this code to view the cinematic flipbook on any mobile device.
-                        </p>
+                      <div className="text-center space-y-4">
+                        <div className="space-y-2">
+                          <p className="text-lg font-bold">{album.title}</p>
+                          <p className="text-sm text-white/40 max-w-[240px]">
+                            Scan this code to view the cinematic flipbook on any mobile device.
+                          </p>
+                        </div>
+                        <Button
+                          onClick={() => {
+                            const printWindow = window.open('', '_blank');
+                            if (!printWindow) return;
+                            const qrCardHtml = `
+                              <html>
+                                <head>
+                                  <title>Printing Luxury Table Card - ${album.title}</title>
+                                  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&family=Lato:wght@300;400;700&display=swap" rel="stylesheet">
+                                  <style>
+                                    body { margin: 0; display: flex; align-items: center; justify-content: center; min-h-screen: 100vh; background: #fff; font-family: 'Lato', sans-serif; }
+                                    .card { width: 4in; height: 6in; border: 1px solid #eee; padding: 40px; display: flex; flex-col: column; align-items: center; justify-content: center; text-align: center; box-sizing: border-box; position: relative; }
+                                    .border-luxury { position: absolute; inset: 15px; border: 2px solid #8b5cf6; opacity: 0.1; pointer-events: none; }
+                                    .logo { height: 40px; margin-bottom: 20px; object-contain: contain; }
+                                    .title { font-family: 'Cinzel', serif; font-size: 24px; font-weight: bold; margin-bottom: 5px; color: #1a1a1a; }
+                                    .subtitle { font-size: 10px; text-transform: uppercase; letter-spacing: 2px; color: #8b5cf6; margin-bottom: 30px; font-weight: bold; }
+                                    .qr-container { padding: 20px; background: #fff; border: 1px solid #f0f0f0; border-radius: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.05); }
+                                    .instruction { margin-top: 30px; font-size: 14px; font-weight: bold; color: #333; }
+                                    .footer { margin-top: 10px; font-size: 10px; color: #999; text-transform: uppercase; letter-spacing: 1px; }
+                                    @media print { .no-print { display: none; } body { padding: 0; } .card { border: none; } }
+                                  </style>
+                                </head>
+                                <body>
+                                  <div class="card">
+                                    <div class="border-luxury"></div>
+                                    <img src="${window.location.origin}/branding material/without bg version.png" class="logo" />
+                                    <div class="title">${album.title}</div>
+                                    <div class="subtitle">Digital Cinema Collection</div>
+                                    <div class="qr-container">
+                                      <div id="qr-target"></div>
+                                    </div>
+                                    <div class="instruction">Scan to Relive the Moments</div>
+                                    <div class="footer">Powered by EventFold Cinematic Engine</div>
+                                    <button class="no-print" style="position:fixed; top: 20px; right: 20px; padding: 10px 20px; background: #8b5cf6; color: white; border: none; border-radius: 10px; cursor: pointer; font-weight: bold;" onclick="window.print()">Print Card</button>
+                                  </div>
+                                  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+                                  <script>
+                                    new QRCode(document.getElementById("qr-target"), {
+                                      text: "${window.location.origin}/album/${album.id}?shared=true",
+                                      width: 200,
+                                      height: 200,
+                                      colorDark : "#000000",
+                                      colorLight : "#ffffff",
+                                      correctLevel : QRCode.CorrectLevel.H
+                                    });
+                                  </script>
+                                </body>
+                              </html>
+                            `;
+                            printWindow.document.write(qrCardHtml);
+                            printWindow.document.close();
+                          }}
+                          className="w-full rounded-2xl bg-primary hover:bg-primary/90 text-white font-bold h-12 shadow-lg shadow-primary/20"
+                        >
+                          Generate Luxury QR Card
+                        </Button>
                       </div>
                     </div>
                   </DialogContent>
@@ -150,7 +208,13 @@ export default function Dashboard() {
           </div>
 
           <CardContent className="pt-6 relative">
-            <h3 className="text-xl font-bold mb-2 group-hover:text-primary transition-colors truncate">{album.title}</h3>
+            <div className="flex items-center justify-between mb-2">
+              <h3 className="text-xl font-bold group-hover:text-primary transition-colors truncate flex-1">{album.title}</h3>
+              <div className="flex items-center gap-1.5 px-2 py-1 bg-primary/10 border border-primary/20 rounded-lg text-[10px] font-bold text-primary animate-pulse shadow-sm">
+                <Eye className="w-3 h-3" />
+                {album.views || 0}
+              </div>
+            </div>
             <div className="flex items-center text-xs text-white/40 uppercase tracking-widest font-medium">
               <Calendar className="w-3 h-3 mr-2" />
               {new Date(album.date).toLocaleDateString(undefined, { month: 'long', year: 'numeric' })}
