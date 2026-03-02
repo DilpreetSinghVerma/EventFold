@@ -173,7 +173,7 @@ export default function Viewer() {
           <img src={settings.businessLogo} alt="Logo" className="w-8 h-8 rounded-lg object-cover" />
         ) : (
           <div className="w-8 h-8 rounded-lg bg-white/10 flex items-center justify-center overflow-hidden border border-white/5">
-            <img src="/logo.png" alt="EventFold Logo" className="w-full h-full object-cover scale-150" />
+            <img src="/branding material/without bg version.png" alt="EventFold Logo" className="w-full h-full object-contain p-1" />
           </div>
         )}
         <div className="flex flex-col">

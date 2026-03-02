@@ -103,7 +103,7 @@ export default function Settings() {
                                 <CardContent className="p-6 space-y-6">
                                     <div className="flex items-center gap-4">
                                         <div className="w-12 h-12 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-center overflow-hidden">
-                                            <img src="/logo.png" alt="EventFold Logo" className="w-full h-full object-cover" />
+                                            <img src="/branding material/without bg version.png" alt="EventFold Logo" className="w-full h-full object-contain p-1" />
                                         </div>
                                         <div>
                                             <p className="text-[10px] font-bold text-white/40 uppercase tracking-widest">Active Studio</p>

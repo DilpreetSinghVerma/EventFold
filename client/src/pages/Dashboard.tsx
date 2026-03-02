@@ -184,7 +184,7 @@ export default function Dashboard() {
         <div className="max-w-7xl mx-auto px-8 h-20 flex items-center justify-between">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center overflow-hidden">
-              <img src="/logo.png" alt="EventFold Logo" className="w-full h-full object-cover" />
+              <img src="/branding material/without bg version.png" alt="EventFold Logo" className="w-full h-full object-contain p-1" />
             </div>
             <div>
               <h1 className="text-2xl font-bold tracking-tight">{settings?.businessName || 'EventFold Studio'}</h1>
