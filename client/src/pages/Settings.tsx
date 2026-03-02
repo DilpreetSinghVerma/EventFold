@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { ArrowLeft, Save, Building2, Lock, Smartphone, Globe, CheckCircle2, Loader2 } from 'lucide-react';
+import { ArrowLeft, Save, Building2, Lock, Smartphone, Globe, CheckCircle2, Loader2, Sparkles } from 'lucide-react';
 import { motion } from 'framer-motion';
 
 export default function Settings() {

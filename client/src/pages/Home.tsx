@@ -6,6 +6,14 @@ import { useAuth } from "@/lib/auth";
 import { Flipbook } from '@/components/Flipbook';
 import weddingCover from '@assets/generated_images/wedding_album_cover_art.png';
 
+// Local demo assets
+import demoFront from '@assets/demo_album/cover_front.png';
+import demoBack from '@assets/demo_album/cover_back.png';
+import demoSheet1L from '@assets/demo_album/sheet1_l.png';
+import demoSheet1R from '@assets/demo_album/sheet1_r.png';
+import demoSheet2L from '@assets/demo_album/sheet2_l.png';
+import demoSheet2R from '@assets/demo_album/sheet2_r.png';
+
 export default function Home() {
   const { user, startStripeCheckout } = useAuth();
   const [, setLocation] = useLocation();
@@ -18,19 +26,19 @@ export default function Home() {
     }
   };
 
-  // Demo album data
+  // Local demo sheets
   const demoSheets = [
-    "https://res.cloudinary.com/dzp0f9u5u/image/upload/v1740393962/demo_sheet_1_lh.jpg",
-    "https://res.cloudinary.com/dzp0f9u5u/image/upload/v1740393962/demo_sheet_1_rh.jpg",
-    "https://res.cloudinary.com/dzp0f9u5u/image/upload/v1740393962/demo_sheet_2_lh.jpg",
-    "https://res.cloudinary.com/dzp0f9u5u/image/upload/v1740393962/demo_sheet_2_rh.jpg",
+    demoSheet1L,
+    demoSheet1R,
+    demoSheet2L,
+    demoSheet2R,
   ];
 
   return (
     <div className="min-h-screen bg-[#030303] text-white selection:bg-primary/30 selection:text-white overflow-x-hidden">
       {/* Decorative Blur Orbs */}
-      <div className="absolute top-0 -left-20 w-96 h-96 bg-primary/20 rounded-full blur-[120px] pointer-events-none" />
-      <div className="absolute top-1/2 -right-20 w-96 h-96 bg-indigo-500/10 rounded-full blur-[120px] pointer-events-none" />
+      <div className="fixed top-0 left-0 w-[500px] h-[500px] bg-primary/5 rounded-full blur-[120px] pointer-events-none" />
+      <div className="fixed bottom-0 right-0 w-[500px] h-[500px] bg-indigo-500/5 rounded-full blur-[120px] pointer-events-none" />
 
       {/* Navigation */}
       <nav className="relative z-50 flex items-center justify-between px-8 py-6 max-w-7xl mx-auto">
@@ -55,66 +63,62 @@ export default function Home() {
       </nav>
 
       {/* Hero Section */}
-      <main className="relative pt-12 pb-24 px-8">
-        <div className="max-w-7xl mx-auto flex flex-col items-center text-center">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8 }}
-            className="max-w-3xl"
-          >
-            <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-primary/10 border border-primary/20 text-primary text-[10px] font-bold tracking-[0.2em] uppercase mb-8">
-              <Sparkles className="w-3 h-3" /> The Modern Standard for Wedding Studios
-            </div>
-            <h1 className="text-5xl md:text-7xl lg:text-8xl font-display font-bold leading-[1.0] mb-8 tracking-tighter">
-              Breathtaking <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary to-indigo-400">3D Digital</span> Albums.
-            </h1>
-            <p className="text-lg md:text-xl text-white/50 mb-12 leading-relaxed max-w-2xl mx-auto">
-              Transform your paper albums into a stunning interactive 3D experience. Upload your first album for <strong>free</strong> and wow your clients today.
-            </p>
+      <main className="relative pt-32 pb-24 overflow-hidden">
+        <div className="max-w-7xl mx-auto px-8">
+          <div className="flex flex-col items-center text-center gap-12">
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.8 }}
+              className="max-w-3xl"
+            >
+              <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-primary/10 border border-primary/20 text-primary text-[10px] font-bold tracking-[0.2em] uppercase mb-8">
+                <Sparkles className="w-3 h-3" /> The Modern Standard for Wedding Studios
+              </div>
+              <h1 className="text-5xl md:text-7xl lg:text-8xl font-display font-bold leading-[1.0] mb-8 tracking-tighter">
+                Breathtaking <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary to-indigo-400">3D Digital</span> Albums.
+              </h1>
+              <p className="text-lg md:text-xl text-white/50 mb-12 leading-relaxed max-w-2xl mx-auto">
+                Transform your paper albums into a stunning interactive 3D experience. Upload your first album for <strong>free</strong> and wow your clients today.
+              </p>
 
-            <div className="flex flex-col sm:flex-row gap-5 justify-center mb-24">
-              <Link href="/create">
-                <Button size="lg" className="rounded-[1.25rem] h-16 px-10 text-lg bg-primary hover:bg-primary/90 text-white font-bold group">
-                  Upload Your Free 1st Album <ArrowRight className="w-5 h-5 ml-2 group-hover:translate-x-1 transition-transform" />
-                </Button>
-              </Link>
-            </div>
-          </motion.div>
+              <div className="flex flex-col sm:flex-row gap-5 justify-center">
+                <Link href="/create">
+                  <Button size="lg" className="rounded-[1.25rem] h-16 px-10 text-lg bg-primary hover:bg-primary/90 text-white font-bold group">
+                    Upload Your Free 1st Album <ArrowRight className="w-5 h-5 ml-2 group-hover:translate-x-1 transition-transform" />
+                  </Button>
+                </Link>
+              </div>
+            </motion.div>
 
-          {/* Interactive Demo Section */}
-          <motion.div
-            initial={{ opacity: 0, y: 40 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            className="w-full relative py-20"
-          >
-            <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[120%] h-full bg-gradient-to-b from-primary/5 to-transparent blur-[120px] -z-10" />
-
-            <div className="text-center mb-16 px-4">
-              <h2 className="text-3xl font-display font-bold mb-4">Interactive Preview</h2>
-              <p className="text-white/40 uppercase tracking-[0.3em] text-xs font-mono">Try flipping the pages below</p>
-            </div>
-
-            <div className="h-[500px] w-full max-w-5xl mx-auto flex items-center justify-center">
-              <Flipbook
-                sheets={demoSheets}
-                frontCover={weddingCover}
-                backCover={weddingCover}
-                title="Cinematic Wedding Demo"
-              />
-            </div>
-          </motion.div>
+            {/* Interactive Demo Container */}
+            <motion.div
+              initial={{ opacity: 0, y: 30 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.4, duration: 0.8 }}
+              className="w-full relative group"
+            >
+              <div className="h-[600px] w-full max-w-6xl mx-auto flex items-center justify-center relative rounded-[3rem] bg-gradient-to-b from-white/[0.02] to-transparent border border-white/5 shadow-inner overflow-hidden">
+                <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_50%,rgba(139,92,246,0.1),transparent_70%)] pointer-events-none" />
+                <Flipbook
+                  sheets={demoSheets}
+                  frontCover={demoFront}
+                  backCover={demoBack}
+                  title="Cinematic Wedding Demo"
+                />
+              </div>
+            </motion.div>
+          </div>
         </div>
       </main>
 
-      {/* Pricing / Plan Section - Competitive Strategy */}
+      {/* Pricing / Plan Section */}
       <section className="py-32 relative">
         <div className="max-w-7xl mx-auto px-8">
           <div className="text-center mb-20">
-            <h2 className="text-5xl md:text-6xl font-display font-bold mb-6 tracking-tight">The <span className="text-primary">Best Price</span> in the Industry</h2>
+            <h2 className="text-5xl md:text-6xl font-display font-bold mb-6 tracking-tight">Simple <span className="text-primary">Pricing</span></h2>
             <p className="text-white/40 text-lg max-w-2xl mx-auto leading-relaxed">
-              Why pay more elsewhere? Get full cinematic 3D features at half the price of Flipix. Switch today and save.
+              Get full cinematic 3D features at half the price of competitors. Start for free and grow as you need.
             </p>
           </div>
 
@@ -131,21 +135,12 @@ export default function Home() {
                     Start Free
                   </Button>
                 </Link>
-                <ul className="space-y-3 pt-4">
-                  {['3D Page Flip', 'QR Sharing', 'Cloud Hosting'].map((f) => (
-                    <li key={f} className="flex items-center gap-3 text-xs text-white/50">
-                      <CheckCircle2 className="w-3.5 h-3.5 text-primary" /> {f}
-                    </li>
-                  ))}
-                </ul>
               </div>
             </div>
 
-            {/* Pro Monthly - The Aggressive Option */}
+            {/* Pro Monthly */}
             <div className="p-8 rounded-[2.5rem] bg-gradient-to-b from-primary/20 to-indigo-600/10 border border-primary/40 relative shadow-2xl overflow-hidden scale-105 z-10">
-              <div className="absolute top-0 right-0 p-6 opacity-20"><Crown className="w-16 h-16 text-primary" /></div>
               <div className="absolute top-4 left-1/2 -translate-x-1/2 px-4 py-1 bg-primary rounded-full text-[10px] font-bold uppercase tracking-widest shadow-xl">Best for Studios</div>
-
               <div className="space-y-6 pt-6">
                 <span className="text-[10px] font-bold uppercase tracking-[0.3em] text-primary">Monthly Elite</span>
                 <h3 className="text-2xl font-bold">Unlimited Albums</h3>
@@ -154,20 +149,13 @@ export default function Home() {
                   <span className="text-sm font-medium text-white/20">/month</span>
                 </div>
                 <p className="text-sm text-white/60 leading-relaxed">Create as many wedding projects as you want. Full studio branding included.</p>
-                <Button onClick={() => handleSubscribe('monthly')} className="w-full h-14 rounded-xl bg-primary hover:bg-primary/90 text-white font-bold shadow-lg shadow-primary/20 transition-transform hover:scale-105">
+                <Button onClick={() => handleSubscribe('monthly')} className="w-full h-14 rounded-xl bg-primary hover:bg-primary/90 text-white font-bold shadow-lg shadow-primary/20">
                   Get Unlimited Now
                 </Button>
-                <ul className="space-y-3 pt-4">
-                  {['UNLIMITED Albums', 'Studio Logo Branding', 'Password Protection', 'Background Music', 'Priority Support'].map((f) => (
-                    <li key={f} className="flex items-center gap-3 text-sm text-white/80 font-medium">
-                      <CheckCircle2 className="w-4 h-4 text-cyan-400" /> {f}
-                    </li>
-                  ))}
-                </ul>
               </div>
             </div>
 
-            {/* Yearly - The Long Term Strategy */}
+            {/* Yearly */}
             <div className="glass p-8 rounded-[2.5rem] border-white/5 relative overflow-hidden group">
               <div className="space-y-6">
                 <span className="text-[10px] font-bold uppercase tracking-[0.3em] text-white/40">Power Studio</span>
@@ -180,42 +168,7 @@ export default function Home() {
                 <Button onClick={() => handleSubscribe('yearly')} className="w-full h-12 rounded-xl bg-white/5 hover:bg-white/10 text-white border border-white/10 font-bold">
                   Choose Yearly
                 </Button>
-                <ul className="space-y-3 pt-4">
-                  {['Everything in Pro', 'White-Label Links', 'Early Access Features', 'API Access (Coming Soon)'].map((f) => (
-                    <li key={f} className="flex items-center gap-3 text-xs text-white/50">
-                      <CheckCircle2 className="w-3.5 h-3.5 text-primary" /> {f}
-                    </li>
-                  ))}
-                </ul>
               </div>
-            </div>
-          </div>
-
-          <div className="mt-16 text-center">
-            <p className="text-white/20 text-xs font-bold uppercase tracking-[0.4em] mb-4">Trusted by 500+ Luxury Studios Worldwide</p>
-            <div className="h-px w-20 bg-primary/20 mx-auto" />
-          </div>
-        </div>
-      </section>
-
-      {/* Custom Feature Grids */}
-      <section className="py-32 bg-black/40 border-t border-white/5">
-        <div className="max-w-7xl mx-auto px-8">
-          <div className="grid md:grid-cols-3 gap-12">
-            <div className="space-y-4">
-              <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center text-primary"><CreditCard className="w-6 h-6" /></div>
-              <h4 className="text-xl font-bold">Easy Billing</h4>
-              <p className="text-white/40 leading-relaxed text-sm">Pay securely via Stripe or UPI. No hidden subscriptions or contracts.</p>
-            </div>
-            <div className="space-y-4">
-              <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center text-primary"><ShieldCheck className="w-6 h-6" /></div>
-              <h4 className="text-xl font-bold">Secure Delivery</h4>
-              <p className="text-white/40 leading-relaxed text-sm">Every album can be protected with a unique password for the client.</p>
-            </div>
-            <div className="space-y-4">
-              <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center text-primary"><LayoutGrid className="w-6 h-6" /></div>
-              <h4 className="text-xl font-bold">Studio Dashboard</h4>
-              <p className="text-white/40 leading-relaxed text-sm">Manage all your client projects from one centralized, elite portal.</p>
             </div>
           </div>
         </div>
@@ -223,7 +176,7 @@ export default function Home() {
 
       <footer className="py-20 border-t border-white/5 text-center">
         <div className="flex items-center justify-center gap-3 mb-8">
-          <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center text-primary"><BookOpen className="w-4 h-4" /></div>
+          <BookOpen className="w-5 h-5 text-primary" />
           <span className="font-display font-bold tracking-tight">EventFold Studio</span>
         </div>
         <p className="text-white/20 text-xs uppercase tracking-[0.4em]">Crafted for the World's Best Photographers</p>

@@ -357,9 +357,30 @@ export function Flipbook({ sheets, frontCover, backCover, title = 'Photo Album' 
             style={{
               transformStyle: 'preserve-3d',
               display: 'inline-block',
-              filter: 'drop-shadow(0 40px 80px rgba(0,0,0,0.5))'
+              filter: 'drop-shadow(0 30px 60px rgba(0,0,0,0.6))'
             }}
           >
+            {/* Cinematic Floor Reflection / Shadow */}
+            <motion.div
+              animate={{
+                opacity: isOpened ? 0.3 : 0.6,
+                scaleX: isOpened ? 1.2 : 0.85,
+                translateY: isOpened ? 40 : 30,
+                rotateX: isOpened ? 0 : 5,
+                filter: 'blur(40px)',
+              }}
+              transition={{ type: 'spring', stiffness: 40, damping: 20 }}
+              style={{
+                position: 'absolute',
+                bottom: -40,
+                left: '-10%',
+                right: '-10%',
+                height: 100,
+                background: 'radial-gradient(ellipse at center, rgba(139,92,246,0.3) 0%, transparent 70%)',
+                zIndex: -2,
+                pointerEvents: 'none',
+              }}
+            />
             {/* Drop shadow — shifts with tilt for realism */}
             <motion.div
               animate={{
@@ -417,6 +438,7 @@ export function Flipbook({ sheets, frontCover, backCover, title = 'Photo Album' 
               onFlip={(e: any) => {
                 playFlipSound();
                 const pg = e.data;
+                setCurrentPage(pg);
 
                 // Browser unblock: try to play sounds on interaction
                 if (pg > 0 && !isOpened) {
@@ -456,10 +478,15 @@ export function Flipbook({ sheets, frontCover, backCover, title = 'Photo Album' 
                       <img
                         src={page.image}
                         alt="cover"
-                        style={{ width: '100%', height: '100%', objectFit: 'contain', display: 'block' }}
+                        style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
                       />
-                      {/* Subtle vignette on cover edges */}
-                      <div style={{ position: 'absolute', inset: 0, boxShadow: 'inset 0 0 40px rgba(0,0,0,0.4)', pointerEvents: 'none' }} />
+                      {/* Premium Leather Texture Overlay */}
+                      <div className="absolute inset-0 opacity-[0.03] pointer-events-none" style={{ backgroundImage: `url("https://www.transparenttextures.com/patterns/leather.png")` }} />
+                      {/* Subtle lighting overlay */}
+                      <div className="absolute inset-0 bg-gradient-to-tr from-black/60 via-transparent to-white/10 pointer-events-none" />
+                      {/* Gold Foil Border Effect */}
+                      <div className="absolute inset-4 border border-white/10 rounded-sm pointer-events-none" />
+                      <div style={{ position: 'absolute', inset: 0, boxShadow: 'inset 0 0 100px rgba(0,0,0,0.8)', pointerEvents: 'none' }} />
                     </div>
                   );
                 }
@@ -502,22 +529,39 @@ export function Flipbook({ sheets, frontCover, backCover, title = 'Photo Album' 
                         style={{
                           width: '100%',
                           height: '100%',
-                          objectFit: 'contain',
-                          objectPosition: 'center',
+                          objectFit: 'cover',
+                          objectPosition: isLeftHalf ? 'right' : 'left',
                           display: 'block',
+                          backgroundColor: '#0a0a0a',
                         }}
                       />
-                      {/* Spine-side gradient shadow for depth */}
+                      {/* High-end Paper Texture */}
+                      <div className="absolute inset-0 opacity-[0.02] pointer-events-none" style={{ backgroundImage: `url("https://www.transparenttextures.com/patterns/paper-fibers.png")` }} />
+
+                      {/* Deep Spine Lighting */}
                       <div style={{
                         position: 'absolute',
                         top: 0,
                         [isLeftHalf ? 'right' : 'left']: 0,
-                        width: 20,
+                        width: 40,
                         height: '100%',
                         background: isLeftHalf
-                          ? 'linear-gradient(to left, rgba(0,0,0,0.35), transparent)'
-                          : 'linear-gradient(to right, rgba(0,0,0,0.35), transparent)',
+                          ? 'linear-gradient(to left, rgba(0,0,0,0.6) 0%, rgba(0,0,0,0.2) 30%, transparent 100%)'
+                          : 'linear-gradient(to right, rgba(0,0,0,0.6) 0%, rgba(0,0,0,0.2) 30%, transparent 100%)',
                         pointerEvents: 'none',
+                        zIndex: 10,
+                      }} />
+
+                      {/* Corner lighting */}
+                      <div style={{
+                        position: 'absolute',
+                        [isLeftHalf ? 'top' : 'bottom']: 0,
+                        [isLeftHalf ? 'left' : 'right']: 0,
+                        width: '60%',
+                        height: '40%',
+                        background: `radial-gradient(circle at ${isLeftHalf ? '0% 0%' : '100% 100%'}, rgba(255,255,255,0.05) 0%, transparent 70%)`,
+                        pointerEvents: 'none',
+                        zIndex: 5,
                       }} />
                     </div>
                   );

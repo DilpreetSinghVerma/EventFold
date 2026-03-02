@@ -5,10 +5,12 @@ import { useDropzone } from 'react-dropzone';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Upload, X, Loader2, ImagePlus, ArrowLeft, CheckCircle2, CloudUpload, ArrowRight, Lock, Sparkles } from 'lucide-react';
+import { Upload, X, Loader2, ImagePlus, ArrowLeft, CheckCircle2, CloudUpload, ArrowRight, Lock, Sparkles, Eye } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '@/lib/auth';
 import { useQuery } from '@tanstack/react-query';
+import { Flipbook } from '@/components/Flipbook';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 
 export default function CreateAlbum() {
   const { user, startStripeCheckout } = useAuth();
@@ -35,6 +37,12 @@ export default function CreateAlbum() {
     password: '',
   });
 
+  const [previewOpen, setPreviewOpen] = useState(false);
+  const [isPreviewLoading, setIsPreviewLoading] = useState(false);
+  const [previewSheets, setPreviewSheets] = useState<string[]>([]);
+  const [previewFront, setPreviewFront] = useState('');
+  const [previewBack, setPreviewBack] = useState('');
+
   const [sheetPreviews, setSheetPreviews] = useState<string[]>([]);
   const prevPreviewsRef = useRef<string[]>([]);
 
@@ -48,6 +56,14 @@ export default function CreateAlbum() {
       newUrls.forEach((url) => URL.revokeObjectURL(url));
     };
   }, [formData.sheets]);
+
+  const previewUrlsRef = useRef<string[]>([]);
+  useEffect(() => {
+    if (!previewOpen) {
+      previewUrlsRef.current.forEach(u => URL.revokeObjectURL(u));
+      previewUrlsRef.current = [];
+    }
+  }, [previewOpen]);
 
   const onDropSheets = useCallback((acceptedFiles: File[]) => {
     setFormData((prev) => ({
@@ -258,6 +274,38 @@ export default function CreateAlbum() {
     }
   };
 
+  const handleLivePreview = async () => {
+    if (!formData.frontCover || !formData.backCover || formData.sheets.length === 0) return;
+
+    setIsPreviewLoading(true);
+    try {
+      // Create local URLs for covers
+      const frontUrl = URL.createObjectURL(formData.frontCover);
+      const backUrl = URL.createObjectURL(formData.backCover);
+
+      setPreviewFront(frontUrl);
+      setPreviewBack(backUrl);
+      previewUrlsRef.current = [frontUrl, backUrl];
+
+      const splitSheets: string[] = [];
+      for (const file of formData.sheets) {
+        const url = URL.createObjectURL(file);
+        const [left, right] = await splitPanoramicSheet(url);
+        splitSheets.push(left, right);
+        previewUrlsRef.current.push(left, right);
+        URL.revokeObjectURL(url); // Clean up the original large blob
+      }
+
+      setPreviewSheets(splitSheets);
+      setPreviewOpen(true);
+    } catch (err) {
+      console.error("Preview failed", err);
+      alert("Failed to generate preview. Ensure your images are valid.");
+    } finally {
+      setIsPreviewLoading(false);
+    }
+  };
+
   return (
     <div className="min-h-screen bg-background text-foreground flex flex-col p-8 selection:bg-primary/30">
       {/* Background Glow */}
@@ -427,9 +475,21 @@ export default function CreateAlbum() {
                 <div className="space-y-4">
                   <div className="flex items-center justify-between">
                     <h4 className="text-xs font-bold uppercase tracking-widest text-white/40">Queue ({formData.sheets.length})</h4>
-                    {formData.sheets.length > 0 && (
-                      <Button variant="ghost" size="sm" className="text-xs text-destructive hover:bg-destructive/10" onClick={() => setFormData(p => ({ ...p, sheets: [] }))}>Clear All</Button>
-                    )}
+                    <div className="flex gap-2">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="text-xs glass border-primary/20 hover:bg-primary/10 text-primary font-bold px-4"
+                        onClick={handleLivePreview}
+                        disabled={formData.sheets.length === 0 || !formData.frontCover || isPreviewLoading}
+                      >
+                        {isPreviewLoading ? <Loader2 className="w-3 h-3 animate-spin mr-2" /> : <Eye className="w-3 h-3 mr-2" />}
+                        Preview Album
+                      </Button>
+                      {formData.sheets.length > 0 && (
+                        <Button variant="ghost" size="sm" className="text-xs text-destructive hover:bg-destructive/10" onClick={() => setFormData(p => ({ ...p, sheets: [] }))}>Clear All</Button>
+                      )}
+                    </div>
                   </div>
 
                   <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 max-h-[400px] overflow-y-auto pr-2 custom-scrollbar">
@@ -509,7 +569,7 @@ export default function CreateAlbum() {
 
               <div className="flex flex-col gap-4 pt-4">
                 <Button
-                  onClick={startStripeCheckout}
+                  onClick={() => startStripeCheckout('monthly')}
                   className="h-16 rounded-2xl bg-primary hover:bg-primary/90 text-white font-bold text-xl shadow-2xl shadow-primary/30 gap-3 border-none"
                 >
                   <Sparkles className="w-6 h-6" /> Unlock Lifetime Access
@@ -528,8 +588,77 @@ export default function CreateAlbum() {
           </motion.div>
         )}
       </AnimatePresence>
+
+      <Dialog open={previewOpen} onOpenChange={setPreviewOpen}>
+        <DialogContent className="max-w-[95vw] h-[90vh] glass-dark border-white/5 p-0 overflow-hidden rounded-[3rem]">
+          <div className="absolute inset-0 bg-primary/5 blur-[120px] -z-10" />
+          <div className="h-full flex flex-col">
+            <div className="px-8 pt-6 pb-2 flex items-center justify-between z-50">
+              <div>
+                <DialogTitle className="text-2xl font-bold font-display tracking-tight text-white mb-1">Studio Live Preview</DialogTitle>
+                <p className="text-xs text-white/40 font-mono uppercase tracking-[0.2em]">Cinematic 3D Engine · Draft Mode</p>
+              </div>
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => setPreviewOpen(false)}
+                className="rounded-full hover:bg-white/10 text-white/40 hover:text-white"
+              >
+                <X className="w-6 h-6" />
+              </Button>
+            </div>
+
+            <div className="flex-1 w-full relative">
+              <Flipbook
+                sheets={previewSheets}
+                frontCover={previewFront}
+                backCover={previewBack}
+                title={formData.title || "Studio Draft"}
+              />
+            </div>
+
+            <div className="p-6 bg-black/40 border-t border-white/5 text-center">
+              <p className="text-[10px] text-white/20 font-bold uppercase tracking-[0.4em]">Interactive 3D Virtual Representation</p>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
+}
+
+// Logic for splitting panoramic sheets locally
+function splitPanoramicSheet(url: string): Promise<[string, string]> {
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    img.onload = () => {
+      const W = img.naturalWidth;
+      const H = img.naturalHeight;
+      const halfW = Math.floor(W / 2);
+
+      const leftCanvas = document.createElement('canvas');
+      leftCanvas.width = halfW;
+      leftCanvas.height = H;
+      const leftCtx = leftCanvas.getContext('2d')!;
+      leftCtx.drawImage(img, 0, 0, halfW, H, 0, 0, halfW, H);
+
+      const rightCanvas = document.createElement('canvas');
+      rightCanvas.width = W - halfW;
+      rightCanvas.height = H;
+      const rightCtx = rightCanvas.getContext('2d')!;
+      rightCtx.drawImage(img, halfW, 0, W - halfW, H, 0, 0, W - halfW, H);
+
+      leftCanvas.toBlob((lb) => {
+        if (!lb) return reject(new Error('Left splitting failed'));
+        rightCanvas.toBlob((rb) => {
+          if (!rb) return reject(new Error('Right splitting failed'));
+          resolve([URL.createObjectURL(lb), URL.createObjectURL(rb)]);
+        }, 'image/jpeg', 0.85);
+      }, 'image/jpeg', 0.85);
+    };
+    img.onerror = () => reject(new Error('Image failed to load for splitting'));
+    img.src = url;
+  });
 }
 
 function CoverUploader({ file, onDrop, label }: { file: File | null; onDrop: (f: File) => void; label: string }) {
