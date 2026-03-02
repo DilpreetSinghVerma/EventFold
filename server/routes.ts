@@ -107,10 +107,46 @@ export function registerRoutes(
   // Update Business Settings
   app.patch("/api/settings", async (req, res) => {
     try {
+      if (!req.isAuthenticated()) return res.status(401).json({ error: "Unauthorized" });
       await storage.updateSettings(req.body);
       res.json({ success: true });
     } catch (e) {
       res.status(500).json({ error: "Failed to update settings" });
+    }
+  });
+
+  // Upload Business Logo
+  app.post("/api/settings/logo", upload.single("logo"), async (req, res) => {
+    try {
+      if (!req.isAuthenticated()) return res.status(401).json({ error: "Unauthorized" });
+      if (!req.file) return res.status(400).json({ error: "No logo file uploaded" });
+
+      const streamUpload = (buffer: Buffer) => {
+        return new Promise((resolve, reject) => {
+          const stream = cloudinary.uploader.upload_stream(
+            {
+              folder: "eventfold_brand",
+              resource_type: "image",
+              quality: "auto",
+              fetch_format: "auto"
+            },
+            (error, result) => {
+              if (result) resolve(result);
+              else reject(error);
+            }
+          );
+          stream.end(buffer);
+        });
+      };
+
+      const result: any = await streamUpload(req.file.buffer);
+      const logoUrl = result.secure_url;
+
+      await storage.updateSettings({ businessLogo: logoUrl });
+      res.json({ logoUrl });
+    } catch (e: any) {
+      console.error("Logo upload failed:", e);
+      res.status(500).json({ error: "Failed to upload logo", details: e.message });
     }
   });
 

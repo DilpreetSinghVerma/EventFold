@@ -114,6 +114,8 @@ export default function Home() {
                   backCover={demoBack}
                   title="Studio Demo Experience"
                   scale={0.8}
+                  contactWhatsApp="+919876543210"
+                  businessName="EventFold Studio"
                 />
 
                 {/* Interactive Hint */}

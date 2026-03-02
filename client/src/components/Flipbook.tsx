@@ -1,7 +1,7 @@
 import React, { useRef, useState, useEffect } from 'react';
 import HTMLFlipBook from 'react-pageflip';
-import { motion } from 'framer-motion';
-import { ChevronLeft, ChevronRight, Volume2, VolumeX, ZoomIn, ZoomOut, RotateCcw, Maximize, Minimize, Play, Pause } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { ChevronLeft, ChevronRight, Volume2, VolumeX, ZoomIn, ZoomOut, RotateCcw, Maximize, Minimize, Play, Pause, MessageCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
 interface FlipbookProps {
@@ -11,9 +11,11 @@ interface FlipbookProps {
   backCover: string;
   title?: string;
   scale?: number;
+  contactWhatsApp?: string;
+  businessName?: string;
 }
 
-export function Flipbook({ sheets, frontCover, backCover, title = 'Photo Album', scale = 1 }: FlipbookProps) {
+export function Flipbook({ sheets, frontCover, backCover, title = 'Photo Album', scale = 1, contactWhatsApp, businessName }: FlipbookProps) {
   const book = useRef<any>(null);
   const container = useRef<HTMLDivElement>(null);
   const [isMuted, setIsMuted] = useState(false);
@@ -572,7 +574,37 @@ export function Flipbook({ sheets, frontCover, backCover, title = 'Photo Album',
               })}
             </HTMLFlipBook>
           </motion.div>  {/* end album tilt wrapper */}
-        </div>          {/* end zoom/pan wrapper */}
+        </div>            {/* end zoom/pan wrapper */}
+
+        {/* ── Lead Generator (Inside Fullscreen Container) ── */}
+        <AnimatePresence>
+          {contactWhatsApp && (
+            <motion.div
+              initial={{ opacity: 0, scale: 0.5, y: 100 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              transition={{ delay: 1, duration: 0.8 }}
+              className="absolute bottom-8 right-8 z-[100] flex flex-col items-end gap-3"
+            >
+              <div className="bg-black/60 backdrop-blur-xl border border-white/10 p-4 rounded-3xl shadow-2xl max-w-[200px] hidden lg:block">
+                <p className="text-[10px] font-bold text-primary uppercase tracking-widest mb-1">Inquiry Hub</p>
+                <p className="text-[10px] text-white/50 leading-relaxed font-medium capitalize">
+                  Love these photos? Contact <span className="text-white font-bold">{businessName || 'the Studio'}</span> for your next event.
+                </p>
+              </div>
+
+              <Button
+                onClick={() => window.open(`https://wa.me/${contactWhatsApp.replace(/[^0-9]/g, '')}?text=Hi! I saw your work on EventFold and I'm interested in booking for an event.`, '_blank')}
+                className="w-14 h-14 rounded-full bg-green-500 hover:bg-green-600 text-white shadow-[0_0_30px_rgba(34,197,94,0.4)] transition-all hover:scale-110 active:scale-95 border-none p-0 group"
+              >
+                <span className="relative">
+                  <MessageCircle className="w-6 h-6 group-hover:rotate-12 transition-transform" />
+                  <span className="absolute -top-1 -right-1 w-2.5 h-2.5 bg-red-500 rounded-full animate-ping" />
+                  <span className="absolute -top-1 -right-1 w-2.5 h-2.5 bg-red-500 rounded-full" />
+                </span>
+              </Button>
+            </motion.div>
+          )}
+        </AnimatePresence>
 
         {/* ── Mobile Side Navigation ── */}
         <div className="md:hidden absolute inset-y-0 left-0 w-12 flex items-center justify-start pl-2 z-50 pointer-events-none">

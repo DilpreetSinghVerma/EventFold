@@ -399,6 +399,8 @@ export default function Viewer() {
           frontCover={loadedFrontCover}
           backCover={loadedBackCover}
           title={album.title}
+          contactWhatsApp={isShared ? settings?.contactWhatsApp : undefined}
+          businessName={settings?.businessName}
         />
       </main>
     </div>
