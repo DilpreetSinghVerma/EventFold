@@ -183,7 +183,7 @@ export default function Dashboard() {
       <nav className="sticky top-0 z-50 w-full border-b border-white/5 bg-background/80 backdrop-blur-xl">
         <div className="max-w-7xl mx-auto px-8 h-20 flex items-center justify-between">
           <Link href="/">
-            <div className="h-10 group cursor-pointer">
+            <div className="h-14 group cursor-pointer py-1">
               <img
                 src="/branding material/without bg version.png"
                 alt="EventFold"

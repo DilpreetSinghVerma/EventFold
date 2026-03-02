@@ -101,8 +101,8 @@ export default function Settings() {
                         <div className="space-y-4">
                             <Card className="glass border-white/5 overflow-hidden">
                                 <CardContent className="p-6">
-                                    <div className="flex flex-col gap-4">
-                                        <div className="h-8">
+                                    <div className="flex flex-col gap-6">
+                                        <div className="h-14">
                                             <img
                                                 src="/branding material/without bg version.png"
                                                 alt="EventFold"

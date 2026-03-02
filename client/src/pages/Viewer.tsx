@@ -168,11 +168,11 @@ export default function Viewer() {
 
   const BrandingHeader = () => (
     <div className="absolute top-0 left-0 right-0 p-6 z-[60] flex items-center justify-between pointer-events-none">
-      <div className="flex items-center gap-4 bg-black/40 backdrop-blur-md px-6 py-4 rounded-2xl border border-white/5 pointer-events-auto shadow-2xl">
+      <div className="flex items-center gap-6 bg-black/40 backdrop-blur-xl px-8 py-5 rounded-3xl border border-white/5 pointer-events-auto shadow-2xl">
         {settings?.businessLogo ? (
-          <img src={settings.businessLogo} alt="Logo" className="h-10 w-auto rounded-lg object-contain" />
+          <img src={settings.businessLogo} alt="Logo" className="h-14 w-auto rounded-xl object-contain" />
         ) : (
-          <img src="/branding material/without bg version.png" alt="EventFold" className="h-8 w-auto object-contain" />
+          <img src="/branding material/without bg version.png" alt="EventFold" className="h-12 w-auto object-contain" />
         )}
         <div className="w-px h-6 bg-white/10 mx-1" />
         <div className="flex flex-col">
