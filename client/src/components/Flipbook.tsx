@@ -10,9 +10,10 @@ interface FlipbookProps {
   frontCover: string;
   backCover: string;
   title?: string;
+  scale?: number;
 }
 
-export function Flipbook({ sheets, frontCover, backCover, title = 'Photo Album' }: FlipbookProps) {
+export function Flipbook({ sheets, frontCover, backCover, title = 'Photo Album', scale = 1 }: FlipbookProps) {
   const book = useRef<any>(null);
   const container = useRef<HTMLDivElement>(null);
   const [isMuted, setIsMuted] = useState(false);
@@ -326,7 +327,7 @@ export function Flipbook({ sheets, frontCover, backCover, title = 'Photo Album' 
             initial={{
               opacity: 0,
               y: 100,
-              scale: 0.7,
+              scale: 0.7 * scale,
               rotateZ: -12,
               rotateX: 25,
               perspective: '2000px',
@@ -334,7 +335,7 @@ export function Flipbook({ sheets, frontCover, backCover, title = 'Photo Album' 
             animate={{
               opacity: 1,
               y: 0,
-              scale: 1,
+              scale: scale,
               // More premium tilt when closed, flat when opened
               rotateZ: (isOpened || window.innerWidth < 768) ? 0 : -5,
               rotateX: (isOpened || window.innerWidth < 768) ? 0 : 8,

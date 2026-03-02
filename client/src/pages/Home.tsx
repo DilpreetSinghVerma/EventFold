@@ -93,19 +93,35 @@ export default function Home() {
 
             {/* Interactive Demo Container */}
             <motion.div
-              initial={{ opacity: 0, y: 30 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.4, duration: 0.8 }}
-              className="w-full relative group"
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ delay: 0.4, duration: 1.2, ease: "easeOut" }}
+              className="w-full relative py-12"
             >
-              <div className="h-[600px] w-full max-w-6xl mx-auto flex items-center justify-center relative rounded-[3rem] bg-gradient-to-b from-white/[0.02] to-transparent border border-white/5 shadow-inner overflow-hidden">
-                <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_50%,rgba(139,92,246,0.1),transparent_70%)] pointer-events-none" />
+              {/* Cinematic Studio Environment */}
+              <div className="h-[700px] w-full max-w-6xl mx-auto flex items-center justify-center relative rounded-[4rem] bg-[#080808] border border-white/5 shadow-[0_0_100px_rgba(0,0,0,1)] overflow-hidden group">
+                {/* Dynamic Spotlight */}
+                <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_0%,rgba(139,92,246,0.15),transparent_60%)] pointer-events-none" />
+                <div className="absolute bottom-0 left-0 right-0 h-1/2 bg-gradient-to-t from-black to-transparent pointer-events-none" />
+
+                {/* Minimal Mesh Floor */}
+                <div className="absolute bottom-0 w-full h-[30%] opacity-[0.05] pointer-events-none"
+                  style={{ backgroundImage: 'radial-gradient(circle at 2px 2px, white 1px, transparent 0)', backgroundSize: '40px 40px' }} />
+
                 <Flipbook
                   sheets={demoSheets}
                   frontCover={demoFront}
                   backCover={demoBack}
-                  title="Cinematic Wedding Demo"
+                  title="Studio Demo Experience"
+                  scale={0.8}
                 />
+
+                {/* Interactive Hint */}
+                <div className="absolute bottom-8 left-1/2 -translate-x-1/2 px-4 py-2 rounded-full glass border-white/10 opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none">
+                  <p className="text-[10px] text-white/40 font-bold uppercase tracking-[0.3em] flex items-center gap-2">
+                    <Zap className="w-3 h-3 text-primary" /> Click corners to flip pages
+                  </p>
+                </div>
               </div>
             </motion.div>
           </div>
