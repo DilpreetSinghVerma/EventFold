@@ -326,8 +326,10 @@ export function registerRoutes(
         userId: userId
       });
 
-      // Deduct credit and create album
-      await storage.deductCredit(userId);
+      // Deduct credit only if NOT in software mode
+      if (process.env.LOCAL_SOFTWARE_MODE !== "true") {
+        await storage.deductCredit(userId);
+      }
       const album = await storage.createAlbum(data);
       res.json(album);
     } catch (e) {

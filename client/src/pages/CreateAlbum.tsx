@@ -26,6 +26,7 @@ export default function CreateAlbum() {
   });
 
   const isLimitReached = user?.plan === 'free' && (albums?.length || 0) >= 1;
+  const isSoftwareMode = user?.plan === 'software_pro';
 
   const [formData, setFormData] = useState({
     title: '',
@@ -544,7 +545,7 @@ export default function CreateAlbum() {
 
       {/* Plan Limit Overlay */}
       <AnimatePresence>
-        {isLimitReached && (
+        {isLimitReached && !isSoftwareMode && (
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}

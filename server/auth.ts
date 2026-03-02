@@ -98,7 +98,19 @@ export function setupAuth(app: Express) {
 
     app.get("/api/auth/me", (req, res) => {
         if (!req.isAuthenticated()) return res.status(401).json({ error: "Not authenticated" });
-        res.json(req.user);
+
+        const user = req.user as User;
+        const isSoftwareMode = process.env.LOCAL_SOFTWARE_MODE === "true";
+
+        if (isSoftwareMode) {
+            return res.json({
+                ...user,
+                plan: 'software_pro', // Special elevated plan
+                credits: 9999,      // Effectively unlimited
+            });
+        }
+
+        res.json(user);
     });
 
     app.post("/api/auth/logout", (req, res, next) => {
