@@ -168,14 +168,13 @@ export default function Viewer() {
 
   const BrandingHeader = () => (
     <div className="absolute top-0 left-0 right-0 p-6 z-[60] flex items-center justify-between pointer-events-none">
-      <div className="flex items-center gap-4 bg-black/40 backdrop-blur-md px-5 py-2.5 rounded-2xl border border-white/5 pointer-events-auto shadow-2xl">
+      <div className="flex items-center gap-4 bg-black/40 backdrop-blur-md px-5 py-3 rounded-2xl border border-white/5 pointer-events-auto shadow-2xl">
         {settings?.businessLogo ? (
-          <img src={settings.businessLogo} alt="Logo" className="w-8 h-8 rounded-lg object-cover" />
+          <img src={settings.businessLogo} alt="Logo" className="h-8 w-auto rounded-lg object-contain" />
         ) : (
-          <div className="w-8 h-8 rounded-lg bg-white/10 flex items-center justify-center overflow-hidden border border-white/5">
-            <img src="/branding material/without bg version.png" alt="EventFold Logo" className="w-full h-full object-contain p-1" />
-          </div>
+          <img src="/branding material/without bg version.png" alt="EventFold" className="h-6 w-auto object-contain" />
         )}
+        <div className="w-px h-6 bg-white/10 mx-1" />
         <div className="flex flex-col">
           <span className="text-[10px] text-white/40 font-bold uppercase tracking-widest leading-none mb-1">{album?.theme || 'Project'}</span>
           <span className="text-sm font-bold text-white tracking-tight leading-none">{settings?.businessName || 'EventFold Studio'}</span>

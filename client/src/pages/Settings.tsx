@@ -100,14 +100,18 @@ export default function Settings() {
                         {/* Status Sidebar */}
                         <div className="space-y-4">
                             <Card className="glass border-white/5 overflow-hidden">
-                                <CardContent className="p-6 space-y-6">
-                                    <div className="flex items-center gap-4">
-                                        <div className="w-12 h-12 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-center overflow-hidden">
-                                            <img src="/branding material/without bg version.png" alt="EventFold Logo" className="w-full h-full object-contain p-1" />
+                                <CardContent className="p-6">
+                                    <div className="flex flex-col gap-4">
+                                        <div className="h-8">
+                                            <img
+                                                src="/branding material/without bg version.png"
+                                                alt="EventFold"
+                                                className="h-full w-auto object-contain"
+                                            />
                                         </div>
                                         <div>
-                                            <p className="text-[10px] font-bold text-white/40 uppercase tracking-widest">Active Studio</p>
-                                            <p className="font-bold truncate max-w-[120px]">{settings.businessName || 'Untitled'}</p>
+                                            <p className="text-[10px] font-bold text-white/40 uppercase tracking-widest leading-none mb-1">Active Studio</p>
+                                            <p className="font-bold truncate text-sm">{settings.businessName || 'Untitled'}</p>
                                         </div>
                                     </div>
                                     <div className="space-y-3">

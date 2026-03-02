@@ -182,15 +182,15 @@ export default function Dashboard() {
       {/* Navbar Overlay */}
       <nav className="sticky top-0 z-50 w-full border-b border-white/5 bg-background/80 backdrop-blur-xl">
         <div className="max-w-7xl mx-auto px-8 h-20 flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center overflow-hidden">
-              <img src="/branding material/without bg version.png" alt="EventFold Logo" className="w-full h-full object-contain p-1" />
+          <Link href="/">
+            <div className="h-8 group cursor-pointer">
+              <img
+                src="/branding material/without bg version.png"
+                alt="EventFold"
+                className="h-full w-auto object-contain transition-transform group-hover:scale-105"
+              />
             </div>
-            <div>
-              <h1 className="text-2xl font-bold tracking-tight">{settings?.businessName || 'EventFold Studio'}</h1>
-              <p className="text-xs text-muted-foreground uppercase tracking-widest font-bold">Project Management Center</p>
-            </div>
-          </div>
+          </Link>
 
           <div className="flex items-center gap-6">
             {dbConnected === false && (
