@@ -43,8 +43,8 @@ export default function Home() {
       {/* Navigation */}
       <nav className="relative z-50 flex items-center justify-between px-8 py-6 max-w-7xl mx-auto">
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-primary to-indigo-600 flex items-center justify-center shadow-lg shadow-primary/20">
-            <ImagePlus className="w-5 h-5 text-white" />
+          <div className="w-10 h-10 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center shadow-2xl overflow-hidden group">
+            <img src="/logo.png" alt="EventFold Logo" className="w-full h-full object-cover scale-110 group-hover:scale-125 transition-transform duration-500" />
           </div>
           <span className="font-display text-2xl font-bold tracking-tight text-white">
             EventFold
