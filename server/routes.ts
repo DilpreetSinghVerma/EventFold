@@ -259,16 +259,16 @@ export function registerRoutes(
   // Health check for cloud debugging
   app.get("/api/health", async (_req, res) => {
     try {
-      const dbUrl = process.env.DATABASE_URL;
-      const isDummy = !dbUrl || dbUrl === "dummy_url" || dbUrl === "";
+      const dbUrl = (process.env.DATABASE_URL || "").trim();
+      const isDummy = !dbUrl || dbUrl === "dummy_url" || dbUrl === "" || dbUrl.includes("your-database-url");
+      const isNeon = dbUrl.includes("neon.tech") || dbUrl.includes("postgresql://");
 
       // Masked Environment Status
       const envStatus = {
-        DATABASE_URL: dbUrl ? (dbUrl.includes('@') ? '***@***' : 'exists') : 'MISSING',
+        DATABASE_URL_SET: !!dbUrl,
+        DATABASE_URL_IS_NEON: isNeon,
+        DATABASE_URL_DUMMY: isDummy,
         GOOGLE_CLIENT_ID: process.env.GOOGLE_CLIENT_ID ? 'exists' : 'MISSING',
-        GOOGLE_CLIENT_SECRET: process.env.GOOGLE_CLIENT_SECRET ? 'masked' : 'MISSING',
-        STRIPE_SECRET_KEY: process.env.STRIPE_SECRET_KEY ? 'masked' : 'MISSING',
-        SESSION_SECRET: process.env.SESSION_SECRET ? 'masked' : 'MISSING',
         CLOUDINARY_CLOUD_NAME: process.env.CLOUDINARY_CLOUD_NAME ? 'exists' : 'MISSING'
       };
 
@@ -279,30 +279,34 @@ export function registerRoutes(
         dbStatus = "local_only";
       } else {
         try {
+          // Attempt a real query to verify connectivity
           await storage.getAlbums().catch(e => {
-            console.error("DB SELECT FAILED:", e);
+            console.error("DB_HEALTH_CHECK_FAILURE:", e);
             dbStatus = "disconnected";
             error = e.message;
+            throw e;
           });
         } catch (e: any) {
           dbStatus = "disconnected";
-          error = e.message;
+          error = e.message || String(e);
         }
       }
 
       res.status(dbStatus === "disconnected" && !isDummy ? 500 : 200).json({
-        status: dbStatus === "disconnected" && !isDummy ? "error" : "ok",
+        status: dbStatus === "connected" ? "ok" : "warning",
         database: dbStatus,
         error: error,
         env: envStatus,
         vercel: !!process.env.VERCEL,
-        region: process.env.VERCEL_REGION || "local"
+        region: process.env.VERCEL_REGION || "local",
+        timestamp: new Date().toISOString()
       });
     } catch (e: any) {
       console.error("System health check crashed:", e);
       res.status(500).json({ status: "error", message: e.message });
     }
   });
+
 
   // Create album (Metadata only)
   app.post("/api/albums", async (req, res) => {

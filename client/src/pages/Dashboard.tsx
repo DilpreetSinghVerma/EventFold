@@ -21,6 +21,7 @@ export default function Dashboard() {
   const [albums, setAlbums] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [dbConnected, setDbConnected] = useState<boolean | null>(null);
+  const [healthData, setHealthData] = useState<any>(null);
   const [settings, setSettings] = useState<any>(null);
 
   // Parse URL for success/cancel params
@@ -34,6 +35,7 @@ export default function Dashboard() {
       const healthRes = await fetch('/api/health').catch(() => null);
       if (healthRes && healthRes.ok) {
         const health = await healthRes.json();
+        setHealthData(health);
         setDbConnected(health.database === 'connected');
       } else {
         setDbConnected(false);
@@ -259,10 +261,35 @@ export default function Dashboard() {
           <div className="flex items-center gap-6">
             {dbConnected === false && (
               <div className="hidden md:flex flex-col items-end">
-                <div className="flex items-center gap-2 px-4 py-2 bg-destructive/10 border border-destructive/20 rounded-full text-destructive text-[10px] font-bold">
-                  <div className="w-2 h-2 rounded-full bg-destructive" />
-                  OFFLINE MODE
-                </div>
+                <Dialog>
+                  <DialogTrigger asChild>
+                    <button className="flex items-center gap-2 px-4 py-2 bg-destructive/10 border border-destructive/20 rounded-full text-destructive text-[10px] font-bold hover:bg-destructive/20 transition-colors cursor-help">
+                      <div className="w-2 h-2 rounded-full bg-destructive" />
+                      OFFLINE MODE
+                    </button>
+                  </DialogTrigger>
+                  <DialogContent className="sm:max-w-md bg-[#0a0a0b] border-white/10 text-white rounded-3xl">
+                    <DialogHeader>
+                      <DialogTitle className="text-xl font-bold text-destructive">Cloud Connectivity Trace</DialogTitle>
+                      <DialogDescription className="text-white/40">
+                        Diagnostic data from the cinematic engine.
+                      </DialogDescription>
+                    </DialogHeader>
+                    <div className="space-y-4 p-4 font-mono text-[10px]">
+                      <div className="p-3 bg-white/5 rounded-xl border border-white/5">
+                        <p className="text-primary mb-1 uppercase tracking-widest font-black">Environment Metrics</p>
+                        <pre className="text-white/60">{JSON.stringify(healthData?.env, null, 2)}</pre>
+                      </div>
+                      <div className="p-3 bg-white/5 rounded-xl border border-white/5 max-h-40 overflow-auto">
+                        <p className="text-destructive mb-1 uppercase tracking-widest font-black">Connection Error</p>
+                        <p className="text-red-400 break-words">{healthData?.error || "No URL detected. System is running on volatile MemStorage."}</p>
+                      </div>
+                      <div className="pt-2">
+                        <p className="text-[9px] text-white/20 uppercase text-center">Check Vercel Environment Variables for DATABASE_URL</p>
+                      </div>
+                    </div>
+                  </DialogContent>
+                </Dialog>
                 <span className="text-[10px] text-white/20 mt-1 uppercase">Local only · Add DATABASE_URL for Mobile</span>
               </div>
             )}
@@ -311,39 +338,54 @@ export default function Dashboard() {
               <span className="text-xs font-bold font-mono text-primary uppercase tracking-[0.2em]">Dashboard Terminal</span>
             </div>
             <h2 className="text-5xl font-display font-bold tracking-tight">Welcome back, <span className="text-primary">{user?.name?.split(' ')[0]}</span></h2>
-            <div className="flex items-center gap-4 pt-4">
-              {user?.plan === 'software_pro' ? (
-                <div className="flex items-center gap-3 px-6 py-3 bg-indigo-500/10 border border-indigo-500/20 rounded-2xl text-sm font-bold text-indigo-300 shadow-2xl shadow-indigo-500/10">
-                  <div className="w-8 h-8 rounded-lg bg-indigo-500/20 flex items-center justify-center mr-1">
-                    <Crown className="w-5 h-5 text-indigo-400" />
-                  </div>
-                  STUDIO ELITE · LIFETIME PRO VERSION
-                  <span className="ml-2 px-2 py-0.5 bg-indigo-500 text-white text-[8px] font-black rounded-md tracking-tighter uppercase">No Credits Required</span>
+            <div className="flex items-center gap-6">
+              {dbConnected === false && (
+                <div className="hidden lg:flex items-center gap-2 px-3 py-1 bg-red-500/10 border border-red-500/20 rounded-full">
+                  <div className="w-1.5 h-1.5 rounded-full bg-red-500 animate-pulse" />
+                  <span className="text-[10px] font-bold text-red-500 uppercase tracking-widest">Cloud Offline</span>
                 </div>
-              ) : (
-                <>
-                  <div className="flex items-center gap-2 px-6 py-2 bg-primary/10 border border-primary/20 rounded-full text-sm font-bold text-primary shadow-xl shadow-primary/10">
-                    <LayoutGrid className="w-4 h-4" />
-                    {user?.credits || 0} ALBUM CREDITS AVAILABLE
-                  </div>
-                  <Button
-                    onClick={buyAlbumCredit}
-                    className="h-10 rounded-full bg-white/5 backdrop-blur-md text-white hover:bg-white/10 border border-white/10 font-bold px-6 group"
-                  >
-                    <Plus className="w-4 h-4 mr-2 group-hover:rotate-90 transition-transform" /> BUY 1 CREDIT (₹199)
-                  </Button>
-                  {user?.plan !== 'pro' && (
-                    <Button
-                      onClick={() => startStripeCheckout('monthly')}
-                      className="h-10 rounded-full bg-primary hover:bg-primary/90 text-white font-bold px-6 shadow-xl shadow-primary/20 relative group overflow-hidden"
-                    >
-                      <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:animate-[shimmer_2s_infinite]" />
-                      <Crown className="w-4 h-4 mr-2" /> UPGRADE TO UNLIMITED (₹499)
-                      <span className="absolute -top-1 -right-1 px-2 py-0.5 bg-cyan-400 text-black text-[8px] font-black rounded-full">HOT</span>
-                    </Button>
-                  )}
-                </>
               )}
+              {dbConnected === true && (
+                <div className="hidden lg:flex items-center gap-2 px-3 py-1 bg-green-500/10 border border-green-500/20 rounded-full">
+                  <div className="w-1.5 h-1.5 rounded-full bg-green-500" />
+                  <span className="text-[10px] font-bold text-green-500 uppercase tracking-widest">Cloud Active</span>
+                </div>
+              )}
+              <div className="w-px h-6 bg-white/10 mx-2" />
+              <div className="flex items-center gap-4 pt-4">
+                {user?.plan === 'software_pro' ? (
+                  <div className="flex items-center gap-3 px-6 py-3 bg-indigo-500/10 border border-indigo-500/20 rounded-2xl text-sm font-bold text-indigo-300 shadow-2xl shadow-indigo-500/10">
+                    <div className="w-8 h-8 rounded-lg bg-indigo-500/20 flex items-center justify-center mr-1">
+                      <Crown className="w-5 h-5 text-indigo-400" />
+                    </div>
+                    STUDIO ELITE · LIFETIME PRO VERSION
+                    <span className="ml-2 px-2 py-0.5 bg-indigo-500 text-white text-[8px] font-black rounded-md tracking-tighter uppercase">No Credits Required</span>
+                  </div>
+                ) : (
+                  <>
+                    <div className="flex items-center gap-2 px-6 py-2 bg-primary/10 border border-primary/20 rounded-full text-sm font-bold text-primary shadow-xl shadow-primary/10">
+                      <LayoutGrid className="w-4 h-4" />
+                      {user?.credits || 0} ALBUM CREDITS AVAILABLE
+                    </div>
+                    <Button
+                      onClick={buyAlbumCredit}
+                      className="h-10 rounded-full bg-white/5 backdrop-blur-md text-white hover:bg-white/10 border border-white/10 font-bold px-6 group"
+                    >
+                      <Plus className="w-4 h-4 mr-2 group-hover:rotate-90 transition-transform" /> BUY 1 CREDIT (₹199)
+                    </Button>
+                    {user?.plan !== 'pro' && (
+                      <Button
+                        onClick={() => startStripeCheckout('monthly')}
+                        className="h-10 rounded-full bg-primary hover:bg-primary/90 text-white font-bold px-6 shadow-xl shadow-primary/20 relative group overflow-hidden"
+                      >
+                        <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:animate-[shimmer_2s_infinite]" />
+                        <Crown className="w-4 h-4 mr-2" /> UPGRADE TO UNLIMITED (₹499)
+                        <span className="absolute -top-1 -right-1 px-2 py-0.5 bg-cyan-400 text-black text-[8px] font-black rounded-full">HOT</span>
+                      </Button>
+                    )}
+                  </>
+                )}
+              </div>
             </div>
           </div>
         </div>
@@ -376,6 +418,6 @@ export default function Dashboard() {
           </div>
         )}
       </main>
-    </div>
+    </div >
   );
 }
