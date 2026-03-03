@@ -57,10 +57,6 @@ async function buildAll() {
     outfile: "dist/index.cjs",
     define: {
       "process.env.NODE_ENV": '"production"',
-      "process.env.DATABASE_URL": JSON.stringify(process.env.DATABASE_URL),
-      "process.env.CLOUDINARY_CLOUD_NAME": JSON.stringify(process.env.CLOUDINARY_CLOUD_NAME),
-      "process.env.CLOUDINARY_API_KEY": JSON.stringify(process.env.CLOUDINARY_API_KEY),
-      "process.env.CLOUDINARY_API_SECRET": JSON.stringify(process.env.CLOUDINARY_API_SECRET),
     },
     minify: true,
     external: externals,
