@@ -263,13 +263,16 @@ export function registerRoutes(
       const isDummy = !dbUrl || dbUrl === "dummy_url" || dbUrl === "" || dbUrl.includes("your-database-url");
       const isNeon = dbUrl.includes("neon.tech") || dbUrl.includes("postgresql://");
 
-      // Masked Environment Status
+      // Deep Environment Diagnostic
+      const rawKeys = Object.keys(process.env).sort();
       const envStatus = {
-        DATABASE_URL_SET: !!dbUrl,
-        DATABASE_URL_IS_NEON: isNeon,
-        DATABASE_URL_DUMMY: isDummy,
-        GOOGLE_CLIENT_ID: process.env.GOOGLE_CLIENT_ID ? 'exists' : 'MISSING',
-        CLOUDINARY_CLOUD_NAME: process.env.CLOUDINARY_CLOUD_NAME ? 'exists' : 'MISSING'
+        DATABASE_URL_PRESENT: !!process.env.DATABASE_URL,
+        DATABASE_URL_LENGTH: process.env.DATABASE_URL?.length || 0,
+        DATABASE_URL_START: process.env.DATABASE_URL ? process.env.DATABASE_URL.substring(0, 15) + "..." : "EMPTY",
+        NODE_ENV: process.env.NODE_ENV,
+        VERCEL_DETECTED: !!process.env.VERCEL,
+        AVAILABLE_KEYS_COUNT: rawKeys.length,
+        ENV_KEYS_SAMPLED: rawKeys.filter(k => k.includes('URL') || k.includes('DB') || k.includes('NEON') || k.includes('VERCEL')).join(', ')
       };
 
       let dbStatus = "connected";
