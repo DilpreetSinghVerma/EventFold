@@ -246,14 +246,14 @@ export default function Dashboard() {
       <div className="fixed top-0 right-0 w-[500px] h-[500px] bg-primary/5 rounded-full blur-[120px] pointer-events-none" />
 
       {/* Navbar Overlay */}
-      <nav className="sticky top-0 z-50 w-full border-b border-white/5 bg-background/80 backdrop-blur-xl">
-        <div className="max-w-7xl mx-auto px-8 h-20 flex items-center justify-between">
+      <nav className="sticky top-0 z-50 w-full border-b border-white/5 bg-background/80 backdrop-blur-3xl">
+        <div className="max-w-7xl mx-auto px-8 h-32 flex items-center justify-between">
           <Link href="/">
-            <div className="h-14 group cursor-pointer py-1">
+            <div className="h-28 group cursor-pointer py-2">
               <img
                 src="/branding material/without bg version.png"
                 alt="EventFold"
-                className="h-full w-auto object-contain transition-transform group-hover:scale-105"
+                className="h-full w-auto object-contain transition-transform group-hover:scale-110 drop-shadow-[0_0_15px_rgba(255,255,255,0.1)]"
               />
             </div>
           </Link>

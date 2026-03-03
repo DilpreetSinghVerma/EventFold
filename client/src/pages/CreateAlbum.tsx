@@ -125,7 +125,11 @@ export default function CreateAlbum() {
     const isSynced = await checkCloudSync();
     if (!isSynced) {
       const proceed = window.confirm(
-        "⚠️ CLOUD SYNC INACTIVE\n\nYour DATABASE_URL is not set. This album will only exist on this machine and WILL NOT be visible on mobile via QR code.\n\nDo you want to continue in OFFLINE MODE?"
+        "🚨 CLOUD SYNC INACTIVE\n\n" +
+        "Your Cinematic Database (DATABASE_URL) is not configured in Vercel. \n\n" +
+        "• PROS: Any album you create now will be TEMPORARY and won't be visible on mobile via QR code.\n" +
+        "• FIX: Copy your Neon Database URL into the Vercel Dashboard Environment Variables.\n\n" +
+        "Do you want to continue in DEMO MODE?"
       );
       if (!proceed) {
         setLoading(false);
