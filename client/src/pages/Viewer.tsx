@@ -5,6 +5,11 @@ import { Button } from '@/components/ui/button';
 import {
   ChevronLeft,
   ChevronRight,
+  ZoomIn,
+  ZoomOut,
+  RotateCcw,
+  Play,
+  Pause,
   Maximize2,
   Minimize2,
   Music,
