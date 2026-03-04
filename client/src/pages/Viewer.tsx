@@ -93,14 +93,9 @@ export default function Viewer() {
     checkOrientation();
     window.addEventListener('resize', checkOrientation);
 
-    // Auto-hide UI after 3 seconds on mobile
-    const timer = setTimeout(() => {
-      if (window.innerWidth < 1024) setUiVisible(false);
-    }, 3000);
-
+    // UI is always visible now as requested
     return () => {
       window.removeEventListener('resize', checkOrientation);
-      clearTimeout(timer);
     };
   }, []);
 
@@ -450,12 +445,7 @@ export default function Viewer() {
 
       <main
         className="flex-1 flex flex-col items-center justify-center relative bg-transparent overflow-hidden"
-        onClick={(e) => {
-          // Only toggle UI if clicking the actual background main element
-          if (e.target === e.currentTarget) {
-            setUiVisible(!uiVisible);
-          }
-        }}
+        style={{ touchAction: 'none' }}
       >
         <TransformWrapper
           initialScale={1}
@@ -465,8 +455,10 @@ export default function Viewer() {
           centerOnInit={true}
           wheel={{ step: 0.1, disabled: window.innerWidth >= 1024 }}
           doubleClick={{ disabled: false }}
-          pinch={{ step: 5 }}
-          panning={{ disabled: window.innerWidth >= 1024, excluded: ["input", "button", ".page-content"] }}
+          pinch={{ disabled: false }}
+          panning={{
+            disabled: window.innerWidth >= 1024
+          }}
         >
           {({ zoomIn, zoomOut, resetTransform, ...rest }) => (
             <>
@@ -488,12 +480,6 @@ export default function Viewer() {
               >
                 <div
                   className="w-full h-full flex items-center justify-center lg:overflow-visible"
-                  onClick={(e) => {
-                    // Also catch clicks on the spread container but not the book itself
-                    if (e.target === e.currentTarget) {
-                      setUiVisible(!uiVisible);
-                    }
-                  }}
                 >
                   <Flipbook
                     sheets={loadedSheets}

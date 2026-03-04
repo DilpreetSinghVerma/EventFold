@@ -235,7 +235,7 @@ export function Flipbook({
         className="flex items-center justify-center w-full h-full lg:overflow-visible"
         style={{
           perspective: '1400px',
-          touchAction: 'none'
+          touchAction: 'auto'
         }}
       >
         <div>
@@ -297,8 +297,8 @@ export function Flipbook({
               startZIndex={0}
               autoSize={false}
               clickEventForward={true}
-              useMouseEvents={true}
-              swipeDistance={30}
+              useMouseEvents={window.innerWidth >= 1024}
+              swipeDistance={60}
               showPageCorners={true}
               disableFlipByClick={false}
               onFlip={(e: any) => {
@@ -405,22 +405,7 @@ export function Flipbook({
 
 
 
-      <div className="md:hidden absolute inset-y-0 left-0 w-10 flex items-center justify-start z-50 pointer-events-none">
-        <Button
-          onClick={() => { playFlipSound(); book.current?.pageFlip().flipPrev(); }}
-          className="rounded-full w-8 h-8 md:w-10 md:h-10 bg-black/40 backdrop-blur-md text-white/80 border border-white/5 p-0 pointer-events-auto shadow-xl"
-        >
-          <ChevronLeft className="w-5 h-5 md:w-6 md:h-6" />
-        </Button>
-      </div>
-      <div className="md:hidden absolute inset-y-0 right-0 w-10 flex items-center justify-end z-50 pointer-events-none">
-        <Button
-          onClick={() => { playFlipSound(); book.current?.pageFlip().flipNext(); }}
-          className="rounded-full w-8 h-8 md:w-10 md:h-10 bg-black/40 backdrop-blur-md text-white/80 border border-white/5 p-0 pointer-events-auto shadow-xl"
-        >
-          <ChevronRight className="w-5 h-5 md:w-6 md:h-6" />
-        </Button>
-      </div>
+
 
       <motion.div
         animate={{
@@ -429,23 +414,9 @@ export function Flipbook({
         }}
         className={`absolute ${window.innerWidth < 1024 && window.innerWidth > window.innerHeight ? 'bottom-2' : 'bottom-5'} z-[80] flex items-center gap-6`}
       >
-        <Button
-          onClick={() => { playFlipSound(); book.current?.pageFlip().flipPrev(); }}
-          className="rounded-full w-10 h-10 md:w-12 md:h-12 bg-white/10 hover:bg-white/25 backdrop-blur-md text-white border border-white/15 p-0 transition-all"
-          title="Previous page"
-        >
-          <ChevronLeft className="w-4 h-4 md:w-5 h-5" />
-        </Button>
-        <span className="text-white/40 text-[10px] md:text-xs font-mono select-none">
+        <span className="text-white/40 text-[10px] md:text-xs font-mono select-none px-4 py-1 bg-black/40 backdrop-blur-md rounded-full border border-white/5">
           {currentPage + 1} / {totalPageCount}
         </span>
-        <Button
-          onClick={() => { playFlipSound(); book.current?.pageFlip().flipNext(); }}
-          className="rounded-full w-10 h-10 md:w-12 md:h-12 bg-white/10 hover:bg-white/25 backdrop-blur-md text-white border border-white/15 p-0 transition-all"
-          title="Next page"
-        >
-          <ChevronRight className="w-4 h-4 md:w-5 h-5" />
-        </Button>
       </motion.div>
     </div>
   );
