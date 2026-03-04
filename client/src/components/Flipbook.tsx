@@ -1,7 +1,7 @@
 import React, { useRef, useState, useEffect } from 'react';
 import HTMLFlipBook from 'react-pageflip';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ChevronLeft, ChevronRight, Volume2, VolumeX, ZoomIn, ZoomOut, RotateCcw, Maximize, Minimize, Play, Pause, MessageCircle } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Volume2, VolumeX, ZoomIn, ZoomOut, RotateCcw, Maximize2, Play, Pause, MessageCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
 interface FlipbookProps {
@@ -34,23 +34,12 @@ export function Flipbook({
   const [pageWidth, setPageWidth] = useState(360);
   const [pageHeight, setPageHeight] = useState(240);
   const [ready, setReady] = useState(false);
-  const [zoom, setZoom] = useState(1);
-  const [panX, setPanX] = useState(0);
-  const [panY, setPanY] = useState(0);
-  const [isDragging, setIsDragging] = useState(false);
-  const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
-  const [currentPage, setCurrentPage] = useState(0);
-  const [totalPages, setTotalPages] = useState(0);
-  // true after the first page flip — triggers the "opening" animation
   const [isOpened, setIsOpened] = useState(false);
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [isSlideshowActive, setIsSlideshowActive] = useState(false);
+  const [currentPage, setCurrentPage] = useState(0);
   const slideshowTimer = useRef<NodeJS.Timeout | null>(null);
   const totalPageCount = 2 + sheets.length; // Front + Back + Sheets
-
-  useEffect(() => {
-    setTotalPages(totalPageCount);
-  }, [totalPageCount]);
 
   // Background music audio element
   const bgMusic = useRef<HTMLAudioElement | null>(null);
@@ -173,10 +162,6 @@ export function Flipbook({
     } catch (e) { }
   };
 
-  const handleZoomIn = () => setZoom((p) => Math.min(p + 0.2, 3));
-  const handleZoomOut = () => setZoom((p) => Math.max(p - 0.2, 1));
-  const handleZoomReset = () => { setZoom(1); setPanX(0); setPanY(0); };
-
   const toggleFullscreen = () => {
     if (!document.fullscreenElement) {
       container.current?.requestFullscreen().catch(() => { });
@@ -205,7 +190,7 @@ export function Flipbook({
           if (state === 'read') {
             book.current.pageFlip().flipNext();
             // If we reached the end, stop slideshow
-            if (currentPage >= totalPages - 1) {
+            if (currentPage >= totalPageCount - 1) {
               setIsSlideshowActive(false);
             }
           }
@@ -215,63 +200,13 @@ export function Flipbook({
       if (slideshowTimer.current) clearInterval(slideshowTimer.current);
     }
     return () => { if (slideshowTimer.current) clearInterval(slideshowTimer.current); };
-  }, [isSlideshowActive, currentPage, totalPages]);
-
-  useEffect(() => { if (zoom === 1) { setPanX(0); setPanY(0); } }, [zoom]);
-
-  const handleMouseWheel = (e: React.WheelEvent) => {
-    if (e.ctrlKey) {
-      e.preventDefault();
-      e.deltaY < 0 ? handleZoomIn() : handleZoomOut();
-    }
-  };
-
-  const handleMouseDown = (e: React.MouseEvent) => {
-    if (zoom > 1) {
-      setIsDragging(true);
-      setDragStart({ x: e.clientX - panX, y: e.clientY - panY });
-    }
-  };
-
-  const handleMouseMove = (e: React.MouseEvent) => {
-    if (!isDragging || zoom <= 1) return;
-    const el = container.current;
-    if (!el) return;
-    const { width, height } = el.getBoundingClientRect();
-    const maxPanX = (width * (zoom - 1)) / 2;
-    const maxPanY = (height * (zoom - 1)) / 2;
-    setPanX(Math.max(-maxPanX, Math.min(maxPanX, e.clientX - dragStart.x)));
-    setPanY(Math.max(-maxPanY, Math.min(maxPanY, e.clientY - dragStart.y)));
-  };
-
-  const handleMouseUp = () => setIsDragging(false);
+  }, [isSlideshowActive, currentPage, totalPageCount]);
 
   if (!ready) return null;
 
-  // ─────────────────────────────────────────────────────────────────
-  // BUILD PAGE SEQUENCE
-  //
-  // sheets[] = [lh0, rh0, lh1, rh1, …] — already-split 12×18 halves.
-  // react-pageflip with showCover=true:
-  //   pages[0]      → front cover (alone, right side)
-  //   pages[1..n-2] → spreads (must be EVEN count)
-  //   pages[n-1]    → back cover (alone, left side)
-  //
-  // Spreads start immediately with the first sheet — no title/intro page.
-  //   [1, 2]  =  lh0 | rh0   (sheet 1 panoramic)
-  //   [3, 4]  =  lh1 | rh1   (sheet 2 panoramic)
-  //   …
-  // sheets.length is always EVEN, so content count is always EVEN ✓
-  // ─────────────────────────────────────────────────────────────────
-
   const pages: { type: string; image?: string; video?: string; key: string }[] = [];
-
   pages.push({ type: 'cover', image: frontCover, key: 'cover-front' });
-
-  // Panoramic halves — each pair [lh, rh] forms one seamless spread
   sheets.forEach((half, idx) => {
-    // Check if this sheet index has an associated video
-    // (We'll assume video corresponds to sheet index for simplicity, or we can use orderIndex)
     const videoForSheet = videos.find(v => v.orderIndex === idx);
     pages.push({
       type: 'sheet',
@@ -280,14 +215,8 @@ export function Flipbook({
       key: `half-${idx}`
     });
   });
-
   pages.push({ type: 'cover', image: backCover, key: 'cover-back' });
 
-
-
-  // ─────────────────────────────────────────────────────────────────
-  // BASE STYLES
-  // ─────────────────────────────────────────────────────────────────
   const pageBase: React.CSSProperties = {
     width: '100%',
     height: '100%',
@@ -298,30 +227,16 @@ export function Flipbook({
 
   return (
     <div className="relative w-full flex-1 flex flex-col items-center justify-center bg-transparent overflow-hidden" style={{ minHeight: 0 }}>
-
-      {/* ── Controls Bar REMOVED (Controlled by Viewer for Pinch/Zoom) ── */}
-
       {/* ── Book Container ── */}
       <div
         ref={container}
-        onWheel={handleMouseWheel}
-        onMouseDown={handleMouseDown}
-        onMouseMove={handleMouseMove}
-        onMouseUp={handleMouseUp}
-        onMouseLeave={handleMouseUp}
         className="flex items-center justify-center w-full h-full"
         style={{
-          cursor: zoom > 1 ? (isDragging ? 'grabbing' : 'grab') : 'default',
           perspective: '1400px',
-          touchAction: 'none' // Absolute control for manual page turns
+          touchAction: 'none'
         }}
       >
-        {/* Zoom / pan wrapper */}
-        <div style={{
-          transform: `scale(${zoom}) translate(${panX / zoom}px, ${panY / zoom}px)`,
-          transition: isDragging ? 'none' : 'transform 0.3s ease-out',
-        }}>
-          {/* ── Album tilt & entrance animation ── */}
+        <div>
           <motion.div
             initial={{
               opacity: 0,
@@ -335,7 +250,6 @@ export function Flipbook({
               opacity: 1,
               y: 0,
               scale: scale,
-              // More premium tilt when closed, flat when opened
               rotateZ: (isOpened || window.innerWidth < 768) ? 0 : -5,
               rotateX: (isOpened || window.innerWidth < 768) ? 0 : 8,
               rotateY: (isOpened || window.innerWidth < 768) ? 0 : 4,
@@ -360,50 +274,6 @@ export function Flipbook({
               filter: 'drop-shadow(0 30px 60px rgba(0,0,0,0.6))'
             }}
           >
-            {/* Cinematic Floor Reflection / Shadow */}
-            <motion.div
-              animate={{
-                opacity: isOpened ? 0.3 : 0.6,
-                scaleX: isOpened ? 1.2 : 0.85,
-                translateY: isOpened ? 40 : 30,
-                rotateX: isOpened ? 0 : 5,
-                filter: 'blur(40px)',
-              }}
-              transition={{ type: 'spring', stiffness: 40, damping: 20 }}
-              style={{
-                position: 'absolute',
-                bottom: -40,
-                left: '-10%',
-                right: '-10%',
-                height: 100,
-                background: 'radial-gradient(ellipse at center, rgba(139,92,246,0.3) 0%, transparent 70%)',
-                zIndex: -2,
-                pointerEvents: 'none',
-              }}
-            />
-            {/* Drop shadow — shifts with tilt for realism */}
-            <motion.div
-              animate={{
-                opacity: isOpened ? 0.35 : 0.55,
-                scaleX: isOpened ? 1 : 0.94,
-                translateY: isOpened ? 16 : 22,
-                translateX: isOpened ? 0 : 12,
-                rotateZ: isOpened ? 0 : -3,
-                filter: isOpened ? 'blur(22px)' : 'blur(28px)',
-              }}
-              transition={{ type: 'spring', stiffness: 80, damping: 18 }}
-              style={{
-                position: 'absolute',
-                bottom: -20,
-                left: '5%',
-                right: '5%',
-                height: 30,
-                backgroundColor: '#000',
-                borderRadius: '50%',
-                zIndex: -1,
-              }}
-            />
-
             <HTMLFlipBook
               ref={book}
               width={pageWidth}
@@ -424,36 +294,24 @@ export function Flipbook({
               usePortrait={false}
               startZIndex={0}
               autoSize={false}
-              clickEventForward={true} // Always forward clicks for smooth flipping
+              clickEventForward={true}
               useMouseEvents={true}
               swipeDistance={30}
               showPageCorners={true}
               disableFlipByClick={false}
-              onChangeState={(e: any) => {
-                if (e.data === 'read') {
-                  // Wait for the animation to finish before updating current page
-                  // but we mainly rely on onFlip for the exact page index.
-                }
-              }}
               onFlip={(e: any) => {
                 playFlipSound();
                 const pg = e.data;
                 setCurrentPage(pg);
-
-                // Browser unblock: try to play sounds on interaction
                 if (pg > 0 && !isOpened) {
                   setIsOpened(true);
                   if (!isMuted && bgMusic.current) {
-                    // Important: Most browsers won't play music until first click.
-                    // This flip counts as a click.
                     bgMusic.current.play().catch(e => console.warn("Music failed to play:", e));
                   }
                 }
-
                 if (pg === 0 && isOpened) {
                   setIsOpened(false);
                   if (bgMusic.current) {
-                    // Fade out
                     const interval = setInterval(() => {
                       if (bgMusic.current && bgMusic.current.volume > 0.01) {
                         bgMusic.current.volume -= 0.01;
@@ -470,8 +328,6 @@ export function Flipbook({
               }}
             >
               {pages.map((page) => {
-
-                // ── Cover (front & back) ──
                 if (page.type === 'cover') {
                   return (
                     <div key={page.key} className="page" style={{ ...pageBase, backgroundColor: '#000', willChange: 'transform' }}>
@@ -480,47 +336,16 @@ export function Flipbook({
                         alt="cover"
                         style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
                       />
-                      {/* Premium Leather Texture Overlay */}
                       <div className="absolute inset-0 opacity-[0.03] pointer-events-none" style={{ backgroundImage: `url("https://www.transparenttextures.com/patterns/leather.png")` }} />
-                      {/* Subtle lighting overlay */}
                       <div className="absolute inset-0 bg-gradient-to-tr from-black/60 via-transparent to-white/10 pointer-events-none" />
-                      {/* Gold Foil Border Effect */}
                       <div className="absolute inset-4 border border-white/10 rounded-sm pointer-events-none" />
                       <div style={{ position: 'absolute', inset: 0, boxShadow: 'inset 0 0 100px rgba(0,0,0,0.8)', pointerEvents: 'none' }} />
                     </div>
                   );
                 }
-
-                // ── Title page ──
-                if (page.type === 'title') {
-                  return (
-                    <div key={page.key} className="page" style={{ ...pageBase, backgroundColor: '#111', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 10 }}>
-                      <div style={{ width: 40, height: 1, backgroundColor: 'rgba(255,255,255,0.2)' }} />
-                      <div style={{ color: 'rgba(255,255,255,0.3)', fontFamily: 'serif', fontSize: 10, letterSpacing: '0.4em', textTransform: 'uppercase' }}>Photo Album</div>
-                      <div style={{ color: 'rgba(255,255,255,0.85)', fontFamily: 'serif', fontStyle: 'italic', fontSize: 18, letterSpacing: '0.08em', textAlign: 'center', padding: '0 20px' }}>{title}</div>
-                      <div style={{ width: 40, height: 1, backgroundColor: 'rgba(255,255,255,0.2)' }} />
-                    </div>
-                  );
-                }
-
-                // ── Blank / filler page ──
-                if (page.type === 'blank') {
-                  return (
-                    <div key={page.key} className="page" style={{ ...pageBase, backgroundColor: '#111' }}>
-                      <div style={{ position: 'absolute', inset: '20%', border: '1px solid rgba(255,255,255,0.05)', borderRadius: 2 }} />
-                    </div>
-                  );
-                }
-
-                // ── Sheet half-page (12×18 landscape) ──
-                // Alternating: even index = left half (spine shadow on RIGHT)
-                //              odd index  = right half (spine shadow on LEFT)
                 if (page.type === 'sheet') {
                   const pageIndex = pages.indexOf(page);
-                  // Sheets start at pages[1]: lh at odd offsets from cover, rh at even
-                  // Index 1=lh0, 2=rh0, 3=lh1, 4=rh1 …  → isLeftHalf when (pageIndex-1)%2===0
                   const isLeftHalf = (pageIndex - 1) % 2 === 0;
-
                   return (
                     <div key={page.key} className="page" style={{ ...pageBase, backgroundColor: '#000', willChange: 'transform' }}>
                       {page.video ? (
@@ -553,10 +378,7 @@ export function Flipbook({
                           }}
                         />
                       )}
-                      {/* High-end Paper Texture */}
                       <div className="absolute inset-0 opacity-[0.02] pointer-events-none" style={{ backgroundImage: `url("https://www.transparenttextures.com/patterns/paper-fibers.png")` }} />
-
-                      {/* Deep Spine Lighting */}
                       <div style={{
                         position: 'absolute',
                         top: 0,
@@ -569,79 +391,62 @@ export function Flipbook({
                         pointerEvents: 'none',
                         zIndex: 10,
                       }} />
-
-                      {/* Corner lighting */}
-                      <div style={{
-                        position: 'absolute',
-                        [isLeftHalf ? 'top' : 'bottom']: 0,
-                        [isLeftHalf ? 'left' : 'right']: 0,
-                        width: '60%',
-                        height: '40%',
-                        background: `radial-gradient(circle at ${isLeftHalf ? '0% 0%' : '100% 100%'}, rgba(255,255,255,0.05) 0%, transparent 70%)`,
-                        pointerEvents: 'none',
-                        zIndex: 5,
-                      }} />
                     </div>
                   );
                 }
-
                 return <div key={page.key} className="page" style={{ ...pageBase, backgroundColor: '#111' }} />;
               })}
             </HTMLFlipBook>
-          </motion.div>  {/* end album tilt wrapper */}
-        </div>            {/* end zoom/pan wrapper */}
+          </motion.div>
+        </div>
+      </div>
 
-        {/* ── Lead Generator (Inside Fullscreen Container) ── */}
-        <AnimatePresence>
-          {contactWhatsApp && uiVisible && (
-            <motion.div
-              initial={{ opacity: 0, scale: 0.5, y: 100 }}
-              animate={{ opacity: 1, scale: 1, y: 0 }}
-              exit={{ opacity: 0, scale: 0.5, y: 100 }}
-              transition={{ delay: 0, duration: 0.5 }}
-              className="absolute bottom-6 left-6 z-[100] flex flex-col items-start gap-3"
+      <AnimatePresence>
+        {contactWhatsApp && uiVisible && (
+          <motion.div
+            initial={{ opacity: 0, scale: 0.5, y: 100 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            exit={{ opacity: 0, scale: 0.5, y: 100 }}
+            transition={{ delay: 0, duration: 0.5 }}
+            className="absolute bottom-6 left-6 z-[100] flex flex-col items-start gap-3"
+          >
+            <div className="bg-black/60 backdrop-blur-xl border border-white/10 p-4 rounded-3xl shadow-2xl max-w-[200px] hidden xl:block">
+              <p className="text-[10px] font-bold text-primary uppercase tracking-widest mb-1">Inquiry Hub</p>
+              <p className="text-[10px] text-white/50 leading-relaxed font-medium capitalize text-left">
+                Love these photos? Contact <span className="text-white font-bold">{businessName || 'the Studio'}</span> for your next event.
+              </p>
+            </div>
+            <Button
+              onClick={() => window.open(`https://wa.me/${contactWhatsApp.replace(/[^0-9]/g, '')}?text=Hi! I saw your work on EventFold and I'm interested in booking for an event.`, '_blank')}
+              className="w-12 h-12 md:w-14 md:h-14 rounded-full bg-green-500 hover:bg-green-600 text-white shadow-[0_0_30px_rgba(34,197,94,0.4)] transition-all hover:scale-110 active:scale-95 border-none p-0 group"
             >
-              <div className="bg-black/60 backdrop-blur-xl border border-white/10 p-4 rounded-3xl shadow-2xl max-w-[200px] hidden xl:block">
-                <p className="text-[10px] font-bold text-primary uppercase tracking-widest mb-1">Inquiry Hub</p>
-                <p className="text-[10px] text-white/50 leading-relaxed font-medium capitalize text-left">
-                  Love these photos? Contact <span className="text-white font-bold">{businessName || 'the Studio'}</span> for your next event.
-                </p>
-              </div>
+              <span className="relative">
+                <MessageCircle className="w-6 h-6 group-hover:rotate-12 transition-transform" />
+                <span className="absolute -top-1 -right-1 w-2.5 h-2.5 bg-red-500 rounded-full animate-ping" />
+                <span className="absolute -top-1 -right-1 w-2.5 h-2.5 bg-red-500 rounded-full" />
+              </span>
+            </Button>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
-              <Button
-                onClick={() => window.open(`https://wa.me/${contactWhatsApp.replace(/[^0-9]/g, '')}?text=Hi! I saw your work on EventFold and I'm interested in booking for an event.`, '_blank')}
-                className="w-12 h-12 md:w-14 md:h-14 rounded-full bg-green-500 hover:bg-green-600 text-white shadow-[0_0_30px_rgba(34,197,94,0.4)] transition-all hover:scale-110 active:scale-95 border-none p-0 group"
-              >
-                <span className="relative">
-                  <MessageCircle className="w-6 h-6 group-hover:rotate-12 transition-transform" />
-                  <span className="absolute -top-1 -right-1 w-2.5 h-2.5 bg-red-500 rounded-full animate-ping" />
-                  <span className="absolute -top-1 -right-1 w-2.5 h-2.5 bg-red-500 rounded-full" />
-                </span>
-              </Button>
-            </motion.div>
-          )}
-        </AnimatePresence>
+      <div className="md:hidden absolute inset-y-0 left-0 w-12 flex items-center justify-start pl-2 z-50 pointer-events-none">
+        <Button
+          onClick={() => { playFlipSound(); book.current?.pageFlip().flipPrev(); }}
+          className="rounded-full w-10 h-10 bg-black/40 backdrop-blur-md text-white border border-white/10 p-0 pointer-events-auto"
+        >
+          <ChevronLeft className="w-6 h-6" />
+        </Button>
+      </div>
+      <div className="md:hidden absolute inset-y-0 right-0 w-12 flex items-center justify-end pr-2 z-50 pointer-events-none">
+        <Button
+          onClick={() => { playFlipSound(); book.current?.pageFlip().flipNext(); }}
+          className="rounded-full w-10 h-10 bg-black/40 backdrop-blur-md text-white border border-white/10 p-0 pointer-events-auto"
+        >
+          <ChevronRight className="w-6 h-6" />
+        </Button>
+      </div>
 
-        {/* ── Mobile Side Navigation ── */}
-        <div className="md:hidden absolute inset-y-0 left-0 w-12 flex items-center justify-start pl-2 z-50 pointer-events-none">
-          <Button
-            onClick={() => { playFlipSound(); book.current?.pageFlip().flipPrev(); }}
-            className="rounded-full w-10 h-10 bg-black/40 backdrop-blur-md text-white border border-white/10 p-0 pointer-events-auto"
-          >
-            <ChevronLeft className="w-6 h-6" />
-          </Button>
-        </div>
-        <div className="md:hidden absolute inset-y-0 right-0 w-12 flex items-center justify-end pr-2 z-50 pointer-events-none">
-          <Button
-            onClick={() => { playFlipSound(); book.current?.pageFlip().flipNext(); }}
-            className="rounded-full w-10 h-10 bg-black/40 backdrop-blur-md text-white border border-white/10 p-0 pointer-events-auto"
-          >
-            <ChevronRight className="w-6 h-6" />
-          </Button>
-        </div>
-      </div>            {/* end container */}
-
-      {/* ── Navigation ── */}
       <motion.div
         animate={{
           y: uiVisible ? 0 : 100,
@@ -667,6 +472,6 @@ export function Flipbook({
           <ChevronRight className="w-4 h-4 md:w-5 h-5" />
         </Button>
       </motion.div>
-    </div >
+    </div>
   );
 }

@@ -454,13 +454,13 @@ export default function Viewer() {
       >
         <TransformWrapper
           initialScale={1}
-          minScale={0.8}
-          maxScale={4}
+          minScale={1}
+          maxScale={window.innerWidth < 1024 ? 4 : 1}
+          disabled={window.innerWidth >= 1024}
           centerOnInit={true}
-          wheel={{ step: 0.1 }}
-          doubleClick={{ disabled: false }}
-          pinch={{ step: 5 }}
-          panning={{ disabled: false, excluded: ["input", "button", ".page-content"] }}
+          wheel={{ disabled: true }}
+          pinch={{ disabled: window.innerWidth >= 1024 }}
+          panning={{ disabled: window.innerWidth >= 1024 }}
         >
           {({ zoomIn, zoomOut, resetTransform, ...rest }) => (
             <>
@@ -500,31 +500,24 @@ export default function Viewer() {
                 </div>
               </TransformComponent>
 
-              {/* Floating Zoom Controls (Synchronized with Pinch/Scroll) */}
-              <motion.div
-                animate={{
-                  y: uiVisible ? 0 : 100,
-                  opacity: uiVisible ? 1 : 0
-                }}
-                className="absolute bottom-24 z-[70] flex gap-1 md:gap-2 glass-dark px-3 py-1.5 md:px-4 md:py-2 rounded-2xl border-white/5 shadow-2xl scale-90 md:scale-100"
-              >
-                <Button variant="ghost" size="icon" onClick={() => zoomOut()} title="Zoom out" className="text-white/60 hover:text-white hover:bg-white/10 rounded-xl w-8 h-8 md:w-10 md:h-10"><ZoomOut className="w-4 h-4 md:w-5 h-5" /></Button>
-                <div className="flex items-center px-2 md:px-3 text-white/90 text-[10px] md:text-sm font-bold min-w-[2.5rem] md:min-w-[3.5rem] justify-center tracking-tighter">
-                  {Math.round((rest.instance.transformState.scale || 1) * 100)}%
-                </div>
-                <Button variant="ghost" size="icon" onClick={() => zoomIn()} title="Zoom in" className="text-white/60 hover:text-white hover:bg-white/10 rounded-xl w-8 h-8 md:w-10 md:h-10"><ZoomIn className="w-4 h-4 md:w-5 h-5" /></Button>
-                <div className="w-px h-6 bg-white/10 mx-1 md:mx-2 self-center" />
-                <Button variant="ghost" size="icon" onClick={() => resetTransform()} title="Reset" className="text-white/60 hover:text-white hover:bg-white/10 rounded-xl w-8 h-8 md:w-10 md:h-10"><RotateCcw className="w-4 h-4 md:w-5 h-5" /></Button>
-                <Button variant="ghost" size="icon" onClick={() => {
-                  if (!document.fullscreenElement) {
-                    document.documentElement.requestFullscreen().catch(() => { });
-                  } else {
-                    document.exitFullscreen();
-                  }
-                }} title="Screen" className="text-white/60 hover:text-white hover:bg-white/10 rounded-xl w-8 h-8 md:w-10 md:h-10">
-                  <Maximize2 className="w-4 h-4 md:w-5 h-5" />
-                </Button>
-              </motion.div>
+              {/* Floating Zoom Controls (Mobile Only) */}
+              {window.innerWidth < 1024 && (
+                <motion.div
+                  animate={{
+                    y: uiVisible ? 0 : 100,
+                    opacity: uiVisible ? 1 : 0
+                  }}
+                  className="absolute bottom-24 z-[70] flex gap-1 md:gap-2 glass-dark px-3 py-1.5 md:px-4 md:py-2 rounded-2xl border-white/5 shadow-2xl scale-90 md:scale-100"
+                >
+                  <Button variant="ghost" size="icon" onClick={() => zoomOut()} title="Zoom out" className="text-white/60 hover:text-white hover:bg-white/10 rounded-xl w-8 h-8 md:w-10 md:h-10"><ZoomOut className="w-4 h-4 md:w-5 h-5" /></Button>
+                  <div className="flex items-center px-2 md:px-3 text-white/90 text-[10px] md:text-sm font-bold min-w-[2.5rem] md:min-w-[3.5rem] justify-center tracking-tighter">
+                    {Math.round((rest.instance.transformState.scale || 1) * 100)}%
+                  </div>
+                  <Button variant="ghost" size="icon" onClick={() => zoomIn()} title="Zoom in" className="text-white/60 hover:text-white hover:bg-white/10 rounded-xl w-8 h-8 md:w-10 md:h-10"><ZoomIn className="w-4 h-4 md:w-5 h-5" /></Button>
+                  <div className="w-px h-6 bg-white/10 mx-1 md:mx-2 self-center" />
+                  <Button variant="ghost" size="icon" onClick={() => resetTransform()} title="Reset" className="text-white/60 hover:text-white hover:bg-white/10 rounded-xl w-8 h-8 md:w-10 md:h-10"><RotateCcw className="w-4 h-4 md:w-5 h-5" /></Button>
+                </motion.div>
+              )}
             </>
           )}
         </TransformWrapper>
