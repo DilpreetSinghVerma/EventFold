@@ -18,6 +18,7 @@ interface FlipbookProps {
   isMuted?: boolean;
   isSlideshowActive?: boolean;
   onSlideshowEnd?: () => void;
+  onPageChange?: (current: number, total: number) => void;
 }
 
 export const Flipbook = forwardRef(({
@@ -32,7 +33,8 @@ export const Flipbook = forwardRef(({
   uiVisible = true,
   isMuted = false,
   isSlideshowActive = false,
-  onSlideshowEnd
+  onSlideshowEnd,
+  onPageChange
 }: FlipbookProps, ref) => {
   const book = useRef<any>(null);
 
@@ -161,8 +163,10 @@ export const Flipbook = forwardRef(({
     handleResize();
     window.addEventListener('resize', handleResize);
     setReady(true);
+    // Initial sync
+    if (onPageChange) onPageChange(0, sheets.length + 2);
     return () => window.removeEventListener('resize', handleResize);
-  }, []);
+  }, [sheets.length]);
 
   const playFlipSound = () => {
     if (isMuted || !flipAudio.current) return;
@@ -311,6 +315,7 @@ export const Flipbook = forwardRef(({
                 playFlipSound();
                 const pg = e.data;
                 setCurrentPage(pg);
+                if (onPageChange) onPageChange(pg, totalPageCount);
                 if (pg > 0 && !isOpened) {
                   setIsOpened(true);
                   if (!isMuted && bgMusic.current) {
@@ -413,17 +418,6 @@ export const Flipbook = forwardRef(({
 
 
 
-      <motion.div
-        animate={{
-          y: uiVisible ? 0 : 100,
-          opacity: uiVisible ? 1 : 0
-        }}
-        className={`absolute ${window.innerWidth < 1024 && window.innerWidth > window.innerHeight ? 'bottom-2' : 'bottom-5'} z-[80] flex items-center gap-6`}
-      >
-        <span className="text-white/40 text-[10px] md:text-xs font-mono select-none px-4 py-1 bg-black/40 backdrop-blur-md rounded-full border border-white/5">
-          {currentPage + 1} / {totalPageCount}
-        </span>
-      </motion.div>
     </div>
   );
 });
