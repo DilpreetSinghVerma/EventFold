@@ -11,12 +11,23 @@ interface FlipbookProps {
   backCover: string;
   title?: string;
   scale?: number;
+  videos?: { filePath: string; orderIndex: number }[];
+  uiVisible?: boolean;
   contactWhatsApp?: string;
   businessName?: string;
-  videos?: { filePath: string; orderIndex: number }[];
 }
 
-export function Flipbook({ sheets, frontCover, backCover, title = 'Photo Album', scale = 1, contactWhatsApp, businessName, videos = [] }: FlipbookProps) {
+export function Flipbook({
+  sheets,
+  frontCover,
+  backCover,
+  title = 'Photo Album',
+  scale = 1,
+  contactWhatsApp,
+  businessName,
+  videos = [],
+  uiVisible = true
+}: FlipbookProps) {
   const book = useRef<any>(null);
   const container = useRef<HTMLDivElement>(null);
   const [isMuted, setIsMuted] = useState(false);
@@ -34,7 +45,6 @@ export function Flipbook({ sheets, frontCover, backCover, title = 'Photo Album',
   const [isOpened, setIsOpened] = useState(false);
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [isSlideshowActive, setIsSlideshowActive] = useState(false);
-  const [uiVisible, setUiVisible] = useState(true);
   const slideshowTimer = useRef<NodeJS.Timeout | null>(null);
   const totalPageCount = 2 + sheets.length; // Front + Back + Sheets
 
@@ -127,8 +137,8 @@ export function Flipbook({ sheets, frontCover, backCover, title = 'Photo Album',
 
       // Vertical space usage: be more aggressive on mobile
       const isLandscape = screenW > screenH;
-      const verticalPadding = isMobile ? (isLandscape ? 60 : 180) : 220;
-      const horizontalPadding = isMobile ? (isLandscape ? 100 : 40) : 120;
+      const verticalPadding = isMobile ? (isLandscape ? 20 : 140) : 220;
+      const horizontalPadding = isMobile ? (isLandscape ? 60 : 40) : 120;
 
       let availW = screenW - horizontalPadding;
       let availH = screenH - verticalPadding;
@@ -347,7 +357,7 @@ export function Flipbook({ sheets, frontCover, backCover, title = 'Photo Album',
             initial={{
               opacity: 0,
               y: 100,
-              scale: 0.7 * scale,
+              scale: 0.9 * scale,
               rotateZ: -12,
               rotateX: 25,
               perspective: '2000px',
@@ -446,7 +456,7 @@ export function Flipbook({ sheets, frontCover, backCover, title = 'Photo Album',
               startZIndex={0}
               autoSize={false}
               clickEventForward={window.innerWidth >= 768}
-              useMouseEvents={true}
+              useMouseEvents={false}
               swipeDistance={30}
               showPageCorners={true}
               disableFlipByClick={false}
@@ -620,11 +630,11 @@ export function Flipbook({ sheets, frontCover, backCover, title = 'Photo Album',
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.5, y: 100 }}
               transition={{ delay: 0, duration: 0.5 }}
-              className="absolute bottom-6 right-6 z-[100] flex flex-col items-end gap-3"
+              className="absolute bottom-6 left-6 z-[100] flex flex-col items-start gap-3"
             >
               <div className="bg-black/60 backdrop-blur-xl border border-white/10 p-4 rounded-3xl shadow-2xl max-w-[200px] hidden xl:block">
                 <p className="text-[10px] font-bold text-primary uppercase tracking-widest mb-1">Inquiry Hub</p>
-                <p className="text-[10px] text-white/50 leading-relaxed font-medium capitalize">
+                <p className="text-[10px] text-white/50 leading-relaxed font-medium capitalize text-left">
                   Love these photos? Contact <span className="text-white font-bold">{businessName || 'the Studio'}</span> for your next event.
                 </p>
               </div>

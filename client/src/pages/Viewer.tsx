@@ -449,6 +449,7 @@ export default function Viewer() {
           contactWhatsApp={isShared ? settings?.contactWhatsApp : undefined}
           businessName={settings?.businessName}
           videos={loadedVideos}
+          uiVisible={uiVisible}
         />
 
         {/* Rotate Overlay */}
