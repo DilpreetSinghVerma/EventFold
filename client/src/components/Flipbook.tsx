@@ -401,34 +401,7 @@ export function Flipbook({
         </div>
       </div>
 
-      <AnimatePresence>
-        {contactWhatsApp && uiVisible && (
-          <motion.div
-            initial={{ opacity: 0, scale: 0.5, y: 100 }}
-            animate={{ opacity: 1, scale: 1, y: 0 }}
-            exit={{ opacity: 0, scale: 0.5, y: 100 }}
-            transition={{ delay: 0, duration: 0.5 }}
-            className="absolute bottom-6 left-6 z-[100] flex flex-col items-start gap-3"
-          >
-            <div className="bg-black/60 backdrop-blur-xl border border-white/10 p-4 rounded-3xl shadow-2xl max-w-[200px] hidden xl:block">
-              <p className="text-[10px] font-bold text-primary uppercase tracking-widest mb-1">Inquiry Hub</p>
-              <p className="text-[10px] text-white/50 leading-relaxed font-medium capitalize text-left">
-                Love these photos? Contact <span className="text-white font-bold">{businessName || 'the Studio'}</span> for your next event.
-              </p>
-            </div>
-            <Button
-              onClick={() => window.open(`https://wa.me/${contactWhatsApp.replace(/[^0-9]/g, '')}?text=Hi! I saw your work on EventFold and I'm interested in booking for an event.`, '_blank')}
-              className="w-12 h-12 md:w-14 md:h-14 rounded-full bg-green-500 hover:bg-green-600 text-white shadow-[0_0_30px_rgba(34,197,94,0.4)] transition-all hover:scale-110 active:scale-95 border-none p-0 group"
-            >
-              <span className="relative">
-                <MessageCircle className="w-6 h-6 group-hover:rotate-12 transition-transform" />
-                <span className="absolute -top-1 -right-1 w-2.5 h-2.5 bg-red-500 rounded-full animate-ping" />
-                <span className="absolute -top-1 -right-1 w-2.5 h-2.5 bg-red-500 rounded-full" />
-              </span>
-            </Button>
-          </motion.div>
-        )}
-      </AnimatePresence>
+
 
       <div className="md:hidden absolute inset-y-0 left-0 w-12 flex items-center justify-start pl-2 z-50 pointer-events-none">
         <Button
