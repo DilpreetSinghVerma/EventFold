@@ -346,12 +346,12 @@ export default function CreateAlbum() {
   };
 
   return (
-    <div className="min-h-screen bg-background text-foreground flex flex-col p-8 selection:bg-primary/30">
+    <div className="min-h-screen bg-background text-foreground flex flex-col p-4 md:p-6 selection:bg-primary/30">
       {/* Background Glow */}
       <div className="fixed top-0 left-1/2 -translate-x-1/2 w-full max-w-4xl h-[500px] bg-primary/10 rounded-full blur-[120px] pointer-events-none -z-10" />
 
       {/* Header */}
-      <header className="max-w-4xl mx-auto w-full flex items-center justify-between mb-12">
+      <header className="max-w-4xl mx-auto w-full flex items-center justify-between mb-6">
         <Link href="/dashboard">
           <Button variant="ghost" className="gap-2 text-muted-foreground hover:text-white glass rounded-xl pr-6 pl-4">
             <ArrowLeft className="w-4 h-4" /> Back to Gallery
@@ -365,7 +365,7 @@ export default function CreateAlbum() {
       </header>
 
       <main className="flex-1 flex items-start justify-center">
-        <div className="w-full max-w-4xl glass rounded-[2.5rem] border-white/5 shadow-2xl overflow-hidden p-8 md:p-12">
+        <div className="w-full max-w-4xl glass rounded-[2.5rem] border-white/5 shadow-2xl overflow-hidden p-6 md:p-10">
           <AnimatePresence mode="wait">
             {step === 1 ? (
               <motion.div
@@ -374,7 +374,7 @@ export default function CreateAlbum() {
                 animate={{ opacity: 1, x: 0 }}
                 exit={{ opacity: 0, x: 20 }}
                 transition={{ duration: 0.4 }}
-                className="space-y-12"
+                className="space-y-8"
               >
                 <div className="space-y-2">
                   <h1 className="text-4xl font-bold tracking-tight">Project Identity</h1>
