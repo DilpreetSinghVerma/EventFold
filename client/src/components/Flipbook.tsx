@@ -34,6 +34,7 @@ export function Flipbook({ sheets, frontCover, backCover, title = 'Photo Album',
   const [isOpened, setIsOpened] = useState(false);
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [isSlideshowActive, setIsSlideshowActive] = useState(false);
+  const [uiVisible, setUiVisible] = useState(true);
   const slideshowTimer = useRef<NodeJS.Timeout | null>(null);
   const totalPageCount = 2 + sheets.length; // Front + Back + Sheets
 
@@ -125,8 +126,9 @@ export function Flipbook({ sheets, frontCover, backCover, title = 'Photo Album',
       const multiplier = 2;
 
       // Vertical space usage: be more aggressive on mobile
-      const verticalPadding = isMobile ? 180 : 220; // Increased padding to avoid header/footer overlap
-      const horizontalPadding = isMobile ? 40 : 120; // Thinner padding for mobile to fit side buttons
+      const isLandscape = screenW > screenH;
+      const verticalPadding = isMobile ? (isLandscape ? 60 : 180) : 220;
+      const horizontalPadding = isMobile ? (isLandscape ? 100 : 40) : 120;
 
       let availW = screenW - horizontalPadding;
       let availH = screenH - verticalPadding;
@@ -288,34 +290,37 @@ export function Flipbook({ sheets, frontCover, backCover, title = 'Photo Album',
     <div className="relative w-full flex-1 flex flex-col items-center justify-center bg-transparent overflow-hidden" style={{ minHeight: 0 }}>
 
       {/* ── Controls Bar (Moved to bottom above navigation for better visibility) ── */}
-      <div className="absolute bottom-24 z-50 flex gap-2 glass-dark px-4 py-2 rounded-2xl border-white/5 shadow-2xl scale-90 md:scale-100">
-        <Button variant="ghost" size="icon" onClick={handleZoomOut} title="Zoom out" className="text-white/60 hover:text-white hover:bg-white/10 rounded-xl w-10 h-10"><ZoomOut className="w-5 h-5" /></Button>
-        <div className="flex items-center px-3 text-white/90 text-sm font-bold min-w-[3.5rem] justify-center tracking-tighter">{Math.round(zoom * 100)}%</div>
-        <Button variant="ghost" size="icon" onClick={handleZoomIn} title="Zoom in" className="text-white/60 hover:text-white hover:bg-white/10 rounded-xl w-10 h-10"><ZoomIn className="w-5 h-5" /></Button>
-        <div className="w-px h-6 bg-white/10 mx-2 self-center" />
-        <Button variant="ghost" size="icon" onClick={handleZoomReset} title="Reset zoom" className="text-white/60 hover:text-white hover:bg-white/10 rounded-xl w-10 h-10"><RotateCcw className="w-5 h-5" /></Button>
-        <Button variant="ghost" size="icon" onClick={toggleFullscreen} title="Toggle Fullscreen" className="text-white/60 hover:text-white hover:bg-white/10 rounded-xl w-10 h-10">
-          {isFullscreen ? <Minimize className="w-5 h-5" /> : <Maximize className="w-5 h-5" />}
+      <motion.div
+        animate={{
+          y: uiVisible ? 0 : 100,
+          opacity: uiVisible ? 1 : 0
+        }}
+        className="absolute bottom-24 z-50 flex gap-1 md:gap-2 glass-dark px-3 py-1.5 md:px-4 md:py-2 rounded-2xl border-white/5 shadow-2xl scale-90 md:scale-100"
+      >
+        <Button variant="ghost" size="icon" onClick={handleZoomOut} title="Zoom out" className="text-white/60 hover:text-white hover:bg-white/10 rounded-xl w-8 h-8 md:w-10 md:h-10"><ZoomOut className="w-4 h-4 md:w-5 h-5" /></Button>
+        <div className="flex items-center px-2 md:px-3 text-white/90 text-[10px] md:text-sm font-bold min-w-[2.5rem] md:min-w-[3.5rem] justify-center tracking-tighter">{Math.round(zoom * 100)}%</div>
+        <Button variant="ghost" size="icon" onClick={handleZoomIn} title="Zoom in" className="text-white/60 hover:text-white hover:bg-white/10 rounded-xl w-8 h-8 md:w-10 md:h-10"><ZoomIn className="w-4 h-4 md:w-5 h-5" /></Button>
+        <div className="w-px h-6 bg-white/10 mx-1 md:mx-2 self-center" />
+        <Button variant="ghost" size="icon" onClick={handleZoomReset} title="Reset zoom" className="text-white/60 hover:text-white hover:bg-white/10 rounded-xl w-8 h-8 md:w-10 md:h-10"><RotateCcw className="w-4 h-4 md:w-5 h-5" /></Button>
+        <Button variant="ghost" size="icon" onClick={toggleFullscreen} title="Toggle Fullscreen" className="text-white/60 hover:text-white hover:bg-white/10 rounded-xl w-8 h-8 md:w-10 md:h-10">
+          {isFullscreen ? <Minimize className="w-4 h-4 md:w-5 h-5" /> : <Maximize className="w-4 h-4 md:w-5 h-5" />}
         </Button>
-        <div className="w-px h-6 bg-white/10 mx-2 self-center" />
-        <Button variant="ghost" size="icon" onClick={toggleSlideshow} title={isSlideshowActive ? "Pause Slideshow" : "Play Slideshow"} className={`text-white/60 hover:text-white hover:bg-white/10 rounded-xl w-10 h-10 ${isSlideshowActive ? 'bg-primary/20 text-primary' : ''}`}>
-          {isSlideshowActive ? <Pause className="w-5 h-5" /> : <Play className="w-5 h-5" />}
+        <div className="w-px h-6 bg-white/10 mx-1 md:mx-2 self-center" />
+        <Button variant="ghost" size="icon" onClick={toggleSlideshow} title={isSlideshowActive ? "Pause Slideshow" : "Play Slideshow"} className={`text-white/60 hover:text-white hover:bg-white/10 rounded-xl w-8 h-8 md:w-10 md:h-10 ${isSlideshowActive ? 'bg-primary/20 text-primary' : ''}`}>
+          {isSlideshowActive ? <Pause className="w-4 h-4 md:w-5 h-5" /> : <Play className="w-4 h-4 md:w-5 h-5" />}
         </Button>
         <Button
           variant="ghost"
           size="icon"
           onClick={() => {
             setIsMuted(!isMuted);
-            if (isMuted && bgMusic.current && isOpened) {
-              bgMusic.current.play().catch(e => console.error("Manual play failed", e));
-            }
           }}
           title="Toggle sound"
-          className={`text-white/60 hover:text-white hover:bg-white/10 rounded-xl w-10 h-10 ${!isMuted && isOpened ? 'text-primary animate-pulse' : ''}`}
+          className={`text-white/60 hover:text-white hover:bg-white/10 rounded-xl w-8 h-8 md:w-10 md:h-10 ${!isMuted && isOpened ? 'text-primary animate-pulse' : ''}`}
         >
-          {isMuted ? <VolumeX className="w-5 h-5" /> : <Volume2 className="w-5 h-5" />}
+          {isMuted ? <VolumeX className="w-4 h-4 md:w-5 h-5" /> : <Volume2 className="w-4 h-4 md:w-5 h-5" />}
         </Button>
-      </div>
+      </motion.div>
 
       {/* ── Book Container ── */}
       <div
@@ -609,11 +614,12 @@ export function Flipbook({ sheets, frontCover, backCover, title = 'Photo Album',
 
         {/* ── Lead Generator (Inside Fullscreen Container) ── */}
         <AnimatePresence>
-          {contactWhatsApp && (
+          {contactWhatsApp && uiVisible && (
             <motion.div
               initial={{ opacity: 0, scale: 0.5, y: 100 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
-              transition={{ delay: 1, duration: 0.8 }}
+              exit={{ opacity: 0, scale: 0.5, y: 100 }}
+              transition={{ delay: 0, duration: 0.5 }}
               className="absolute bottom-6 right-6 z-[100] flex flex-col items-end gap-3"
             >
               <div className="bg-black/60 backdrop-blur-xl border border-white/10 p-4 rounded-3xl shadow-2xl max-w-[200px] hidden xl:block">
@@ -657,25 +663,31 @@ export function Flipbook({ sheets, frontCover, backCover, title = 'Photo Album',
       </div>            {/* end container */}
 
       {/* ── Navigation ── */}
-      <div className="absolute bottom-5 z-40 flex items-center gap-6">
+      <motion.div
+        animate={{
+          y: uiVisible ? 0 : 100,
+          opacity: uiVisible ? 1 : 0
+        }}
+        className="absolute bottom-5 z-40 flex items-center gap-6"
+      >
         <Button
           onClick={() => { playFlipSound(); book.current?.pageFlip().flipPrev(); }}
-          className="rounded-full w-12 h-12 bg-white/10 hover:bg-white/25 backdrop-blur-md text-white border border-white/15 p-0 transition-all"
+          className="rounded-full w-10 h-10 md:w-12 md:h-12 bg-white/10 hover:bg-white/25 backdrop-blur-md text-white border border-white/15 p-0 transition-all"
           title="Previous page"
         >
-          <ChevronLeft className="w-5 h-5" />
+          <ChevronLeft className="w-4 h-4 md:w-5 h-5" />
         </Button>
-        <span className="text-white/40 text-xs font-mono select-none">
+        <span className="text-white/40 text-[10px] md:text-xs font-mono select-none">
           {currentPage + 1} / {totalPageCount}
         </span>
         <Button
           onClick={() => { playFlipSound(); book.current?.pageFlip().flipNext(); }}
-          className="rounded-full w-12 h-12 bg-white/10 hover:bg-white/25 backdrop-blur-md text-white border border-white/15 p-0 transition-all"
+          className="rounded-full w-10 h-10 md:w-12 md:h-12 bg-white/10 hover:bg-white/25 backdrop-blur-md text-white border border-white/15 p-0 transition-all"
           title="Next page"
         >
-          <ChevronRight className="w-5 h-5" />
+          <ChevronRight className="w-4 h-4 md:w-5 h-5" />
         </Button>
-      </div>
+      </motion.div>
     </div >
   );
 }

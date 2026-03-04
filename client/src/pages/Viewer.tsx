@@ -68,15 +68,29 @@ export default function Viewer() {
   const [settings, setSettings] = useState<any>(null);
 
   const [isPortrait, setIsPortrait] = useState(false);
+  const [isSmallHeight, setIsSmallHeight] = useState(false);
+  const [uiVisible, setUiVisible] = useState(true);
   const splitUrlsRef = useRef<string[]>([]);
 
   useEffect(() => {
     const checkOrientation = () => {
-      setIsPortrait(window.innerHeight > window.innerWidth && window.innerWidth < 1024);
+      const portrait = window.innerHeight > window.innerWidth && window.innerWidth < 1024;
+      const smallH = window.innerHeight < 500;
+      setIsPortrait(portrait);
+      setIsSmallHeight(smallH);
     };
     checkOrientation();
     window.addEventListener('resize', checkOrientation);
-    return () => window.removeEventListener('resize', checkOrientation);
+
+    // Auto-hide UI after 3 seconds on mobile
+    const timer = setTimeout(() => {
+      if (window.innerWidth < 1024) setUiVisible(false);
+    }, 3000);
+
+    return () => {
+      window.removeEventListener('resize', checkOrientation);
+      clearTimeout(timer);
+    };
   }, []);
 
   useEffect(() => {
@@ -187,17 +201,24 @@ export default function Viewer() {
   }
 
   const BrandingHeader = () => (
-    <div className="absolute top-0 left-0 right-0 p-6 z-[60] flex items-center justify-between pointer-events-none">
-      <div className="flex items-center gap-6 bg-black/40 backdrop-blur-xl px-8 py-5 rounded-3xl border border-white/5 pointer-events-auto shadow-2xl">
+    <motion.div
+      initial={false}
+      animate={{
+        y: uiVisible ? 0 : -100,
+        opacity: uiVisible ? 1 : 0
+      }}
+      className="absolute top-0 left-0 right-0 p-3 md:p-6 z-[60] flex items-center justify-between pointer-events-none"
+    >
+      <div className={`flex items-center gap-3 md:gap-6 bg-black/60 backdrop-blur-xl border border-white/5 pointer-events-auto shadow-2xl transition-all duration-300 ${isSmallHeight ? 'px-4 py-2 rounded-xl' : 'px-8 py-5 rounded-3xl'}`}>
         {settings?.businessLogo ? (
-          <img src={settings.businessLogo} alt="Logo" className="h-14 w-auto rounded-xl object-contain" />
+          <img src={settings.businessLogo} alt="Logo" className={`${isSmallHeight ? 'h-6' : 'h-14'} w-auto rounded-lg object-contain`} />
         ) : (
-          <img src="/branding material/without bg version.png" alt="EventFold" className="h-12 w-auto object-contain" />
+          <img src="/branding material/without bg version.png" alt="EventFold" className={`${isSmallHeight ? 'h-6' : 'h-12'} w-auto object-contain`} />
         )}
-        <div className="w-px h-6 bg-white/10 mx-1" />
+        {!isSmallHeight && <div className="w-px h-6 bg-white/10 mx-1" />}
         <div className="flex flex-col">
-          <span className="text-[10px] text-white/40 font-bold uppercase tracking-widest leading-none mb-1">{album?.theme || 'Project'}</span>
-          <span className="text-sm font-bold text-white tracking-tight leading-none">{settings?.businessName || 'EventFold Studio'}</span>
+          {!isSmallHeight && <span className="text-[10px] text-white/40 font-bold uppercase tracking-widest leading-none mb-1">{album?.theme || 'Project'}</span>}
+          <span className={`${isSmallHeight ? 'text-xs' : 'text-sm'} font-bold text-white tracking-tight leading-none`}>{settings?.businessName || 'EventFold Studio'}</span>
         </div>
       </div>
 
@@ -205,14 +226,14 @@ export default function Viewer() {
         {settings?.contactWhatsApp && window.innerWidth >= 1024 && (
           <Button
             onClick={() => window.open(`https://wa.me/${settings.contactWhatsApp.replace(/[^0-9]/g, '')}`, '_blank')}
-            className="rounded-xl h-11 bg-green-500 hover:bg-green-600 text-white border-none shadow-lg shadow-green-500/20 px-5 font-bold"
+            className={`rounded-xl bg-green-500 hover:bg-green-600 text-white border-none shadow-lg shadow-green-500/20 px-5 font-bold ${isSmallHeight ? 'h-9 px-3 text-xs' : 'h-11'}`}
           >
-            <MessageCircle className="w-4 h-4 mr-2" />
+            <MessageCircle className={`${isSmallHeight ? 'w-3 h-3' : 'w-4 h-4'} mr-2`} />
             <span className="hidden sm:inline">Contact Studio</span>
           </Button>
         )}
       </div>
-    </div>
+    </motion.div>
   );
 
   const PasswordWall = () => {
@@ -400,19 +421,26 @@ export default function Viewer() {
 
       {/* Customer Title */}
       {isShared && (
-        <div className="absolute top-8 left-0 right-0 z-50 flex justify-center pointer-events-none">
+        <div className="absolute top-4 md:top-8 left-0 right-0 z-50 flex justify-center pointer-events-none">
           <motion.div
-            initial={{ opacity: 0, scale: 0.9 }}
-            animate={{ opacity: 1, scale: 1 }}
-            className="glass-dark px-8 py-3 rounded-2xl border-white/5 flex items-center gap-4"
+            initial={false}
+            animate={{
+              y: (uiVisible || !isSmallHeight) ? 0 : -60,
+              opacity: (uiVisible || !isSmallHeight) ? 1 : 0,
+              scale: isSmallHeight ? 0.8 : 1
+            }}
+            className="glass-dark px-4 md:px-8 py-2 md:py-3 rounded-2xl border-white/5 flex items-center gap-3 md:gap-4"
           >
-            <div className="w-2 h-2 rounded-full bg-primary animate-pulse" />
-            <h1 className="font-display font-bold text-xs text-white/90 tracking-[0.4em] uppercase">{album.title}</h1>
+            <div className="w-1.5 h-1.5 md:w-2 md:h-2 rounded-full bg-primary animate-pulse" />
+            <h1 className="font-display font-bold text-[10px] md:text-xs text-white/90 tracking-[0.4em] uppercase">{album.title}</h1>
           </motion.div>
         </div>
       )}
 
-      <main className="flex-1 flex flex-col items-center justify-center relative">
+      <main
+        className="flex-1 flex flex-col items-center justify-center relative cursor-pointer"
+        onClick={() => setUiVisible(!uiVisible)}
+      >
         <Flipbook
           sheets={loadedSheets}
           frontCover={loadedFrontCover}
