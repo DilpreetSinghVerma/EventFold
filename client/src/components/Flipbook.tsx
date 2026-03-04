@@ -136,8 +136,8 @@ export const Flipbook = forwardRef(({
 
       // Vertical space usage: be more aggressive on mobile landscape to clear UI
       const isLandscape = screenW > screenH;
-      const verticalPadding = isMobile ? (isLandscape ? 120 : 140) : 340; // Increased mobile landscape padding from 20 to 120
-      const horizontalPadding = isMobile ? (isLandscape ? 160 : 40) : 500; // Increased mobile landscape padding from 80 to 160 to clear side arrows
+      const verticalPadding = isMobile ? (isLandscape ? 60 : 140) : 340; // Reduced from 120 to 60 for larger view
+      const horizontalPadding = isMobile ? (isLandscape ? 100 : 40) : 500; // Reduced from 160 to 100 for larger view
 
       let availW = screenW - horizontalPadding;
       let availH = screenH - verticalPadding;

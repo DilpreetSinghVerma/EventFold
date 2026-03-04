@@ -214,7 +214,7 @@ export default function Viewer() {
         y: uiVisible ? 0 : -120,
         opacity: uiVisible ? 1 : 0
       }}
-      className={`absolute top-0 left-0 right-0 ${isMobileLandscape ? 'p-2' : 'p-3 md:p-6'} z-[60] flex items-center justify-between pointer-events-none`}
+      className={`absolute top-0 left-0 right-0 p-3 md:p-6 z-[60] flex items-center justify-between pointer-events-none`}
     >
       <div className={`flex items-center gap-2 md:gap-4 bg-black/70 backdrop-blur-3xl border border-white/5 pointer-events-auto shadow-2xl transition-all duration-300 ${isSmallHeight || isMobileLandscape || window.innerWidth >= 1024 ? 'px-3 py-1.5 rounded-xl' : 'px-8 py-5 rounded-3xl'}`}>
         {settings?.businessLogo ? (
@@ -467,7 +467,7 @@ export default function Viewer() {
                   width: "100%",
                   height: "100%",
                   backgroundColor: "transparent",
-                  overflow: window.innerWidth >= 1024 ? "visible" : "hidden"
+                  overflow: "visible" // Allow zoom/pan to extend outside viewport without clipping
                 }}
                 contentStyle={{
                   width: "100%",
@@ -475,7 +475,7 @@ export default function Viewer() {
                   display: "flex",
                   alignItems: "center",
                   justifyContent: "center",
-                  overflow: window.innerWidth >= 1024 ? "visible" : "hidden"
+                  overflow: "visible"
                 }}
               >
                 <div
@@ -526,7 +526,7 @@ export default function Viewer() {
                   y: uiVisible ? 0 : 100,
                   opacity: uiVisible ? 1 : 0
                 }}
-                className="absolute bottom-10 z-[70] flex gap-1 md:gap-2 glass-dark px-3 py-1.5 md:px-4 md:py-2 rounded-2xl border-white/5 shadow-2xl scale-90 md:scale-100"
+                className={`absolute ${isMobileLandscape ? 'bottom-6' : 'bottom-10'} z-[70] flex gap-1 md:gap-2 glass-dark px-3 py-1.5 md:px-4 md:py-2 rounded-2xl border-white/5 shadow-2xl scale-90 md:scale-100`}
               >
                 <Button variant="ghost" size="icon" onClick={() => zoomOut()} title="Zoom out" className="text-white/60 hover:text-white hover:bg-white/10 rounded-xl w-8 h-8 md:w-10 md:h-10"><ZoomOut className="w-4 h-4 md:w-5 h-5" /></Button>
                 <div className="flex items-center px-2 md:px-3 text-white/90 text-[10px] md:text-sm font-bold min-w-[2.5rem] md:min-w-[3.5rem] justify-center tracking-tighter">
