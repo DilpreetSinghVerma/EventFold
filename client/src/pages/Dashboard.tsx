@@ -247,9 +247,9 @@ export default function Dashboard() {
 
       {/* Navbar Overlay */}
       <nav className="sticky top-0 z-50 w-full border-b border-white/5 bg-background/80 backdrop-blur-3xl">
-        <div className="max-w-7xl mx-auto px-8 h-24 flex items-center justify-between">
+        <div className="max-w-7xl mx-auto px-8 h-20 flex items-center justify-between">
           <Link href="/">
-            <div className="h-16 group cursor-pointer py-1">
+            <div className="h-14 group cursor-pointer py-0.5">
               <img
                 src="/branding material/without bg version.png"
                 alt="EventFold"
@@ -328,7 +328,7 @@ export default function Dashboard() {
         </div>
       )}
 
-      <header className="max-w-7xl mx-auto px-8 pt-10 pb-6">
+      <header className="max-w-7xl mx-auto px-8 pt-6 pb-2">
         <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-8">
           <div className="space-y-4">
             <div className="flex items-center gap-3 mb-2">
@@ -391,7 +391,7 @@ export default function Dashboard() {
         </div>
       </header>
 
-      <main className="max-w-7xl mx-auto px-8 pt-8">
+      <main className="max-w-7xl mx-auto px-8 pt-4">
         <div className="mb-12">
           <h1 className="text-4xl font-bold mb-2">My Collections</h1>
           <p className="text-white/40">Manage and share your digital storytelling projects.</p>

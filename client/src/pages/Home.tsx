@@ -41,9 +41,9 @@ export default function Home() {
       <div className="fixed bottom-0 right-0 w-[500px] h-[500px] bg-indigo-500/5 rounded-full blur-[120px] pointer-events-none" />
 
       {/* Navigation */}
-      <nav className="relative z-50 flex items-center justify-between px-8 py-10 max-w-7xl mx-auto">
+      <nav className="relative z-50 flex items-center justify-between px-8 py-6 max-w-7xl mx-auto">
         <Link href="/">
-          <div className="h-40 cursor-pointer group">
+          <div className="h-20 cursor-pointer group">
             <img
               src="/branding material/without bg version.png"
               alt="EventFold"
@@ -64,22 +64,22 @@ export default function Home() {
       </nav>
 
       {/* Hero Section */}
-      <main className="relative pt-32 pb-24 overflow-hidden">
+      <main className="relative pt-12 pb-16 overflow-hidden">
         <div className="max-w-7xl mx-auto px-8">
-          <div className="flex flex-col items-center text-center gap-12">
+          <div className="flex flex-col items-center text-center gap-6">
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.8 }}
               className="max-w-3xl"
             >
-              <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-primary/10 border border-primary/20 text-primary text-[10px] font-bold tracking-[0.2em] uppercase mb-8">
+              <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-primary/10 border border-primary/20 text-primary text-[10px] font-bold tracking-[0.2em] uppercase mb-4">
                 <Sparkles className="w-3 h-3" /> The Modern Standard for Wedding Studios
               </div>
-              <h1 className="text-5xl md:text-7xl lg:text-8xl font-display font-bold leading-[1.0] mb-8 tracking-tighter">
+              <h1 className="text-5xl md:text-7xl lg:text-8xl font-display font-bold leading-[1.0] mb-4 tracking-tighter">
                 Breathtaking <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary to-indigo-400">3D Digital</span> Albums.
               </h1>
-              <p className="text-lg md:text-xl text-white/50 mb-12 leading-relaxed max-w-2xl mx-auto">
+              <p className="text-lg md:text-xl text-white/50 mb-8 leading-relaxed max-w-2xl mx-auto">
                 Transform your paper albums into a stunning interactive 3D experience. Upload your first album for <strong>free</strong> and wow your clients today.
               </p>
 
