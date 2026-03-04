@@ -67,7 +67,17 @@ export default function Viewer() {
   const [zoom, setZoom] = useState(1);
   const [settings, setSettings] = useState<any>(null);
 
+  const [isPortrait, setIsPortrait] = useState(false);
   const splitUrlsRef = useRef<string[]>([]);
+
+  useEffect(() => {
+    const checkOrientation = () => {
+      setIsPortrait(window.innerHeight > window.innerWidth && window.innerWidth < 1024);
+    };
+    checkOrientation();
+    window.addEventListener('resize', checkOrientation);
+    return () => window.removeEventListener('resize', checkOrientation);
+  }, []);
 
   useEffect(() => {
     return () => {
@@ -192,7 +202,7 @@ export default function Viewer() {
       </div>
 
       <div className="flex items-center gap-2 pointer-events-auto">
-        {settings?.contactWhatsApp && (
+        {settings?.contactWhatsApp && window.innerWidth >= 1024 && (
           <Button
             onClick={() => window.open(`https://wa.me/${settings.contactWhatsApp.replace(/[^0-9]/g, '')}`, '_blank')}
             className="rounded-xl h-11 bg-green-500 hover:bg-green-600 text-white border-none shadow-lg shadow-green-500/20 px-5 font-bold"
@@ -412,6 +422,41 @@ export default function Viewer() {
           businessName={settings?.businessName}
           videos={loadedVideos}
         />
+
+        {/* Rotate Overlay */}
+        <AnimatePresence>
+          {isPortrait && (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="fixed inset-0 z-[200] bg-background/95 backdrop-blur-xl flex flex-col items-center justify-center p-8 text-center"
+            >
+              <div className="relative mb-8">
+                <motion.div
+                  animate={{ rotate: 90 }}
+                  transition={{ duration: 1.5, repeat: Infinity, repeatType: "reverse", ease: "easeInOut" }}
+                  className="p-6 bg-primary/20 rounded-[2rem] text-primary"
+                >
+                  <Smartphone className="w-16 h-16" />
+                </motion.div>
+                <motion.div
+                  animate={{ opacity: [0, 1, 0] }}
+                  transition={{ duration: 1.5, repeat: Infinity }}
+                  className="absolute -top-4 -right-4 w-6 h-6 bg-primary rounded-full blur-md"
+                />
+              </div>
+              <h2 className="text-3xl font-display font-bold mb-4">Cinematic View Ready</h2>
+              <p className="text-white/40 text-lg leading-relaxed max-w-sm mb-8">
+                Please <span className="text-white font-bold">rotate your device</span> to landscape for the full immersive 3D experience.
+              </p>
+              <div className="flex items-center gap-3 px-6 py-3 bg-white/5 rounded-2xl border border-white/10 text-xs font-bold uppercase tracking-widest opacity-60">
+                <div className="w-2 h-2 rounded-full bg-primary animate-pulse" />
+                Live Orientation Tracking
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
       </main>
     </div>
   );

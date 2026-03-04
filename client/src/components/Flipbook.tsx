@@ -125,11 +125,15 @@ export function Flipbook({ sheets, frontCover, backCover, title = 'Photo Album',
       const multiplier = 2;
 
       // Vertical space usage: be more aggressive on mobile
-      const verticalPadding = isMobile ? 120 : 180;
-      const horizontalPadding = isMobile ? 10 : 120; // Thinner padding for mobile to fit side buttons
+      const verticalPadding = isMobile ? 180 : 220; // Increased padding to avoid header/footer overlap
+      const horizontalPadding = isMobile ? 40 : 120; // Thinner padding for mobile to fit side buttons
 
       let availW = screenW - horizontalPadding;
       let availH = screenH - verticalPadding;
+
+      // Ensure we don't have negative availability
+      availW = Math.max(availW, 200);
+      availH = Math.max(availH, 150);
 
       let w = availW / multiplier;
       let h = w / PAGE_RATIO;
@@ -283,8 +287,8 @@ export function Flipbook({ sheets, frontCover, backCover, title = 'Photo Album',
   return (
     <div className="relative w-full flex-1 flex flex-col items-center justify-center bg-transparent overflow-hidden" style={{ minHeight: 0 }}>
 
-      {/* ── Controls Bar ── */}
-      <div className="absolute top-6 z-50 flex gap-2 glass-dark px-4 py-2 rounded-2xl border-white/5 shadow-2xl">
+      {/* ── Controls Bar (Moved to bottom above navigation for better visibility) ── */}
+      <div className="absolute bottom-24 z-50 flex gap-2 glass-dark px-4 py-2 rounded-2xl border-white/5 shadow-2xl scale-90 md:scale-100">
         <Button variant="ghost" size="icon" onClick={handleZoomOut} title="Zoom out" className="text-white/60 hover:text-white hover:bg-white/10 rounded-xl w-10 h-10"><ZoomOut className="w-5 h-5" /></Button>
         <div className="flex items-center px-3 text-white/90 text-sm font-bold min-w-[3.5rem] justify-center tracking-tighter">{Math.round(zoom * 100)}%</div>
         <Button variant="ghost" size="icon" onClick={handleZoomIn} title="Zoom in" className="text-white/60 hover:text-white hover:bg-white/10 rounded-xl w-10 h-10"><ZoomIn className="w-5 h-5" /></Button>
@@ -610,9 +614,9 @@ export function Flipbook({ sheets, frontCover, backCover, title = 'Photo Album',
               initial={{ opacity: 0, scale: 0.5, y: 100 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               transition={{ delay: 1, duration: 0.8 }}
-              className="absolute bottom-8 right-8 z-[100] flex flex-col items-end gap-3"
+              className="absolute bottom-6 right-6 z-[100] flex flex-col items-end gap-3"
             >
-              <div className="bg-black/60 backdrop-blur-xl border border-white/10 p-4 rounded-3xl shadow-2xl max-w-[200px] hidden lg:block">
+              <div className="bg-black/60 backdrop-blur-xl border border-white/10 p-4 rounded-3xl shadow-2xl max-w-[200px] hidden xl:block">
                 <p className="text-[10px] font-bold text-primary uppercase tracking-widest mb-1">Inquiry Hub</p>
                 <p className="text-[10px] text-white/50 leading-relaxed font-medium capitalize">
                   Love these photos? Contact <span className="text-white font-bold">{businessName || 'the Studio'}</span> for your next event.
@@ -621,7 +625,7 @@ export function Flipbook({ sheets, frontCover, backCover, title = 'Photo Album',
 
               <Button
                 onClick={() => window.open(`https://wa.me/${contactWhatsApp.replace(/[^0-9]/g, '')}?text=Hi! I saw your work on EventFold and I'm interested in booking for an event.`, '_blank')}
-                className="w-14 h-14 rounded-full bg-green-500 hover:bg-green-600 text-white shadow-[0_0_30px_rgba(34,197,94,0.4)] transition-all hover:scale-110 active:scale-95 border-none p-0 group"
+                className="w-12 h-12 md:w-14 md:h-14 rounded-full bg-green-500 hover:bg-green-600 text-white shadow-[0_0_30px_rgba(34,197,94,0.4)] transition-all hover:scale-110 active:scale-95 border-none p-0 group"
               >
                 <span className="relative">
                   <MessageCircle className="w-6 h-6 group-hover:rotate-12 transition-transform" />
