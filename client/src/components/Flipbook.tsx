@@ -126,8 +126,8 @@ export function Flipbook({
 
       // Vertical space usage: be more aggressive on mobile
       const isLandscape = screenW > screenH;
-      const verticalPadding = isMobile ? (isLandscape ? 20 : 140) : 220;
-      const horizontalPadding = isMobile ? (isLandscape ? 60 : 40) : 120;
+      const verticalPadding = isMobile ? (isLandscape ? 20 : 140) : 320; // Increased PC padding (from 220 to 320)
+      const horizontalPadding = isMobile ? (isLandscape ? 60 : 40) : 240; // Increased PC padding (from 120 to 240)
 
       let availW = screenW - horizontalPadding;
       let availH = screenH - verticalPadding;
