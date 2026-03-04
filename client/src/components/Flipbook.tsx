@@ -15,6 +15,9 @@ interface FlipbookProps {
   uiVisible?: boolean;
   contactWhatsApp?: string;
   businessName?: string;
+  isMuted?: boolean;
+  isSlideshowActive?: boolean;
+  onSlideshowEnd?: () => void;
 }
 
 export function Flipbook({
@@ -26,17 +29,18 @@ export function Flipbook({
   contactWhatsApp,
   businessName,
   videos = [],
-  uiVisible = true
+  uiVisible = true,
+  isMuted = false,
+  isSlideshowActive = false,
+  onSlideshowEnd
 }: FlipbookProps) {
   const book = useRef<any>(null);
   const container = useRef<HTMLDivElement>(null);
-  const [isMuted, setIsMuted] = useState(false);
   const [pageWidth, setPageWidth] = useState(360);
   const [pageHeight, setPageHeight] = useState(240);
   const [ready, setReady] = useState(false);
   const [isOpened, setIsOpened] = useState(false);
   const [isFullscreen, setIsFullscreen] = useState(false);
-  const [isSlideshowActive, setIsSlideshowActive] = useState(false);
   const [currentPage, setCurrentPage] = useState(0);
   const slideshowTimer = useRef<NodeJS.Timeout | null>(null);
   const totalPageCount = 2 + sheets.length; // Front + Back + Sheets
@@ -178,9 +182,7 @@ export function Flipbook({
     return () => document.removeEventListener('fullscreenchange', handleFsChange);
   }, []);
 
-  const toggleSlideshow = () => {
-    setIsSlideshowActive(!isSlideshowActive);
-  };
+
 
   useEffect(() => {
     if (isSlideshowActive) {
@@ -191,7 +193,7 @@ export function Flipbook({
             book.current.pageFlip().flipNext();
             // If we reached the end, stop slideshow
             if (currentPage >= totalPageCount - 1) {
-              setIsSlideshowActive(false);
+              onSlideshowEnd?.();
             }
           }
         }

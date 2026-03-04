@@ -76,6 +76,8 @@ export default function Viewer() {
   const [isPortrait, setIsPortrait] = useState(false);
   const [isSmallHeight, setIsSmallHeight] = useState(false);
   const [uiVisible, setUiVisible] = useState(true);
+  const [isMuted, setIsMuted] = useState(false);
+  const [isSlideshowActive, setIsSlideshowActive] = useState(false);
   const splitUrlsRef = useRef<string[]>([]);
 
   useEffect(() => {
@@ -499,6 +501,9 @@ export default function Viewer() {
                     businessName={settings?.businessName}
                     videos={loadedVideos}
                     uiVisible={uiVisible}
+                    isMuted={isMuted}
+                    isSlideshowActive={isSlideshowActive}
+                    onSlideshowEnd={() => setIsSlideshowActive(false)}
                   />
                 </div>
               </TransformComponent>
@@ -518,6 +523,30 @@ export default function Viewer() {
                 <Button variant="ghost" size="icon" onClick={() => zoomIn()} title="Zoom in" className="text-white/60 hover:text-white hover:bg-white/10 rounded-xl w-8 h-8 md:w-10 md:h-10"><ZoomIn className="w-4 h-4 md:w-5 h-5" /></Button>
                 <div className="w-px h-6 bg-white/10 mx-1 md:mx-2 self-center" />
                 <Button variant="ghost" size="icon" onClick={() => resetTransform()} title="Reset" className="text-white/60 hover:text-white hover:bg-white/10 rounded-xl w-8 h-8 md:w-10 md:h-10"><RotateCcw className="w-4 h-4 md:w-5 h-5" /></Button>
+                <div className="w-px h-6 bg-white/10 mx-1 md:mx-2 self-center" />
+
+                {/* Music Toggle */}
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={() => setIsMuted(!isMuted)}
+                  title={isMuted ? "Unmute" : "Mute"}
+                  className={`${isMuted ? 'text-white/30' : 'text-primary animate-pulse'} hover:bg-white/10 rounded-xl w-8 h-8 md:w-10 md:h-10`}
+                >
+                  {isMuted ? <VolumeX className="w-4 h-4 md:w-5 h-5" /> : <Volume2 className="w-4 h-4 md:w-5 h-5" />}
+                </Button>
+
+                {/* Slideshow Toggle */}
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={() => setIsSlideshowActive(!isSlideshowActive)}
+                  title={isSlideshowActive ? "Stop Slideshow" : "Start Slideshow"}
+                  className={`${isSlideshowActive ? 'text-primary' : 'text-white/60'} hover:bg-white/10 rounded-xl w-8 h-8 md:w-10 md:h-10`}
+                >
+                  {isSlideshowActive ? <Pause className="w-4 h-4 md:w-5 h-5" /> : <Play className="w-4 h-4 md:w-5 h-5" />}
+                </Button>
+
                 <div className="w-px h-6 bg-white/10 mx-1 md:mx-2 self-center" />
                 <Button variant="ghost" size="icon" onClick={() => {
                   if (!document.fullscreenElement) {
