@@ -193,10 +193,10 @@ export default function Dashboard() {
                                     <style>
                                       body { margin: 0; background: #fafafa; display: flex; align-items: center; justify-content: center; min-height: 100vh; font-family: 'Lato', sans-serif; -webkit-print-color-adjust: exact; }
                                       .card { 
-                                        width: 800px; 
-                                        height: 1200px; 
+                                        width: 500px; 
+                                        height: 750px; 
                                         background: white; 
-                                        padding: 80px; 
+                                        padding: 40px; 
                                         display: flex; 
                                         flex-direction: column; 
                                         align-items: center; 
@@ -204,45 +204,45 @@ export default function Dashboard() {
                                         text-align: center; 
                                         box-sizing: border-box; 
                                         position: relative;
-                                        box-shadow: 0 40px 100px rgba(0,0,0,0.1);
+                                        box-shadow: 0 20px 50px rgba(0,0,0,0.1);
                                       }
                                       .luxury-border { 
                                         position: absolute; 
-                                        inset: 30px; 
+                                        inset: 20px; 
                                         border: 1px solid #d4af37; 
                                         pointer-events: none;
                                       }
                                       .luxury-border::after {
                                         content: '';
                                         position: absolute;
-                                        inset: 5px;
-                                        border: 3px solid #d4af37;
+                                        inset: 3px;
+                                        border: 2px solid #d4af37;
                                         clip-path: polygon(0 0, 30% 0, 30% 1%, 1% 1%, 1% 30%, 0 30%, 0 0, 70% 0, 70% 1%, 99% 1%, 99% 30%, 100% 30%, 100% 0, 100% 70%, 99% 70%, 99% 99%, 70% 99%, 70% 100%, 100% 100%, 0 100%, 0 70%, 1% 70%, 1% 99%, 30% 99%, 30% 100%, 0 100%);
                                       }
-                                      .header { margin-top: 40px; }
-                                      .logo { height: 80px; margin-bottom: 40px; }
-                                      .divider { width: 100px; h: 2px; background: linear-gradient(to right, transparent, #d4af37, transparent); margin: 30px auto; }
-                                      .title { font-family: 'Cinzel', serif; font-size: 52px; font-weight: 700; color: #1a1a1a; letter-spacing: 2px; text-transform: uppercase; margin-bottom: 15px; }
-                                      .subtitle { font-family: 'Playfair Display', serif; font-size: 22px; font-style: italic; color: #d4af37; margin-bottom: 60px; }
-                                      .qr-section { position: relative; padding: 40px; }
+                                      .header { margin-top: 20px; }
+                                      .logo { height: 60px; margin-bottom: 20px; }
+                                      .divider { width: 80px; height: 1px; background: linear-gradient(to right, transparent, #d4af37, transparent); margin: 20px auto; }
+                                      .title { font-family: 'Cinzel', serif; font-size: 36px; font-weight: 700; color: #1a1a1a; letter-spacing: 1px; text-transform: uppercase; margin-bottom: 10px; }
+                                      .subtitle { font-family: 'Playfair Display', serif; font-size: 16px; font-style: italic; color: #d4af37; margin-bottom: 30px; }
+                                      .qr-section { position: relative; padding: 20px; }
                                       .qr-frame { 
-                                        padding: 30px; 
+                                        padding: 20px; 
                                         background: white; 
-                                        border-radius: 40px; 
-                                        box-shadow: 0 20px 60px rgba(212, 175, 55, 0.15);
-                                        border: 2px solid #fcfaf0;
+                                        border-radius: 20px; 
+                                        box-shadow: 0 10px 30px rgba(212, 175, 55, 0.1);
+                                        border: 1px solid #fcfaf0;
                                       }
                                       .instruction { 
                                         font-family: 'Cinzel', serif;
-                                        font-size: 20px; 
+                                        font-size: 16px; 
                                         color: #444; 
-                                        letter-spacing: 4px; 
+                                        letter-spacing: 2px; 
                                         text-transform: uppercase;
-                                        margin-top: 60px;
+                                        margin-top: 30px;
                                       }
-                                      .scan-hint { font-size: 14px; color: #999; margin-top: 10px; font-weight: 300; }
-                                      .footer { margin-bottom: 40px; }
-                                      .branding { font-size: 12px; letter-spacing: 5px; color: #ccc; text-transform: uppercase; }
+                                      .scan-hint { font-size: 12px; color: #999; margin-top: 8px; font-weight: 300; }
+                                      .footer { margin-bottom: 20px; }
+                                      .branding { font-size: 10px; letter-spacing: 3px; color: #ccc; text-transform: uppercase; }
                                       @media print { 
                                         body { background: white; padding: 0; }
                                         .card { box-shadow: none; border: none; width: 100%; height: 100vh; }
@@ -251,7 +251,7 @@ export default function Dashboard() {
                                     </style>
                                   </head>
                                   <body>
-                                    <div class="card">
+                                    <div class="card" id="luxury-card">
                                       <div class="luxury-border"></div>
                                       <div class="header">
                                         <img src="${window.location.origin}/branding material/without bg version.png" class="logo" />
@@ -269,22 +269,39 @@ export default function Dashboard() {
                                       <div class="footer">
                                         <div class="instruction">Scan to Relive</div>
                                         <div class="scan-hint">Open Camera & Point at QR Code</div>
-                                        <div style="margin: 40px 0; h: 1px; width: 40px; background: #eee; margin-left: auto; margin-right: auto;"></div>
+                                        <div style="margin: 20px 0; height: 1px; width: 30px; background: #eee; margin-left: auto; margin-right: auto;"></div>
                                         <div class="branding">EventFold Cinematic Engine</div>
                                       </div>
                                       
-                                      <button class="no-print" style="position:fixed; top: 40px; right: 40px; padding: 15px 30px; background: #1a1a1a; color: white; border: none; border-radius: 12px; cursor: pointer; font-weight: bold; font-family: 'Lato'; box-shadow: 0 10px 30px rgba(0,0,0,0.2);" onclick="window.print()">Print Luxury Card</button>
+                                      <button class="no-print" style="position:fixed; top: 40px; right: 200px; padding: 10px 20px; background: #1a1a1a; color: white; border: none; border-radius: 10px; cursor: pointer; font-weight: bold; font-family: 'Lato'; box-shadow: 0 10px 30px rgba(0,0,0,0.2);" onclick="downloadCardImage()">Download Image</button>
+                                      <button class="no-print" style="position:fixed; top: 40px; right: 40px; padding: 10px 20px; background: #1a1a1a; color: white; border: none; border-radius: 10px; cursor: pointer; font-weight: bold; font-family: 'Lato'; box-shadow: 0 10px 30px rgba(0,0,0,0.2);" onclick="window.print()">Print Card</button>
                                     </div>
                                     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+                                    <script src="https://html2canvas.hertzen.com/dist/html2canvas.min.js"></script>
                                     <script>
                                       new QRCode(document.getElementById("qr-target"), {
                                         text: "${window.location.origin}/album/${album.id}?shared=true",
-                                        width: 320,
-                                        height: 320,
+                                        width: 200,
+                                        height: 200,
                                         colorDark : "#000000",
                                         colorLight : "#ffffff",
                                         correctLevel : QRCode.CorrectLevel.H
                                       });
+
+                                      function downloadCardImage() {
+                                        const cardElement = document.getElementById('luxury-card');
+                                        html2canvas(cardElement, {
+                                          scale: 2, // Increase scale for better quality
+                                          useCORS: true, // Important for images loaded from other origins
+                                          allowTaint: true, // Allow tainting the canvas if images are from different origin
+                                          ignoreElements: (element) => element.classList.contains('no-print') // Ignore buttons
+                                        }).then(canvas => {
+                                          const link = document.createElement('a');
+                                          link.download = 'Luxury_QR_Card_${album.title}.png';
+                                          link.href = canvas.toDataURL('image/png');
+                                          link.click();
+                                        });
+                                      }
                                     </script>
                                   </body>
                                 </html>
