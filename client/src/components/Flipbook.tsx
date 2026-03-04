@@ -234,7 +234,7 @@ export const Flipbook = forwardRef(({
   };
 
   return (
-    <div className="relative w-full flex-1 flex flex-col items-center justify-center bg-transparent lg:overflow-visible overflow-hidden" style={{ minHeight: 0 }}>
+    <div className="relative w-full flex-1 flex flex-col items-center justify-center bg-transparent overflow-visible" style={{ minHeight: 0 }}>
       {/* ── Book Container ── */}
       <div
         ref={container}

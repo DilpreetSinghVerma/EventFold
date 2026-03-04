@@ -445,8 +445,8 @@ export default function Viewer() {
       )}
 
       <main
-        className="flex-1 flex flex-col items-center justify-center relative bg-transparent overflow-hidden"
-        style={{ touchAction: 'none' }}
+        className="relative w-full flex-1 flex flex-col items-center justify-center bg-transparent lg:overflow-visible"
+        style={{ touchAction: 'none', minHeight: 0 }}
       >
         <TransformWrapper
           maxScale={window.innerWidth < 1024 ? 4 : 2}
@@ -526,7 +526,7 @@ export default function Viewer() {
                   y: uiVisible ? 0 : 100,
                   opacity: uiVisible ? 1 : 0
                 }}
-                className={`absolute ${isMobileLandscape ? 'bottom-6' : 'bottom-10'} z-[70] flex gap-1 md:gap-2 glass-dark px-3 py-1.5 md:px-4 md:py-2 rounded-2xl border-white/5 shadow-2xl scale-90 md:scale-100`}
+                className={`absolute ${isMobileLandscape ? 'bottom-20' : 'bottom-10'} z-[70] flex gap-1 md:gap-2 glass-dark px-3 py-1.5 md:px-4 md:py-2 rounded-2xl border-white/5 shadow-2xl scale-90 md:scale-100`}
               >
                 <Button variant="ghost" size="icon" onClick={() => zoomOut()} title="Zoom out" className="text-white/60 hover:text-white hover:bg-white/10 rounded-xl w-8 h-8 md:w-10 md:h-10"><ZoomOut className="w-4 h-4 md:w-5 h-5" /></Button>
                 <div className="flex items-center px-2 md:px-3 text-white/90 text-[10px] md:text-sm font-bold min-w-[2.5rem] md:min-w-[3.5rem] justify-center tracking-tighter">
