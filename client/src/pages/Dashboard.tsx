@@ -220,7 +220,7 @@ export default function Dashboard() {
                                         clip-path: polygon(0 0, 30% 0, 30% 1%, 1% 1%, 1% 30%, 0 30%, 0 0, 70% 0, 70% 1%, 99% 1%, 99% 30%, 100% 30%, 100% 0, 100% 70%, 99% 70%, 99% 99%, 70% 99%, 70% 100%, 100% 100%, 0 100%, 0 70%, 1% 70%, 1% 99%, 30% 99%, 30% 100%, 0 100%);
                                       }
                                       .header { margin-top: 20px; }
-                                      .logo { height: 60px; margin-bottom: 20px; }
+                                      .logo { height: 60px; margin-bottom: 20px; border-radius: 12px; }
                                       .divider { width: 80px; height: 1px; background: linear-gradient(to right, transparent, #d4af37, transparent); margin: 20px auto; }
                                       .title { font-family: 'Cinzel', serif; font-size: 36px; font-weight: 700; color: #1a1a1a; letter-spacing: 1px; text-transform: uppercase; margin-bottom: 10px; }
                                       .subtitle { font-family: 'Playfair Display', serif; font-size: 16px; font-style: italic; color: #d4af37; margin-bottom: 30px; }
@@ -254,7 +254,7 @@ export default function Dashboard() {
                                     <div class="card" id="luxury-card">
                                       <div class="luxury-border"></div>
                                       <div class="header">
-                                        <img src="${window.location.origin}/branding material/without bg version.png" class="logo" />
+                                        <img src="${window.location.origin}/branding material/bg version.png" class="logo" />
                                         <div class="title">${album.title}</div>
                                         <div class="subtitle">Digital Cinema Collection</div>
                                         <div class="divider"></div>
