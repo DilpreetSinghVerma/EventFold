@@ -2,7 +2,7 @@ import { Link } from 'wouter';
 import { Card, CardContent, CardFooter } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Plus, QrCode, Eye, Trash2, LayoutGrid, Calendar, LogOut, Settings as SettingsIcon, Lock, Loader2, Sparkles, User as UserIcon, Crown } from 'lucide-react';
+import { Plus, QrCode, Eye, Trash2, LayoutGrid, Calendar, LogOut, Settings as SettingsIcon, Lock, Loader2, Sparkles, User as UserIcon, Crown, Copy, Download, Share2, Check } from 'lucide-react';
 import { QRCodeSVG } from 'qrcode.react';
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -23,6 +23,7 @@ export default function Dashboard() {
   const [dbConnected, setDbConnected] = useState<boolean | null>(null);
   const [healthData, setHealthData] = useState<any>(null);
   const [settings, setSettings] = useState<any>(null);
+  const [copiedId, setCopiedId] = useState<string | null>(null);
 
   // Parse URL for success/cancel params
   const { search } = typeof window !== 'undefined' ? window.location : { search: '' };
@@ -129,76 +130,171 @@ export default function Dashboard() {
                     <DialogHeader>
                       <DialogTitle className="font-display text-center text-3xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-primary to-indigo-400">Share Memories</DialogTitle>
                     </DialogHeader>
-                    <div className="flex flex-col items-center justify-center p-8 space-y-6">
-                      <div className="p-6 bg-white rounded-[2rem] shadow-2xl shadow-primary/20">
+                    <div className="flex flex-col items-center justify-center p-8 space-y-8">
+                      <div className="p-6 bg-white rounded-[2.5rem] shadow-2xl shadow-primary/30 qr-container-target scale-110">
                         <QRCodeSVG
                           value={`${window.location.origin}/album/${album.id}?shared=true`}
-                          size={240}
+                          size={200}
                           level="H"
                           fgColor="#000000"
                         />
                       </div>
-                      <div className="text-center space-y-4">
-                        <div className="space-y-2">
-                          <p className="text-lg font-bold">{album.title}</p>
-                          <p className="text-sm text-white/40 max-w-[240px]">
-                            Scan this code to view the cinematic flipbook on any mobile device.
-                          </p>
-                        </div>
+                      <div className="flex flex-col gap-3 w-full">
+                        <Button
+                          onClick={() => {
+                            const url = `${window.location.origin}/album/${album.id}?shared=true`;
+                            navigator.clipboard.writeText(url);
+                            setCopiedId(album.id);
+                            setTimeout(() => setCopiedId(null), 2000);
+                          }}
+                          className="w-full rounded-2xl bg-white/5 hover:bg-white/10 text-white border border-white/10 h-12 flex items-center justify-center gap-2"
+                        >
+                          {copiedId === album.id ? <Check className="w-4 h-4 text-green-400" /> : <Copy className="w-4 h-4" />}
+                          {copiedId === album.id ? 'Copied Link' : 'Copy Shareable Link'}
+                        </Button>
+
+                        <Button
+                          onClick={() => {
+                            const svg = document.querySelector('.qr-container-target svg') as SVGElement;
+                            if (!svg) return;
+                            const svgData = new XMLSerializer().serializeToString(svg);
+                            const canvas = document.createElement('canvas');
+                            const ctx = canvas.getContext('2d');
+                            const img = new Image();
+                            img.onload = () => {
+                              canvas.width = 1200;
+                              canvas.height = 1200;
+                              if (ctx) {
+                                ctx.fillStyle = 'white';
+                                ctx.fillRect(0, 0, canvas.width, canvas.height);
+                                ctx.drawImage(img, 100, 100, 1000, 1000);
+                                const link = document.createElement('a');
+                                link.download = `QR-${album.title}.png`;
+                                link.href = canvas.toDataURL('image/png');
+                                link.click();
+                              }
+                            };
+                            img.src = 'data:image/svg+xml;base64,' + btoa(svgData);
+                          }}
+                          className="w-full rounded-2xl bg-white/5 hover:bg-white/10 text-white border border-white/10 h-12 flex items-center justify-center gap-2"
+                        >
+                          <Download className="w-4 h-4" /> Download QR Code
+                        </Button>
+
                         <Button
                           onClick={() => {
                             const printWindow = window.open('', '_blank');
                             if (!printWindow) return;
                             const qrCardHtml = `
-                              <html>
-                                <head>
-                                  <title>Printing Luxury Table Card - ${album.title}</title>
-                                  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&family=Lato:wght@300;400;700&display=swap" rel="stylesheet">
-                                  <style>
-                                    body { margin: 0; display: flex; align-items: center; justify-content: center; min-h-screen: 100vh; background: #fff; font-family: 'Lato', sans-serif; }
-                                    .card { width: 4in; height: 6in; border: 1px solid #eee; padding: 40px; display: flex; flex-col: column; align-items: center; justify-content: center; text-align: center; box-sizing: border-box; position: relative; }
-                                    .border-luxury { position: absolute; inset: 15px; border: 2px solid #8b5cf6; opacity: 0.1; pointer-events: none; }
-                                    .logo { height: 40px; margin-bottom: 20px; object-contain: contain; }
-                                    .title { font-family: 'Cinzel', serif; font-size: 24px; font-weight: bold; margin-bottom: 5px; color: #1a1a1a; }
-                                    .subtitle { font-size: 10px; text-transform: uppercase; letter-spacing: 2px; color: #8b5cf6; margin-bottom: 30px; font-weight: bold; }
-                                    .qr-container { padding: 20px; background: #fff; border: 1px solid #f0f0f0; border-radius: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.05); }
-                                    .instruction { margin-top: 30px; font-size: 14px; font-weight: bold; color: #333; }
-                                    .footer { margin-top: 10px; font-size: 10px; color: #999; text-transform: uppercase; letter-spacing: 1px; }
-                                    @media print { .no-print { display: none; } body { padding: 0; } .card { border: none; } }
-                                  </style>
-                                </head>
-                                <body>
-                                  <div class="card">
-                                    <div class="border-luxury"></div>
-                                    <img src="${window.location.origin}/branding material/without bg version.png" class="logo" />
-                                    <div class="title">${album.title}</div>
-                                    <div class="subtitle">Digital Cinema Collection</div>
-                                    <div class="qr-container">
-                                      <div id="qr-target"></div>
+                                <html>
+                                  <head>
+                                    <title>Premium Luxury Table Card - ${album.title}</title>
+                                    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&family=Playfair+Display:wght@400;700&family=Lato:wght@300;400&display=swap" rel="stylesheet">
+                                    <style>
+                                      body { margin: 0; background: #fafafa; display: flex; align-items: center; justify-content: center; min-height: 100vh; font-family: 'Lato', sans-serif; -webkit-print-color-adjust: exact; }
+                                      .card { 
+                                        width: 800px; 
+                                        height: 1200px; 
+                                        background: white; 
+                                        padding: 80px; 
+                                        display: flex; 
+                                        flex-direction: column; 
+                                        align-items: center; 
+                                        justify-content: space-between; 
+                                        text-align: center; 
+                                        box-sizing: border-box; 
+                                        position: relative;
+                                        box-shadow: 0 40px 100px rgba(0,0,0,0.1);
+                                      }
+                                      .luxury-border { 
+                                        position: absolute; 
+                                        inset: 30px; 
+                                        border: 1px solid #d4af37; 
+                                        pointer-events: none;
+                                      }
+                                      .luxury-border::after {
+                                        content: '';
+                                        position: absolute;
+                                        inset: 5px;
+                                        border: 3px solid #d4af37;
+                                        clip-path: polygon(0 0, 30% 0, 30% 1%, 1% 1%, 1% 30%, 0 30%, 0 0, 70% 0, 70% 1%, 99% 1%, 99% 30%, 100% 30%, 100% 0, 100% 70%, 99% 70%, 99% 99%, 70% 99%, 70% 100%, 100% 100%, 0 100%, 0 70%, 1% 70%, 1% 99%, 30% 99%, 30% 100%, 0 100%);
+                                      }
+                                      .header { margin-top: 40px; }
+                                      .logo { height: 80px; margin-bottom: 40px; }
+                                      .divider { width: 100px; h: 2px; background: linear-gradient(to right, transparent, #d4af37, transparent); margin: 30px auto; }
+                                      .title { font-family: 'Cinzel', serif; font-size: 52px; font-weight: 700; color: #1a1a1a; letter-spacing: 2px; text-transform: uppercase; margin-bottom: 15px; }
+                                      .subtitle { font-family: 'Playfair Display', serif; font-size: 22px; font-style: italic; color: #d4af37; margin-bottom: 60px; }
+                                      .qr-section { position: relative; padding: 40px; }
+                                      .qr-frame { 
+                                        padding: 30px; 
+                                        background: white; 
+                                        border-radius: 40px; 
+                                        box-shadow: 0 20px 60px rgba(212, 175, 55, 0.15);
+                                        border: 2px solid #fcfaf0;
+                                      }
+                                      .instruction { 
+                                        font-family: 'Cinzel', serif;
+                                        font-size: 20px; 
+                                        color: #444; 
+                                        letter-spacing: 4px; 
+                                        text-transform: uppercase;
+                                        margin-top: 60px;
+                                      }
+                                      .scan-hint { font-size: 14px; color: #999; margin-top: 10px; font-weight: 300; }
+                                      .footer { margin-bottom: 40px; }
+                                      .branding { font-size: 12px; letter-spacing: 5px; color: #ccc; text-transform: uppercase; }
+                                      @media print { 
+                                        body { background: white; padding: 0; }
+                                        .card { box-shadow: none; border: none; width: 100%; height: 100vh; }
+                                        .no-print { display: none; }
+                                      }
+                                    </style>
+                                  </head>
+                                  <body>
+                                    <div class="card">
+                                      <div class="luxury-border"></div>
+                                      <div class="header">
+                                        <img src="${window.location.origin}/branding material/without bg version.png" class="logo" />
+                                        <div class="title">${album.title}</div>
+                                        <div class="subtitle">Digital Cinema Collection</div>
+                                        <div class="divider"></div>
+                                      </div>
+                                      
+                                      <div class="qr-section">
+                                        <div class="qr-frame">
+                                          <div id="qr-target"></div>
+                                        </div>
+                                      </div>
+                                      
+                                      <div class="footer">
+                                        <div class="instruction">Scan to Relive</div>
+                                        <div class="scan-hint">Open Camera & Point at QR Code</div>
+                                        <div style="margin: 40px 0; h: 1px; width: 40px; background: #eee; margin-left: auto; margin-right: auto;"></div>
+                                        <div class="branding">EventFold Cinematic Engine</div>
+                                      </div>
+                                      
+                                      <button class="no-print" style="position:fixed; top: 40px; right: 40px; padding: 15px 30px; background: #1a1a1a; color: white; border: none; border-radius: 12px; cursor: pointer; font-weight: bold; font-family: 'Lato'; box-shadow: 0 10px 30px rgba(0,0,0,0.2);" onclick="window.print()">Print Luxury Card</button>
                                     </div>
-                                    <div class="instruction">Scan to Relive the Moments</div>
-                                    <div class="footer">Powered by EventFold Cinematic Engine</div>
-                                    <button class="no-print" style="position:fixed; top: 20px; right: 20px; padding: 10px 20px; background: #8b5cf6; color: white; border: none; border-radius: 10px; cursor: pointer; font-weight: bold;" onclick="window.print()">Print Card</button>
-                                  </div>
-                                  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
-                                  <script>
-                                    new QRCode(document.getElementById("qr-target"), {
-                                      text: "${window.location.origin}/album/${album.id}?shared=true",
-                                      width: 200,
-                                      height: 200,
-                                      colorDark : "#000000",
-                                      colorLight : "#ffffff",
-                                      correctLevel : QRCode.CorrectLevel.H
-                                    });
-                                  </script>
-                                </body>
-                              </html>
-                            `;
+                                    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+                                    <script>
+                                      new QRCode(document.getElementById("qr-target"), {
+                                        text: "${window.location.origin}/album/${album.id}?shared=true",
+                                        width: 320,
+                                        height: 320,
+                                        colorDark : "#000000",
+                                        colorLight : "#ffffff",
+                                        correctLevel : QRCode.CorrectLevel.H
+                                      });
+                                    </script>
+                                  </body>
+                                </html>
+                              `;
                             printWindow.document.write(qrCardHtml);
                             printWindow.document.close();
                           }}
-                          className="w-full rounded-2xl bg-primary hover:bg-primary/90 text-white font-bold h-12 shadow-lg shadow-primary/20"
+                          className="w-full rounded-2xl bg-gradient-to-r from-primary to-indigo-600 hover:from-primary/90 hover:to-indigo-600/90 text-white font-bold h-14 shadow-xl shadow-primary/20 flex items-center justify-center gap-2 group transition-all"
                         >
+                          <Crown className="w-5 h-5 group-hover:scale-110 transition-transform" />
                           Generate Luxury QR Card
                         </Button>
                       </div>
