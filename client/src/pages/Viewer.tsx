@@ -75,6 +75,7 @@ export default function Viewer() {
 
   const [isPortrait, setIsPortrait] = useState(false);
   const [isSmallHeight, setIsSmallHeight] = useState(false);
+  const [isMobileLandscape, setIsMobileLandscape] = useState(false);
   const [uiVisible, setUiVisible] = useState(true);
   const [isMuted, setIsMuted] = useState(false);
   const [isSlideshowActive, setIsSlideshowActive] = useState(false);
@@ -84,8 +85,10 @@ export default function Viewer() {
     const checkOrientation = () => {
       const portrait = window.innerHeight > window.innerWidth && window.innerWidth < 1024;
       const smallH = window.innerHeight < 500;
+      const mobileL = window.innerWidth > window.innerHeight && window.innerWidth < 1024;
       setIsPortrait(portrait);
       setIsSmallHeight(smallH);
+      setIsMobileLandscape(mobileL);
     };
     checkOrientation();
     window.addEventListener('resize', checkOrientation);
@@ -212,21 +215,21 @@ export default function Viewer() {
     <motion.div
       initial={false}
       animate={{
-        y: uiVisible ? 0 : -100,
+        y: uiVisible ? 0 : -120,
         opacity: uiVisible ? 1 : 0
       }}
-      className="absolute top-0 left-0 right-0 p-3 md:p-6 z-[60] flex items-center justify-between pointer-events-none"
+      className={`absolute top-0 left-0 right-0 ${isMobileLandscape ? 'p-2' : 'p-3 md:p-6'} z-[60] flex items-center justify-between pointer-events-none`}
     >
-      <div className={`flex items-center gap-3 md:gap-4 bg-black/60 backdrop-blur-xl border border-white/5 pointer-events-auto shadow-2xl transition-all duration-300 ${isSmallHeight || window.innerWidth >= 1024 ? 'px-5 py-2.5 rounded-2xl' : 'px-8 py-5 rounded-3xl'}`}>
+      <div className={`flex items-center gap-2 md:gap-4 bg-black/70 backdrop-blur-3xl border border-white/5 pointer-events-auto shadow-2xl transition-all duration-300 ${isSmallHeight || isMobileLandscape || window.innerWidth >= 1024 ? 'px-3 py-1.5 rounded-xl' : 'px-8 py-5 rounded-3xl'}`}>
         {settings?.businessLogo ? (
-          <img src={settings.businessLogo} alt="Logo" className={`${isSmallHeight || window.innerWidth >= 1024 ? 'h-7' : 'h-14'} w-auto rounded-lg object-contain`} />
+          <img src={settings.businessLogo} alt="Logo" className={`${isSmallHeight || isMobileLandscape || window.innerWidth >= 1024 ? 'h-5 md:h-7' : 'h-14'} w-auto rounded-lg object-contain`} />
         ) : (
-          <img src="/branding material/without bg version.png" alt="EventFold" className={`${isSmallHeight || window.innerWidth >= 1024 ? 'h-7' : 'h-12'} w-auto object-contain`} />
+          <img src="/branding material/without bg version.png" alt="EventFold" className={`${isSmallHeight || isMobileLandscape || window.innerWidth >= 1024 ? 'h-5 md:h-7' : 'h-12'} w-auto object-contain`} />
         )}
-        {!(isSmallHeight || window.innerWidth >= 1024) && <div className="w-px h-6 bg-white/10 mx-1" />}
+        {!(isSmallHeight || isMobileLandscape || window.innerWidth >= 1024) && <div className="w-px h-6 bg-white/10 mx-1" />}
         <div className="flex flex-col">
-          {!(isSmallHeight || window.innerWidth >= 1024) && <span className="text-[10px] text-white/40 font-bold uppercase tracking-widest leading-none mb-1">{album?.theme || 'Project'}</span>}
-          <span className={`${isSmallHeight || window.innerWidth >= 1024 ? 'text-sm' : 'text-base'} font-bold text-white tracking-tight leading-none`}>{settings?.businessName || 'EventFold Studio'}</span>
+          {!(isSmallHeight || isMobileLandscape || window.innerWidth >= 1024) && <span className="text-[10px] text-white/40 font-bold uppercase tracking-widest leading-none mb-1">{album?.theme || 'Project'}</span>}
+          <span className={`${isSmallHeight || isMobileLandscape || window.innerWidth >= 1024 ? 'text-[10px] md:text-sm' : 'text-base'} font-bold text-white tracking-tight leading-none`}>{settings?.businessName || 'EventFold Studio'}</span>
         </div>
       </div>
 

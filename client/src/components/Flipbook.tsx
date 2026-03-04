@@ -128,10 +128,10 @@ export function Flipbook({
       const PAGE_RATIO = 1.5;
       const multiplier = 2;
 
-      // Vertical space usage: be more aggressive on mobile
+      // Vertical space usage: be more aggressive on mobile landscape to clear UI
       const isLandscape = screenW > screenH;
-      const verticalPadding = isMobile ? (isLandscape ? 20 : 140) : 340; // Significant PC padding to clear header and footer
-      const horizontalPadding = isMobile ? (isLandscape ? 80 : 40) : 500; // Significant PC padding to clear side UI elements
+      const verticalPadding = isMobile ? (isLandscape ? 120 : 140) : 340; // Increased mobile landscape padding from 20 to 120
+      const horizontalPadding = isMobile ? (isLandscape ? 160 : 40) : 500; // Increased mobile landscape padding from 80 to 160 to clear side arrows
 
       let availW = screenW - horizontalPadding;
       let availH = screenH - verticalPadding;
@@ -405,20 +405,20 @@ export function Flipbook({
 
 
 
-      <div className="md:hidden absolute inset-y-0 left-0 w-12 flex items-center justify-start pl-2 z-50 pointer-events-none">
+      <div className="md:hidden absolute inset-y-0 left-0 w-10 flex items-center justify-start z-50 pointer-events-none">
         <Button
           onClick={() => { playFlipSound(); book.current?.pageFlip().flipPrev(); }}
-          className="rounded-full w-10 h-10 bg-black/40 backdrop-blur-md text-white border border-white/10 p-0 pointer-events-auto"
+          className="rounded-full w-8 h-8 md:w-10 md:h-10 bg-black/40 backdrop-blur-md text-white/80 border border-white/5 p-0 pointer-events-auto shadow-xl"
         >
-          <ChevronLeft className="w-6 h-6" />
+          <ChevronLeft className="w-5 h-5 md:w-6 md:h-6" />
         </Button>
       </div>
-      <div className="md:hidden absolute inset-y-0 right-0 w-12 flex items-center justify-end pr-2 z-50 pointer-events-none">
+      <div className="md:hidden absolute inset-y-0 right-0 w-10 flex items-center justify-end z-50 pointer-events-none">
         <Button
           onClick={() => { playFlipSound(); book.current?.pageFlip().flipNext(); }}
-          className="rounded-full w-10 h-10 bg-black/40 backdrop-blur-md text-white border border-white/10 p-0 pointer-events-auto"
+          className="rounded-full w-8 h-8 md:w-10 md:h-10 bg-black/40 backdrop-blur-md text-white/80 border border-white/5 p-0 pointer-events-auto shadow-xl"
         >
-          <ChevronRight className="w-6 h-6" />
+          <ChevronRight className="w-5 h-5 md:w-6 md:h-6" />
         </Button>
       </div>
 
@@ -427,7 +427,7 @@ export function Flipbook({
           y: uiVisible ? 0 : 100,
           opacity: uiVisible ? 1 : 0
         }}
-        className="absolute bottom-5 z-[80] flex items-center gap-6"
+        className={`absolute ${window.innerWidth < 1024 && window.innerWidth > window.innerHeight ? 'bottom-2' : 'bottom-5'} z-[80] flex items-center gap-6`}
       >
         <Button
           onClick={() => { playFlipSound(); book.current?.pageFlip().flipPrev(); }}
