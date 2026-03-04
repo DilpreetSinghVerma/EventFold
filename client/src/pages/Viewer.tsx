@@ -70,7 +70,8 @@ export default function Viewer() {
   const [loading, setLoading] = useState(true);
   const [loadStatus, setLoadStatus] = useState('Establishing connection…');
   const [copied, setCopied] = useState(false);
-  const [zoom, setZoom] = useState(1);
+  const [scale, setScale] = useState(1);
+  const flipbookRef = useRef<any>(null);
   const [settings, setSettings] = useState<any>(null);
 
   const [isPortrait, setIsPortrait] = useState(false);
@@ -448,11 +449,10 @@ export default function Viewer() {
         style={{ touchAction: 'none' }}
       >
         <TransformWrapper
-          initialScale={1}
-          minScale={1}
           maxScale={window.innerWidth < 1024 ? 4 : 2}
           disabled={false}
           centerOnInit={true}
+          onTransformed={(ref) => setScale(ref.state.scale)}
           wheel={{ step: 0.1, disabled: window.innerWidth >= 1024 }}
           doubleClick={{ disabled: false }}
           pinch={{ disabled: false }}
@@ -482,6 +482,7 @@ export default function Viewer() {
                   className="w-full h-full flex items-center justify-center lg:overflow-visible"
                 >
                   <Flipbook
+                    ref={flipbookRef}
                     sheets={loadedSheets}
                     frontCover={loadedFrontCover}
                     backCover={loadedBackCover}
@@ -497,6 +498,28 @@ export default function Viewer() {
                 </div>
               </TransformComponent>
 
+              {/* Safe-Zone Navigation Arrows (Always at screen edges, non-overlapping) */}
+              <div className="absolute inset-y-0 left-0 w-16 md:w-24 flex items-center justify-center z-[100] pointer-events-none">
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={() => flipbookRef.current?.prev()}
+                  className="w-10 h-10 md:w-14 md:h-14 rounded-full bg-black/40 backdrop-blur-md text-white/60 hover:text-white hover:bg-black/60 border border-white/5 pointer-events-auto transition-all shadow-2xl"
+                >
+                  <ChevronLeft className="w-6 h-6 md:w-8 md:h-8" />
+                </Button>
+              </div>
+              <div className="absolute inset-y-0 right-0 w-16 md:w-24 flex items-center justify-center z-[100] pointer-events-none">
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={() => flipbookRef.current?.next()}
+                  className="w-10 h-10 md:w-14 md:h-14 rounded-full bg-black/40 backdrop-blur-md text-white/60 hover:text-white hover:bg-black/60 border border-white/5 pointer-events-auto transition-all shadow-2xl"
+                >
+                  <ChevronRight className="w-6 h-6 md:w-8 md:h-8" />
+                </Button>
+              </div>
+
               {/* Floating Zoom Controls (Responsive - Now visible on both) */}
               <motion.div
                 animate={{
@@ -507,7 +530,7 @@ export default function Viewer() {
               >
                 <Button variant="ghost" size="icon" onClick={() => zoomOut()} title="Zoom out" className="text-white/60 hover:text-white hover:bg-white/10 rounded-xl w-8 h-8 md:w-10 md:h-10"><ZoomOut className="w-4 h-4 md:w-5 h-5" /></Button>
                 <div className="flex items-center px-2 md:px-3 text-white/90 text-[10px] md:text-sm font-bold min-w-[2.5rem] md:min-w-[3.5rem] justify-center tracking-tighter">
-                  {Math.round((rest.instance.transformState.scale || 1) * 100)}%
+                  {Math.round((scale || 1) * 100)}%
                 </div>
                 <Button variant="ghost" size="icon" onClick={() => zoomIn()} title="Zoom in" className="text-white/60 hover:text-white hover:bg-white/10 rounded-xl w-8 h-8 md:w-10 md:h-10"><ZoomIn className="w-4 h-4 md:w-5 h-5" /></Button>
                 <div className="w-px h-6 bg-white/10 mx-1 md:mx-2 self-center" />

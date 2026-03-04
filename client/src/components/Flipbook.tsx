@@ -1,4 +1,4 @@
-import React, { useRef, useState, useEffect } from 'react';
+import React, { useRef, useState, useEffect, forwardRef, useImperativeHandle } from 'react';
 import HTMLFlipBook from 'react-pageflip';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ChevronLeft, ChevronRight, Volume2, VolumeX, ZoomIn, ZoomOut, RotateCcw, Maximize2, Play, Pause, MessageCircle } from 'lucide-react';
@@ -20,7 +20,7 @@ interface FlipbookProps {
   onSlideshowEnd?: () => void;
 }
 
-export function Flipbook({
+export const Flipbook = forwardRef(({
   sheets,
   frontCover,
   backCover,
@@ -33,8 +33,14 @@ export function Flipbook({
   isMuted = false,
   isSlideshowActive = false,
   onSlideshowEnd
-}: FlipbookProps) {
+}: FlipbookProps, ref) => {
   const book = useRef<any>(null);
+
+  useImperativeHandle(ref, () => ({
+    next: () => book.current?.pageFlip().flipNext(),
+    prev: () => book.current?.pageFlip().flipPrev()
+  }));
+
   const container = useRef<HTMLDivElement>(null);
   const [pageWidth, setPageWidth] = useState(360);
   const [pageHeight, setPageHeight] = useState(240);
@@ -420,4 +426,4 @@ export function Flipbook({
       </motion.div>
     </div>
   );
-}
+});
