@@ -299,38 +299,7 @@ export function Flipbook({
   return (
     <div className="relative w-full flex-1 flex flex-col items-center justify-center bg-transparent overflow-hidden" style={{ minHeight: 0 }}>
 
-      {/* ── Controls Bar (Moved to bottom above navigation for better visibility) ── */}
-      <motion.div
-        animate={{
-          y: uiVisible ? 0 : 100,
-          opacity: uiVisible ? 1 : 0
-        }}
-        className="absolute bottom-24 z-50 flex gap-1 md:gap-2 glass-dark px-3 py-1.5 md:px-4 md:py-2 rounded-2xl border-white/5 shadow-2xl scale-90 md:scale-100"
-      >
-        <Button variant="ghost" size="icon" onClick={handleZoomOut} title="Zoom out" className="text-white/60 hover:text-white hover:bg-white/10 rounded-xl w-8 h-8 md:w-10 md:h-10"><ZoomOut className="w-4 h-4 md:w-5 h-5" /></Button>
-        <div className="flex items-center px-2 md:px-3 text-white/90 text-[10px] md:text-sm font-bold min-w-[2.5rem] md:min-w-[3.5rem] justify-center tracking-tighter">{Math.round(zoom * 100)}%</div>
-        <Button variant="ghost" size="icon" onClick={handleZoomIn} title="Zoom in" className="text-white/60 hover:text-white hover:bg-white/10 rounded-xl w-8 h-8 md:w-10 md:h-10"><ZoomIn className="w-4 h-4 md:w-5 h-5" /></Button>
-        <div className="w-px h-6 bg-white/10 mx-1 md:mx-2 self-center" />
-        <Button variant="ghost" size="icon" onClick={handleZoomReset} title="Reset zoom" className="text-white/60 hover:text-white hover:bg-white/10 rounded-xl w-8 h-8 md:w-10 md:h-10"><RotateCcw className="w-4 h-4 md:w-5 h-5" /></Button>
-        <Button variant="ghost" size="icon" onClick={toggleFullscreen} title="Toggle Fullscreen" className="text-white/60 hover:text-white hover:bg-white/10 rounded-xl w-8 h-8 md:w-10 md:h-10">
-          {isFullscreen ? <Minimize className="w-4 h-4 md:w-5 h-5" /> : <Maximize className="w-4 h-4 md:w-5 h-5" />}
-        </Button>
-        <div className="w-px h-6 bg-white/10 mx-1 md:mx-2 self-center" />
-        <Button variant="ghost" size="icon" onClick={toggleSlideshow} title={isSlideshowActive ? "Pause Slideshow" : "Play Slideshow"} className={`text-white/60 hover:text-white hover:bg-white/10 rounded-xl w-8 h-8 md:w-10 md:h-10 ${isSlideshowActive ? 'bg-primary/20 text-primary' : ''}`}>
-          {isSlideshowActive ? <Pause className="w-4 h-4 md:w-5 h-5" /> : <Play className="w-4 h-4 md:w-5 h-5" />}
-        </Button>
-        <Button
-          variant="ghost"
-          size="icon"
-          onClick={() => {
-            setIsMuted(!isMuted);
-          }}
-          title="Toggle sound"
-          className={`text-white/60 hover:text-white hover:bg-white/10 rounded-xl w-8 h-8 md:w-10 md:h-10 ${!isMuted && isOpened ? 'text-primary animate-pulse' : ''}`}
-        >
-          {isMuted ? <VolumeX className="w-4 h-4 md:w-5 h-5" /> : <Volume2 className="w-4 h-4 md:w-5 h-5" />}
-        </Button>
-      </motion.div>
+      {/* ── Controls Bar REMOVED (Controlled by Viewer for Pinch/Zoom) ── */}
 
       {/* ── Book Container ── */}
       <div
@@ -455,8 +424,8 @@ export function Flipbook({
               usePortrait={false}
               startZIndex={0}
               autoSize={false}
-              clickEventForward={window.innerWidth >= 768}
-              useMouseEvents={false}
+              clickEventForward={true} // Always forward clicks for smooth flipping
+              useMouseEvents={true}
               swipeDistance={30}
               showPageCorners={true}
               disableFlipByClick={false}
@@ -678,7 +647,7 @@ export function Flipbook({
           y: uiVisible ? 0 : 100,
           opacity: uiVisible ? 1 : 0
         }}
-        className="absolute bottom-5 z-40 flex items-center gap-6"
+        className="absolute bottom-5 z-[80] flex items-center gap-6"
       >
         <Button
           onClick={() => { playFlipSound(); book.current?.pageFlip().flipPrev(); }}
