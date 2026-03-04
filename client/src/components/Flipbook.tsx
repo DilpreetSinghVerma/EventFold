@@ -226,11 +226,11 @@ export function Flipbook({
   };
 
   return (
-    <div className="relative w-full flex-1 flex flex-col items-center justify-center bg-transparent overflow-hidden" style={{ minHeight: 0 }}>
+    <div className="relative w-full flex-1 flex flex-col items-center justify-center bg-transparent lg:overflow-visible overflow-hidden" style={{ minHeight: 0 }}>
       {/* ── Book Container ── */}
       <div
         ref={container}
-        className="flex items-center justify-center w-full h-full"
+        className="flex items-center justify-center w-full h-full lg:overflow-visible"
         style={{
           perspective: '1400px',
           touchAction: 'none'
