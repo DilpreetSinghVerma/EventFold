@@ -126,8 +126,8 @@ export function Flipbook({
 
       // Vertical space usage: be more aggressive on mobile
       const isLandscape = screenW > screenH;
-      const verticalPadding = isMobile ? (isLandscape ? 20 : 140) : 220; // Reverted PC vertical padding to 220 to prevent cutting
-      const horizontalPadding = isMobile ? (isLandscape ? 60 : 40) : 320; // Increased horizontal padding for elegance without cutting row height
+      const verticalPadding = isMobile ? (isLandscape ? 20 : 140) : 340; // Significant PC padding to clear header and footer
+      const horizontalPadding = isMobile ? (isLandscape ? 80 : 40) : 500; // Significant PC padding to clear side UI elements
 
       let availW = screenW - horizontalPadding;
       let availH = screenH - verticalPadding;
