@@ -166,7 +166,7 @@ export function registerRoutes(
       const options = {
         amount: 19900, // ₹199 in paise
         currency: "INR",
-        receipt: `receipt_${Date.now()}_${userId}`,
+        receipt: `rct_${Date.now()}_${userId}`.slice(0, 40),
         notes: { userId, type: 'credit' }
       };
 
@@ -193,7 +193,7 @@ export function registerRoutes(
       const options = {
         amount,
         currency: "INR",
-        receipt: `receipt_${Date.now()}_${user.id}`,
+        receipt: `rct_${Date.now()}_${user.id}`.slice(0, 40),
         notes: { userId: user.id, type: 'subscription', plan }
       };
 
