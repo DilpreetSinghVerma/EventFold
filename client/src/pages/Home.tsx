@@ -15,7 +15,7 @@ import demoSheet2L from '@assets/demo_album/sheet2_l.png';
 import demoSheet2R from '@assets/demo_album/sheet2_r.png';
 
 export default function Home() {
-  const { user, startStripeCheckout } = useAuth();
+  const { user, startStripeCheckout, buyAlbumCredit } = useAuth();
   const [, setLocation] = useLocation();
 
   const handleSubscribe = (plan: string) => {
@@ -142,24 +142,22 @@ export default function Home() {
           </div>
 
           <div className="grid md:grid-cols-3 gap-8 items-start">
-            {/* Free Tier */}
-            <div className="glass p-8 rounded-[2.5rem] border-white/5 relative overflow-hidden group">
+            {/* Pay Per Album (Mid-Tier) */}
+            <div className="glass p-8 rounded-[2.5rem] border-white/5 relative overflow-hidden group hover:border-primary/20 transition-all duration-500">
               <div className="space-y-6">
-                <span className="text-[10px] font-bold uppercase tracking-[0.3em] text-white/40">Starter</span>
-                <h3 className="text-2xl font-bold">1st Album Free</h3>
-                <div className="text-4xl font-display font-bold">₹0</div>
-                <p className="text-sm text-white/40 leading-relaxed">Perfect to test our 3D cinematic engine with your first client.</p>
-                <Link href="/create">
-                  <Button className="w-full h-12 rounded-xl bg-white/5 hover:bg-white/10 text-white border border-white/10 font-bold">
-                    Start Free
-                  </Button>
-                </Link>
+                <span className="text-[10px] font-bold uppercase tracking-[0.3em] text-white/40">Pay As You Go</span>
+                <h3 className="text-2xl font-bold">Standard Credit</h3>
+                <div className="text-4xl font-display font-bold">₹199</div>
+                <p className="text-sm text-white/40 leading-relaxed">Perfect for single events. High-resolution textures and 1 year of cloud storage included.</p>
+                <Button onClick={() => user ? buyAlbumCredit() : setLocation('/login')} className="w-full h-12 rounded-xl bg-white/5 hover:bg-white/10 text-white border border-white/10 font-bold">
+                  Buy 1 Credit
+                </Button>
               </div>
             </div>
 
             {/* Pro Monthly */}
             <div className="p-8 rounded-[2.5rem] bg-gradient-to-b from-primary/20 to-indigo-600/10 border border-primary/40 relative shadow-2xl overflow-hidden scale-105 z-10">
-              <div className="absolute top-4 left-1/2 -translate-x-1/2 px-4 py-1 bg-primary rounded-full text-[10px] font-bold uppercase tracking-widest shadow-xl">Best for Studios</div>
+              <div className="absolute top-4 left-1/2 -translate-x-1/2 px-4 py-1 bg-primary rounded-full text-[10px] font-bold uppercase tracking-widest shadow-xl">Most Popular</div>
               <div className="space-y-6 pt-6">
                 <span className="text-[10px] font-bold uppercase tracking-[0.3em] text-primary">Monthly Elite</span>
                 <h3 className="text-2xl font-bold">Unlimited Albums</h3>
@@ -167,25 +165,25 @@ export default function Home() {
                   <span className="text-4xl font-display font-bold">₹499</span>
                   <span className="text-sm font-medium text-white/20">/month</span>
                 </div>
-                <p className="text-sm text-white/60 leading-relaxed">Create as many wedding projects as you want. Full studio branding included.</p>
+                <p className="text-sm text-white/60 leading-relaxed">Unlimited project creation for busy studios. Full custom branding and priority syncing.</p>
                 <Button onClick={() => handleSubscribe('monthly')} className="w-full h-14 rounded-xl bg-primary hover:bg-primary/90 text-white font-bold shadow-lg shadow-primary/20">
-                  Get Unlimited Now
+                  Select Pro Monthly
                 </Button>
               </div>
             </div>
 
             {/* Yearly */}
-            <div className="glass p-8 rounded-[2.5rem] border-white/5 relative overflow-hidden group">
+            <div className="glass p-8 rounded-[2.5rem] border-white/5 relative overflow-hidden group hover:border-primary/20 transition-all duration-500">
               <div className="space-y-6">
-                <span className="text-[10px] font-bold uppercase tracking-[0.3em] text-white/40">Power Studio</span>
+                <span className="text-[10px] font-bold uppercase tracking-[0.3em] text-white/40">Best Value</span>
                 <h3 className="text-2xl font-bold">Elite Yearly</h3>
                 <div className="flex items-baseline gap-1">
                   <span className="text-4xl font-display font-bold">₹3,999</span>
                   <span className="text-sm font-medium text-white/20">/year</span>
                 </div>
-                <p className="text-sm text-white/40 leading-relaxed">Save 33% compared to monthly. Professional standard for top wedding photographers.</p>
+                <p className="text-sm text-white/40 leading-relaxed">The ultimate studio package. Includes white-labeling and lifetime storage for all albums.</p>
                 <Button onClick={() => handleSubscribe('yearly')} className="w-full h-12 rounded-xl bg-white/5 hover:bg-white/10 text-white border border-white/10 font-bold">
-                  Choose Yearly
+                  Get Elite Yearly
                 </Button>
               </div>
             </div>

@@ -8,6 +8,7 @@ interface AuthContextType {
     logout: () => void;
     startStripeCheckout: (plan?: string) => Promise<void>;
     buyAlbumCredit: () => Promise<void>;
+    startBillingPortal: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -53,6 +54,20 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         }
     };
 
+    const startBillingPortal = async () => {
+        try {
+            const res = await fetch("/api/billing/portal", { method: "POST" });
+            const data = await res.json();
+            if (data.url) {
+                window.location.href = data.url;
+            } else if (data.error) {
+                alert(data.error);
+            }
+        } catch (e) {
+            console.error("Portal access failed", e);
+        }
+    };
+
     return (
         <AuthContext.Provider
             value={{
@@ -61,6 +76,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
                 logout: () => logoutMutation.mutate(),
                 startStripeCheckout,
                 buyAlbumCredit,
+                startBillingPortal,
             }}
         >
             {children}

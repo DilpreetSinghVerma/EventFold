@@ -7,6 +7,8 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { ArrowLeft, Save, Building2, Lock, Smartphone, Globe, CheckCircle2, Loader2, Sparkles, Upload, X, ImagePlus } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useDropzone } from 'react-dropzone';
+import { useAuth } from '@/lib/auth';
+import { CreditCard, Rocket, Crown, History, ExternalLink } from 'lucide-react';
 
 export default function Settings() {
     const [, setLocation] = useLocation();
@@ -14,6 +16,8 @@ export default function Settings() {
     const [saving, setSaving] = useState(false);
     const [success, setSuccess] = useState(false);
     const [uploadingLogo, setUploadingLogo] = useState(false);
+    const { user, buyAlbumCredit, startStripeCheckout, startBillingPortal } = useAuth();
+    const [activeTab, setActiveTab] = useState<'profile' | 'billing'>('profile');
     const [settings, setSettings] = useState({
         businessName: '',
         businessLogo: '',
@@ -139,122 +143,219 @@ export default function Settings() {
                                     A high-resolution PNG logo looks best on the transparent cinematic viewer.
                                 </p>
                             </div>
+
+                            <div className="space-y-2 pt-4">
+                                <Button
+                                    variant="ghost"
+                                    onClick={() => setActiveTab('profile')}
+                                    className={`w-full justify-start rounded-xl h-12 gap-3 transition-all ${activeTab === 'profile' ? 'bg-white/10 text-white' : 'text-white/40 hover:text-white'}`}
+                                >
+                                    <Building2 className="w-4 h-4" /> Studio Identity
+                                </Button>
+                                <Button
+                                    variant="ghost"
+                                    onClick={() => setActiveTab('billing')}
+                                    className={`w-full justify-start rounded-xl h-12 gap-3 transition-all ${activeTab === 'billing' ? 'bg-white/10 text-white' : 'text-white/40 hover:text-white'}`}
+                                >
+                                    <CreditCard className="w-4 h-4" /> Billing & Plan
+                                </Button>
+                            </div>
                         </div>
 
                         {/* Profile Content */}
                         <div className="md:col-span-2 space-y-8">
-                            <Card className="glass border-white/5 overflow-hidden">
-                                <CardHeader className="bg-white/[0.02] border-b border-white/5">
-                                    <CardTitle>Studio Identity</CardTitle>
-                                    <CardDescription>Customize how your business appears to your clients.</CardDescription>
-                                </CardHeader>
-                                <CardContent className="p-8 space-y-8">
-                                    {/* Logo Upload Section */}
-                                    <div className="space-y-4">
-                                        <Label className="text-sm font-bold uppercase tracking-widest text-white/40">Studio Logo</Label>
-                                        <div className="flex flex-col sm:flex-row items-center gap-8">
-                                            <div
-                                                className={`w-24 h-24 rounded-[1.5rem] border-2 border-dashed transition-all flex items-center justify-center relative overflow-hidden group ${isDragActive ? 'border-primary bg-primary/10' : 'border-white/10 hover:border-white/20 bg-white/5'}`}
-                                                {...getRootProps()}
-                                            >
-                                                <input {...getInputProps()} />
-                                                {settings.businessLogo ? (
-                                                    <>
-                                                        <img src={settings.businessLogo} alt="Logo" className="w-full h-full object-cover" />
-                                                        <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                                                            <Upload className="w-6 h-6 text-white" />
-                                                        </div>
-                                                    </>
-                                                ) : (
-                                                    <ImagePlus className="w-8 h-8 text-white/10" />
-                                                )}
-                                                {uploadingLogo && (
-                                                    <div className="absolute inset-0 bg-black/60 flex items-center justify-center">
-                                                        <Loader2 className="w-6 h-6 text-primary animate-spin" />
-                                                    </div>
-                                                )}
-                                            </div>
-                                            <div className="flex-1 space-y-2">
-                                                <p className="text-sm font-bold">Studio Branding</p>
-                                                <p className="text-xs text-white/40 leading-relaxed">
-                                                    Drag and drop your logo file here. Supported formats: PNG, JPG, SVG. We optimize it for you.
-                                                </p>
-                                                {settings.businessLogo && (
-                                                    <Button
-                                                        variant="ghost"
-                                                        size="sm"
-                                                        className="h-8 rounded-lg text-red-400 hover:text-red-300 hover:bg-red-500/10 px-0"
-                                                        onClick={(e) => {
-                                                            e.stopPropagation();
-                                                            setSettings({ ...settings, businessLogo: '' });
-                                                        }}
+                            {activeTab === 'profile' ? (
+                                <>
+                                    <Card className="glass border-white/5 overflow-hidden">
+                                        <CardHeader className="bg-white/[0.02] border-b border-white/5">
+                                            <CardTitle>Studio Identity</CardTitle>
+                                            <CardDescription>Customize how your business appears to your clients.</CardDescription>
+                                        </CardHeader>
+                                        <CardContent className="p-8 space-y-8">
+                                            {/* Logo Upload Section */}
+                                            <div className="space-y-4">
+                                                <Label className="text-sm font-bold uppercase tracking-widest text-white/40">Studio Logo</Label>
+                                                <div className="flex flex-col sm:flex-row items-center gap-8">
+                                                    <div
+                                                        className={`w-24 h-24 rounded-[1.5rem] border-2 border-dashed transition-all flex items-center justify-center relative overflow-hidden group ${isDragActive ? 'border-primary bg-primary/10' : 'border-white/10 hover:border-white/20 bg-white/5'}`}
+                                                        {...getRootProps()}
                                                     >
-                                                        <X className="w-3 h-3 mr-2" /> Remove Logo
-                                                    </Button>
-                                                )}
+                                                        <input {...getInputProps()} />
+                                                        {settings.businessLogo ? (
+                                                            <>
+                                                                <img src={settings.businessLogo} alt="Logo" className="w-full h-full object-cover" />
+                                                                <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                                                                    <Upload className="w-6 h-6 text-white" />
+                                                                </div>
+                                                            </>
+                                                        ) : (
+                                                            <ImagePlus className="w-8 h-8 text-white/10" />
+                                                        )}
+                                                        {uploadingLogo && (
+                                                            <div className="absolute inset-0 bg-black/60 flex items-center justify-center">
+                                                                <Loader2 className="w-6 h-6 text-primary animate-spin" />
+                                                            </div>
+                                                        )}
+                                                    </div>
+                                                    <div className="flex-1 space-y-2">
+                                                        <p className="text-sm font-bold">Studio Branding</p>
+                                                        <p className="text-xs text-white/40 leading-relaxed">
+                                                            Drag and drop your logo file here. Supported formats: PNG, JPG, SVG. We optimize it for you.
+                                                        </p>
+                                                        {settings.businessLogo && (
+                                                            <Button
+                                                                variant="ghost"
+                                                                size="sm"
+                                                                className="h-8 rounded-lg text-red-400 hover:text-red-300 hover:bg-red-500/10 px-0"
+                                                                onClick={(e) => {
+                                                                    e.stopPropagation();
+                                                                    setSettings({ ...settings, businessLogo: '' });
+                                                                }}
+                                                            >
+                                                                <X className="w-3 h-3 mr-2" /> Remove Logo
+                                                            </Button>
+                                                        )}
+                                                    </div>
+                                                </div>
                                             </div>
-                                        </div>
+
+                                            <div className="space-y-4">
+                                                <Label className="text-sm font-bold uppercase tracking-widest text-white/40">Business Name</Label>
+                                                <Input
+                                                    value={settings.businessName}
+                                                    onChange={e => setSettings({ ...settings, businessName: e.target.value })}
+                                                    placeholder="e.g. Royale Photography Studio"
+                                                    className="bg-white/5 border-white/10 h-14 rounded-2xl text-lg font-medium px-6"
+                                                />
+                                            </div>
+
+                                            <div className="space-y-4">
+                                                <div className="flex items-center justify-between">
+                                                    <Label className="text-sm font-bold uppercase tracking-widest text-white/40">Contact WhatsApp</Label>
+                                                    <span className="text-[10px] text-primary font-bold uppercase tracking-widest bg-primary/10 px-2 py-0.5 rounded">Lead Gen active</span>
+                                                </div>
+                                                <div className="relative">
+                                                    <Smartphone className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-white/20" />
+                                                    <Input
+                                                        value={settings.contactWhatsApp}
+                                                        onChange={e => setSettings({ ...settings, contactWhatsApp: e.target.value })}
+                                                        placeholder="+91 98765 43210"
+                                                        className="bg-white/5 border-white/10 h-14 rounded-2xl pl-14 text-lg font-medium"
+                                                    />
+                                                </div>
+                                            </div>
+                                        </CardContent>
+                                    </Card>
+
+                                    <Card className="glass border-white/5 overflow-hidden">
+                                        <CardHeader className="bg-white/[0.02] border-b border-white/5">
+                                            <CardTitle>Management Access</CardTitle>
+                                            <CardDescription>Internal security for your studio dashboard.</CardDescription>
+                                        </CardHeader>
+                                        <CardContent className="p-8 space-y-6">
+                                            <div className="space-y-4">
+                                                <Label className="text-sm font-bold uppercase tracking-widest text-white/40">Dashboard Passcode</Label>
+                                                <div className="relative">
+                                                    <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-white/20" />
+                                                    <Input
+                                                        type="password"
+                                                        value={settings.adminPassword}
+                                                        onChange={e => setSettings({ ...settings, adminPassword: e.target.value })}
+                                                        className="bg-white/5 border-white/10 h-14 rounded-2xl pl-14 text-lg font-mono tracking-widest"
+                                                    />
+                                                </div>
+                                            </div>
+                                        </CardContent>
+                                    </Card>
+
+                                    <div className="flex justify-end pt-4">
+                                        <Button
+                                            type="submit"
+                                            disabled={saving}
+                                            className="h-16 rounded-[1.5rem] px-12 bg-primary hover:bg-primary/90 text-white font-bold text-lg transition-all shadow-xl shadow-primary/30 active:scale-95"
+                                        >
+                                            {saving ? <Loader2 className="w-5 h-5 animate-spin mr-3" /> : success ? <CheckCircle2 className="w-5 h-5 mr-3 text-white" /> : <Save className="w-5 h-5 mr-3" />}
+                                            {saving ? 'Synchronizing Profile...' : success ? 'Profile Updated' : 'Push Brand Changes'}
+                                        </Button>
+                                    </div>
+                                </>
+                            ) : (
+                                <div className="space-y-8">
+                                    <div className="grid grid-cols-2 gap-6">
+                                        <Card className="glass border-white/5 p-8 flex flex-col items-center text-center gap-4">
+                                            <div className="w-16 h-16 rounded-2xl bg-primary/10 flex items-center justify-center border border-primary/20">
+                                                <Rocket className="w-8 h-8 text-primary" />
+                                            </div>
+                                            <div>
+                                                <p className="text-xs font-bold text-white/40 uppercase tracking-widest mb-1">Current Plan</p>
+                                                <h3 className="text-2xl font-bold capitalize">{user?.plan === 'pro' ? 'Elite Unlimited' : user?.plan === 'software_pro' ? 'Studio Elite' : 'Basic Plan'}</h3>
+                                            </div>
+                                            {user?.plan === 'free' && (
+                                                <Button onClick={() => startStripeCheckout('monthly')} className="w-full rounded-xl bg-primary shadow-lg shadow-primary/20 mt-2">
+                                                    Upgrade to Unlimited
+                                                </Button>
+                                            )}
+                                        </Card>
+
+                                        <Card className="glass border-white/5 p-8 flex flex-col items-center text-center gap-4">
+                                            <div className="w-16 h-16 rounded-2xl bg-indigo-500/10 flex items-center justify-center border border-indigo-500/20">
+                                                <Sparkles className="w-8 h-8 text-indigo-400" />
+                                            </div>
+                                            <div>
+                                                <p className="text-xs font-bold text-white/40 uppercase tracking-widest mb-1">Available Credits</p>
+                                                <h3 className="text-2xl font-bold">{user?.plan === 'software_pro' || user?.plan === 'pro' ? 'Unlimited' : `${user?.credits || 0} Album Credits`}</h3>
+                                            </div>
+                                            {user?.plan === 'free' && (
+                                                <Button onClick={buyAlbumCredit} variant="outline" className="w-full rounded-xl border-white/10 hover:bg-white/5 mt-2">
+                                                    Add 1 Credit (₹199)
+                                                </Button>
+                                            )}
+                                        </Card>
                                     </div>
 
-                                    <div className="space-y-4">
-                                        <Label className="text-sm font-bold uppercase tracking-widest text-white/40">Business Name</Label>
-                                        <Input
-                                            value={settings.businessName}
-                                            onChange={e => setSettings({ ...settings, businessName: e.target.value })}
-                                            placeholder="e.g. Royale Photography Studio"
-                                            className="bg-white/5 border-white/10 h-14 rounded-2xl text-lg font-medium px-6"
-                                        />
-                                    </div>
+                                    <Card className="glass border-white/5 overflow-hidden">
+                                        <CardHeader className="bg-white/[0.02] border-b border-white/5 flex flex-row items-center justify-between">
+                                            <div>
+                                                <CardTitle>Stripe Billing Portal</CardTitle>
+                                                <CardDescription>Manage your subscriptions, payment methods, and invoices.</CardDescription>
+                                            </div>
+                                            <Button
+                                                onClick={startBillingPortal}
+                                                variant="outline"
+                                                className="rounded-xl border-white/10 hover:bg-white/5"
+                                            >
+                                                <ExternalLink className="w-4 h-4 mr-2" /> Open Portal
+                                            </Button>
+                                        </CardHeader>
+                                        <CardContent className="p-8">
+                                            <div className="flex items-start gap-4 p-6 rounded-2xl bg-[#0d0d0f] border border-white/5">
+                                                <History className="w-5 h-5 text-white/20 mt-1" />
+                                                <div className="space-y-1">
+                                                    <p className="font-bold">Automated Invoicing</p>
+                                                    <p className="text-sm text-white/40 leading-relaxed">
+                                                        Access your internal billing dashboard to download PDF invoices for your studio records. All transactions are securely processed via Stripe.
+                                                    </p>
+                                                </div>
+                                            </div>
+                                        </CardContent>
+                                    </Card>
 
-                                    <div className="space-y-4">
-                                        <div className="flex items-center justify-between">
-                                            <Label className="text-sm font-bold uppercase tracking-widest text-white/40">Contact WhatsApp</Label>
-                                            <span className="text-[10px] text-primary font-bold uppercase tracking-widest bg-primary/10 px-2 py-0.5 rounded">Lead Gen active</span>
+                                    {user?.plan !== 'pro' && user?.plan !== 'software_pro' && (
+                                        <div className="p-8 rounded-[2.5rem] bg-gradient-to-r from-primary/20 to-indigo-600/10 border border-primary/20 flex flex-col md:flex-row items-center justify-between gap-8">
+                                            <div className="space-y-2">
+                                                <div className="flex items-center gap-2">
+                                                    <Crown className="w-5 h-5 text-primary" />
+                                                    <h3 className="text-xl font-bold">Try the Elite Experience</h3>
+                                                </div>
+                                                <p className="text-sm text-white/60">Unlock unlimited albums, custom branding, and 50GB vault storage.</p>
+                                            </div>
+                                            <Button onClick={() => startStripeCheckout('monthly')} className="h-14 px-8 rounded-2xl bg-primary hover:bg-primary/90 text-white font-bold shadow-xl shadow-primary/30 shrink-0">
+                                                Upgrade Now (₹499)
+                                            </Button>
                                         </div>
-                                        <div className="relative">
-                                            <Smartphone className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-white/20" />
-                                            <Input
-                                                value={settings.contactWhatsApp}
-                                                onChange={e => setSettings({ ...settings, contactWhatsApp: e.target.value })}
-                                                placeholder="+91 98765 43210"
-                                                className="bg-white/5 border-white/10 h-14 rounded-2xl pl-14 text-lg font-medium"
-                                            />
-                                        </div>
-                                    </div>
-                                </CardContent>
-                            </Card>
-
-                            <Card className="glass border-white/5 overflow-hidden">
-                                <CardHeader className="bg-white/[0.02] border-b border-white/5">
-                                    <CardTitle>Management Access</CardTitle>
-                                    <CardDescription>Internal security for your studio dashboard.</CardDescription>
-                                </CardHeader>
-                                <CardContent className="p-8 space-y-6">
-                                    <div className="space-y-4">
-                                        <Label className="text-sm font-bold uppercase tracking-widest text-white/40">Dashboard Passcode</Label>
-                                        <div className="relative">
-                                            <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-white/20" />
-                                            <Input
-                                                type="password"
-                                                value={settings.adminPassword}
-                                                onChange={e => setSettings({ ...settings, adminPassword: e.target.value })}
-                                                className="bg-white/5 border-white/10 h-14 rounded-2xl pl-14 text-lg font-mono tracking-widest"
-                                            />
-                                        </div>
-                                    </div>
-                                </CardContent>
-                            </Card>
-
-                            <div className="flex justify-end pt-4">
-                                <Button
-                                    type="submit"
-                                    disabled={saving}
-                                    className="h-16 rounded-[1.5rem] px-12 bg-primary hover:bg-primary/90 text-white font-bold text-lg transition-all shadow-xl shadow-primary/30 active:scale-95"
-                                >
-                                    {saving ? <Loader2 className="w-5 h-5 animate-spin mr-3" /> : success ? <CheckCircle2 className="w-5 h-5 mr-3 text-white" /> : <Save className="w-5 h-5 mr-3" />}
-                                    {saving ? 'Synchronizing Profile...' : success ? 'Profile Updated' : 'Push Brand Changes'}
-                                </Button>
-                            </div>
+                                    )}
+                                </div>
+                            )}
                         </div>
                     </div>
                 </form>

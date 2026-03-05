@@ -221,6 +221,27 @@ export function registerRoutes(
     }
   });
 
+  // Stripe Billing: Create Customer Portal Session
+  app.post("/api/billing/portal", async (req, res) => {
+    try {
+      if (!req.isAuthenticated()) return res.status(401).json({ error: "Unauthorized" });
+      const user = req.user as any;
+
+      if (!user.stripeCustomerId) {
+        return res.status(400).json({ error: "No active subscription or customer record found." });
+      }
+
+      const session = await stripe.billingPortal.sessions.create({
+        customer: user.stripeCustomerId,
+        return_url: `${req.headers.origin}/settings`,
+      });
+
+      res.json({ url: session.url });
+    } catch (e: any) {
+      res.status(500).json({ error: "Stripe Portal error", details: e.message });
+    }
+  });
+
   // Consolidated Stripe Webhook
   app.post("/api/billing/webhook", async (req, res) => {
     const sig = req.headers["stripe-signature"];

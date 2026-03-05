@@ -465,7 +465,7 @@ export default function Dashboard() {
                 </div>
               )}
               <div className="w-px h-6 bg-white/10 mx-2" />
-              <div className="flex items-center gap-4 pt-4">
+              <div className="flex flex-wrap items-center gap-4 pt-4">
                 {user?.plan === 'software_pro' ? (
                   <div className="flex items-center gap-3 px-6 py-3 bg-indigo-500/10 border border-indigo-500/20 rounded-2xl text-sm font-bold text-indigo-300 shadow-2xl shadow-indigo-500/10">
                     <div className="w-8 h-8 rounded-lg bg-indigo-500/20 flex items-center justify-center mr-1">
@@ -474,28 +474,34 @@ export default function Dashboard() {
                     STUDIO ELITE · LIFETIME PRO VERSION
                     <span className="ml-2 px-2 py-0.5 bg-indigo-500 text-white text-[8px] font-black rounded-md tracking-tighter uppercase">No Credits Required</span>
                   </div>
+                ) : user?.plan === 'pro' ? (
+                  <div className="flex items-center gap-3 px-6 py-3 bg-primary/10 border border-primary/20 rounded-2xl text-sm font-bold text-primary shadow-2xl shadow-primary/10">
+                    <div className="w-8 h-8 rounded-lg bg-primary/20 flex items-center justify-center mr-1">
+                      <Crown className="w-5 h-5 text-primary" />
+                    </div>
+                    ELITE UNLIMITED · ACTIVE SUBSCRIPTION
+                    <span className="ml-2 px-2 py-0.5 bg-primary text-white text-[8px] font-black rounded-md tracking-tighter uppercase">Unlimited Projects</span>
+                  </div>
                 ) : (
                   <>
-                    <div className="flex items-center gap-2 px-6 py-2 bg-primary/10 border border-primary/20 rounded-full text-sm font-bold text-primary shadow-xl shadow-primary/10">
-                      <LayoutGrid className="w-4 h-4" />
-                      {user?.credits || 0} ALBUM CREDITS AVAILABLE
+                    <div className={`flex items-center gap-2 px-6 py-2 rounded-full text-sm font-bold shadow-xl transition-all ${user?.credits === 0 ? 'bg-red-500/10 border border-red-500/40 text-red-500 shadow-red-500/10 scale-105' : 'bg-primary/10 border border-primary/20 text-primary shadow-primary/10'}`}>
+                      <LayoutGrid className={`w-4 h-4 ${user?.credits === 0 ? 'animate-pulse' : ''}`} />
+                      {user?.credits || 0} ALBUM CREDITS {user?.credits === 0 ? 'REMAINING' : 'AVAILABLE'}
                     </div>
                     <Button
                       onClick={buyAlbumCredit}
-                      className="h-10 rounded-full bg-white/5 backdrop-blur-md text-white hover:bg-white/10 border border-white/10 font-bold px-6 group"
+                      className="h-10 rounded-full bg-white/5 backdrop-blur-md text-white hover:bg-white/10 border border-white/10 font-bold px-6 group transition-all"
                     >
                       <Plus className="w-4 h-4 mr-2 group-hover:rotate-90 transition-transform" /> BUY 1 CREDIT (₹199)
                     </Button>
-                    {user?.plan !== 'pro' && (
-                      <Button
-                        onClick={() => startStripeCheckout('monthly')}
-                        className="h-10 rounded-full bg-primary hover:bg-primary/90 text-white font-bold px-6 shadow-xl shadow-primary/20 relative group overflow-hidden"
-                      >
-                        <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:animate-[shimmer_2s_infinite]" />
-                        <Crown className="w-4 h-4 mr-2" /> UPGRADE TO UNLIMITED (₹499)
-                        <span className="absolute -top-1 -right-1 px-2 py-0.5 bg-cyan-400 text-black text-[8px] font-black rounded-full">HOT</span>
-                      </Button>
-                    )}
+                    <Button
+                      onClick={() => startStripeCheckout('monthly')}
+                      className="h-10 rounded-full bg-primary hover:bg-primary/90 text-white font-bold px-6 shadow-xl shadow-primary/20 relative group overflow-hidden"
+                    >
+                      <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:animate-[shimmer_2s_infinite]" />
+                      <Crown className="w-4 h-4 mr-2" /> UPGRADE TO UNLIMITED (₹499)
+                      <span className="absolute -top-1 -right-1 px-2 py-0.5 bg-cyan-400 text-black text-[8px] font-black rounded-full">HOT</span>
+                    </Button>
                   </>
                 )}
               </div>
