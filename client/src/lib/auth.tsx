@@ -57,13 +57,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
                 };
                 const rzp = new (window as any).Razorpay(options);
                 rzp.open();
-            } else {
-                const errorDetail = typeof data.details === 'object' ? JSON.stringify(data.details) : (data.details || data.error);
-                alert(`Order creation failed: ${errorDetail}`);
             }
         } catch (e: any) {
             console.error("Subscription failed", e);
-            alert(`Network error: ${e.message}`);
         }
     };
 
@@ -94,13 +90,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
                 };
                 const rzp = new (window as any).Razorpay(options);
                 rzp.open();
-            } else {
-                const errorDetail = typeof data.details === 'object' ? JSON.stringify(data.details) : (data.details || data.error);
-                alert(`Credit order failed: ${errorDetail}`);
             }
         } catch (e: any) {
             console.error("Credit purchase failed", e);
-            alert(`Network error: ${e.message}`);
         }
     };
 
