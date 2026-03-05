@@ -35,6 +35,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             const data = await res.json();
 
             if (data.orderId) {
+                // ... (rest of Razorpay options)
                 const options = {
                     key: data.key,
                     amount: data.amount,
@@ -56,9 +57,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
                 };
                 const rzp = new (window as any).Razorpay(options);
                 rzp.open();
+            } else {
+                alert(`Order creation failed: ${data.details || data.error || 'Unknown error'}`);
             }
-        } catch (e) {
+        } catch (e: any) {
             console.error("Subscription failed", e);
+            alert(`Network error: ${e.message}`);
         }
     };
 
@@ -89,9 +93,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
                 };
                 const rzp = new (window as any).Razorpay(options);
                 rzp.open();
+            } else {
+                alert(`Credit order failed: ${data.details || data.error || 'Unknown error'}`);
             }
-        } catch (e) {
+        } catch (e: any) {
             console.error("Credit purchase failed", e);
+            alert(`Network error: ${e.message}`);
         }
     };
 
