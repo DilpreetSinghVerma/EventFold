@@ -6,9 +6,8 @@ interface AuthContextType {
     user: User | null;
     isLoading: boolean;
     logout: () => void;
-    startStripeCheckout: (plan?: string) => Promise<void>;
+    startRazorpayCheckout: (plan?: string) => Promise<void>;
     buyAlbumCredit: () => Promise<void>;
-    startBillingPortal: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -30,12 +29,33 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         },
     });
 
-    const startStripeCheckout = async (plan: string = 'monthly') => {
+    const startRazorpayCheckout = async (plan: string = 'monthly') => {
         try {
             const res = await fetch(`/api/billing/subscribe/${plan}`, { method: "POST" });
             const data = await res.json();
-            if (data.url) {
-                window.location.href = data.url;
+
+            if (data.orderId) {
+                const options = {
+                    key: data.key,
+                    amount: data.amount,
+                    currency: "INR",
+                    name: "EventFold Studio",
+                    description: `${plan === 'yearly' ? 'Yearly' : 'Monthly'} Elite Subscription`,
+                    order_id: data.orderId,
+                    handler: function () {
+                        queryClient.invalidateQueries({ queryKey: ["/api/auth/me"] });
+                        window.location.href = "/dashboard?success=true";
+                    },
+                    prefill: {
+                        name: user?.name,
+                        email: user?.email,
+                    },
+                    theme: {
+                        color: "#6366f1",
+                    },
+                };
+                const rzp = new (window as any).Razorpay(options);
+                rzp.open();
             }
         } catch (e) {
             console.error("Subscription failed", e);
@@ -46,25 +66,32 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         try {
             const res = await fetch("/api/billing/buy-credit", { method: "POST" });
             const data = await res.json();
-            if (data.url) {
-                window.location.href = data.url;
+
+            if (data.orderId) {
+                const options = {
+                    key: data.key,
+                    amount: data.amount,
+                    currency: "INR",
+                    name: "EventFold Studio",
+                    description: "1 Album Credit",
+                    order_id: data.orderId,
+                    handler: function () {
+                        queryClient.invalidateQueries({ queryKey: ["/api/auth/me"] });
+                        window.location.href = "/dashboard?success=true";
+                    },
+                    prefill: {
+                        name: user?.name,
+                        email: user?.email,
+                    },
+                    theme: {
+                        color: "#6366f1",
+                    },
+                };
+                const rzp = new (window as any).Razorpay(options);
+                rzp.open();
             }
         } catch (e) {
             console.error("Credit purchase failed", e);
-        }
-    };
-
-    const startBillingPortal = async () => {
-        try {
-            const res = await fetch("/api/billing/portal", { method: "POST" });
-            const data = await res.json();
-            if (data.url) {
-                window.location.href = data.url;
-            } else if (data.error) {
-                alert(data.error);
-            }
-        } catch (e) {
-            console.error("Portal access failed", e);
         }
     };
 
@@ -74,9 +101,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
                 user: user || null,
                 isLoading,
                 logout: () => logoutMutation.mutate(),
-                startStripeCheckout,
+                startRazorpayCheckout,
                 buyAlbumCredit,
-                startBillingPortal,
             }}
         >
             {children}

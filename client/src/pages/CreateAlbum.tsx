@@ -13,7 +13,7 @@ import { Flipbook } from '@/components/Flipbook';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 
 export default function CreateAlbum() {
-  const { user, startStripeCheckout } = useAuth();
+  const { user, startRazorpayCheckout } = useAuth();
   const [, setLocation] = useLocation();
   const { addAlbum } = useAlbumStore();
   const [step, setStep] = useState(1);
@@ -641,7 +641,7 @@ export default function CreateAlbum() {
 
               <div className="flex flex-col gap-4 pt-4">
                 <Button
-                  onClick={() => startStripeCheckout('monthly')}
+                  onClick={() => startRazorpayCheckout('monthly')}
                   className="h-16 rounded-2xl bg-primary hover:bg-primary/90 text-white font-bold text-xl shadow-2xl shadow-primary/30 gap-3 border-none"
                 >
                   <Sparkles className="w-6 h-6" /> Unlock Lifetime Access

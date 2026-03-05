@@ -16,7 +16,7 @@ export default function Settings() {
     const [saving, setSaving] = useState(false);
     const [success, setSuccess] = useState(false);
     const [uploadingLogo, setUploadingLogo] = useState(false);
-    const { user, buyAlbumCredit, startStripeCheckout, startBillingPortal } = useAuth();
+    const { user, buyAlbumCredit, startRazorpayCheckout } = useAuth();
     const [activeTab, setActiveTab] = useState<'profile' | 'billing'>('profile');
     const [settings, setSettings] = useState({
         businessName: '',
@@ -291,7 +291,7 @@ export default function Settings() {
                                                 <h3 className="text-2xl font-bold capitalize">{user?.plan === 'pro' ? 'Elite Unlimited' : user?.plan === 'software_pro' ? 'Studio Elite' : 'Basic Plan'}</h3>
                                             </div>
                                             {user?.plan === 'free' && (
-                                                <Button onClick={() => startStripeCheckout('monthly')} className="w-full rounded-xl bg-primary shadow-lg shadow-primary/20 mt-2">
+                                                <Button onClick={() => startRazorpayCheckout('monthly')} className="w-full rounded-xl bg-primary shadow-lg shadow-primary/20 mt-2">
                                                     Upgrade to Unlimited
                                                 </Button>
                                             )}
@@ -316,16 +316,9 @@ export default function Settings() {
                                     <Card className="glass border-white/5 overflow-hidden">
                                         <CardHeader className="bg-white/[0.02] border-b border-white/5 flex flex-row items-center justify-between">
                                             <div>
-                                                <CardTitle>Stripe Billing Portal</CardTitle>
-                                                <CardDescription>Manage your subscriptions, payment methods, and invoices.</CardDescription>
+                                                <CardTitle>Razorpay Billing</CardTitle>
+                                                <CardDescription>Manage your payments and invoices securely.</CardDescription>
                                             </div>
-                                            <Button
-                                                onClick={startBillingPortal}
-                                                variant="outline"
-                                                className="rounded-xl border-white/10 hover:bg-white/5"
-                                            >
-                                                <ExternalLink className="w-4 h-4 mr-2" /> Open Portal
-                                            </Button>
                                         </CardHeader>
                                         <CardContent className="p-8">
                                             <div className="flex items-start gap-4 p-6 rounded-2xl bg-[#0d0d0f] border border-white/5">
@@ -333,7 +326,7 @@ export default function Settings() {
                                                 <div className="space-y-1">
                                                     <p className="font-bold">Automated Invoicing</p>
                                                     <p className="text-sm text-white/40 leading-relaxed">
-                                                        Access your internal billing dashboard to download PDF invoices for your studio records. All transactions are securely processed via Stripe.
+                                                        All transactions are securely processed via Razorpay. You will receive an email receipt for every transaction which you can use for your studio records.
                                                     </p>
                                                 </div>
                                             </div>
@@ -349,7 +342,7 @@ export default function Settings() {
                                                 </div>
                                                 <p className="text-sm text-white/60">Unlock unlimited albums, custom branding, and 50GB vault storage.</p>
                                             </div>
-                                            <Button onClick={() => startStripeCheckout('monthly')} className="h-14 px-8 rounded-2xl bg-primary hover:bg-primary/90 text-white font-bold shadow-xl shadow-primary/30 shrink-0">
+                                            <Button onClick={() => startRazorpayCheckout('monthly')} className="h-14 px-8 rounded-2xl bg-primary hover:bg-primary/90 text-white font-bold shadow-xl shadow-primary/30 shrink-0">
                                                 Upgrade Now (₹499)
                                             </Button>
                                         </div>

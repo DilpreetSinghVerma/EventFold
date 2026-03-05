@@ -266,6 +266,8 @@ export class MemStorage implements IStorage {
       googleId: insertUser.googleId || null,
       stripeCustomerId: insertUser.stripeCustomerId || null,
       subscriptionId: insertUser.subscriptionId || null,
+      razorpayCustomerId: insertUser.razorpayCustomerId || null,
+      razorpaySubscriptionId: insertUser.razorpaySubscriptionId || null,
       plan: insertUser.plan || 'free',
       credits: insertUser.credits ?? 1,
       createdAt: new Date()

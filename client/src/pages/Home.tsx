@@ -15,12 +15,12 @@ import demoSheet2L from '@assets/demo_album/sheet2_l.png';
 import demoSheet2R from '@assets/demo_album/sheet2_r.png';
 
 export default function Home() {
-  const { user, startStripeCheckout, buyAlbumCredit } = useAuth();
+  const { user, startRazorpayCheckout, buyAlbumCredit } = useAuth();
   const [, setLocation] = useLocation();
 
   const handleSubscribe = (plan: string) => {
     if (user) {
-      startStripeCheckout(plan);
+      startRazorpayCheckout(plan);
     } else {
       setLocation('/login');
     }

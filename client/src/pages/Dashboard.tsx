@@ -17,7 +17,7 @@ import {
 import { useAuth } from '@/lib/auth';
 
 export default function Dashboard() {
-  const { user, logout, buyAlbumCredit, startStripeCheckout } = useAuth();
+  const { user, logout, buyAlbumCredit, startRazorpayCheckout } = useAuth();
   const [albums, setAlbums] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [dbConnected, setDbConnected] = useState<boolean | null>(null);
@@ -495,7 +495,7 @@ export default function Dashboard() {
                       <Plus className="w-4 h-4 mr-2 group-hover:rotate-90 transition-transform" /> BUY 1 CREDIT (₹199)
                     </Button>
                     <Button
-                      onClick={() => startStripeCheckout('monthly')}
+                      onClick={() => startRazorpayCheckout('monthly')}
                       className="h-10 rounded-full bg-primary hover:bg-primary/90 text-white font-bold px-6 shadow-xl shadow-primary/20 relative group overflow-hidden"
                     >
                       <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:animate-[shimmer_2s_infinite]" />

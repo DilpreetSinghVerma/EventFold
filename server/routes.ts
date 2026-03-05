@@ -7,6 +7,13 @@ import fs from "fs";
 import { insertAlbumSchema, insertFileSchema, users } from "../shared/schema";
 import { ZodError } from "zod";
 import Stripe from "stripe";
+import Razorpay from "razorpay";
+import crypto from "crypto";
+
+const razorpay = new Razorpay({
+  key_id: process.env.RAZORPAY_KEY_ID || "",
+  key_secret: process.env.RAZORPAY_KEY_SECRET || "",
+});
 
 let _stripe: Stripe | null = null;
 const getStripe = () => {
@@ -150,39 +157,28 @@ export function registerRoutes(
     }
   });
 
-  // Stripe Billing: Buy 1 Album Credit (One-time)
+  // Razorpay Billing: Buy 1 Album Credit (One-time)
   app.post("/api/billing/buy-credit", async (req, res) => {
     try {
       if (!req.isAuthenticated()) return res.status(401).json({ error: "Unauthorized" });
       const userId = (req.user as any).id;
 
-      const session = await stripe.checkout.sessions.create({
-        mode: "payment",
-        line_items: [
-          {
-            price_data: {
-              currency: "inr",
-              product_data: {
-                name: "1 Album Credit",
-                description: "Allows you to create one full 3D flipbook album.",
-              },
-              unit_amount: 19900, // ₹199
-            },
-            quantity: 1,
-          },
-        ],
-        success_url: `${req.headers.origin}/dashboard?success=true`,
-        cancel_url: `${req.headers.origin}/dashboard?canceled=true`,
-        metadata: { userId, type: 'credit' },
-      });
+      const options = {
+        amount: 19900, // ₹199 in paise
+        currency: "INR",
+        receipt: `receipt_${Date.now()}_${userId}`,
+        notes: { userId, type: 'credit' }
+      };
 
-      res.json({ url: session.url });
+      const order = await razorpay.orders.create(options);
+      res.json({ orderId: order.id, amount: order.amount, key: process.env.RAZORPAY_KEY_ID });
     } catch (e: any) {
-      res.status(500).json({ error: "Stripe error", details: e.message });
+      console.error("Razorpay Order Error:", e);
+      res.status(500).json({ error: "Razorpay error", details: e.message });
     }
   });
 
-  // Stripe Billing: Monthly & Yearly Subscriptions
+  // Razorpay Billing: Monthly & Yearly Subscriptions (using Orders for simplicity for now)
   app.post("/api/billing/subscribe/:plan", async (req, res) => {
     try {
       if (!req.isAuthenticated()) return res.status(401).json({ error: "Unauthorized" });
@@ -190,38 +186,24 @@ export function registerRoutes(
       const { plan } = req.params; // 'monthly' or 'yearly'
 
       const isYearly = plan === 'yearly';
-      const amount = isYearly ? 399900 : 49900; // ₹3999 or ₹499
-      const interval = isYearly ? "year" : "month";
+      const amount = isYearly ? 399900 : 49900; // ₹3999 or ₹499 in paise
 
-      const session = await stripe.checkout.sessions.create({
-        mode: "subscription",
-        line_items: [
-          {
-            price_data: {
-              currency: "inr",
-              product_data: {
-                name: isYearly ? "EventFold Elite (Yearly)" : "EventFold Pro (Monthly)",
-                description: "Unlimited Cinematic Albums & Premium Branding",
-              },
-              unit_amount: amount,
-              recurring: { interval: interval as any },
-            },
-            quantity: 1,
-          },
-        ],
-        success_url: `${req.headers.origin}/dashboard?success=true`,
-        cancel_url: `${req.headers.origin}/dashboard?canceled=true`,
-        metadata: { userId: user.id, type: 'subscription', plan },
-        customer_email: user.email,
-      });
+      const options = {
+        amount,
+        currency: "INR",
+        receipt: `receipt_${Date.now()}_${user.id}`,
+        notes: { userId: user.id, type: 'subscription', plan }
+      };
 
-      res.json({ url: session.url });
+      const order = await razorpay.orders.create(options);
+      res.json({ orderId: order.id, amount: order.amount, key: process.env.RAZORPAY_KEY_ID });
     } catch (e: any) {
-      res.status(500).json({ error: "Stripe error", details: e.message });
+      console.error("Razorpay Subscription Order Error:", e);
+      res.status(500).json({ error: "Razorpay error", details: e.message });
     }
   });
 
-  // Stripe Billing: Create Customer Portal Session
+  // Stripe Billing Portal Session (Keep as is or remove)
   app.post("/api/billing/portal", async (req, res) => {
     try {
       if (!req.isAuthenticated()) return res.status(401).json({ error: "Unauthorized" });
@@ -242,39 +224,42 @@ export function registerRoutes(
     }
   });
 
-  // Consolidated Stripe Webhook
+  // Razorpay Webhook
   app.post("/api/billing/webhook", async (req, res) => {
-    const sig = req.headers["stripe-signature"];
-    let event;
+    const secret = process.env.RAZORPAY_WEBHOOK_SECRET || "razorpay_secret";
+    const signature = req.headers["x-razorpay-signature"];
 
     try {
-      event = stripe.webhooks.constructEvent(
-        (req as any).rawBody || req.body,
-        sig!,
-        process.env.STRIPE_WEBHOOK_SECRET || ""
-      );
-    } catch (err: any) {
-      return res.status(400).send(`Webhook Error: ${err.message}`);
-    }
+      const shasum = crypto.createHmac("sha256", secret);
+      shasum.update(JSON.stringify(req.body));
+      const digest = shasum.digest("hex");
 
-    if (event.type === "checkout.session.completed") {
-      const session = event.data.object as any;
-      const { userId, type } = session.metadata;
-
-      if (type === 'credit') {
-        await storage.addCredit(userId, 1);
-        console.log(`Credits added for user ${userId}`);
-      } else if (type === 'subscription') {
-        await storage.updateUser(userId, {
-          plan: 'pro',
-          stripeCustomerId: session.customer,
-          subscriptionId: session.subscription
-        });
-        console.log(`User ${userId} upgraded to PRO Subscription`);
+      if (digest !== signature) {
+        return res.status(400).json({ status: "invalid signature" });
       }
-    }
 
-    res.json({ received: true });
+      const event = req.body;
+      if (event.event === "payment.captured") {
+        const payment = event.payload.payment.entity;
+        const { userId, type, plan } = payment.notes;
+
+        if (type === 'credit') {
+          await storage.addCredit(userId, 1);
+          console.log(`Credits added for user ${userId} via Razorpay`);
+        } else if (type === 'subscription') {
+          await storage.updateUser(userId, {
+            plan: plan === 'yearly' ? 'pro' : 'pro', // Map to your pro plan
+            razorpayCustomerId: payment.customer_id
+          });
+          console.log(`User ${userId} upgraded to ${plan} via Razorpay`);
+        }
+      }
+
+      res.json({ status: "ok" });
+    } catch (err: any) {
+      console.error("Webhook Error:", err);
+      res.status(500).json({ error: "Webhook failed" });
+    }
   });
 
   // Health check for cloud debugging

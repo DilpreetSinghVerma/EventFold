@@ -13,6 +13,8 @@ export const users = pgTable("users", {
   credits: integer("credits").notNull().default(1), // Starts with 1 free album
   stripeCustomerId: text("stripe_customer_id"),
   subscriptionId: text("subscription_id"),
+  razorpayCustomerId: text("razorpay_customer_id"),
+  razorpaySubscriptionId: text("razorpay_subscription_id"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 
