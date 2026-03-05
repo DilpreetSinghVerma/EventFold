@@ -164,7 +164,7 @@ export function registerRoutes(
       const userId = (req.user as any).id;
 
       const options = {
-        amount: 19900, // ₹199 in paise
+        amount: 9900, // ₹99 in paise
         currency: "INR",
         receipt: `rct_${Date.now()}_${userId}`.slice(0, 40),
         notes: { userId, type: 'credit' }
@@ -188,7 +188,7 @@ export function registerRoutes(
       const { plan } = req.params; // 'monthly' or 'yearly'
 
       const isYearly = plan === 'yearly';
-      const amount = isYearly ? 399900 : 49900; // ₹3999 or ₹499 in paise
+      const amount = isYearly ? 299900 : 44900; // ₹2999 or ₹449 in paise
 
       const options = {
         amount,

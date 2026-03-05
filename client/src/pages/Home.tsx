@@ -147,7 +147,7 @@ export default function Home() {
               <div className="space-y-6">
                 <span className="text-[10px] font-bold uppercase tracking-[0.3em] text-white/40">Pay As You Go</span>
                 <h3 className="text-2xl font-bold">Standard Credit</h3>
-                <div className="text-4xl font-display font-bold">₹199</div>
+                <div className="text-4xl font-display font-bold">₹99</div>
                 <p className="text-sm text-white/40 leading-relaxed">Perfect for single events. High-resolution textures and 1 year of cloud storage included.</p>
                 <Button onClick={() => user ? buyAlbumCredit() : setLocation('/login')} className="w-full h-12 rounded-xl bg-white/5 hover:bg-white/10 text-white border border-white/10 font-bold">
                   Buy 1 Credit

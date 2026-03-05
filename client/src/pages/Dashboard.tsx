@@ -492,14 +492,14 @@ export default function Dashboard() {
                       onClick={buyAlbumCredit}
                       className="h-10 rounded-full bg-white/5 backdrop-blur-md text-white hover:bg-white/10 border border-white/10 font-bold px-6 group transition-all"
                     >
-                      <Plus className="w-4 h-4 mr-2 group-hover:rotate-90 transition-transform" /> BUY 1 CREDIT (₹199)
+                      <Plus className="w-4 h-4 mr-2 group-hover:rotate-90 transition-transform" /> BUY 1 CREDIT (₹99)
                     </Button>
                     <Button
                       onClick={() => startRazorpayCheckout('monthly')}
                       className="h-10 rounded-full bg-primary hover:bg-primary/90 text-white font-bold px-6 shadow-xl shadow-primary/20 relative group overflow-hidden"
                     >
                       <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:animate-[shimmer_2s_infinite]" />
-                      <Crown className="w-4 h-4 mr-2" /> UPGRADE TO UNLIMITED (₹499)
+                      <Crown className="w-4 h-4 mr-2" /> UPGRADE TO UNLIMITED (₹449)
                       <span className="absolute -top-1 -right-1 px-2 py-0.5 bg-cyan-400 text-black text-[8px] font-black rounded-full">HOT</span>
                     </Button>
                   </>
