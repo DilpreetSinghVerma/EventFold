@@ -174,7 +174,9 @@ export function registerRoutes(
       res.json({ orderId: order.id, amount: order.amount, key: process.env.RAZORPAY_KEY_ID });
     } catch (e: any) {
       console.error("Razorpay Order Error:", e);
-      res.status(500).json({ error: "Razorpay error", details: e.message });
+      // Razorpay errors often contain details in a nested error object
+      const errorMsg = e.description || e.error?.description || e.message || "Razorpay error";
+      res.status(500).json({ error: errorMsg, details: e.error || e });
     }
   });
 
@@ -199,7 +201,8 @@ export function registerRoutes(
       res.json({ orderId: order.id, amount: order.amount, key: process.env.RAZORPAY_KEY_ID });
     } catch (e: any) {
       console.error("Razorpay Subscription Order Error:", e);
-      res.status(500).json({ error: "Razorpay error", details: e.message });
+      const errorMsg = e.description || e.error?.description || e.message || "Razorpay error";
+      res.status(500).json({ error: errorMsg, details: e.error || e });
     }
   });
 
