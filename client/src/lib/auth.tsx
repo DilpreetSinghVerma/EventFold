@@ -58,7 +58,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
                 const rzp = new (window as any).Razorpay(options);
                 rzp.open();
             } else {
-                alert(`Order creation failed: ${data.details || data.error || 'Unknown error'}`);
+                const errorDetail = typeof data.details === 'object' ? JSON.stringify(data.details) : (data.details || data.error);
+                alert(`Order creation failed: ${errorDetail}`);
             }
         } catch (e: any) {
             console.error("Subscription failed", e);
@@ -94,7 +95,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
                 const rzp = new (window as any).Razorpay(options);
                 rzp.open();
             } else {
-                alert(`Credit order failed: ${data.details || data.error || 'Unknown error'}`);
+                const errorDetail = typeof data.details === 'object' ? JSON.stringify(data.details) : (data.details || data.error);
+                alert(`Credit order failed: ${errorDetail}`);
             }
         } catch (e: any) {
             console.error("Credit purchase failed", e);
