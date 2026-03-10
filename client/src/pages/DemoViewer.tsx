@@ -62,6 +62,15 @@ export default function DemoViewer() {
         // Simulate loading for cinematic effect
         const timer = setTimeout(() => setLoading(false), 1500);
 
+        // Auto-fullscreen on mobile
+        if (window.innerWidth < 1024) {
+            setTimeout(() => {
+                if (!document.fullscreenElement) {
+                    document.documentElement.requestFullscreen().catch(() => { });
+                }
+            }, 2000);
+        }
+
         return () => {
             window.removeEventListener('resize', checkOrientation);
             clearTimeout(timer);
@@ -141,9 +150,10 @@ export default function DemoViewer() {
                 style={{ touchAction: 'none', minHeight: 0 }}
             >
                 <TransformWrapper
-                    initialScale={window.innerWidth < 1024 ? 2 : 1}
+                    initialScale={window.innerWidth < 1024 ? 1.6 : 1}
                     maxScale={window.innerWidth < 1024 ? 4 : 2}
                     centerOnInit={true}
+                    centerZoomedOut={true}
                     onTransformed={(ref) => setScale(ref.state.scale)}
                     wheel={{ step: 0.1, disabled: window.innerWidth >= 1024 }}
                     doubleClick={{ disabled: false }}
@@ -195,8 +205,8 @@ export default function DemoViewer() {
                             </div>
 
                             <motion.div
-                                animate={{ y: uiVisible ? 0 : (window.innerWidth < 1024 ? -100 : 100), opacity: uiVisible ? 1 : 0 }}
-                                className={`absolute ${window.innerWidth < 1024 ? 'top-6' : (isMobileLandscape ? 'bottom-20' : 'bottom-10')} z-[70] flex gap-1 md:gap-2 glass-dark px-3 py-1.5 md:px-4 md:py-2 rounded-2xl border-white/5 shadow-2xl scale-90 md:scale-100 transition-all duration-500`}
+                                animate={{ y: uiVisible ? 0 : (window.innerWidth < 1024 ? -120 : 100), opacity: uiVisible ? 1 : 0 }}
+                                className={`absolute ${window.innerWidth < 1024 ? 'top-2' : (isMobileLandscape ? 'bottom-20' : 'bottom-10')} z-[70] flex gap-1 md:gap-2 glass-dark px-3 py-1.5 md:px-4 md:py-2 rounded-2xl border-white/5 shadow-2xl scale-90 md:scale-100 transition-all duration-500`}
                             >
                                 {window.innerWidth < 1024 && (
                                     <>
