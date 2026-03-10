@@ -68,6 +68,7 @@ export default function Viewer() {
   const [loadedBackCover, setLoadedBackCover] = useState<string>('');
   const [loadedVideos, setLoadedVideos] = useState<{ filePath: string; orderIndex: number }[]>([]);
   const [loading, setLoading] = useState(true);
+  const [hasStarted, setHasStarted] = useState(false);
   const [loadStatus, setLoadStatus] = useState('Establishing connection…');
   const [copied, setCopied] = useState(false);
   const [scale, setScale] = useState(1);
@@ -174,15 +175,6 @@ export default function Viewer() {
     };
 
     fetchAndLoad();
-
-    // Auto-fullscreen on mobile
-    if (window.innerWidth < 1024) {
-      setTimeout(() => {
-        if (!document.fullscreenElement) {
-          document.documentElement.requestFullscreen().catch(() => { });
-        }
-      }, 1000);
-    }
   }, [id]);
 
   const [shareModalOpen, setShareModalOpen] = useState(false);
@@ -213,6 +205,37 @@ export default function Viewer() {
           <h2 className="text-2xl font-bold mb-6">Project Missing</h2>
           <Link href="/dashboard"><Button className="rounded-xl">Return to Terminal</Button></Link>
         </div>
+      </div>
+    );
+  }
+
+  if (window.innerWidth < 1024 && !hasStarted && !loading) {
+    return (
+      <div className="min-h-screen flex flex-col items-center justify-center bg-[#030303] text-white p-8 text-center relative overflow-hidden">
+        <div className="fixed inset-0 bg-primary/5 blur-[120px] rounded-full -z-10" />
+        <motion.div
+          initial={{ opacity: 0, scale: 0.9 }}
+          animate={{ opacity: 1, scale: 1 }}
+          className="relative max-w-sm"
+        >
+          <div className="w-24 h-24 mb-8 mx-auto bg-primary/20 rounded-full flex items-center justify-center relative">
+            <div className="absolute inset-0 bg-primary/20 rounded-full animate-ping" />
+            <Play className="w-10 h-10 text-primary fill-primary ml-1 relative z-10" />
+          </div>
+          <h2 className="text-4xl font-display font-bold mb-4 tracking-tight leading-tight">Your Digital Cinema is Ready</h2>
+          <p className="text-white/40 text-sm font-mono uppercase tracking-[0.2em] mb-12">Tap below for the full immersive experience</p>
+          <Button
+            size="lg"
+            onClick={() => {
+              setHasStarted(true);
+              document.documentElement.requestFullscreen().catch(() => { });
+            }}
+            className="w-full rounded-2xl h-16 bg-primary hover:bg-primary/90 text-white font-bold text-lg shadow-2xl shadow-primary/40 group overflow-hidden relative"
+          >
+            <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:animate-[shimmer_2s_infinite]" />
+            Start Immersive View
+          </Button>
+        </motion.div>
       </div>
     );
   }
@@ -459,7 +482,7 @@ export default function Viewer() {
         style={{ touchAction: 'none', minHeight: 0 }}
       >
         <TransformWrapper
-          initialScale={window.innerWidth < 1024 ? 1.6 : 1}
+          initialScale={window.innerWidth < 1024 ? 1.4 : 1}
           maxScale={window.innerWidth < 1024 ? 4 : 2}
           centerOnInit={true}
           centerZoomedOut={true}
