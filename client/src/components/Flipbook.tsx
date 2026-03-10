@@ -295,13 +295,13 @@ export const Flipbook = forwardRef(({
               maxWidth={3000}
               minHeight={50}
               maxHeight={3000}
-              maxShadowOpacity={window.innerWidth < 768 ? 0.2 : 0.4}
+              maxShadowOpacity={window.innerWidth < 1024 ? 0 : 0.3}
               showCover={true}
-              mobileScrollSupport={true}
+              mobileScrollSupport={false}
               className="shadow-2xl"
               style={{ display: 'block' }}
               startPage={0}
-              drawShadow={true}
+              drawShadow={window.innerWidth >= 1024}
               flippingTime={2000}
               usePortrait={false}
               startZIndex={0}

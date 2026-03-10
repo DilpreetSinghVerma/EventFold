@@ -44,8 +44,8 @@ function getCloudinaryHalves(url: string): [string, string] | null {
 
   // c_crop,g_west,w_0.5,h_1.0 = crop exactly left 50% with full height
   // q_auto,f_auto = automatic quality and modern format (WebP/AVIF)
-  const left = `${parts[0]}/upload/c_crop,g_west,w_0.5,h_1.0,q_auto,f_auto/${parts[1]}`;
-  const right = `${parts[0]}/upload/c_crop,g_east,w_0.5,h_1.0,q_auto,f_auto/${parts[1]}`;
+  const left = `${parts[0]}/upload/c_crop,g_west,w_0.5,h_1.0,q_auto:eco,f_auto/${parts[1]}`;
+  const right = `${parts[0]}/upload/c_crop,g_east,w_0.5,h_1.0,q_auto:eco,f_auto/${parts[1]}`;
   return [left, right];
 }
 
@@ -482,11 +482,10 @@ export default function Viewer() {
         style={{ touchAction: 'none', minHeight: 0 }}
       >
         <TransformWrapper
-          initialScale={window.innerWidth < 1024 ? 1.4 : 1}
-          maxScale={window.innerWidth < 1024 ? 4 : 2}
+          initialScale={window.innerWidth < 1024 ? 1.3 : 1}
           centerOnInit={true}
           centerZoomedOut={true}
-          limitToBounds={false} // Disable bounds limiting for smoother manual panning
+          limitToBounds={false}
           smooth={true}
           onTransformed={(ref) => setScale(ref.state.scale)}
           wheel={{ step: 0.1, disabled: window.innerWidth >= 1024 }}

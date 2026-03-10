@@ -172,8 +172,8 @@ export default function DemoViewer() {
                 style={{ touchAction: 'none', minHeight: 0 }}
             >
                 <TransformWrapper
-                    initialScale={window.innerWidth < 1024 ? 1.4 : 1}
-                    maxScale={window.innerWidth < 1024 ? 4 : 2}
+                    initialScale={window.innerWidth < 1024 ? 1.3 : 1}
+                    maxScale={window.innerWidth < 1024 ? 3 : 2}
                     centerOnInit={true}
                     centerZoomedOut={true}
                     limitToBounds={false}
