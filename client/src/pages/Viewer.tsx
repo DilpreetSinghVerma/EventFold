@@ -485,6 +485,7 @@ export default function Viewer() {
       >
         <TransformWrapper
           initialScale={window.innerWidth < 1024 ? 1.3 : 1}
+          maxScale={window.innerWidth < 1024 ? 4 : 2}
           centerOnInit={true}
           centerZoomedOut={true}
           limitToBounds={true}

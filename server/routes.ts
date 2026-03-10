@@ -1,4 +1,5 @@
-import type { Express } from "express";
+import { eq, asc, lte, and, isNotNull } from "drizzle-orm";
+import type { Express, Request, Response, NextFunction } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import multer from "multer";
@@ -259,7 +260,6 @@ export function registerRoutes(
           const userAlbums = await storage.getAlbumsByUser(userId);
           const { db } = await import("./db");
           const { albums } = await import("../shared/schema");
-          const { eq } = await import("drizzle-orm");
           if (db) {
             await db.update(albums)
               .set({ expiresAt: null })
@@ -281,42 +281,43 @@ export function registerRoutes(
   app.get("/api/health", async (_req, res) => {
     try {
       const dbUrl = (process.env.DATABASE_URL || "").trim();
-      const isDummy = !dbUrl || dbUrl === "dummy_url" || dbUrl === "" || dbUrl.includes("your-database-url");
-      const isNeon = dbUrl.includes("neon.tech") || dbUrl.includes("postgresql://");
+      const isMissing = !dbUrl || dbUrl === "" || dbUrl === "dummy_url";
+      const isDummy = isMissing || dbUrl.includes("your-database-url");
 
-      // Deep Environment Diagnostic
-      const rawKeys = Object.keys(process.env).sort();
+      // Sanitized Diagnostic Data
       const envStatus = {
         DATABASE_URL_PRESENT: !!process.env.DATABASE_URL,
-        DATABASE_URL_LENGTH: process.env.DATABASE_URL?.length || 0,
-        DATABASE_URL_START: process.env.DATABASE_URL ? process.env.DATABASE_URL.substring(0, 15) + "..." : "EMPTY",
+        DATABASE_URL_LENGTH: dbUrl.length,
+        DATABASE_URL_START: dbUrl ? (dbUrl.substring(0, 10) + "****") : "EMPTY",
+        DATABASE_URL_HAS_QUOTES: dbUrl.startsWith('"') || dbUrl.endsWith('"') || dbUrl.startsWith("'"),
         NODE_ENV: process.env.NODE_ENV,
         VERCEL_DETECTED: !!process.env.VERCEL,
-        AVAILABLE_KEYS_COUNT: rawKeys.length,
-        ENV_KEYS_SAMPLED: rawKeys.filter(k => k.includes('URL') || k.includes('DB') || k.includes('NEON') || k.includes('VERCEL')).join(', ')
+        VERCEL_ENV: process.env.VERCEL_ENV || "unknown",
+        DB_URL_CONTAINS_POSTGRES: dbUrl.toLowerCase().includes("postgres")
       };
 
-      let dbStatus = "connected";
+      let dbStatus = "unknown";
       let error = null;
 
-      if (isDummy) {
+      if (isMissing) {
         dbStatus = "local_only";
       } else {
         try {
-          // Attempt a real query to verify connectivity
-          await storage.getAlbums().catch(e => {
-            console.error("DB_HEALTH_CHECK_FAILURE:", e);
-            dbStatus = "disconnected";
-            error = e.message;
-            throw e;
-          });
+          // Verify connectivity with a 5s timeout
+          const timeoutPromise = new Promise((_, reject) => setTimeout(() => reject(new Error("Database connection timeout (5s)")), 5000));
+          await Promise.race([
+            storage.getAlbums(),
+            timeoutPromise
+          ]);
+          dbStatus = "connected";
         } catch (e: any) {
+          console.error("DB_HEALTH_CHECK_FAILURE:", e);
           dbStatus = "disconnected";
           error = e.message || String(e);
         }
       }
 
-      res.status(dbStatus === "disconnected" && !isDummy ? 500 : 200).json({
+      res.status(200).json({
         status: dbStatus === "connected" ? "ok" : "warning",
         database: dbStatus,
         error: error,
