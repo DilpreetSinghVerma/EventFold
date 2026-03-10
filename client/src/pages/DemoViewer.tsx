@@ -72,10 +72,10 @@ export default function DemoViewer() {
         <motion.div
             initial={false}
             animate={{
-                y: uiVisible ? 0 : -120,
-                opacity: uiVisible ? 1 : 0
+                y: (uiVisible && window.innerWidth < 1024) ? -120 : (uiVisible ? 0 : -120),
+                opacity: (uiVisible && window.innerWidth < 1024) ? 0 : (uiVisible ? 1 : 0)
             }}
-            className={`absolute top-0 left-0 right-0 p-3 md:p-6 z-[60] flex items-center justify-between pointer-events-none`}
+            className={`absolute top-0 left-0 right-0 p-3 md:p-6 z-[60] flex items-center justify-between pointer-events-none transition-all duration-500`}
         >
             <div className="flex items-center gap-4">
                 <Button
@@ -141,6 +141,7 @@ export default function DemoViewer() {
                 style={{ touchAction: 'none', minHeight: 0 }}
             >
                 <TransformWrapper
+                    initialScale={window.innerWidth < 1024 ? 2 : 1}
                     maxScale={window.innerWidth < 1024 ? 4 : 2}
                     centerOnInit={true}
                     onTransformed={(ref) => setScale(ref.state.scale)}
@@ -194,9 +195,23 @@ export default function DemoViewer() {
                             </div>
 
                             <motion.div
-                                animate={{ y: uiVisible ? 0 : 100, opacity: uiVisible ? 1 : 0 }}
-                                className={`absolute ${isMobileLandscape ? 'bottom-20' : 'bottom-10'} z-[70] flex gap-1 md:gap-2 glass-dark px-3 py-1.5 md:px-4 md:py-2 rounded-2xl border-white/5 shadow-2xl scale-90 md:scale-100`}
+                                animate={{ y: uiVisible ? 0 : (window.innerWidth < 1024 ? -100 : 100), opacity: uiVisible ? 1 : 0 }}
+                                className={`absolute ${window.innerWidth < 1024 ? 'top-6' : (isMobileLandscape ? 'bottom-20' : 'bottom-10')} z-[70] flex gap-1 md:gap-2 glass-dark px-3 py-1.5 md:px-4 md:py-2 rounded-2xl border-white/5 shadow-2xl scale-90 md:scale-100 transition-all duration-500`}
                             >
+                                {window.innerWidth < 1024 && (
+                                    <>
+                                        <Button
+                                            variant="ghost"
+                                            size="icon"
+                                            title="Close"
+                                            onClick={() => window.close()}
+                                            className="text-white/60 hover:text-white hover:bg-white/10 rounded-xl w-8 h-8 md:w-10 md:h-10"
+                                        >
+                                            <ArrowLeft className="w-5 h-5" />
+                                        </Button>
+                                        <div className="w-px h-6 bg-white/10 mx-1 self-center" />
+                                    </>
+                                )}
                                 <Button variant="ghost" size="icon" onClick={() => zoomOut()} title="Zoom out" className="text-white/60 hover:text-white hover:bg-white/10 rounded-xl w-8 h-8 md:w-10 md:h-10"><ZoomOut className="w-4 h-4 md:w-5 h-5" /></Button>
                                 <div className="flex items-center px-2 md:px-3 text-white/90 text-[10px] md:text-sm font-bold min-w-[2.5rem] md:min-w-[3.5rem] justify-center tracking-tighter">
                                     {Math.round((scale || 1) * 100)}%
