@@ -302,13 +302,13 @@ export const Flipbook = forwardRef(({
               style={{ display: 'block' }}
               startPage={0}
               drawShadow={true}
-              flippingTime={1200}
+              flippingTime={2000}
               usePortrait={false}
               startZIndex={0}
               autoSize={false}
               clickEventForward={true}
               useMouseEvents={window.innerWidth >= 1024}
-              swipeDistance={60}
+              swipeDistance={30}
               showPageCorners={true}
               disableFlipByClick={false}
               onFlip={(e: any) => {
@@ -343,11 +343,26 @@ export const Flipbook = forwardRef(({
               {pages.map((page) => {
                 if (page.type === 'cover') {
                   return (
-                    <div key={page.key} className="page" style={{ ...pageBase, backgroundColor: '#000', willChange: 'transform' }}>
+                    <div key={page.key} className="page" style={{
+                      ...pageBase,
+                      backgroundColor: '#000',
+                      willChange: 'transform',
+                      backfaceVisibility: 'hidden',
+                      WebkitBackfaceVisibility: 'hidden',
+                      transform: 'translate3d(0,0,0)',
+                      WebkitTransform: 'translate3d(0,0,0)',
+                      transformStyle: 'preserve-3d',
+                      WebkitTransformStyle: 'preserve-3d',
+                    }}>
                       <img
                         src={page.image}
                         alt="cover"
-                        style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
+                        style={{
+                          width: '100%',
+                          height: '100%',
+                          objectFit: 'cover',
+                          display: 'block',
+                        }}
                       />
                       <div className="absolute inset-0 opacity-[0.03] pointer-events-none" style={{ backgroundImage: `url("https://www.transparenttextures.com/patterns/leather.png")` }} />
                       <div className="absolute inset-0 bg-gradient-to-tr from-black/60 via-transparent to-white/10 pointer-events-none" />
@@ -360,7 +375,17 @@ export const Flipbook = forwardRef(({
                   const pageIndex = pages.indexOf(page);
                   const isLeftHalf = (pageIndex - 1) % 2 === 0;
                   return (
-                    <div key={page.key} className="page" style={{ ...pageBase, backgroundColor: '#000', willChange: 'transform' }}>
+                    <div key={page.key} className="page" style={{
+                      ...pageBase,
+                      backgroundColor: '#000',
+                      willChange: 'transform',
+                      backfaceVisibility: 'hidden',
+                      WebkitBackfaceVisibility: 'hidden',
+                      transform: 'translate3d(0,0,0)',
+                      WebkitTransform: 'translate3d(0,0,0)',
+                      transformStyle: 'preserve-3d',
+                      WebkitTransformStyle: 'preserve-3d',
+                    }}>
                       {page.video ? (
                         <video
                           src={page.video}

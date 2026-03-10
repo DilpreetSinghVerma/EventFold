@@ -486,6 +486,8 @@ export default function Viewer() {
           maxScale={window.innerWidth < 1024 ? 4 : 2}
           centerOnInit={true}
           centerZoomedOut={true}
+          limitToBounds={false} // Disable bounds limiting for smoother manual panning
+          smooth={true}
           onTransformed={(ref) => setScale(ref.state.scale)}
           wheel={{ step: 0.1, disabled: window.innerWidth >= 1024 }}
           doubleClick={{ disabled: false }}
@@ -561,7 +563,7 @@ export default function Viewer() {
                   y: uiVisible ? 0 : (window.innerWidth < 1024 ? -120 : 100),
                   opacity: uiVisible ? 1 : 0
                 }}
-                className={`absolute ${window.innerWidth < 1024 ? 'top-2' : (isMobileLandscape ? 'bottom-20' : 'bottom-10')} z-[70] flex gap-1 md:gap-2 glass-dark px-3 py-1.5 md:px-4 md:py-2 rounded-2xl border-white/5 shadow-2xl scale-90 md:scale-100 transition-all duration-500`}
+                className={`${window.innerWidth < 1024 ? 'fixed top-4 left-1/2 -translate-x-1/2' : 'absolute bottom-10'} z-[70] flex gap-1 md:gap-2 glass-dark px-3 py-1.5 md:px-4 md:py-2 rounded-2xl border-white/5 shadow-2xl scale-90 md:scale-100 transition-all duration-500`}
               >
                 {window.innerWidth < 1024 && (
                   <>
