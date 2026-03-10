@@ -340,7 +340,11 @@ export const Flipbook = forwardRef(({
                 }
               }}
             >
-              {pages.map((page) => {
+              {pages.map((page, index) => {
+                // Windowed Rendering: Only render actual content for pages near the current page
+                // This significantly reduces DOM memory and GPU load on mobile.
+                const isNear = Math.abs(index - currentPage) <= 4;
+
                 if (page.type === 'cover') {
                   return (
                     <div key={page.key} className="page" style={{
@@ -354,20 +358,25 @@ export const Flipbook = forwardRef(({
                       transformStyle: 'preserve-3d',
                       WebkitTransformStyle: 'preserve-3d',
                     }}>
-                      <img
-                        src={page.image}
-                        alt="cover"
-                        style={{
-                          width: '100%',
-                          height: '100%',
-                          objectFit: 'cover',
-                          display: 'block',
-                        }}
-                      />
-                      <div className="absolute inset-0 opacity-[0.03] pointer-events-none" style={{ backgroundImage: `url("https://www.transparenttextures.com/patterns/leather.png")` }} />
-                      <div className="absolute inset-0 bg-gradient-to-tr from-black/60 via-transparent to-white/10 pointer-events-none" />
-                      <div className="absolute inset-4 border border-white/10 rounded-sm pointer-events-none" />
-                      <div style={{ position: 'absolute', inset: 0, boxShadow: 'inset 0 0 100px rgba(0,0,0,0.8)', pointerEvents: 'none' }} />
+                      {isNear && (
+                        <>
+                          <img
+                            src={page.image}
+                            alt="cover"
+                            decoding="async"
+                            style={{
+                              width: '100%',
+                              height: '100%',
+                              objectFit: 'cover',
+                              display: 'block',
+                            }}
+                          />
+                          <div className="absolute inset-0 opacity-[0.03] pointer-events-none" style={{ backgroundImage: `url("https://www.transparenttextures.com/patterns/leather.png")` }} />
+                          <div className="absolute inset-0 bg-gradient-to-tr from-black/60 via-transparent to-white/10 pointer-events-none" />
+                          <div className="absolute inset-4 border border-white/10 rounded-sm pointer-events-none" />
+                          <div style={{ position: 'absolute', inset: 0, boxShadow: window.innerWidth >= 1024 ? 'inset 0 0 100px rgba(0,0,0,0.8)' : 'none', pointerEvents: 'none' }} />
+                        </>
+                      )}
                     </div>
                   );
                 }
@@ -377,7 +386,7 @@ export const Flipbook = forwardRef(({
                   return (
                     <div key={page.key} className="page" style={{
                       ...pageBase,
-                      backgroundColor: '#000',
+                      backgroundColor: '#0a0a0a',
                       willChange: 'transform',
                       backfaceVisibility: 'hidden',
                       WebkitBackfaceVisibility: 'hidden',
@@ -386,53 +395,58 @@ export const Flipbook = forwardRef(({
                       transformStyle: 'preserve-3d',
                       WebkitTransformStyle: 'preserve-3d',
                     }}>
-                      {page.video ? (
-                        <video
-                          src={page.video}
-                          autoPlay
-                          loop
-                          muted
-                          playsInline
-                          style={{
-                            width: '100%',
+                      {isNear && (
+                        <>
+                          {page.video ? (
+                            <video
+                              src={page.video}
+                              autoPlay
+                              loop
+                              muted
+                              playsInline
+                              style={{
+                                width: '100%',
+                                height: '100%',
+                                objectFit: 'cover',
+                                objectPosition: isLeftHalf ? 'right' : 'left',
+                                display: 'block',
+                                backgroundColor: '#0a0a0a',
+                              }}
+                            />
+                          ) : (
+                            <img
+                              src={page.image}
+                              alt="sheet"
+                              decoding="async"
+                              style={{
+                                width: '100%',
+                                height: '100%',
+                                objectFit: 'cover',
+                                objectPosition: isLeftHalf ? 'right' : 'left',
+                                display: 'block',
+                                backgroundColor: '#0a0a0a',
+                              }}
+                            />
+                          )}
+                          <div className="absolute inset-0 opacity-[0.02] pointer-events-none" style={{ backgroundImage: `url("https://www.transparenttextures.com/patterns/paper-fibers.png")` }} />
+                          <div style={{
+                            position: 'absolute',
+                            top: 0,
+                            [isLeftHalf ? 'right' : 'left']: 0,
+                            width: 30,
                             height: '100%',
-                            objectFit: 'cover',
-                            objectPosition: isLeftHalf ? 'right' : 'left',
-                            display: 'block',
-                            backgroundColor: '#0a0a0a',
-                          }}
-                        />
-                      ) : (
-                        <img
-                          src={page.image}
-                          alt="sheet"
-                          style={{
-                            width: '100%',
-                            height: '100%',
-                            objectFit: 'cover',
-                            objectPosition: isLeftHalf ? 'right' : 'left',
-                            display: 'block',
-                            backgroundColor: '#0a0a0a',
-                          }}
-                        />
+                            background: isLeftHalf
+                              ? 'linear-gradient(to left, rgba(0,0,0,0.4) 0%, rgba(0,0,0,0.1) 40%, transparent 100%)'
+                              : 'linear-gradient(to right, rgba(0,0,0,0.4) 0%, rgba(0,0,0,0.1) 40%, transparent 100%)',
+                            pointerEvents: 'none',
+                            zIndex: 10,
+                          }} />
+                        </>
                       )}
-                      <div className="absolute inset-0 opacity-[0.02] pointer-events-none" style={{ backgroundImage: `url("https://www.transparenttextures.com/patterns/paper-fibers.png")` }} />
-                      <div style={{
-                        position: 'absolute',
-                        top: 0,
-                        [isLeftHalf ? 'right' : 'left']: 0,
-                        width: 40,
-                        height: '100%',
-                        background: isLeftHalf
-                          ? 'linear-gradient(to left, rgba(0,0,0,0.6) 0%, rgba(0,0,0,0.2) 30%, transparent 100%)'
-                          : 'linear-gradient(to right, rgba(0,0,0,0.6) 0%, rgba(0,0,0,0.2) 30%, transparent 100%)',
-                        pointerEvents: 'none',
-                        zIndex: 10,
-                      }} />
                     </div>
                   );
                 }
-                return <div key={page.key} className="page" style={{ ...pageBase, backgroundColor: '#111' }} />;
+                return <div key={page.key} className="page" style={{ ...pageBase, backgroundColor: '#000' }} />;
               })}
             </HTMLFlipBook>
           </motion.div>

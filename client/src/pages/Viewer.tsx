@@ -37,24 +37,24 @@ import { TransformWrapper, TransformComponent } from 'react-zoom-pan-pinch';
 // Each half is 12×18 and forms one page in the flipbook spread.
 // ─────────────────────────────────────────────────────────────────
 // Helper to get split halves via Cloudinary transformations for instant mobile loading
-function getCloudinaryHalves(url: string): [string, string] | null {
+function getCloudinaryHalves(url: string, widthCap?: number): [string, string] | null {
   if (!url.includes('res.cloudinary.com')) return null;
   const parts = url.split('/upload/');
   if (parts.length !== 2) return null;
 
-  // c_crop,g_west,w_0.5,h_1.0 = crop exactly left 50% with full height
-  // q_auto,f_auto = automatic quality and modern format (WebP/AVIF)
-  const left = `${parts[0]}/upload/c_crop,g_west,w_0.5,h_1.0,q_auto:eco,f_auto/${parts[1]}`;
-  const right = `${parts[0]}/upload/c_crop,g_east,w_0.5,h_1.0,q_auto:eco,f_auto/${parts[1]}`;
+  const w = widthCap ? `,w_${widthCap}` : '';
+  const left = `${parts[0]}/upload/c_crop,g_west,w_0.5,h_1.0,q_auto:eco,f_auto${w}/${parts[1]}`;
+  const right = `${parts[0]}/upload/c_crop,g_east,w_0.5,h_1.0,q_auto:eco,f_auto${w}/${parts[1]}`;
   return [left, right];
 }
 
 // Simple optimization for single images (covers)
-function optimizeCloudinary(url: string): string {
+function optimizeCloudinary(url: string, widthCap?: number): string {
   if (!url.includes('res.cloudinary.com')) return url;
   const parts = url.split('/upload/');
   if (parts.length !== 2) return url;
-  return `${parts[0]}/upload/q_auto,f_auto/${parts[1]}`;
+  const w = widthCap ? `,w_${widthCap}` : '';
+  return `${parts[0]}/upload/q_auto:eco,f_auto${w}/${parts[1]}`;
 }
 
 export default function Viewer() {
@@ -137,8 +137,10 @@ export default function Viewer() {
 
         const getUrl = (path: string) => (path.startsWith('/') || path.startsWith('http')) ? path : `/${path}`;
 
-        setLoadedFrontCover(optimizeCloudinary(getUrl(frontFile?.filePath || '')));
-        setLoadedBackCover(optimizeCloudinary(getUrl(backFile?.filePath || '')));
+        const widthCap = window.innerWidth < 1024 ? 1200 : undefined;
+
+        setLoadedFrontCover(optimizeCloudinary(getUrl(frontFile?.filePath || ''), widthCap));
+        setLoadedBackCover(optimizeCloudinary(getUrl(backFile?.filePath || ''), widthCap));
 
         setLoadStatus(`Processing ${sheetFiles.length} cinematic spreads…`);
         const halves: string[] = [];
@@ -146,7 +148,7 @@ export default function Viewer() {
           const url = getUrl(sheetFiles[i].filePath);
 
           // TRY CLOUDINARY SPLIT FIRST (Instant)
-          const cloudHalves = getCloudinaryHalves(url);
+          const cloudHalves = getCloudinaryHalves(url, widthCap);
           if (cloudHalves) {
             halves.push(...cloudHalves);
           } else {
@@ -485,8 +487,9 @@ export default function Viewer() {
           initialScale={window.innerWidth < 1024 ? 1.3 : 1}
           centerOnInit={true}
           centerZoomedOut={true}
-          limitToBounds={false}
+          limitToBounds={true}
           smooth={true}
+          minScale={1}
           onTransformed={(ref) => setScale(ref.state.scale)}
           wheel={{ step: 0.1, disabled: window.innerWidth >= 1024 }}
           doubleClick={{ disabled: false }}

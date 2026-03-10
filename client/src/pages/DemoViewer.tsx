@@ -176,8 +176,9 @@ export default function DemoViewer() {
                     maxScale={window.innerWidth < 1024 ? 3 : 2}
                     centerOnInit={true}
                     centerZoomedOut={true}
-                    limitToBounds={false}
+                    limitToBounds={true}
                     smooth={true}
+                    minScale={1}
                     onTransformed={(ref) => setScale(ref.state.scale)}
                     wheel={{ step: 0.1, disabled: window.innerWidth >= 1024 }}
                     doubleClick={{ disabled: false }}
