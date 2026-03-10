@@ -109,12 +109,11 @@ if (process.env.NODE_ENV === "production" || process.env.VERCEL) {
     });
 }
 
-// In Vercel, we export the app without calling listen
-if (!process.env.VERCEL && process.env.NODE_ENV === "production") {
-  const port = parseInt(process.env.PORT || "3000", 10);
-  httpServer.listen(port, "0.0.0.0", () => {
-    log(`serving on port ${port}`);
-  });
-}
+// Background cleanup task (Every hour)
+import { storage } from "./storage";
+setInterval(() => {
+  log("Running background cleanup for expired albums...");
+  storage.cleanupExpiredAlbums().catch(e => log(`Cleanup Failed: ${e.message}`, "error"));
+}, 60 * 60 * 1000);
 
 export default app;

@@ -325,9 +325,17 @@ export default function Dashboard() {
           <CardContent className="pt-6 relative">
             <div className="flex items-center justify-between mb-2">
               <h3 className="text-xl font-bold group-hover:text-primary transition-colors truncate flex-1">{album.title}</h3>
-              <div className="flex items-center gap-1.5 px-2 py-1 bg-primary/10 border border-primary/20 rounded-lg text-[10px] font-bold text-primary animate-pulse shadow-sm">
-                <Eye className="w-3 h-3" />
-                {album.views || 0}
+              <div className="flex flex-col items-end gap-1.5">
+                <div className="flex items-center gap-1.5 px-2 py-1 bg-primary/10 border border-primary/20 rounded-lg text-[10px] font-bold text-primary animate-pulse shadow-sm">
+                  <Eye className="w-3 h-3" />
+                  {album.views || 0}
+                </div>
+                {album.expiresAt && (
+                  <div className="flex items-center gap-1 px-2 py-0.5 bg-red-500/10 border border-red-500/20 rounded-md text-[8px] font-black text-red-500 uppercase tracking-tighter">
+                    <Lock className="w-2 h-2" />
+                    Expires in {Math.ceil((new Date(album.expiresAt).getTime() - Date.now()) / (1000 * 60 * 60 * 24))}d
+                  </div>
+                )}
               </div>
             </div>
             <div className="flex items-center text-xs text-white/40 uppercase tracking-widest font-medium">
@@ -499,7 +507,7 @@ export default function Dashboard() {
                       className="h-10 rounded-full bg-primary hover:bg-primary/90 text-white font-bold px-6 shadow-xl shadow-primary/20 relative group overflow-hidden"
                     >
                       <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:animate-[shimmer_2s_infinite]" />
-                      <Crown className="w-4 h-4 mr-2" /> UPGRADE TO UNLIMITED (₹449)
+                      <Crown className="w-4 h-4 mr-2" /> UPGRADE TO UNLIMITED (₹499)
                       <span className="absolute -top-1 -right-1 px-2 py-0.5 bg-cyan-400 text-black text-[8px] font-black rounded-full">HOT</span>
                     </Button>
                   </>

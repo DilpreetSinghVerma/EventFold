@@ -188,7 +188,7 @@ export function registerRoutes(
       const { plan } = req.params; // 'monthly' or 'yearly'
 
       const isYearly = plan === 'yearly';
-      const amount = isYearly ? 299900 : 44900; // ₹2999 or ₹449 in paise
+      const amount = isYearly ? 399900 : 49900; // ₹3999 or ₹499 in paise
 
       const options = {
         amount,
@@ -254,7 +254,19 @@ export function registerRoutes(
             plan: plan === 'yearly' ? 'pro' : 'pro', // Map to your pro plan
             razorpayCustomerId: payment.customer_id
           });
-          console.log(`User ${userId} upgraded to ${plan} via Razorpay`);
+
+          // Make all user's albums permanent upon subscription
+          const userAlbums = await storage.getAlbumsByUser(userId);
+          const { db } = await import("./db");
+          const { albums } = await import("../shared/schema");
+          const { eq } = await import("drizzle-orm");
+          if (db) {
+            await db.update(albums)
+              .set({ expiresAt: null })
+              .where(eq(albums.userId, userId));
+          }
+
+          console.log(`User ${userId} upgraded to ${plan} via Razorpay. Albums made permanent.`);
         }
       }
 
@@ -337,9 +349,19 @@ export function registerRoutes(
         });
       }
 
+      // Calculate Expiration Date
+      let expiresAt: Date | null = null;
+      if (user.plan !== 'pro' && user.plan !== 'software_pro') {
+        const existingAlbums = await storage.getAlbumsByUser(userId);
+        const days = existingAlbums.length === 0 ? 7 : 365;
+        expiresAt = new Date();
+        expiresAt.setDate(expiresAt.getDate() + days);
+      }
+
       const data = insertAlbumSchema.parse({
         ...req.body,
-        userId: userId
+        userId: userId,
+        expiresAt: expiresAt
       });
 
       // Deduct credit only if NOT in software mode

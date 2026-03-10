@@ -1,7 +1,7 @@
 import crypto from "crypto";
 import { type InsertAlbum, type Album, type InsertFile, type File, type User, type InsertUser, albums, files, settings, users } from "../shared/schema";
 import { db } from "./db";
-import { eq, asc } from "drizzle-orm";
+import { eq, asc, lte, and, isNotNull } from "drizzle-orm";
 
 export interface IStorage {
   createAlbum(album: InsertAlbum): Promise<Album>;
@@ -26,6 +26,7 @@ export interface IStorage {
   deductCredit(userId: string): Promise<User>;
   addCredit(userId: string, amount: number): Promise<User>;
   incrementAlbumViews(id: string): Promise<void>;
+  cleanupExpiredAlbums(): Promise<void>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -154,6 +155,18 @@ export class DatabaseStorage implements IStorage {
       .set({ views: (album.views || 0) + 1 })
       .where(eq(albums.id, id));
   }
+
+  async cleanupExpiredAlbums(): Promise<void> {
+    if (!db) return;
+    const now = new Date();
+    // Delete albums where expiresAt is in the past
+    await db.delete(albums).where(
+      and(
+        isNotNull(albums.expiresAt),
+        lte(albums.expiresAt, now)
+      )
+    );
+  }
 }
 
 export class MemStorage implements IStorage {
@@ -184,6 +197,7 @@ export class MemStorage implements IStorage {
       theme: insertAlbum.theme || 'royal',
       password: insertAlbum.password || null,
       views: 0,
+      expiresAt: insertAlbum.expiresAt || null,
       createdAt: new Date(),
     };
     this.albums.set(id, album);
@@ -305,6 +319,21 @@ export class MemStorage implements IStorage {
     const album = this.albums.get(id);
     if (album) {
       this.albums.set(id, { ...album, views: (album.views || 0) + 1 });
+    }
+  }
+
+  async cleanupExpiredAlbums(): Promise<void> {
+    const now = new Date();
+    const entries = Array.from(this.albums.entries());
+    for (const [id, album] of entries) {
+      if (album.expiresAt && album.expiresAt <= now) {
+        this.albums.delete(id);
+        // Also delete associated files
+        const filesToDelete = Array.from(this.files.values()).filter(f => f.albumId === id);
+        for (const file of filesToDelete) {
+          this.files.delete(file.id);
+        }
+      }
     }
   }
 }

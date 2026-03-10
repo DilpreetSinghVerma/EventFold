@@ -26,6 +26,7 @@ export const albums = pgTable("albums", {
   theme: varchar("theme", { length: 20 }).notNull().default('royal'),
   password: text("password"), // Optional password for protected albums
   views: integer("views").notNull().default(0), // View tracker for analytics
+  expiresAt: timestamp("expires_at"), // For 7-day trials or 1-year credits
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 

@@ -1,9 +1,8 @@
 import { Link, useLocation } from 'wouter';
 import { Button } from '@/components/ui/button';
 import { motion } from 'framer-motion';
-import { Sparkles, ImagePlus, Eye, Smartphone, Zap, ArrowRight, LayoutGrid, CheckCircle2, ShoppingCart, ShieldCheck, Upload, Share2, BookOpen, Crown, CreditCard, Rocket } from "lucide-react";
+import { Sparkles, ImagePlus, Eye, Smartphone, Zap, ArrowRight, LayoutGrid, CheckCircle2, ShoppingCart, ShieldCheck, Upload, Share2, BookOpen, Crown, CreditCard, Rocket, Play } from "lucide-react";
 import { useAuth } from "@/lib/auth";
-import { Flipbook } from '@/components/Flipbook';
 import weddingCover from '@assets/generated_images/wedding_album_cover_art.png';
 
 // Local demo assets
@@ -26,13 +25,7 @@ export default function Home() {
     }
   };
 
-  // Local demo sheets
-  const demoSheets = [
-    demoSheet1L,
-    demoSheet1R,
-    demoSheet2L,
-    demoSheet2R,
-  ];
+
 
   return (
     <div className="min-h-screen bg-[#030303] text-white selection:bg-primary/30 selection:text-white overflow-x-hidden">
@@ -89,42 +82,53 @@ export default function Home() {
                     Upload Your Free 1st Album <ArrowRight className="w-5 h-5 ml-2 group-hover:translate-x-1 transition-transform" />
                   </Button>
                 </Link>
+                <Button
+                  variant="outline"
+                  size="lg"
+                  onClick={() => window.open('/demo', '_blank')}
+                  className="rounded-[1.25rem] h-16 px-10 text-lg border-white/10 hover:bg-white/5 text-white font-bold group"
+                >
+                  <Eye className="w-5 h-5 mr-3" /> Launch Demo Experience
+                </Button>
               </div>
             </motion.div>
 
-            {/* Interactive Demo Container */}
+            {/* Static Visual Representation of the Experience */}
             <motion.div
               initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
               transition={{ delay: 0.4, duration: 1.2, ease: "easeOut" }}
               className="w-full relative py-12"
             >
-              {/* Cinematic Studio Environment */}
-              <div className="h-[700px] w-full max-w-6xl mx-auto flex items-center justify-center relative rounded-[4rem] bg-[#080808] border border-white/5 shadow-[0_0_100px_rgba(0,0,0,1)] overflow-hidden group">
+              {/* Cinematic Studio Environment - Simplified for better flow */}
+              <div
+                onClick={() => window.open('/demo', '_blank')}
+                className="h-[500px] w-full max-w-6xl mx-auto flex items-center justify-center relative rounded-[4rem] bg-[#080808] border border-white/5 shadow-[0_0_100px_rgba(0,0,0,1)] overflow-hidden group cursor-pointer"
+              >
                 {/* Dynamic Spotlight */}
                 <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_0%,rgba(139,92,246,0.15),transparent_60%)] pointer-events-none" />
-                <div className="absolute bottom-0 left-0 right-0 h-1/2 bg-gradient-to-t from-black to-transparent pointer-events-none" />
+
+                <div className="relative z-10 flex flex-col items-center gap-8 group-hover:scale-110 transition-transform duration-700">
+                  <div className="relative">
+                    <img
+                      src={demoFront}
+                      alt="Demo Album"
+                      className="w-80 h-auto rounded-lg shadow-2xl transition-all duration-500 group-hover:shadow-primary/20 rotate-[-4deg] group-hover:rotate-0"
+                    />
+                    <div className="absolute inset-0 rounded-lg bg-primary/20 opacity-0 group-hover:opacity-100 transition-opacity" />
+                  </div>
+
+                  <div className="flex flex-col items-center gap-2">
+                    <div className="px-6 py-2 rounded-full bg-primary text-white font-bold flex items-center gap-3 shadow-lg shadow-primary/40">
+                      <Play className="w-4 h-4 fill-current" /> Play 3D Experience
+                    </div>
+                    <p className="text-white/40 text-xs font-bold uppercase tracking-[0.3em]">Click to launch immersive viewer</p>
+                  </div>
+                </div>
 
                 {/* Minimal Mesh Floor */}
                 <div className="absolute bottom-0 w-full h-[30%] opacity-[0.05] pointer-events-none"
                   style={{ backgroundImage: 'radial-gradient(circle at 2px 2px, white 1px, transparent 0)', backgroundSize: '40px 40px' }} />
-
-                <Flipbook
-                  sheets={demoSheets}
-                  frontCover={demoFront}
-                  backCover={demoBack}
-                  title="Studio Demo Experience"
-                  scale={0.8}
-                  contactWhatsApp="+919876543210"
-                  businessName="EventFold Studio"
-                />
-
-                {/* Interactive Hint */}
-                <div className="absolute bottom-8 left-1/2 -translate-x-1/2 px-4 py-2 rounded-full glass border-white/10 opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none">
-                  <p className="text-[10px] text-white/40 font-bold uppercase tracking-[0.3em] flex items-center gap-2">
-                    <Zap className="w-3 h-3 text-primary" /> Click corners to flip pages
-                  </p>
-                </div>
               </div>
             </motion.div>
           </div>
@@ -165,7 +169,7 @@ export default function Home() {
                   <span className="text-4xl font-display font-bold">₹499</span>
                   <span className="text-sm font-medium text-white/20">/month</span>
                 </div>
-                <p className="text-sm text-white/60 leading-relaxed">Unlimited project creation for busy studios. Full custom branding and priority syncing.</p>
+                <p className="text-sm text-white/60 leading-relaxed">Unlimited project creation for busy studios. Includes lifetime storage for all albums and custom branding.</p>
                 <Button onClick={() => handleSubscribe('monthly')} className="w-full h-14 rounded-xl bg-primary hover:bg-primary/90 text-white font-bold shadow-lg shadow-primary/20">
                   Select Pro Monthly
                 </Button>
