@@ -109,6 +109,23 @@ export default function Viewer() {
   }, []);
 
   useEffect(() => {
+    // Proactive Preloading: Trigger browser cache for all sheets once URLs are ready
+    if (loadedSheets.length > 0) {
+      const preloadImages = () => {
+        [loadedFrontCover, loadedBackCover, ...loadedSheets].forEach(url => {
+          if (!url) return;
+          const img = new Image();
+          img.src = url;
+        });
+      };
+      
+      // Small delay to allow initial render to be priority
+      const timer = setTimeout(preloadImages, 1000);
+      return () => clearTimeout(timer);
+    }
+  }, [loadedSheets, loadedFrontCover, loadedBackCover]);
+
+  useEffect(() => {
     const fetchAndLoad = async () => {
       if (!id) return;
 

@@ -302,7 +302,7 @@ export const Flipbook = forwardRef(({
               style={{ display: 'block' }}
               startPage={0}
               drawShadow={window.innerWidth >= 1024}
-              flippingTime={2000}
+              flippingTime={800}
               usePortrait={false}
               startZIndex={0}
               autoSize={false}
@@ -343,7 +343,8 @@ export const Flipbook = forwardRef(({
               {pages.map((page, index) => {
                 // Windowed Rendering: Only render actual content for pages near the current page
                 // This significantly reduces DOM memory and GPU load on mobile.
-                const isNear = Math.abs(index - currentPage) <= 4;
+                // Increased proximity detection to 8 to avoid black pages during fast flips
+                const isNear = Math.abs(index - currentPage) <= 8;
 
                 if (page.type === 'cover') {
                   return (
@@ -363,12 +364,19 @@ export const Flipbook = forwardRef(({
                           <img
                             src={page.image}
                             alt="cover"
-                            decoding="async"
+                            loading="eager"
+                            decoding="sync"
+                            onLoad={(e) => {
+                              (e.target as HTMLImageElement).style.opacity = '1';
+                            }}
                             style={{
                               width: '100%',
                               height: '100%',
                               objectFit: 'cover',
                               display: 'block',
+                              opacity: 0,
+                              transition: 'opacity 0.4s ease-in-out',
+                              willChange: 'opacity'
                             }}
                           />
                           <div className="absolute inset-0 opacity-[0.03] pointer-events-none" style={{ backgroundImage: `url("https://www.transparenttextures.com/patterns/leather.png")` }} />
@@ -417,7 +425,11 @@ export const Flipbook = forwardRef(({
                             <img
                               src={page.image}
                               alt="sheet"
-                              decoding="async"
+                              loading="eager"
+                              decoding="sync"
+                              onLoad={(e) => {
+                                (e.target as HTMLImageElement).style.opacity = '1';
+                              }}
                               style={{
                                 width: '100%',
                                 height: '100%',
@@ -425,6 +437,9 @@ export const Flipbook = forwardRef(({
                                 objectPosition: isLeftHalf ? 'right' : 'left',
                                 display: 'block',
                                 backgroundColor: '#0a0a0a',
+                                opacity: 0,
+                                transition: 'opacity 0.4s ease-in-out',
+                                willChange: 'opacity'
                               }}
                             />
                           )}

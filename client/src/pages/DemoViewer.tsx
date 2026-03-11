@@ -60,13 +60,19 @@ export default function DemoViewer() {
         checkOrientation();
         window.addEventListener('resize', checkOrientation);
 
+        // Proactive Preloading for Demo
+        [demoFront, demoBack, ...loadedSheets].forEach(url => {
+            const img = new Image();
+            img.src = url;
+        });
+
         const timer = setTimeout(() => setLoading(false), 1500);
 
         return () => {
             window.removeEventListener('resize', checkOrientation);
             clearTimeout(timer);
         };
-    }, []);
+    }, [loadedSheets]);
 
     const BrandingHeader = () => (
         <motion.div
