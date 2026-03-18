@@ -200,8 +200,10 @@ export default function Viewer() {
 
   // Always use the live internet viewer (Vercel) for Customer links
   const origin = import.meta.env.VITE_PUBLIC_VIEWER_URL || 'https://eventfold.vercel.app';
-  // Use the shared music URL
-  const musicUrl = album?.theme === 'royal' ? 'https://res.cloudinary.com/dzp0f9u5u/video/upload/v1740393962/royalty_wedding_bg_music_oc9z3p.mp3' : 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3';
+  // Extract custom uploaded music from the album, or fall back to default theme music
+  const customAudio = album?.files?.find((f: any) => f.fileType === 'audio')?.filePath;
+  const defaultMusicUrl = album?.theme === 'royal' ? 'https://res.cloudinary.com/dzp0f9u5u/video/upload/v1740393962/royalty_wedding_bg_music_oc9z3p.mp3' : 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3';
+  const musicUrl = customAudio || defaultMusicUrl;
   const shareUrl = `${origin}/album/${id}?shared=true`;
 
   const handleShare = async () => {
@@ -551,6 +553,7 @@ export default function Viewer() {
                     isSlideshowActive={isSlideshowActive}
                     onSlideshowEnd={() => setIsSlideshowActive(false)}
                     onPageChange={(current, total) => setPageInfo({ current, total })}
+                    audioUrl={musicUrl}
                   />
                 </div>
               </TransformComponent>

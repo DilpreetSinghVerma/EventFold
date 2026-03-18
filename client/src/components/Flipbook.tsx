@@ -19,6 +19,7 @@ interface FlipbookProps {
   isSlideshowActive?: boolean;
   onSlideshowEnd?: () => void;
   onPageChange?: (current: number, total: number) => void;
+  audioUrl?: string;
 }
 
 export const Flipbook = forwardRef(({
@@ -34,7 +35,8 @@ export const Flipbook = forwardRef(({
   isMuted = false,
   isSlideshowActive = false,
   onSlideshowEnd,
-  onPageChange
+  onPageChange,
+  audioUrl
 }: FlipbookProps, ref) => {
   const book = useRef<any>(null);
 
@@ -58,10 +60,10 @@ export const Flipbook = forwardRef(({
   const flipAudio = useRef<HTMLAudioElement | null>(null);
 
   useEffect(() => {
-    // Soft piano / wedding-style royalty-free background music
-    const musicUrl = '/music.mp3';
-
-    const music = new Audio(musicUrl);
+    // Soft piano / wedding-style royalty-free background music or custom upload
+    const defaultMusicUrl = '/music.mp3';
+    
+    const music = new Audio(audioUrl || defaultMusicUrl);
     music.loop = true;
     music.volume = 0;
     bgMusic.current = music;
@@ -80,7 +82,7 @@ export const Flipbook = forwardRef(({
       flip.pause();
       flip.src = '';
     };
-  }, []);
+  }, [audioUrl]);
 
   // Handle music fade-in and state
   const fadeInterval = useRef<NodeJS.Timeout | null>(null);

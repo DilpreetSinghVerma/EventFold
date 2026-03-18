@@ -37,6 +37,7 @@ export default function CreateAlbum() {
     sheets: File[];
     sheetVideos: (File | null)[];
     password: string;
+    bgMusic: File | null;
   }>({
     title: '',
     date: new Date().toISOString().split('T')[0],
@@ -46,6 +47,7 @@ export default function CreateAlbum() {
     sheets: [],
     sheetVideos: [],
     password: '',
+    bgMusic: null,
   });
 
   const [previewOpen, setPreviewOpen] = useState(false);
@@ -282,6 +284,14 @@ export default function CreateAlbum() {
         }
       });
 
+      // Add custom background music if provided
+      if (formData.bgMusic) {
+        uploadPromises.push((async () => {
+          const url = await uploadToCloudinary(formData.bgMusic!, 'Background Music', true); // 'video' resource_type in Cloudinary accepts audio
+          return { filePath: url, fileType: 'audio', orderIndex: 0 };
+        })());
+      }
+
       const uploadedFiles = await Promise.all(uploadPromises);
 
       // 4. Send the URLs to our server to link them to the album
@@ -413,6 +423,17 @@ export default function CreateAlbum() {
                       value={formData.password}
                       onChange={(e) => setFormData({ ...formData, password: e.target.value })}
                       className="h-14 bg-white/[0.03] border-white/5 rounded-2xl px-6 focus:ring-primary/20 transition-all font-mono"
+                    />
+                  </div>
+
+                  <div className="space-y-3">
+                    <Label htmlFor="bgMusic" className="text-sm font-bold uppercase tracking-[0.15em] text-white/40 ml-1">Custom Background Music (Optional)</Label>
+                    <Input
+                      id="bgMusic"
+                      type="file"
+                      accept="audio/*"
+                      onChange={(e) => setFormData({ ...formData, bgMusic: e.target.files?.[0] || null })}
+                      className="h-14 bg-white/[0.03] border-white/5 rounded-2xl px-6 focus:ring-primary/20 transition-all font-mono py-3"
                     />
                   </div>
                 </div>
