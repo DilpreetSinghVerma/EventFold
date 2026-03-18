@@ -639,6 +639,19 @@ export default function Viewer() {
 
                 <div className="w-px h-6 bg-white/10 mx-1 md:mx-2 self-center" />
 
+                {/* Shared Album Button */}
+                <Button 
+                    variant="ghost" 
+                    size="icon" 
+                    onClick={handleShare} 
+                    title="Share Album" 
+                    className={`${copied ? 'text-green-400' : 'text-white/60'} hover:text-white hover:bg-white/10 rounded-xl w-8 h-8 md:w-10 md:h-10`}
+                >
+                  {copied ? <Check className="w-4 h-4 md:w-5 h-5" /> : <Share2 className="w-4 h-4 md:w-5 h-5" />}
+                </Button>
+
+                <div className="w-px h-6 bg-white/10 mx-1 md:mx-2 self-center" />
+
                 {/* Page Counter integrated into Control Center */}
                 <div className="flex items-center px-2 md:px-3 text-white/40 text-[10px] md:text-xs font-mono select-none tracking-widest min-w-[3.5rem] md:min-w-[4.5rem] justify-center">
                   {pageInfo.current + 1}<span className="mx-1 text-white/10">/</span>{pageInfo.total}
