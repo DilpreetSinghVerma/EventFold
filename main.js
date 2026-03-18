@@ -1,4 +1,4 @@
-const { app, BrowserWindow, session } = require('electron');
+const { app, BrowserWindow, session, ipcMain } = require('electron');
 const path = require('path');
 const isDev = !app.isPackaged;
 
@@ -7,6 +7,8 @@ if (!isDev) {
     // Set environment variables for the packaged server
     process.env.NODE_ENV = 'production';
     process.env.PORT = '5000'; // Keep port consistent with development
+    process.env.LOCAL_SOFTWARE_MODE = 'true'; // Enable software pro logic
+
 
     try {
         // Require the bundled server logic
@@ -81,4 +83,8 @@ app.on('window-all-closed', () => {
     if (process.platform !== 'darwin') {
         app.quit();
     }
+});
+
+ipcMain.on('quit-app', () => {
+    app.quit();
 });

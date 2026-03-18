@@ -152,13 +152,15 @@ export default function Settings() {
                                 >
                                     <Building2 className="w-4 h-4" /> Studio Identity
                                 </Button>
-                                <Button
-                                    variant="ghost"
-                                    onClick={() => setActiveTab('billing')}
-                                    className={`w-full justify-start rounded-xl h-12 gap-3 transition-all ${activeTab === 'billing' ? 'bg-white/10 text-white' : 'text-white/40 hover:text-white'}`}
-                                >
-                                    <CreditCard className="w-4 h-4" /> Billing & Plan
-                                </Button>
+                                {user?.plan === 'software_pro' ? null : (
+                                    <Button
+                                        variant="ghost"
+                                        onClick={() => setActiveTab('billing')}
+                                        className={`w-full justify-start rounded-xl h-12 gap-3 transition-all ${activeTab === 'billing' ? 'bg-white/10 text-white' : 'text-white/40 hover:text-white'}`}
+                                    >
+                                        <CreditCard className="w-4 h-4" /> Billing & Plan
+                                    </Button>
+                                )}
                             </div>
                         </div>
 

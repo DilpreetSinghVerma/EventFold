@@ -434,9 +434,15 @@ export default function Dashboard() {
                 Support
               </Button>
             </ContactModal>
-            <Button onClick={() => logout()} variant="ghost" className="rounded-xl text-white/40 hover:text-red-400 glass border-none group">
-              <LogOut className="w-4 h-4 mr-2 group-hover:rotate-180 transition-transform" /> Sign Out
-            </Button>
+            {user?.plan === 'software_pro' ? (
+              <Button onClick={() => (window as any).electron?.send('quit-app')} variant="ghost" className="rounded-xl text-white/40 hover:text-red-400 glass border-none group">
+                <LogOut className="w-4 h-4 mr-2 group-hover:rotate-180 transition-transform" /> Exit Studio
+              </Button>
+            ) : (
+              <Button onClick={() => logout()} variant="ghost" className="rounded-xl text-white/40 hover:text-red-400 glass border-none group">
+                <LogOut className="w-4 h-4 mr-2 group-hover:rotate-180 transition-transform" /> Sign Out
+              </Button>
+            )}
             <Link href="/create">
               <Button className="rounded-xl px-6 bg-primary hover:bg-primary/90 text-white shadow-lg shadow-primary/20">
                 <Plus className="w-4 h-4 mr-2" /> New Album

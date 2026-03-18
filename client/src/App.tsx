@@ -23,7 +23,9 @@ function Router() {
 
   return (
     <Switch>
-      <Route path="/" component={Home} />
+      <Route path="/">
+        {user?.plan === 'software_pro' ? <Redirect to="/dashboard" /> : <Home />}
+      </Route>
       <Route path="/login">
         {user ? <Redirect to="/dashboard" /> : <Login />}
       </Route>

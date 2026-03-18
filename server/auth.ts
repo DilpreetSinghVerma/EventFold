@@ -10,6 +10,21 @@ export function setupAuth(app: Express) {
         app.set("trust proxy", 1);
     }
 
+    const isSoftwareMode = process.env.LOCAL_SOFTWARE_MODE === "true";
+    if (isSoftwareMode) {
+        app.use((req: any, _res, next) => {
+            req.isAuthenticated = () => true;
+            req.user = {
+                id: 'local_studio_admin',
+                email: 'studio@local',
+                name: 'Studio Master',
+                plan: 'software_pro',
+                credits: 9999
+            };
+            next();
+        });
+    }
+
     app.use(cookieSession({
         name: 'session',
         keys: [process.env.SESSION_SECRET || "eventfold-secret-key"],
@@ -100,7 +115,6 @@ export function setupAuth(app: Express) {
         if (!req.isAuthenticated()) return res.status(401).json({ error: "Not authenticated" });
 
         const user = req.user as User;
-        const isSoftwareMode = process.env.LOCAL_SOFTWARE_MODE === "true";
 
         if (isSoftwareMode) {
             return res.json({

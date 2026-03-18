@@ -92,6 +92,22 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getUser(id: string): Promise<User | undefined> {
+    if (id === 'local_studio_admin' && process.env.LOCAL_SOFTWARE_MODE === 'true') {
+        return {
+            id: 'local_studio_admin',
+            googleId: null,
+            email: 'studio@local',
+            name: 'Studio Master',
+            avatar: null,
+            plan: 'software_pro',
+            credits: 9999,
+            stripeCustomerId: null,
+            subscriptionId: null,
+            razorpayCustomerId: null,
+            razorpaySubscriptionId: null,
+            createdAt: new Date()
+        };
+    }
     if (!db) return;
     const [row] = await db.select().from(users).where(eq(users.id, id));
     return row;
@@ -259,6 +275,22 @@ export class MemStorage implements IStorage {
   }
 
   async getUser(id: string): Promise<User | undefined> {
+    if (id === 'local_studio_admin' && process.env.LOCAL_SOFTWARE_MODE === 'true') {
+        return {
+            id: 'local_studio_admin',
+            googleId: null,
+            email: 'studio@local',
+            name: 'Studio Master',
+            avatar: null,
+            plan: 'software_pro',
+            credits: 9999,
+            stripeCustomerId: null,
+            subscriptionId: null,
+            razorpayCustomerId: null,
+            razorpaySubscriptionId: null,
+            createdAt: new Date()
+        };
+    }
     return this.users.get(id);
   }
 
@@ -347,6 +379,27 @@ function getStorage(): IStorage {
   if (url && url !== "dummy_url") {
     console.log("STORAGE: Initializing DatabaseStorage (DATABASE_URL detected)");
     _storage = new DatabaseStorage();
+    
+    // Auto-provision local admin if in software mode
+    if (process.env.LOCAL_SOFTWARE_MODE === 'true') {
+        (async () => {
+            try {
+                const existing = await _storage!.getUser('local_studio_admin');
+                if (!existing) {
+                    await db.insert(users).values({
+                        id: 'local_studio_admin',
+                        email: 'studio@local',
+                        name: 'Studio Master',
+                        plan: 'software_pro',
+                        credits: 9999
+                    });
+                    console.log("STORAGE: Provisioned 'local_studio_admin' user.");
+                }
+            } catch (e) {
+                console.warn("STORAGE: Failed to auto-provision local admin (probably DB not ready yet/schema mismatch).", e);
+            }
+        })();
+    }
   } else {
     console.log("STORAGE: Initializing MemStorage (DATABASE_URL missing or empty)");
     _storage = new MemStorage();
