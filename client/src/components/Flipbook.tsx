@@ -302,7 +302,7 @@ export const Flipbook = forwardRef(({
               style={{ display: 'block' }}
               startPage={0}
               drawShadow={window.innerWidth >= 1024}
-              flippingTime={800}
+              flippingTime={window.innerWidth < 768 ? 1400 : 800}
               usePortrait={false}
               startZIndex={0}
               autoSize={false}
