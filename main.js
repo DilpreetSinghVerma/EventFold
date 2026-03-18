@@ -1,5 +1,6 @@
 const { app, BrowserWindow, session, ipcMain } = require('electron');
 const path = require('path');
+require('dotenv').config();
 const isDev = !app.isPackaged;
 
 // Start the background server in production
@@ -34,6 +35,8 @@ function createWindow() {
         show: false
     });
 
+    win.setMenuBarVisibility(false);
+    win.removeMenu();
     win.center();
 
     // Allow all content in dev mode (fixes CSP blocking React/Vite)

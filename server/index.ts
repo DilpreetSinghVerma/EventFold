@@ -90,19 +90,19 @@ app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
   res.status(status).json({ message });
 });
 
-if (process.env.NODE_ENV === "production" || process.env.VERCEL) {
+if (process.env.VERCEL) {
   serveStatic(app);
 } else {
-  // Use static serving for local Electron dev as well to avoid Vite hook crashes (Exit Code 3221226356)
+  // Always serve static assets and listen locally for Electron/Standalone mode
   serveStatic(app);
 
   const port = parseInt(process.env.PORT || "5000", 10);
   httpServer.listen(port, "0.0.0.0", () => {
-    log(`serving compiled static assets on port ${port}`);
+    log(`serving compiled static assets on port ${port} (Software Version Active)`);
   })
     .on('error', (err: any) => {
       if (err.code === 'EADDRINUSE') {
-        log(`Port ${port} is already in use. The server might already be running.`, 'warning');
+        log(`Port ${port} already in use. Service may be active in background.`, 'warning');
       } else {
         log(`Server error: ${err.message}`);
       }
