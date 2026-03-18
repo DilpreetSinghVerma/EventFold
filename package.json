@@ -1,6 +1,6 @@
 {
   "name": "rest-express",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "main": "main.js",
   "license": "MIT",
   "scripts": {
@@ -8,14 +8,19 @@
     "dev:server": "cross-env NODE_ENV=development tsx watch server/index.ts",
     "dev": "npm run build && concurrently \"npm run dev:client\" \"npm run dev:server\" \"wait-on -t 60000 http://127.0.0.1:5000 && electron .\"",
     "build": "tsx script/build.ts",
-    "build:studio": "npm run build && cross-env CSC_LINK=null electron-builder",
+    "build:studio": "npm run build && cross-env CSC_IDENTITY_AUTO_DISCOVERY=false electron-builder --win portable",
     "start": "cross-env NODE_ENV=production node dist/index.cjs",
     "check": "tsc",
     "db:push": "drizzle-kit push"
   },
   "build": {
     "appId": "com.eventfold.studio",
-    "productName": "EventFold Studio",
+    "productName": "EventFold Studio Elite",
+    "icon": "client/public/branding material/fevicon.png",
+    "asar": true,
+    "asarUnpack": [
+      "dist/public/**/*"
+    ],
     "directories": {
       "output": "build-studio"
     },
@@ -26,7 +31,8 @@
       "package.json"
     ],
     "win": {
-      "target": "portable"
+      "target": "portable",
+      "signAndEditExecutable": false
     }
   },
   "dependencies": {
