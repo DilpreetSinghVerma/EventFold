@@ -15,6 +15,7 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { useAuth } from '@/lib/auth';
+import { ContactModal } from '@/components/ContactModal';
 
 export default function Dashboard() {
   const { user, logout, buyAlbumCredit, startRazorpayCheckout } = useAuth();
@@ -428,11 +429,11 @@ export default function Dashboard() {
                 <SettingsIcon className="w-4 h-4 mr-2" /> Settings
               </Button>
             </Link>
-            <a href="mailto:dilpreetsinghverma@gmail.com">
+            <ContactModal>
               <Button variant="ghost" className="rounded-xl text-white/40 hover:text-white glass border-none">
                 Support
               </Button>
-            </a>
+            </ContactModal>
             <Button onClick={() => logout()} variant="ghost" className="rounded-xl text-white/40 hover:text-red-400 glass border-none group">
               <LogOut className="w-4 h-4 mr-2 group-hover:rotate-180 transition-transform" /> Sign Out
             </Button>

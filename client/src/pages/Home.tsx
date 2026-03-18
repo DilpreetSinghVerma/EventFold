@@ -4,6 +4,7 @@ import { motion } from 'framer-motion';
 import { Sparkles, ImagePlus, Eye, Smartphone, Zap, ArrowRight, LayoutGrid, CheckCircle2, ShoppingCart, ShieldCheck, Upload, Share2, BookOpen, Crown, CreditCard, Rocket, Play } from "lucide-react";
 import { useAuth } from "@/lib/auth";
 import weddingCover from '@assets/generated_images/wedding_album_cover_art.png';
+import { ContactModal } from '@/components/ContactModal';
 
 // Local demo assets
 import demoFront from '@assets/demo_album/cover_front.png';
@@ -200,9 +201,11 @@ export default function Home() {
           <BookOpen className="w-5 h-5 text-primary" />
           <span className="font-display font-bold tracking-tight">EventFold Studio</span>
         </div>
-        <a href="mailto:dilpreetsinghverma@gmail.com" className="text-white/40 hover:text-primary transition-colors text-sm font-medium mb-8 inline-block">
-          Contact Customer Service
-        </a>
+        <ContactModal>
+          <button className="text-white/40 hover:text-cyan-400 transition-colors text-sm font-medium mb-8 inline-block cursor-pointer">
+            Contact Customer Service
+          </button>
+        </ContactModal>
         <p className="text-white/20 text-xs uppercase tracking-[0.4em]">Crafted for the World's Best Photographers</p>
       </footer>
     </div>
