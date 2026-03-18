@@ -195,11 +195,14 @@ export default function Home() {
         </div>
       </section>
 
-      <footer className="py-20 border-t border-white/5 text-center">
-        <div className="flex items-center justify-center gap-3 mb-8">
+      <footer className="py-20 border-t border-white/5 text-center flex flex-col items-center">
+        <div className="flex items-center justify-center gap-3 mb-6">
           <BookOpen className="w-5 h-5 text-primary" />
           <span className="font-display font-bold tracking-tight">EventFold Studio</span>
         </div>
+        <a href="mailto:dilpreetsinghverma@gmail.com" className="text-white/40 hover:text-primary transition-colors text-sm font-medium mb-8 inline-block">
+          Contact Customer Service
+        </a>
         <p className="text-white/20 text-xs uppercase tracking-[0.4em]">Crafted for the World's Best Photographers</p>
       </footer>
     </div>

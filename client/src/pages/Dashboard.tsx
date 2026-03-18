@@ -428,6 +428,11 @@ export default function Dashboard() {
                 <SettingsIcon className="w-4 h-4 mr-2" /> Settings
               </Button>
             </Link>
+            <a href="mailto:dilpreetsinghverma@gmail.com">
+              <Button variant="ghost" className="rounded-xl text-white/40 hover:text-white glass border-none">
+                Support
+              </Button>
+            </a>
             <Button onClick={() => logout()} variant="ghost" className="rounded-xl text-white/40 hover:text-red-400 glass border-none group">
               <LogOut className="w-4 h-4 mr-2 group-hover:rotate-180 transition-transform" /> Sign Out
             </Button>
