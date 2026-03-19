@@ -94,8 +94,9 @@ export default function Privacy() {
                         <div className="space-y-4 pt-12 border-t border-white/5">
                             <h3 className="text-xl font-bold text-white">Contact Us</h3>
                             <p className="text-white/50 leading-relaxed text-sm">
-                                If you have any questions about this Privacy Policy, please contact us via the support form on our homepage.
+                                If you have any questions about this Privacy Policy, please contact us at:
                             </p>
+                            <a href="mailto:eventfoldstudio@gmail.com" className="text-primary font-bold hover:underline">eventfoldstudio@gmail.com</a>
                         </div>
                     </div>
                 </motion.div>

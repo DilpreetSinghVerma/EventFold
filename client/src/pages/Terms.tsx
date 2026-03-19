@@ -93,7 +93,15 @@ export default function Terms() {
                         </div>
 
                         <div className="space-y-4 pt-12 border-t border-white/5">
-                            <h3 className="text-xl font-bold text-white">Governing Law</h3>
+                            <h3 className="text-xl font-bold text-white">Contact Us</h3>
+                            <p className="text-white/50 leading-relaxed text-sm">
+                                If you have any questions about these Terms, please contact us at:
+                            </p>
+                            <a href="mailto:eventfoldstudio@gmail.com" className="text-primary font-bold hover:underline mb-8 block">eventfoldstudio@gmail.com</a>
+                        </div>
+
+                        <div className="space-y-4 pt-12 border-t border-white/5">
+                            <h3 className="text-xl font-bold text-white leading-none">Governing Law</h3>
                             <p className="text-white/50 leading-relaxed text-sm">
                                 These terms shall be governed by and construed in accordance with the laws of India. Any disputes shall be subject to the exclusive jurisdiction of the courts in India.
                             </p>
