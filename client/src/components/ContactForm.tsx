@@ -12,7 +12,7 @@ export function ContactForm() {
     const data = Object.fromEntries(formData);
     
     try {
-      const response = await fetch("https://formsubmit.co/ajax/dilpreetsinghverma@gmail.com", {
+      const response = await fetch("https://formsubmit.co/ajax/eventfoldstudio@gmail.com", {
         method: "POST",
         headers: {
             'Content-Type': 'application/json',
