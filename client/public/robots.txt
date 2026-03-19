@@ -1,0 +1,5 @@
+User-agent: *
+Allow: /
+Allow: /api/og
+
+Sitemap: https://eventfoldstudio.com/sitemap.xml
