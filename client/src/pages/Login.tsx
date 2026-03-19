@@ -1,3 +1,4 @@
+import { Link } from "wouter";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { LogIn, Globe, ShieldCheck, Zap, Sparkles, ImagePlus, ArrowRight } from "lucide-react";
@@ -114,8 +115,12 @@ export default function Login() {
                 </motion.div>
             </motion.div>
 
-            {/* Footer */}
-            <footer className="absolute bottom-8 left-0 right-0 text-center">
+            <footer className="absolute bottom-6 left-0 right-0 text-center space-y-4">
+                <div className="flex items-center justify-center gap-4 text-[10px] uppercase font-bold tracking-widest text-white/20">
+                    <Link href="/terms" className="hover:text-primary transition-colors">Terms</Link>
+                    <span className="w-1 h-1 rounded-full bg-white/10" />
+                    <Link href="/privacy" className="hover:text-primary transition-colors">Privacy</Link>
+                </div>
                 <p className="text-white/10 text-[10px] uppercase tracking-[0.4em]">
                     &copy; 2026 EventFold &bull; Crafted with Precision
                 </p>

@@ -12,6 +12,8 @@ import Viewer from "@/pages/Viewer";
 import DemoViewer from "@/pages/DemoViewer";
 import Settings from "@/pages/Settings";
 import Login from "@/pages/Login";
+import Terms from "@/pages/Terms";
+import Privacy from "@/pages/Privacy";
 import { AuthProvider, useAuth } from "@/lib/auth";
 import { Loader2 } from "lucide-react";
 
@@ -43,6 +45,8 @@ function Router() {
 
       <Route path="/album/:id" component={Viewer} />
       <Route path="/demo" component={DemoViewer} />
+      <Route path="/terms" component={Terms} />
+      <Route path="/privacy" component={Privacy} />
       <Route component={NotFound} />
     </Switch>
   );

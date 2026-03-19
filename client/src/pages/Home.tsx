@@ -200,9 +200,10 @@ export default function Home() {
         <div className="w-full max-w-xl mx-auto mb-20 px-4">
           <ContactForm />
         </div>
-        <div className="flex items-center justify-center gap-3 mb-6">
-          <BookOpen className="w-5 h-5 text-primary" />
-          <span className="font-display font-bold tracking-tight">EventFold Studio</span>
+        <div className="flex items-center justify-center gap-6 mb-8 text-[10px] uppercase tracking-[0.2em] font-bold text-white/30">
+          <Link href="/terms" className="hover:text-primary transition-colors">Terms of Service</Link>
+          <span className="w-1 h-1 rounded-full bg-white/10" />
+          <Link href="/privacy" className="hover:text-primary transition-colors">Privacy Policy</Link>
         </div>
         <p className="text-white/20 text-xs uppercase tracking-[0.4em]">Crafted for the World's Best Photographers</p>
       </footer>
