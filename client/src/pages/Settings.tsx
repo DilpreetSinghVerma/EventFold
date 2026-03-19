@@ -50,9 +50,13 @@ export default function Settings() {
             if (res.ok) {
                 const data = await res.json();
                 setSettings(prev => ({ ...prev, businessLogo: data.logoUrl }));
+            } else {
+                const err = await res.json().catch(() => ({ error: 'Upload failed' }));
+                alert(`Logo upload failed: ${err.error || 'Server Error'}`);
             }
-        } catch (e) {
+        } catch (e: any) {
             console.error("Logo upload failed", e);
+            alert(`Network error: ${e.message}`);
         } finally {
             setUploadingLogo(false);
         }
@@ -76,9 +80,12 @@ export default function Settings() {
             if (res.ok) {
                 setSuccess(true);
                 setTimeout(() => setSuccess(false), 3000);
+            } else {
+                const err = await res.json().catch(() => ({ error: 'Update failed' }));
+                alert(`Settings update failed: ${err.error || 'Server Error'}`);
             }
-        } finally {
-            setSaving(false);
+        } catch (e: any) {
+            alert(`Network error: ${e.message}`);
         }
     };
 
