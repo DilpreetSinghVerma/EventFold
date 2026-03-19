@@ -103,9 +103,10 @@ export function registerRoutes(
   });
 
   // Get Business Settings
-  app.get("/api/settings", async (_req, res) => {
+  app.get("/api/settings", async (req, res) => {
     try {
-      const s = await storage.getSettings();
+      if (!req.isAuthenticated()) return res.status(401).json({ error: "Unauthorized" });
+      const s = await storage.getSettings((req.user as any).id);
       res.json(s);
     } catch (e) {
       res.status(500).json({ error: "Failed to fetch settings" });
@@ -116,7 +117,7 @@ export function registerRoutes(
   app.patch("/api/settings", async (req, res) => {
     try {
       if (!req.isAuthenticated()) return res.status(401).json({ error: "Unauthorized" });
-      await storage.updateSettings(req.body);
+      await storage.updateSettings((req.user as any).id, req.body);
       res.json({ success: true });
     } catch (e) {
       res.status(500).json({ error: "Failed to update settings" });
@@ -149,8 +150,9 @@ export function registerRoutes(
 
       const result: any = await streamUpload(req.file.buffer);
       const logoUrl = result.secure_url;
+      const userId = (req.user as any).id;
 
-      await storage.updateSettings({ businessLogo: logoUrl });
+      await storage.updateSettings(userId, { businessLogo: logoUrl });
       res.json({ logoUrl });
     } catch (e: any) {
       console.error("Logo upload failed:", e);
@@ -432,9 +434,10 @@ export function registerRoutes(
       }
 
       const files = await storage.getFilesByAlbum(req.params.id);
+      const branding = await storage.getSettings(album.userId!);
       // Strip password from the response for security
       const { password, ...albumSafe } = album as any;
-      res.json({ ...albumSafe, files, isProtected: !!album.password, isUnlocked: true });
+      res.json({ ...albumSafe, files, branding, isProtected: !!album.password, isUnlocked: true });
     } catch (e) {
       res.status(500).json({ error: "Failed to fetch album" });
     }

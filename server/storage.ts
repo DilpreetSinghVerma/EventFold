@@ -15,8 +15,8 @@ export interface IStorage {
   getFile(id: string): Promise<File | undefined>;
   deleteFilesByAlbum(albumId: string): Promise<void>;
 
-  getSettings(): Promise<any>;
-  updateSettings(data: any): Promise<void>;
+  getSettings(userId: string): Promise<any>;
+  updateSettings(userId: string, data: any): Promise<void>;
 
   getUser(id: string): Promise<User | undefined>;
   getUserByEmail(email: string): Promise<User | undefined>;
@@ -75,18 +75,18 @@ export class DatabaseStorage implements IStorage {
     await db.delete(files).where(eq(files.albumId, albumId));
   }
 
-  async getSettings(): Promise<any> {
-    if (!db) return { businessName: "EventFold Studio" };
-    const [row] = await db.select().from(settings).where(eq(settings.id, 1));
-    return row || { businessName: "EventFold Studio" };
+  async getSettings(userId: string): Promise<any> {
+    if (!db) return { businessName: "EventFold Studio", businessLogo: null, contactWhatsApp: null, adminPassword: "admin123" };
+    const [row] = await db.select().from(settings).where(eq(settings.userId, userId));
+    return row || { businessName: "EventFold Studio", businessLogo: null, contactWhatsApp: null, adminPassword: "admin123" };
   }
 
-  async updateSettings(data: any): Promise<void> {
+  async updateSettings(userId: string, data: any): Promise<void> {
     if (!db) return;
     await db.insert(settings)
-      .values({ ...data, id: 1 })
+      .values({ ...data, userId })
       .onConflictDoUpdate({
-        target: settings.id,
+        target: settings.userId,
         set: data
       });
   }
@@ -190,7 +190,7 @@ export class MemStorage implements IStorage {
   private albums: Map<string, Album>;
   private files: Map<string, File>;
   private users: Map<string, User>;
-  private settings: any;
+  private settings: Map<string, any>;
   private albumIdCounter: number;
   private fileIdCounter: number;
   private userIdCounter: number;
@@ -199,7 +199,7 @@ export class MemStorage implements IStorage {
     this.albums = new Map();
     this.files = new Map();
     this.users = new Map();
-    this.settings = { id: 1, businessName: "EventFold Studio", adminPassword: "admin123" };
+    this.settings = new Map();
     this.albumIdCounter = 1;
     this.fileIdCounter = 1;
     this.userIdCounter = 1;
@@ -267,12 +267,13 @@ export class MemStorage implements IStorage {
     }
   }
 
-  async getSettings(): Promise<any> {
-    return this.settings;
+  async getSettings(userId: string): Promise<any> {
+    return this.settings.get(userId) || { businessName: "EventFold Studio", businessLogo: null, contactWhatsApp: null, adminPassword: "admin123" };
   }
 
-  async updateSettings(data: any): Promise<void> {
-    this.settings = { ...this.settings, ...data, id: 1 };
+  async updateSettings(userId: string, data: any): Promise<void> {
+    const existing = this.settings.get(userId) || {};
+    this.settings.set(userId, { ...existing, ...data, userId });
   }
 
   async getUser(id: string): Promise<User | undefined> {

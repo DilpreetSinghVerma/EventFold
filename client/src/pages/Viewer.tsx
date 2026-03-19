@@ -179,11 +179,8 @@ export default function Viewer() {
         splitUrlsRef.current = halves;
         setLoadedSheets(halves);
 
-        // Fetch business settings for branding
-        setLoadStatus('Fetching studio settings...');
-        const settingsResponse = await fetch('/api/settings');
-        const settingsData = await settingsResponse.json();
-        setSettings(settingsData);
+        // Use the branding returned as part of the album metadata
+        setSettings(albumData.branding);
 
       } catch (e) {
         console.error('Failed to load album or settings', e);

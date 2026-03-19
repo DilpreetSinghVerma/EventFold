@@ -39,7 +39,7 @@ export const files = pgTable("files", {
 });
 
 export const settings = pgTable("settings", {
-  id: integer("id").primaryKey().default(1),
+  userId: varchar("user_id").primaryKey().references(() => users.id, { onDelete: 'cascade' }),
   businessName: text("business_name").notNull().default("EventFold Studio"),
   businessLogo: text("business_logo"),
   contactWhatsApp: text("contact_whatsapp"),
