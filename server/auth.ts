@@ -10,7 +10,9 @@ export function setupAuth(app: Express) {
         app.set("trust proxy", 1);
     }
 
-    const isSoftwareMode = process.env.LOCAL_SOFTWARE_MODE === "true";
+    // Software mode is ONLY for local development or standalone Electron builds.
+    // It is dangerous on Vercel because it makes every user the same master admin.
+    const isSoftwareMode = process.env.LOCAL_SOFTWARE_MODE === "true" && !process.env.VERCEL;
     if (isSoftwareMode) {
         app.use((req: any, _res, next) => {
             req.isAuthenticated = () => true;

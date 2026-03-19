@@ -365,8 +365,9 @@ export function registerRoutes(
         expiresAt: expiresAt
       });
 
-      // Deduct credit only if NOT in software mode
-      if (process.env.LOCAL_SOFTWARE_MODE !== "true") {
+      // Deduct credit only if NOT in software mode (and NOT on Vercel)
+      const isSoftwareMode = process.env.LOCAL_SOFTWARE_MODE === "true" && !process.env.VERCEL;
+      if (!isSoftwareMode) {
         await storage.deductCredit(userId);
       }
       const album = await storage.createAlbum(data);

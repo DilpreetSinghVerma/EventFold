@@ -25,7 +25,7 @@ export default function CreateAlbum() {
     enabled: !!user,
   });
 
-  const isLimitReached = user?.plan === 'free' && (albums?.length || 0) >= 1;
+  const isLimitReached = user?.plan === 'free' && (albums?.length || 0) >= 1 && (user?.credits || 0) <= 0;
   const isSoftwareMode = user?.plan === 'software_pro';
 
   const [formData, setFormData] = useState<{

@@ -92,7 +92,8 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getUser(id: string): Promise<User | undefined> {
-    if (id === 'local_studio_admin' && process.env.LOCAL_SOFTWARE_MODE === 'true') {
+    const isSoftwareMode = process.env.LOCAL_SOFTWARE_MODE === "true" && !process.env.VERCEL;
+    if (id === 'local_studio_admin' && isSoftwareMode) {
         return {
             id: 'local_studio_admin',
             googleId: null,
@@ -275,7 +276,8 @@ export class MemStorage implements IStorage {
   }
 
   async getUser(id: string): Promise<User | undefined> {
-    if (id === 'local_studio_admin' && process.env.LOCAL_SOFTWARE_MODE === 'true') {
+    const isSoftwareMode = process.env.LOCAL_SOFTWARE_MODE === "true" && !process.env.VERCEL;
+    if (id === 'local_studio_admin' && isSoftwareMode) {
         return {
             id: 'local_studio_admin',
             googleId: null,
@@ -380,8 +382,9 @@ function getStorage(): IStorage {
     console.log("STORAGE: Initializing DatabaseStorage (DATABASE_URL detected)");
     _storage = new DatabaseStorage();
     
-    // Auto-provision local admin if in software mode
-    if (process.env.LOCAL_SOFTWARE_MODE === 'true') {
+    // Auto-provision local admin if in software mode (and not on Vercel)
+    const isSoftwareMode = process.env.LOCAL_SOFTWARE_MODE === "true" && !process.env.VERCEL;
+    if (isSoftwareMode) {
         (async () => {
             try {
                 const existing = await _storage!.getUser('local_studio_admin');
