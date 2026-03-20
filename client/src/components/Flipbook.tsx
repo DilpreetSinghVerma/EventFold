@@ -260,47 +260,17 @@ export const Flipbook = forwardRef(({
         className="flex items-center justify-center w-full h-full lg:overflow-visible"
         style={{
           perspective: window.innerWidth < 768 ? 'none' : '1400px',
-          touchAction: window.innerWidth < 768 ? 'pan-y' : 'auto'
+          touchAction: 'auto'
         }}
       >
-        <div>
-          <motion.div
-            initial={{
-              opacity: 0,
-              y: 100,
-              scale: 0.9 * scale,
-              rotateZ: window.innerWidth < 768 ? 0 : -12,
-              rotateX: window.innerWidth < 768 ? 0 : 25,
-              perspective: '2000px',
-            }}
-            animate={{
-              opacity: 1,
-              y: 0,
-              scale: scale,
-              rotateZ: (isOpened || window.innerWidth < 768) ? 0 : -5,
-              rotateX: (isOpened || window.innerWidth < 768) ? 0 : 8,
-              rotateY: (isOpened || window.innerWidth < 768) ? 0 : 4,
-            }}
-            transition={{
-              opacity: { duration: 0.8, ease: 'easeOut' },
-              y: { duration: 1.2, ease: [0.16, 1, 0.3, 1] },
-              scale: { duration: 1.2, ease: [0.16, 1, 0.3, 1] },
-              rotateZ: isOpened
-                ? { type: 'spring', stiffness: 60, damping: 20 }
-                : { duration: 1.2, ease: [0.16, 1, 0.3, 1] },
-              rotateX: isOpened
-                ? { type: 'spring', stiffness: 60, damping: 20 }
-                : { duration: 1.2, ease: [0.16, 1, 0.3, 1] },
-              rotateY: isOpened
-                ? { type: 'spring', stiffness: 60, damping: 20 }
-                : { duration: 1.2, ease: [0.16, 1, 0.3, 1] },
-            }}
-            style={{
-              transformStyle: 'preserve-3d',
-              display: 'inline-block',
-              filter: window.innerWidth < 1024 ? 'none' : 'drop-shadow(0 30px 60px rgba(0,0,0,0.6))'
-            }}
-          >
+          {window.innerWidth < 768 ? (
+            // Mobile: plain div, no 3D transforms — full GPU power goes to the flip animation
+            <motion.div
+              initial={{ opacity: 0, y: 40 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6, ease: 'easeOut' }}
+              style={{ display: 'inline-block' }}
+            >
             <HTMLFlipBook
               ref={book}
               width={pageWidth}
@@ -484,14 +454,146 @@ export const Flipbook = forwardRef(({
                 return <div key={page.key} className="page" style={{ ...pageBase, backgroundColor: '#000' }} />;
               })}
             </HTMLFlipBook>
-          </motion.div>
-        </div>
+            </motion.div>
+          ) : (
+            // Desktop: full 3D tilt animation
+            <motion.div
+              initial={{
+                opacity: 0,
+                y: 100,
+                scale: 0.9 * scale,
+                rotateZ: -12,
+                rotateX: 25,
+              }}
+              animate={{
+                opacity: 1,
+                y: 0,
+                scale: scale,
+                rotateZ: isOpened ? 0 : -5,
+                rotateX: isOpened ? 0 : 8,
+                rotateY: isOpened ? 0 : 4,
+              }}
+              transition={{
+                opacity: { duration: 0.8, ease: 'easeOut' },
+                y: { duration: 1.2, ease: [0.16, 1, 0.3, 1] },
+                scale: { duration: 1.2, ease: [0.16, 1, 0.3, 1] },
+                rotateZ: isOpened ? { type: 'spring', stiffness: 60, damping: 20 } : { duration: 1.2, ease: [0.16, 1, 0.3, 1] },
+                rotateX: isOpened ? { type: 'spring', stiffness: 60, damping: 20 } : { duration: 1.2, ease: [0.16, 1, 0.3, 1] },
+                rotateY: isOpened ? { type: 'spring', stiffness: 60, damping: 20 } : { duration: 1.2, ease: [0.16, 1, 0.3, 1] },
+              }}
+              style={{
+                transformStyle: 'preserve-3d',
+                display: 'inline-block',
+                filter: 'drop-shadow(0 30px 60px rgba(0,0,0,0.6))'
+              }}
+            >
+            <HTMLFlipBook
+              ref={book}
+              width={pageWidth}
+              height={pageHeight}
+              size="fixed"
+              minWidth={50}
+              maxWidth={3000}
+              minHeight={50}
+              maxHeight={3000}
+              maxShadowOpacity={0.3}
+              showCover={true}
+              mobileScrollSupport={false}
+              className="shadow-2xl"
+              style={{ display: 'block' }}
+              startPage={0}
+              drawShadow={true}
+              flippingTime={800}
+              usePortrait={false}
+              startZIndex={0}
+              autoSize={false}
+              clickEventForward={true}
+              useMouseEvents={true}
+              swipeDistance={30}
+              showPageCorners={true}
+              disableFlipByClick={false}
+              onFlip={(e: any) => {
+                playFlipSound();
+                const pg = e.data;
+                setCurrentPage(pg);
+                if (onPageChange) onPageChange(pg, totalPageCount);
+                if (pg > 0 && !isOpened) {
+                  setIsOpened(true);
+                  if (!isMuted && bgMusic.current) {
+                    bgMusic.current.play().catch(e => console.warn("Music failed to play:", e));
+                  }
+                }
+                if (pg === 0 && isOpened) {
+                  setIsOpened(false);
+                  if (bgMusic.current) {
+                    const interval = setInterval(() => {
+                      if (bgMusic.current && bgMusic.current.volume > 0.01) {
+                        bgMusic.current.volume -= 0.01;
+                      } else {
+                        if (bgMusic.current) {
+                          bgMusic.current.pause();
+                          bgMusic.current.volume = 0;
+                        }
+                        clearInterval(interval);
+                      }
+                    }, 50);
+                  }
+                }
+              }}
+            >
+              {pages.map((page, index) => {
+                const isNear = Math.abs(index - currentPage) <= 8;
+                if (page.type === 'cover') {
+                  return (
+                    <div key={page.key} className="page hard" data-density="hard"
+                      style={{ ...pageBase, backgroundColor: '#000', willChange: 'transform' }}>
+                      {isNear && (
+                        <>
+                          <img src={page.image} alt="cover" loading="eager" decoding="async"
+                            onLoad={(e) => { (e.target as HTMLImageElement).style.opacity = '1'; }}
+                            style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block', opacity: 0, transition: 'opacity 0.4s ease-in-out' }} />
+                          <div className="absolute inset-0 opacity-[0.03] pointer-events-none" style={{ backgroundImage: `url("https://www.transparenttextures.com/patterns/leather.png")` }} />
+                          <div className="absolute inset-0 bg-gradient-to-tr from-black/60 via-transparent to-white/10 pointer-events-none" />
+                          <div className="absolute inset-4 border border-white/10 rounded-sm pointer-events-none" />
+                          <div style={{ position: 'absolute', inset: 0, boxShadow: 'inset 0 0 100px rgba(0,0,0,0.8)', pointerEvents: 'none' }} />
+                        </>
+                      )}
+                    </div>
+                  );
+                }
+                if (page.type === 'sheet') {
+                  const pageIndex = pages.indexOf(page);
+                  const isLeftHalf = (pageIndex - 1) % 2 === 0;
+                  return (
+                    <div key={page.key} className="page" data-density="soft"
+                      style={{ ...pageBase, backgroundColor: '#0a0a0a', willChange: 'transform' }}>
+                      {isNear && (
+                        <>
+                          {page.video ? (
+                            <video src={page.video} autoPlay loop muted playsInline
+                              style={{ width: '100%', height: '100%', objectFit: 'cover', objectPosition: isLeftHalf ? 'right' : 'left', display: 'block', backgroundColor: '#0a0a0a' }} />
+                          ) : (
+                            <img src={page.image} alt="sheet" loading="eager" decoding="async"
+                              onLoad={(e) => { (e.target as HTMLImageElement).style.opacity = '1'; }}
+                              style={{ width: '100%', height: '100%', objectFit: 'cover', objectPosition: isLeftHalf ? 'right' : 'left', display: 'block', backgroundColor: '#0a0a0a', opacity: 0, transition: 'opacity 0.4s ease-in-out' }} />
+                          )}
+                          <div className="absolute inset-0 opacity-[0.02] pointer-events-none" style={{ backgroundImage: `url("https://www.transparenttextures.com/patterns/paper-fibers.png")` }} />
+                          <div style={{ position: 'absolute', top: 0, [isLeftHalf ? 'right' : 'left']: 0, width: 30, height: '100%',
+                            background: isLeftHalf
+                              ? 'linear-gradient(to left, rgba(0,0,0,0.4) 0%, rgba(0,0,0,0.1) 40%, transparent 100%)'
+                              : 'linear-gradient(to right, rgba(0,0,0,0.4) 0%, rgba(0,0,0,0.1) 40%, transparent 100%)',
+                            pointerEvents: 'none', zIndex: 10 }} />
+                        </>
+                      )}
+                    </div>
+                  );
+                }
+                return <div key={page.key} className="page" style={{ ...pageBase, backgroundColor: '#000' }} />;
+              })}
+            </HTMLFlipBook>
+            </motion.div>
+          )}
       </div>
-
-
-
-
-
     </div>
   );
 });
