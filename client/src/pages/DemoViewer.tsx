@@ -188,157 +188,82 @@ export default function DemoViewer() {
 
             <BrandingHeader />
 
-            <main className="relative w-full flex-1 flex flex-col items-center justify-center bg-transparent lg:overflow-visible" style={{ minHeight: 0 }}>
-
-                {isMobileDevice ? (
-                    <TransformWrapper
-                        initialScale={1}
-                        maxScale={3}
-                        centerOnInit={true}
-                        centerZoomedOut={true}
-                        limitToBounds={true}
-                        smooth={true}
-                        minScale={1}
-                        wheel={{ disabled: true }}
-                        doubleClick={{ disabled: false }}
-                        pinch={{ disabled: false }}
-                        panning={{ disabled: false }} // Allow pan on mobile
-                        onTransformed={(ref) => {
-                             const zText = document.getElementById('mobile-zoom-text');
-                             if (zText) zText.innerText = Math.round(ref.state.scale * 100) + '%';
-                        }}
-                    >
-                        {({ zoomIn, zoomOut, resetTransform }) => (
-                            <div className="relative w-full h-full flex items-center justify-center" style={{ touchAction: 'none' }}>
-                                <TransformComponent
-                                    wrapperStyle={{ width: "100%", height: "100%", backgroundColor: "transparent", overflow: "visible" }}
-                                    contentStyle={{ width: "100%", height: "100%", display: "flex", alignItems: "center", justifyContent: "center", overflow: "visible" }}
-                                >
-                                    <div className="w-full h-full flex items-center justify-center">
-                                        {FlipbookNode}
-                                    </div>
-                                </TransformComponent>
-
-                                {/* Nav arrows */}
-                                <div className="absolute inset-y-0 left-0 w-16 flex items-center justify-center z-[100] pointer-events-none">
-                                    <Button variant="ghost" size="icon" onClick={() => flipbookRef.current?.prev()}
-                                        className="w-10 h-10 rounded-full bg-black/40 backdrop-blur-md text-white/60 hover:text-white hover:bg-black/60 border border-white/5 pointer-events-auto transition-all shadow-2xl">
-                                        <ChevronLeft className="w-6 h-6" />
-                                    </Button>
+            <main className="relative w-full flex-1 flex flex-col items-center justify-center bg-transparent lg:overflow-visible" style={{ touchAction: 'none', minHeight: 0 }}>
+                <TransformWrapper
+                    initialScale={window.innerWidth < 1024 ? 1.3 : 1}
+                    maxScale={window.innerWidth < 1024 ? 4 : 2}
+                    centerOnInit={true}
+                    centerZoomedOut={true}
+                    limitToBounds={true}
+                    smooth={true}
+                    minScale={1}
+                    onTransformed={(ref) => setScale(ref.state.scale)}
+                    wheel={{ step: 0.1, disabled: window.innerWidth >= 1024 }}
+                    doubleClick={{ disabled: false }}
+                    pinch={{ disabled: false }}
+                    panning={{ disabled: window.innerWidth >= 1024 }}
+                >
+                    {({ zoomIn, zoomOut, resetTransform }) => (
+                        <>
+                            <TransformComponent
+                                wrapperStyle={{ width: "100%", height: "100%", backgroundColor: "transparent", overflow: "visible" }}
+                                contentStyle={{ width: "100%", height: "100%", display: "flex", alignItems: "center", justifyContent: "center", overflow: "visible" }}
+                            >
+                                <div className="w-full h-full flex items-center justify-center lg:overflow-visible">
+                                    {FlipbookNode}
                                 </div>
-                                <div className="absolute inset-y-0 right-0 w-16 flex items-center justify-center z-[100] pointer-events-none">
-                                    <Button variant="ghost" size="icon" onClick={() => flipbookRef.current?.next()}
-                                        className="w-10 h-10 rounded-full bg-black/40 backdrop-blur-md text-white/60 hover:text-white hover:bg-black/60 border border-white/5 pointer-events-auto transition-all shadow-2xl">
-                                        <ChevronRight className="w-6 h-6" />
-                                    </Button>
-                                </div>
+                            </TransformComponent>
 
-                                {/* Mobile toolbar */}
-                                <motion.div
-                                    animate={{ y: uiVisible ? 0 : -120, opacity: uiVisible ? 1 : 0 }}
-                                    className="fixed top-4 left-1/2 -translate-x-1/2 z-[70] flex gap-1 glass-dark px-3 py-1.5 rounded-2xl border-white/5 shadow-2xl scale-90"
-                                >
-                                    <Button variant="ghost" size="icon" title="Close" onClick={() => window.close()} className="text-white/60 hover:text-white hover:bg-white/10 rounded-xl w-8 h-8">
-                                        <ArrowLeft className="w-5 h-5" />
-                                    </Button>
-                                    <div className="w-px h-6 bg-white/10 mx-1 self-center" />
-                                    <Button variant="ghost" size="icon" onClick={() => zoomOut()} className="text-white/60 hover:text-white hover:bg-white/10 rounded-xl w-8 h-8"><ZoomOut className="w-4 h-4" /></Button>
-                                    <div id="mobile-zoom-text" className="flex items-center px-2 text-white/90 text-[10px] font-bold min-w-[2.5rem] justify-center">100%</div>
-                                    <Button variant="ghost" size="icon" onClick={() => zoomIn()} className="text-white/60 hover:text-white hover:bg-white/10 rounded-xl w-8 h-8"><ZoomIn className="w-4 h-4" /></Button>
-                                    <div className="w-px h-6 bg-white/10 mx-1 self-center" />
-                                    <Button variant="ghost" size="icon" onClick={() => resetTransform()} className="text-white/60 hover:text-white hover:bg-white/10 rounded-xl w-8 h-8"><RotateCcw className="w-4 h-4" /></Button>
-                                    <div className="w-px h-6 bg-white/10 mx-1 self-center" />
-                                    <Button variant="ghost" size="icon" onClick={() => setIsMuted(!isMuted)} className={`${isMuted ? 'text-white/30' : 'text-primary animate-pulse'} hover:bg-white/10 rounded-xl w-8 h-8`}>
-                                        {isMuted ? <VolumeX className="w-4 h-4" /> : <Volume2 className="w-4 h-4" />}
-                                    </Button>
-                                    <Button variant="ghost" size="icon" onClick={() => setIsSlideshowActive(!isSlideshowActive)} className={`${isSlideshowActive ? 'text-primary' : 'text-white/60'} hover:bg-white/10 rounded-xl w-8 h-8`}>
-                                        {isSlideshowActive ? <Pause className="w-4 h-4" /> : <Play className="w-4 h-4" />}
-                                    </Button>
-                                    <div className="w-px h-6 bg-white/10 mx-1 self-center" />
-                                    <Button variant="ghost" size="icon" onClick={() => {
-                                        if (!document.fullscreenElement) document.documentElement.requestFullscreen().catch(() => { });
-                                        else document.exitFullscreen();
-                                    }} className="text-white/60 hover:text-white hover:bg-white/10 rounded-xl w-8 h-8">
-                                        <Maximize2 className="w-4 h-4" />
-                                    </Button>
-                                    <div className="w-px h-6 bg-white/10 mx-1 self-center" />
-                                    <div className="flex items-center px-2 text-white/40 text-[10px] font-mono select-none min-w-[3rem] justify-center">
-                                        {pageInfo.current + 1}<span className="mx-1 text-white/10">/</span>{pageInfo.total}
-                                    </div>
-                                </motion.div>
+                            <div className="absolute inset-y-0 left-0 w-16 md:w-24 flex items-center justify-center z-[100] pointer-events-none">
+                                <Button variant="ghost" size="icon" onClick={() => flipbookRef.current?.prev()} className="w-10 h-10 md:w-14 md:h-14 rounded-full bg-black/40 backdrop-blur-md text-white/60 hover:text-white hover:bg-black/60 border border-white/5 pointer-events-auto transition-all shadow-2xl">
+                                    <ChevronLeft className="w-6 h-6 md:w-8 md:h-8" />
+                                </Button>
                             </div>
-                        )}
-                    </TransformWrapper>
-                ) : (
-                    /* ── DESKTOP: full TransformWrapper, unchanged ── */
-                    <TransformWrapper
-                        initialScale={1}
-                        maxScale={2}
-                        centerOnInit={true}
-                        centerZoomedOut={true}
-                        limitToBounds={true}
-                        smooth={true}
-                        minScale={1}
-                        onTransformed={(ref) => setScale(ref.state.scale)}
-                        wheel={{ step: 0.1 }}
-                        doubleClick={{ disabled: false }}
-                        pinch={{ disabled: false }}
-                        panning={{ disabled: true }}
-                    >
-                        {({ zoomIn, zoomOut, resetTransform }) => (
-                            <>
-                                <TransformComponent
-                                    wrapperStyle={{ width: "100%", height: "100%", backgroundColor: "transparent", overflow: "visible" }}
-                                    contentStyle={{ width: "100%", height: "100%", display: "flex", alignItems: "center", justifyContent: "center", overflow: "visible" }}
-                                >
-                                    <div className="w-full h-full flex items-center justify-center lg:overflow-visible">
-                                        {FlipbookNode}
-                                    </div>
-                                </TransformComponent>
+                            <div className="absolute inset-y-0 right-0 w-16 md:w-24 flex items-center justify-center z-[100] pointer-events-none">
+                                <Button variant="ghost" size="icon" onClick={() => flipbookRef.current?.next()} className="w-10 h-10 md:w-14 md:h-14 rounded-full bg-black/40 backdrop-blur-md text-white/60 hover:text-white hover:bg-black/60 border border-white/5 pointer-events-auto transition-all shadow-2xl">
+                                    <ChevronRight className="w-6 h-6 md:w-8 md:h-8" />
+                                </Button>
+                            </div>
 
-                                <div className="absolute inset-y-0 left-0 w-24 flex items-center justify-center z-[100] pointer-events-none">
-                                    <Button variant="ghost" size="icon" onClick={() => flipbookRef.current?.prev()} className="w-14 h-14 rounded-full bg-black/40 backdrop-blur-md text-white/60 hover:text-white hover:bg-black/60 border border-white/5 pointer-events-auto transition-all shadow-2xl">
-                                        <ChevronLeft className="w-8 h-8" />
-                                    </Button>
+                            <motion.div
+                                animate={{ y: uiVisible ? 0 : (window.innerWidth < 1024 ? -120 : 100), opacity: uiVisible ? 1 : 0 }}
+                                className={`${window.innerWidth < 1024 ? 'fixed top-4 left-1/2 -translate-x-1/2' : 'absolute bottom-10'} z-[70] flex gap-1 md:gap-2 glass-dark px-3 py-1.5 md:px-4 md:py-2 rounded-2xl border-white/5 shadow-2xl scale-90 md:scale-100 transition-all duration-500`}
+                            >
+                                {window.innerWidth < 1024 && (
+                                    <>
+                                        <Button variant="ghost" size="icon" title="Close" onClick={() => window.close()} className="text-white/60 hover:text-white hover:bg-white/10 rounded-xl w-8 h-8 md:w-10 md:h-10">
+                                            <ArrowLeft className="w-5 h-5" />
+                                        </Button>
+                                        <div className="w-px h-6 bg-white/10 mx-1 self-center" />
+                                    </>
+                                )}
+                                <Button variant="ghost" size="icon" onClick={() => zoomOut()} className="text-white/60 hover:text-white hover:bg-white/10 rounded-xl w-8 h-8 md:w-10 md:h-10"><ZoomOut className="w-4 h-4 md:w-5 h-5" /></Button>
+                                <div className="flex items-center px-2 md:px-3 text-white/90 text-[10px] md:text-sm font-bold min-w-[2.5rem] md:min-w-[3.5rem] justify-center tracking-tighter">{Math.round((scale || 1) * 100)}%</div>
+                                <Button variant="ghost" size="icon" onClick={() => zoomIn()} className="text-white/60 hover:text-white hover:bg-white/10 rounded-xl w-8 h-8 md:w-10 md:h-10"><ZoomIn className="w-4 h-4 md:w-5 h-5" /></Button>
+                                <div className="w-px h-6 bg-white/10 mx-1 md:mx-2 self-center" />
+                                <Button variant="ghost" size="icon" onClick={() => resetTransform()} className="text-white/60 hover:text-white hover:bg-white/10 rounded-xl w-8 h-8 md:w-10 md:h-10"><RotateCcw className="w-4 h-4 md:w-5 h-5" /></Button>
+                                <div className="w-px h-6 bg-white/10 mx-1 md:mx-2 self-center" />
+                                <Button variant="ghost" size="icon" onClick={() => setIsMuted(!isMuted)} className={`${isMuted ? 'text-white/30' : 'text-primary animate-pulse'} hover:bg-white/10 rounded-xl w-8 h-8 md:w-10 md:h-10`}>
+                                    {isMuted ? <VolumeX className="w-4 h-4 md:w-5 h-5" /> : <Volume2 className="w-4 h-4 md:w-5 h-5" />}
+                                </Button>
+                                <Button variant="ghost" size="icon" onClick={() => setIsSlideshowActive(!isSlideshowActive)} className={`${isSlideshowActive ? 'text-primary' : 'text-white/60'} hover:bg-white/10 rounded-xl w-8 h-8 md:w-10 md:h-10`}>
+                                    {isSlideshowActive ? <Pause className="w-4 h-4 md:w-5 h-5" /> : <Play className="w-4 h-4 md:w-5 h-5" />}
+                                </Button>
+                                <div className="w-px h-6 bg-white/10 mx-1 md:mx-2 self-center" />
+                                <Button variant="ghost" size="icon" onClick={() => {
+                                    if (!document.fullscreenElement) document.documentElement.requestFullscreen().catch(() => { });
+                                    else document.exitFullscreen();
+                                }} className="text-white/60 hover:text-white hover:bg-white/10 rounded-xl w-8 h-8 md:w-10 md:h-10">
+                                    <Maximize2 className="w-4 h-4 md:w-5 h-5" />
+                                </Button>
+                                <div className="w-px h-6 bg-white/10 mx-1 md:mx-2 self-center" />
+                                <div className="flex items-center px-2 md:px-3 text-white/40 text-[10px] md:text-xs font-mono select-none tracking-widest min-w-[3.5rem] md:min-w-[4.5rem] justify-center">
+                                    {pageInfo.current + 1}<span className="mx-1 text-white/10">/</span>{pageInfo.total}
                                 </div>
-                                <div className="absolute inset-y-0 right-0 w-24 flex items-center justify-center z-[100] pointer-events-none">
-                                    <Button variant="ghost" size="icon" onClick={() => flipbookRef.current?.next()} className="w-14 h-14 rounded-full bg-black/40 backdrop-blur-md text-white/60 hover:text-white hover:bg-black/60 border border-white/5 pointer-events-auto transition-all shadow-2xl">
-                                        <ChevronRight className="w-8 h-8" />
-                                    </Button>
-                                </div>
-
-                                <motion.div
-                                    animate={{ y: uiVisible ? 0 : 100, opacity: uiVisible ? 1 : 0 }}
-                                    className="absolute bottom-10 z-[70] flex gap-2 glass-dark px-4 py-2 rounded-2xl border-white/5 shadow-2xl"
-                                >
-                                    <Button variant="ghost" size="icon" onClick={() => zoomOut()} className="text-white/60 hover:text-white hover:bg-white/10 rounded-xl w-10 h-10"><ZoomOut className="w-5 h-5" /></Button>
-                                    <div className="flex items-center px-3 text-white/90 text-sm font-bold min-w-[3.5rem] justify-center">{Math.round((scale || 1) * 100)}%</div>
-                                    <Button variant="ghost" size="icon" onClick={() => zoomIn()} className="text-white/60 hover:text-white hover:bg-white/10 rounded-xl w-10 h-10"><ZoomIn className="w-5 h-5" /></Button>
-                                    <div className="w-px h-6 bg-white/10 mx-2 self-center" />
-                                    <Button variant="ghost" size="icon" onClick={() => resetTransform()} className="text-white/60 hover:text-white hover:bg-white/10 rounded-xl w-10 h-10"><RotateCcw className="w-5 h-5" /></Button>
-                                    <div className="w-px h-6 bg-white/10 mx-2 self-center" />
-                                    <Button variant="ghost" size="icon" onClick={() => setIsMuted(!isMuted)} className={`${isMuted ? 'text-white/30' : 'text-primary animate-pulse'} hover:bg-white/10 rounded-xl w-10 h-10`}>
-                                        {isMuted ? <VolumeX className="w-5 h-5" /> : <Volume2 className="w-5 h-5" />}
-                                    </Button>
-                                    <Button variant="ghost" size="icon" onClick={() => setIsSlideshowActive(!isSlideshowActive)} className={`${isSlideshowActive ? 'text-primary' : 'text-white/60'} hover:bg-white/10 rounded-xl w-10 h-10`}>
-                                        {isSlideshowActive ? <Pause className="w-5 h-5" /> : <Play className="w-5 h-5" />}
-                                    </Button>
-                                    <div className="w-px h-6 bg-white/10 mx-2 self-center" />
-                                    <Button variant="ghost" size="icon" onClick={() => {
-                                        if (!document.fullscreenElement) document.documentElement.requestFullscreen().catch(() => { });
-                                        else document.exitFullscreen();
-                                    }} className="text-white/60 hover:text-white hover:bg-white/10 rounded-xl w-10 h-10">
-                                        <Maximize2 className="w-5 h-5" />
-                                    </Button>
-                                    <div className="w-px h-6 bg-white/10 mx-2 self-center" />
-                                    <div className="flex items-center px-3 text-white/40 text-xs font-mono select-none min-w-[4.5rem] justify-center">
-                                        {pageInfo.current + 1}<span className="mx-1 text-white/10">/</span>{pageInfo.total}
-                                    </div>
-                                </motion.div>
-                            </>
-                        )}
-                    </TransformWrapper>
-                )}
+                            </motion.div>
+                        </>
+                    )}
+                </TransformWrapper>
 
                 <AnimatePresence>
                     {isPortrait && (
