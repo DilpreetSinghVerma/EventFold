@@ -188,22 +188,12 @@ export default function DemoViewer() {
 
             <BrandingHeader />
 
-            <main className="relative w-full flex-1 flex flex-col items-center justify-center bg-transparent lg:overflow-visible" style={{ touchAction: 'none', minHeight: 0 }}>
+            <main className="relative w-full flex-1 flex flex-col items-center justify-center bg-transparent lg:overflow-visible" style={{ minHeight: 0 }}>
 
                 {isMobileDevice ? (
-                    /* ── MOBILE: Pure CSS zoom, zero React re-renders on pinch ── */
-                    <div className="relative w-full h-full flex items-center justify-center">
-                        {/* The browser's native pinch-zoom handles scaling, no React involved */}
-                        <div
-                            ref={zoomContainerRef}
-                            style={{
-                                transform: 'scale(1)',
-                                transformOrigin: 'center center',
-                                touchAction: 'pinch-zoom',
-                                willChange: 'transform',
-                            }}
-                            className="w-full h-full flex items-center justify-center"
-                        >
+                    <div className="relative w-full h-full flex items-center justify-center" style={{ touchAction: 'auto' }}>
+                        {/* No JS zoom wrapper — browser handles pinch+pan natively, flipbook gets clean swipe events */}
+                        <div className="w-full h-full flex items-center justify-center">
                             {FlipbookNode}
                         </div>
 
@@ -221,7 +211,7 @@ export default function DemoViewer() {
                             </Button>
                         </div>
 
-                        {/* Mobile toolbar */}
+                        {/* Mobile toolbar — simplified, no zoom buttons (use native pinch) */}
                         <motion.div
                             animate={{ y: uiVisible ? 0 : -120, opacity: uiVisible ? 1 : 0 }}
                             className="fixed top-4 left-1/2 -translate-x-1/2 z-[70] flex gap-1 glass-dark px-3 py-1.5 rounded-2xl border-white/5 shadow-2xl scale-90"
@@ -229,26 +219,6 @@ export default function DemoViewer() {
                             <Button variant="ghost" size="icon" title="Close" onClick={() => window.close()} className="text-white/60 hover:text-white hover:bg-white/10 rounded-xl w-8 h-8">
                                 <ArrowLeft className="w-5 h-5" />
                             </Button>
-                            <div className="w-px h-6 bg-white/10 mx-1 self-center" />
-                            <Button variant="ghost" size="icon" onClick={() => {
-                                const next = Math.max(1, parseFloat((scaleRef.current - 0.25).toFixed(2)));
-                                scaleRef.current = next;
-                                if (zoomContainerRef.current) zoomContainerRef.current.style.transform = `scale(${next})`;
-                                setScale(next);
-                            }} className="text-white/60 hover:text-white hover:bg-white/10 rounded-xl w-8 h-8"><ZoomOut className="w-4 h-4" /></Button>
-                            <div className="flex items-center px-2 text-white/90 text-[10px] font-bold min-w-[2.5rem] justify-center">{Math.round(scale * 100)}%</div>
-                            <Button variant="ghost" size="icon" onClick={() => {
-                                const next = Math.min(3, parseFloat((scaleRef.current + 0.25).toFixed(2)));
-                                scaleRef.current = next;
-                                if (zoomContainerRef.current) zoomContainerRef.current.style.transform = `scale(${next})`;
-                                setScale(next);
-                            }} className="text-white/60 hover:text-white hover:bg-white/10 rounded-xl w-8 h-8"><ZoomIn className="w-4 h-4" /></Button>
-                            <div className="w-px h-6 bg-white/10 mx-1 self-center" />
-                            <Button variant="ghost" size="icon" onClick={() => {
-                                scaleRef.current = 1;
-                                if (zoomContainerRef.current) zoomContainerRef.current.style.transform = 'scale(1)';
-                                setScale(1);
-                            }} className="text-white/60 hover:text-white hover:bg-white/10 rounded-xl w-8 h-8"><RotateCcw className="w-4 h-4" /></Button>
                             <div className="w-px h-6 bg-white/10 mx-1 self-center" />
                             <Button variant="ghost" size="icon" onClick={() => setIsMuted(!isMuted)} className={`${isMuted ? 'text-white/30' : 'text-primary animate-pulse'} hover:bg-white/10 rounded-xl w-8 h-8`}>
                                 {isMuted ? <VolumeX className="w-4 h-4" /> : <Volume2 className="w-4 h-4" />}
@@ -264,7 +234,7 @@ export default function DemoViewer() {
                                 <Maximize2 className="w-4 h-4" />
                             </Button>
                             <div className="w-px h-6 bg-white/10 mx-1 self-center" />
-                            <div className="flex items-center px-2 text-white/40 text-[10px] font-mono select-none min-w-[3.5rem] justify-center">
+                            <div className="flex items-center px-2 text-white/40 text-[10px] font-mono select-none min-w-[3rem] justify-center">
                                 {pageInfo.current + 1}<span className="mx-1 text-white/10">/</span>{pageInfo.total}
                             </div>
                         </motion.div>
