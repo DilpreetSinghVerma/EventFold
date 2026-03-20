@@ -253,7 +253,7 @@ export default function DemoViewer() {
                         wheel={{ step: 0.1 }}
                         doubleClick={{ disabled: false }}
                         pinch={{ disabled: false }}
-                        panning={{ disabled: false }}
+                        panning={{ disabled: true }}
                     >
                         {({ zoomIn, zoomOut, resetTransform }) => (
                             <>
