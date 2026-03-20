@@ -37,7 +37,9 @@ export default function DemoViewer() {
     ]);
     const [loading, setLoading] = useState(true);
     const [hasStarted, setHasStarted] = useState(false);
-    const [scale, setScale] = useState(1);
+    const [scale, setScale] = useState(1);          // display only
+    const scaleRef = useRef(1);                      // actual value, no re-renders
+    const zoomContainerRef = useRef<HTMLDivElement>(null); // direct DOM zoom
     const flipbookRef = useRef<any>(null);
     const [isPortrait, setIsPortrait] = useState(false);
     const [isSmallHeight, setIsSmallHeight] = useState(false);
@@ -193,8 +195,9 @@ export default function DemoViewer() {
                     <div className="relative w-full h-full flex items-center justify-center">
                         {/* The browser's native pinch-zoom handles scaling, no React involved */}
                         <div
+                            ref={zoomContainerRef}
                             style={{
-                                transform: `scale(${scale})`,
+                                transform: 'scale(1)',
                                 transformOrigin: 'center center',
                                 touchAction: 'pinch-zoom',
                                 willChange: 'transform',
@@ -227,11 +230,25 @@ export default function DemoViewer() {
                                 <ArrowLeft className="w-5 h-5" />
                             </Button>
                             <div className="w-px h-6 bg-white/10 mx-1 self-center" />
-                            <Button variant="ghost" size="icon" onClick={() => setScale(s => Math.max(1, parseFloat((s - 0.25).toFixed(2))))} className="text-white/60 hover:text-white hover:bg-white/10 rounded-xl w-8 h-8"><ZoomOut className="w-4 h-4" /></Button>
+                            <Button variant="ghost" size="icon" onClick={() => {
+                                const next = Math.max(1, parseFloat((scaleRef.current - 0.25).toFixed(2)));
+                                scaleRef.current = next;
+                                if (zoomContainerRef.current) zoomContainerRef.current.style.transform = `scale(${next})`;
+                                setScale(next);
+                            }} className="text-white/60 hover:text-white hover:bg-white/10 rounded-xl w-8 h-8"><ZoomOut className="w-4 h-4" /></Button>
                             <div className="flex items-center px-2 text-white/90 text-[10px] font-bold min-w-[2.5rem] justify-center">{Math.round(scale * 100)}%</div>
-                            <Button variant="ghost" size="icon" onClick={() => setScale(s => Math.min(3, parseFloat((s + 0.25).toFixed(2))))} className="text-white/60 hover:text-white hover:bg-white/10 rounded-xl w-8 h-8"><ZoomIn className="w-4 h-4" /></Button>
+                            <Button variant="ghost" size="icon" onClick={() => {
+                                const next = Math.min(3, parseFloat((scaleRef.current + 0.25).toFixed(2)));
+                                scaleRef.current = next;
+                                if (zoomContainerRef.current) zoomContainerRef.current.style.transform = `scale(${next})`;
+                                setScale(next);
+                            }} className="text-white/60 hover:text-white hover:bg-white/10 rounded-xl w-8 h-8"><ZoomIn className="w-4 h-4" /></Button>
                             <div className="w-px h-6 bg-white/10 mx-1 self-center" />
-                            <Button variant="ghost" size="icon" onClick={() => setScale(1)} className="text-white/60 hover:text-white hover:bg-white/10 rounded-xl w-8 h-8"><RotateCcw className="w-4 h-4" /></Button>
+                            <Button variant="ghost" size="icon" onClick={() => {
+                                scaleRef.current = 1;
+                                if (zoomContainerRef.current) zoomContainerRef.current.style.transform = 'scale(1)';
+                                setScale(1);
+                            }} className="text-white/60 hover:text-white hover:bg-white/10 rounded-xl w-8 h-8"><RotateCcw className="w-4 h-4" /></Button>
                             <div className="w-px h-6 bg-white/10 mx-1 self-center" />
                             <Button variant="ghost" size="icon" onClick={() => setIsMuted(!isMuted)} className={`${isMuted ? 'text-white/30' : 'text-primary animate-pulse'} hover:bg-white/10 rounded-xl w-8 h-8`}>
                                 {isMuted ? <VolumeX className="w-4 h-4" /> : <Volume2 className="w-4 h-4" />}
