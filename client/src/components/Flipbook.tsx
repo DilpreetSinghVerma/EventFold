@@ -259,8 +259,8 @@ export const Flipbook = forwardRef(({
         ref={container}
         className="flex items-center justify-center w-full h-full lg:overflow-visible"
         style={{
-          perspective: '1400px',
-          touchAction: 'auto'
+          perspective: window.innerWidth < 768 ? 'none' : '1400px',
+          touchAction: window.innerWidth < 768 ? 'pan-y' : 'auto'
         }}
       >
         <div>
@@ -312,7 +312,7 @@ export const Flipbook = forwardRef(({
               maxHeight={3000}
               maxShadowOpacity={window.innerWidth < 1024 ? 0 : 0.3}
               showCover={true}
-              mobileScrollSupport={false}
+              mobileScrollSupport={window.innerWidth < 768}
               className="shadow-2xl"
               style={{ display: 'block' }}
               startPage={0}
