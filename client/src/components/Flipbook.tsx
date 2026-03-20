@@ -76,6 +76,19 @@ export const Flipbook = forwardRef(({
     music.load();
     flip.load();
 
+    // Background preloader for images
+    if (sheets.length > 0) {
+      const preloadNext = (urls: string[]) => {
+        urls.forEach(url => {
+          if (!url) return;
+          const img = new Image();
+          img.src = url;
+        });
+      };
+      // Preload the first few pages immediately plus covers
+      preloadNext([frontCover, backCover, ...sheets.slice(0, 8)]);
+    }
+
     return () => {
       music.pause();
       music.src = '';
@@ -285,7 +298,7 @@ export const Flipbook = forwardRef(({
             style={{
               transformStyle: 'preserve-3d',
               display: 'inline-block',
-              filter: 'drop-shadow(0 30px 60px rgba(0,0,0,0.6))'
+              filter: window.innerWidth < 1024 ? 'none' : 'drop-shadow(0 30px 60px rgba(0,0,0,0.6))'
             }}
           >
             <HTMLFlipBook
@@ -304,14 +317,14 @@ export const Flipbook = forwardRef(({
               style={{ display: 'block' }}
               startPage={0}
               drawShadow={window.innerWidth >= 1024}
-              flippingTime={window.innerWidth < 768 ? 1400 : 800}
+              flippingTime={window.innerWidth < 768 ? 600 : 800}
               usePortrait={false}
               startZIndex={0}
               autoSize={false}
               clickEventForward={true}
               useMouseEvents={window.innerWidth >= 1024}
-              swipeDistance={30}
-              showPageCorners={true}
+              swipeDistance={window.innerWidth < 768 ? 15 : 30}
+              showPageCorners={window.innerWidth >= 1024}
               disableFlipByClick={false}
               onFlip={(e: any) => {
                 playFlipSound();
@@ -345,12 +358,14 @@ export const Flipbook = forwardRef(({
               {pages.map((page, index) => {
                 // Windowed Rendering: Only render actual content for pages near the current page
                 // This significantly reduces DOM memory and GPU load on mobile.
-                // Increased proximity detection to 8 to avoid black pages during fast flips
                 const isNear = Math.abs(index - currentPage) <= 8;
+                const isMobile = window.innerWidth < 768;
 
                 if (page.type === 'cover') {
                   return (
-                    <div key={page.key} className="page" style={{
+                    <div key={page.key} className="page" 
+                      data-density={isMobile ? 'hard' : 'hard'} // Covers are always hard density
+                      style={{
                       ...pageBase,
                       backgroundColor: '#000',
                       willChange: 'transform',
@@ -367,7 +382,7 @@ export const Flipbook = forwardRef(({
                             src={page.image}
                             alt="cover"
                             loading="eager"
-                            decoding="sync"
+                            decoding="async"
                             onLoad={(e) => {
                               (e.target as HTMLImageElement).style.opacity = '1';
                             }}
@@ -377,7 +392,7 @@ export const Flipbook = forwardRef(({
                               objectFit: 'cover',
                               display: 'block',
                               opacity: 0,
-                              transition: 'opacity 0.4s ease-in-out',
+                              transition: isMobile ? 'opacity 0.2s ease-in-out' : 'opacity 0.4s ease-in-out',
                               willChange: 'opacity'
                             }}
                           />
@@ -394,7 +409,9 @@ export const Flipbook = forwardRef(({
                   const pageIndex = pages.indexOf(page);
                   const isLeftHalf = (pageIndex - 1) % 2 === 0;
                   return (
-                    <div key={page.key} className="page" style={{
+                    <div key={page.key} className="page" 
+                      data-density={isMobile ? 'hard' : 'soft'}
+                      style={{
                       ...pageBase,
                       backgroundColor: '#0a0a0a',
                       willChange: 'transform',
@@ -428,7 +445,7 @@ export const Flipbook = forwardRef(({
                               src={page.image}
                               alt="sheet"
                               loading="eager"
-                              decoding="sync"
+                              decoding="async"
                               onLoad={(e) => {
                                 (e.target as HTMLImageElement).style.opacity = '1';
                               }}
@@ -440,7 +457,7 @@ export const Flipbook = forwardRef(({
                                 display: 'block',
                                 backgroundColor: '#0a0a0a',
                                 opacity: 0,
-                                transition: 'opacity 0.4s ease-in-out',
+                                transition: isMobile ? 'opacity 0.2s ease-in-out' : 'opacity 0.4s ease-in-out',
                                 willChange: 'opacity'
                               }}
                             />
