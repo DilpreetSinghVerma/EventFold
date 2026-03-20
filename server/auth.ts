@@ -1,5 +1,6 @@
 import passport from "passport";
 import { Strategy as GoogleStrategy } from "passport-google-oauth20";
+import { Strategy as LocalStrategy } from "passport-local";
 import { type Express } from "express";
 import cookieSession from "cookie-session";
 import { storage } from "./storage";
@@ -50,6 +51,7 @@ export function setupAuth(app: Express) {
     app.use(passport.initialize());
     app.use(passport.session());
 
+    // Google Strategy (Main)
     passport.use(
         new GoogleStrategy(
             {
@@ -68,7 +70,6 @@ export function setupAuth(app: Express) {
                         user = await storage.getUserByEmail(email);
                         if (user) {
                             // Link Google account to existing user email if needed
-                            // (Simplification: just return the user)
                         } else {
                             user = await storage.createUser({
                                 googleId: profile.id,
@@ -84,6 +85,36 @@ export function setupAuth(app: Express) {
                     return done(null, user);
                 } catch (err) {
                     return done(err);
+                }
+            }
+        )
+    );
+
+    // Local Strategy (Specific for Razorpay Reviewer)
+    passport.use(
+        new LocalStrategy(
+            { usernameField: "email" },
+            async (email, password, done) => {
+                try {
+                    // Logic for the specific test account given to Razorpay
+                    if (email === "dilpreetsinghverma@gmail.com" && password === "eventfold_secure_secret_2026") {
+                        let user = await storage.getUserByEmail(email);
+                        if (!user) {
+                            user = await storage.createUser({
+                                googleId: null,
+                                email: email,
+                                name: "Admin Reviewer",
+                                avatar: null,
+                                plan: 'free',
+                                stripeCustomerId: null,
+                                subscriptionId: null,
+                            });
+                        }
+                        return done(null, user);
+                    }
+                    return done(null, false, { message: "Invalid credentials" });
+                } catch (e) {
+                    return done(e);
                 }
             }
         )
@@ -112,6 +143,18 @@ export function setupAuth(app: Express) {
             res.redirect("/dashboard");
         }
     );
+
+    // Local Login Route (Used by Razorpay Reviewer)
+    app.post("/api/auth/login", (req, res, next) => {
+        passport.authenticate("local", (err: any, user: any, info: any) => {
+            if (err) return next(err);
+            if (!user) return res.status(401).json({ error: info?.message || "Login failed" });
+            req.logIn(user, (err) => {
+                if (err) return next(err);
+                res.json(user);
+            });
+        })(req, res, next);
+    });
 
     app.get("/api/auth/me", (req, res) => {
         if (!req.isAuthenticated()) return res.status(401).json({ error: "Not authenticated" });
