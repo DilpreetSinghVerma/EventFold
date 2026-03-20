@@ -10,6 +10,18 @@ import { createServer } from "http";
 const app = express();
 const httpServer = createServer(app);
 
+// MIDDLEWARE (JSON Body Parser MUST be before setupAuth for passport-local to work)
+app.use(
+  express.json({
+    limit: '20mb',
+    verify: (req: any, _res, buf) => {
+      req.rawBody = buf;
+    },
+  }),
+);
+
+app.use(express.urlencoded({ extended: false, limit: '20mb' }));
+
 try {
   log("Initializing Authentication system...");
   setupAuth(app);
@@ -22,17 +34,6 @@ declare module "http" {
     rawBody: unknown;
   }
 }
-
-app.use(
-  express.json({
-    limit: '20mb',
-    verify: (req, _res, buf) => {
-      req.rawBody = buf;
-    },
-  }),
-);
-
-app.use(express.urlencoded({ extended: false, limit: '20mb' }));
 
 function log(message: string, source = "express") {
   const formattedTime = new Date().toLocaleTimeString("en-US", {
