@@ -351,6 +351,9 @@ export const Flipbook = forwardRef(({
                   return (
                     <div key={page.key} className={pageClass} 
                       data-density={pageDensity}
+                      onClickCapture={(e) => {
+                        if (window.innerWidth < 1024) e.stopPropagation();
+                      }}
                       style={{
                         ...pageBase,
                         backgroundColor: '#000',
@@ -387,6 +390,9 @@ export const Flipbook = forwardRef(({
                   return (
                     <div key={page.key} className={pageClass}
                       data-density={pageDensity}
+                      onClickCapture={(e) => {
+                        if (window.innerWidth < 1024) e.stopPropagation();
+                      }}
                       style={{
                         ...pageBase,
                         backgroundColor: '#0a0a0a',
