@@ -295,7 +295,7 @@ export const Flipbook = forwardRef(({
               useMouseEvents={window.innerWidth >= 1024}
               swipeDistance={window.innerWidth < 768 ? 15 : 30}
               showPageCorners={window.innerWidth >= 1024}
-              disableFlipByClick={false}
+              disableFlipByClick={window.innerWidth < 1024}
               onFlip={(e: any) => {
                 playFlipSound();
                 const pg = e.data;
