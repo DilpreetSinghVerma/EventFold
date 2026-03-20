@@ -326,9 +326,10 @@ export const Flipbook = forwardRef(({
               }}
             >
               {pages.map((page, index) => {
-                const isMobile = window.innerWidth < 768;
-                // Windowing (isNear) saves PC memory and rescues mobile GPU texture limits.
-                const isNear = Math.abs(index - currentPage) <= (isMobile ? 6 : 8);
+                const isMobileLayout = window.innerWidth < 1024;
+                // react-pageflip's layout engine crashes if we hot-swap "hard" pages using windowing.
+                // Mobile GPU jitter is already fixed by removing the CSS transitions.
+                const isNear = isMobileLayout ? true : Math.abs(index - currentPage) <= 8;
 
                 let pageClass = "page";
                 let pageDensity = "soft";
@@ -337,12 +338,10 @@ export const Flipbook = forwardRef(({
                   pageClass = "page hard";
                   pageDensity = "hard";
                 } else if (page.type === 'sheet') {
-                  pageClass = `page ${isMobile ? 'hard' : ''}`;
-                  pageDensity = isMobile ? 'hard' : 'soft';
+                  pageClass = `page ${isMobileLayout ? 'hard' : ''}`;
+                  pageDensity = isMobileLayout ? 'hard' : 'soft';
                 }
 
-                // If page is not near, render a placeholder that perfectly matches the density and classes
-                // so react-pageflip's layout engine doesn't break.
                 if (!isNear) {
                   return <div key={page.key} className={pageClass} data-density={pageDensity} style={{ ...pageBase, backgroundColor: '#000' }} />;
                 }
