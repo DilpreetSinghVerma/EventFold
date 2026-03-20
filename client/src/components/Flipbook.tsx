@@ -269,8 +269,8 @@ export const Flipbook = forwardRef(({
               opacity: 0,
               y: 100,
               scale: 0.9 * scale,
-              rotateZ: -12,
-              rotateX: 25,
+              rotateZ: window.innerWidth < 768 ? 0 : -12,
+              rotateX: window.innerWidth < 768 ? 0 : 25,
               perspective: '2000px',
             }}
             animate={{
@@ -316,7 +316,7 @@ export const Flipbook = forwardRef(({
               className="shadow-2xl"
               style={{ display: 'block' }}
               startPage={0}
-              drawShadow={window.innerWidth >= 1024}
+              drawShadow={window.innerWidth >= 768}
               flippingTime={window.innerWidth < 768 ? 1400 : 800}
               usePortrait={false}
               startZIndex={0}
@@ -356,15 +356,16 @@ export const Flipbook = forwardRef(({
               }}
             >
               {pages.map((page, index) => {
-                // Windowed Rendering: Only render actual content for pages near the current page
-                // This significantly reduces DOM memory and GPU load on mobile.
-                const isNear = Math.abs(index - currentPage) <= 8;
                 const isMobile = window.innerWidth < 768;
+                // Windowing (isNear) is great for PC memory, 
+                // but on mobile it causes flickers and glitches during fast flips.
+                // We disable it for mobile to keep all pages ready in the DOM.
+                const isNear = isMobile ? true : Math.abs(index - currentPage) <= 8;
 
                 if (page.type === 'cover') {
                   return (
-                    <div key={page.key} className="page" 
-                      data-density={isMobile ? 'hard' : 'hard'} // Covers are always hard density
+                    <div key={page.key} className="page hard" 
+                      data-density="hard"
                       style={{
                       ...pageBase,
                       backgroundColor: '#000',
@@ -409,7 +410,7 @@ export const Flipbook = forwardRef(({
                   const pageIndex = pages.indexOf(page);
                   const isLeftHalf = (pageIndex - 1) % 2 === 0;
                   return (
-                    <div key={page.key} className="page" 
+                    <div key={page.key} className={`page ${isMobile ? 'hard' : ''}`}
                       data-density={isMobile ? 'hard' : 'soft'}
                       style={{
                       ...pageBase,

@@ -188,8 +188,8 @@ export default function DemoViewer() {
                     onTransformed={(ref) => setScale(ref.state.scale)}
                     wheel={{ step: 0.1, disabled: window.innerWidth >= 1024 }}
                     doubleClick={{ disabled: false }}
-                    pinch={{ disabled: false }}
-                    panning={{ disabled: window.innerWidth >= 1024 }}
+                    pinch={{ disabled: true }}
+                    panning={{ disabled: true }}
                 >
                     {({ zoomIn, zoomOut, resetTransform }) => (
                         <>
