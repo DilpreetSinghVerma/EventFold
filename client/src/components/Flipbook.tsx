@@ -282,12 +282,12 @@ export const Flipbook = forwardRef(({
               maxHeight={3000}
               maxShadowOpacity={window.innerWidth < 1024 ? 0 : 0.3}
               showCover={true}
-              mobileScrollSupport={window.innerWidth < 768}
+              mobileScrollSupport={false}
               className="shadow-2xl"
               style={{ display: 'block' }}
               startPage={0}
               drawShadow={window.innerWidth >= 768}
-              flippingTime={window.innerWidth < 768 ? 1400 : 800}
+              flippingTime={800}
               usePortrait={false}
               startZIndex={0}
               autoSize={false}
@@ -337,16 +337,10 @@ export const Flipbook = forwardRef(({
                     <div key={page.key} className="page hard" 
                       data-density="hard"
                       style={{
-                      ...pageBase,
-                      backgroundColor: '#000',
-                      willChange: 'transform',
-                      backfaceVisibility: 'hidden',
-                      WebkitBackfaceVisibility: 'hidden',
-                      transform: 'translate3d(0,0,0)',
-                      WebkitTransform: 'translate3d(0,0,0)',
-                      transformStyle: 'preserve-3d',
-                      WebkitTransformStyle: 'preserve-3d',
-                    }}>
+                        ...pageBase,
+                        backgroundColor: '#000',
+                      }}
+                    >
                       {isNear && (
                         <>
                           <img
@@ -383,16 +377,10 @@ export const Flipbook = forwardRef(({
                     <div key={page.key} className={`page ${isMobile ? 'hard' : ''}`}
                       data-density={isMobile ? 'hard' : 'soft'}
                       style={{
-                      ...pageBase,
-                      backgroundColor: '#0a0a0a',
-                      willChange: 'transform',
-                      backfaceVisibility: 'hidden',
-                      WebkitBackfaceVisibility: 'hidden',
-                      transform: 'translate3d(0,0,0)',
-                      WebkitTransform: 'translate3d(0,0,0)',
-                      transformStyle: 'preserve-3d',
-                      WebkitTransformStyle: 'preserve-3d',
-                    }}>
+                        ...pageBase,
+                        backgroundColor: '#0a0a0a',
+                      }}
+                    >
                       {isNear && (
                         <>
                           {page.video ? (
@@ -546,7 +534,7 @@ export const Flipbook = forwardRef(({
                 if (page.type === 'cover') {
                   return (
                     <div key={page.key} className="page hard" data-density="hard"
-                      style={{ ...pageBase, backgroundColor: '#000', willChange: 'transform' }}>
+                      style={{ ...pageBase, backgroundColor: '#000' }}>
                       {isNear && (
                         <>
                           <img src={page.image} alt="cover" loading="eager" decoding="async"
@@ -566,7 +554,7 @@ export const Flipbook = forwardRef(({
                   const isLeftHalf = (pageIndex - 1) % 2 === 0;
                   return (
                     <div key={page.key} className="page" data-density="soft"
-                      style={{ ...pageBase, backgroundColor: '#0a0a0a', willChange: 'transform' }}>
+                      style={{ ...pageBase, backgroundColor: '#0a0a0a' }}>
                       {isNear && (
                         <>
                           {page.video ? (
