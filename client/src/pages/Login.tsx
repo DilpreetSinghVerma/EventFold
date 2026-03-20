@@ -30,7 +30,8 @@ export default function Login() {
 
             if (res.ok) {
                 toast({ title: "Welcome back!", description: "Successfully logged in." });
-                setLocation("/dashboard");
+                // Use full page reload to ensure the new auth cookie is picked up by Apollo/Auth hooks
+                window.location.href = "/dashboard";
             } else {
                 const data = await res.json();
                 toast({ variant: "destructive", title: "Login Failed", description: data.error || "Invalid credentials." });
