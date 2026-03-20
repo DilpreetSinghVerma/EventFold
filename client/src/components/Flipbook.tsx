@@ -364,17 +364,11 @@ export const Flipbook = forwardRef(({
                         alt="cover"
                         loading="eager"
                         decoding="async"
-                        onLoad={(e) => {
-                          (e.target as HTMLImageElement).style.opacity = '1';
-                        }}
                         style={{
                           width: '100%',
                           height: '100%',
                           objectFit: 'cover',
                           display: 'block',
-                          opacity: 0,
-                          transition: isMobile ? 'opacity 0.2s ease-in-out' : 'opacity 0.4s ease-in-out',
-                          willChange: 'opacity'
                         }}
                       />
                       <div className="absolute inset-0 opacity-[0.03] pointer-events-none" style={{ backgroundImage: `url("https://www.transparenttextures.com/patterns/leather.png")` }} />
@@ -420,9 +414,6 @@ export const Flipbook = forwardRef(({
                           alt="sheet"
                           loading="eager"
                           decoding="async"
-                          onLoad={(e) => {
-                            (e.target as HTMLImageElement).style.opacity = '1';
-                          }}
                           style={{
                             width: '100%',
                             height: '100%',
@@ -430,9 +421,6 @@ export const Flipbook = forwardRef(({
                             objectPosition: isLeftHalf ? 'right' : 'left',
                             display: 'block',
                             backgroundColor: '#0a0a0a',
-                            opacity: 0,
-                            transition: isMobile ? 'opacity 0.2s ease-in-out' : 'opacity 0.4s ease-in-out',
-                            willChange: 'opacity'
                           }}
                         />
                       )}
