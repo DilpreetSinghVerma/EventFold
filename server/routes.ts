@@ -465,7 +465,7 @@ export function registerRoutes(
     try {
       if (!req.isAuthenticated()) return res.status(401).json({ error: "Unauthorized" });
       
-      const adminEmails = ["admin@eventfold.com", "dilpreetsinghv88@gmail.com"]; // Add user emails here
+      const adminEmails = ["admin@eventfold.com", "dilpreetsinghverma@gmail.com"]; // Add user emails here
       if (!adminEmails.includes((req.user as any).email)) {
         return res.status(403).json({ error: "Admin privilege required" });
       }

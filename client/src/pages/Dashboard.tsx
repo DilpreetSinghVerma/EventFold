@@ -122,7 +122,7 @@ export default function Dashboard() {
                   </Button>
                 </Link>
                 {/* Admin Demo Management */}
-                {["admin@eventfold.com", "dilpreetsinghv88@gmail.com"].includes(user?.email || "") && (
+                {["admin@eventfold.com", "dilpreetsinghverma@gmail.com"].includes(user?.email || "") && (
                   <Dialog>
                     <DialogTrigger asChild>
                       <Button variant="secondary" size="icon" className={`rounded-xl glass border-none ${album.isPublicDemo === 'true' ? 'text-primary' : 'text-white/40'}`}>
