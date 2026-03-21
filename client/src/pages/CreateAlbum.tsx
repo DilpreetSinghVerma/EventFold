@@ -612,8 +612,7 @@ export default function CreateAlbum() {
                                 </Button>
                                 {formData.sheetVideos[idx]?.file && (
                                   <>
-                                    {/* Side Selection Toggle */}
-                                    <div className="absolute -top-12 left-1/2 -translate-x-1/2 flex bg-black/90 rounded-xl p-1 border border-white/10 shadow-2xl backdrop-blur-md min-w-[90px] z-50">
+                                    <div className="absolute top-4 left-1/2 -translate-x-1/2 flex bg-black/80 rounded-lg p-0.5 border border-white/10 shadow-xl backdrop-blur-sm z-50">
                                       <button
                                         onClick={(e) => {
                                           e.stopPropagation();
@@ -622,7 +621,7 @@ export default function CreateAlbum() {
                                             sheetVideos: p.sheetVideos.map((v, i) => i === idx ? { ...v, side: 'left' } : v)
                                           }));
                                         }}
-                                        className={`flex-1 px-2 py-1 text-[8px] font-bold rounded-lg transition-all ${formData.sheetVideos[idx].side === 'left' ? 'bg-primary text-white shadow-lg' : 'text-white/40 hover:text-white'}`}
+                                        className={`px-3 py-1 text-[8px] font-bold rounded-md transition-all ${formData.sheetVideos[idx].side === 'left' ? 'bg-primary text-white shadow-md' : 'text-white/40 hover:text-white'}`}
                                       >LEFT</button>
                                       <button
                                         onClick={(e) => {
@@ -632,11 +631,11 @@ export default function CreateAlbum() {
                                             sheetVideos: p.sheetVideos.map((v, i) => i === idx ? { ...v, side: 'right' } : v)
                                           }));
                                         }}
-                                        className={`flex-1 px-2 py-1 text-[8px] font-bold rounded-lg transition-all ${formData.sheetVideos[idx].side === 'right' ? 'bg-primary text-white shadow-lg' : 'text-white/40 hover:text-white'}`}
+                                        className={`px-3 py-1 text-[8px] font-bold rounded-md transition-all ${formData.sheetVideos[idx].side === 'right' ? 'bg-primary text-white shadow-md' : 'text-white/40 hover:text-white'}`}
                                       >RIGHT</button>
                                     </div>
 
-                                    <div className="absolute -top-1 -right-1 flex flex-col items-center">
+                                    <div className="absolute top-2 right-2 flex flex-col items-center">
                                       <div className="w-2 h-2 bg-green-500 rounded-full animate-ping" />
                                       <span className="text-[8px] text-white/40 mt-1 font-mono">{(formData.sheetVideos[idx].file!.size / 1024 / 1024).toFixed(1)}MB</span>
                                     </div>
