@@ -253,8 +253,16 @@ export default function Viewer() {
   if (window.innerWidth < 1024 && !hasStarted && !loading) {
     if (isIABB) {
       const currentUrl = window.location.href.replace(/^https?:\/\//, '');
+      const encodedUrl = encodeURIComponent(window.location.href);
+      // Improved Chrome Intent URL
       const chromeIntent = `intent://${currentUrl}#Intent;scheme=https;package=com.android.chrome;end`;
       
+      const copyUrl = () => {
+        navigator.clipboard.writeText(window.location.href);
+        setCopied(true);
+        setTimeout(() => setCopied(false), 2000);
+      };
+
       return (
         <div className="min-h-screen flex flex-col items-center justify-center bg-[#030303] text-white p-8 text-center relative overflow-hidden">
           <div className="fixed inset-0 bg-primary/10 blur-[120px] rounded-full -z-10" />
@@ -268,36 +276,60 @@ export default function Viewer() {
                 <Smartphone className="w-10 h-10 text-primary" />
               </div>
               <h2 className="text-3xl font-display font-bold tracking-tight">Better in Browser</h2>
-              <p className="text-white/60 text-sm leading-relaxed">
-                Instagram's browser is limited. For the full 3D cinematic experience, open this in your system browser.
+              <p className="text-white/60 text-sm leading-relaxed px-4">
+                The Instagram browser doesn't support the full 3D cinematic engine. Open this in your system browser.
               </p>
             </div>
 
             <div className="space-y-4">
               {isAndroid ? (
-                <Button
-                  size="lg"
-                  onClick={() => window.location.href = chromeIntent}
-                  className="w-full rounded-2xl h-16 bg-primary hover:bg-primary/90 text-white font-bold text-lg shadow-2xl shadow-primary/40"
-                >
-                  Open in Chrome
-                </Button>
+                <div className="space-y-3">
+                  <Button
+                    size="lg"
+                    onClick={() => {
+                        window.location.replace(chromeIntent);
+                    }}
+                    className="w-full rounded-2xl h-16 bg-primary hover:bg-primary/90 text-white font-bold text-lg shadow-2xl shadow-primary/40"
+                  >
+                    Launch in Chrome
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="lg"
+                    onClick={copyUrl}
+                    className="w-full rounded-2xl h-16 bg-white/5 border border-white/10 text-white font-semibold flex items-center justify-center gap-2"
+                  >
+                    {copied ? <Check className="w-5 h-5" /> : <Share2 className="w-5 h-5" />}
+                    {copied ? 'Link Copied!' : 'Copy Link to Paste'}
+                  </Button>
+                </div>
               ) : (
-                <div className="p-6 rounded-2xl bg-white/5 border border-white/10 space-y-4 text-left">
-                  <div className="flex items-center gap-3">
-                    <div className="w-8 h-8 rounded-full bg-primary/20 flex items-center justify-center text-primary font-bold">1</div>
-                    <p className="text-sm">Tap the <strong>三个圆点 (···)</strong> or <strong>分享 icon</strong></p>
-                  </div>
-                  <div className="flex items-center gap-3">
-                    <div className="w-8 h-8 rounded-full bg-primary/20 flex items-center justify-center text-primary font-bold">2</div>
-                    <p className="text-sm">Select <strong>Open in Safari / Browser</strong></p>
-                  </div>
+                <div className="space-y-4">
+                    <div className="p-6 rounded-3xl bg-white/5 border border-white/10 space-y-4 text-left">
+                    <div className="flex items-center gap-3">
+                        <div className="w-8 h-8 rounded-full bg-primary/20 flex items-center justify-center text-primary font-bold">1</div>
+                        <p className="text-sm">Tap the <strong>三个圆点 (···)</strong> or <strong>分享 icon</strong></p>
+                    </div>
+                    <div className="flex items-center gap-3">
+                        <div className="w-8 h-8 rounded-full bg-primary/20 flex items-center justify-center text-primary font-bold">2</div>
+                        <p className="text-sm">Select <strong>Open in Safari / Browser</strong></p>
+                    </div>
+                    </div>
+                    <Button
+                        variant="ghost"
+                        size="lg"
+                        onClick={copyUrl}
+                        className="w-full rounded-2xl h-16 bg-white/10 text-white font-semibold flex items-center justify-center gap-2"
+                    >
+                        {copied ? <Check className="w-5 h-5" /> : <Share2 className="w-5 h-5" />}
+                        {copied ? 'Link Copied!' : 'Copy Link for Browser'}
+                    </Button>
                 </div>
               )}
 
               <button
                 onClick={() => setHasStarted(true)}
-                className="text-white/40 text-xs uppercase tracking-widest hover:text-white/60 transition-colors"
+                className="text-white/40 text-xs uppercase tracking-widest hover:text-white/60 transition-colors mt-8 inline-block"
               >
                 Continue in Instagram anyway
               </button>
