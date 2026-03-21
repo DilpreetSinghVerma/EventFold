@@ -64,17 +64,20 @@ export default function DemoViewer() {
         checkOrientation();
         window.addEventListener('resize', checkOrientation);
 
-        // Proactive Preloading for Demo
-        [demoFront, demoBack, ...loadedSheets].forEach(url => {
-            const img = new Image();
-            img.src = url;
-        });
-
-        const timer = setTimeout(() => setLoading(false), 1500);
+        const prewarm = async () => {
+            const initialToPreload = [demoFront, ...loadedSheets.slice(0, 4)];
+            await Promise.all(initialToPreload.map(url => new Promise(resolve => {
+                const img = new Image();
+                img.onload = resolve;
+                img.onerror = resolve;
+                img.src = url;
+            })));
+            setLoading(false);
+        };
+        prewarm();
 
         return () => {
             window.removeEventListener('resize', checkOrientation);
-            clearTimeout(timer);
         };
     }, [loadedSheets]);
 

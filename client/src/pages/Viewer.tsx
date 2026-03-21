@@ -179,8 +179,19 @@ export default function Viewer() {
         splitUrlsRef.current = halves;
         setLoadedSheets(halves);
 
-        // Use the branding returned as part of the album metadata
-        setSettings(albumData.branding);
+        // Proactive Initial Pre-warming
+        setLoadStatus('Pre-warming cinematic covers…');
+        const initialToPreload = [
+          optimizeCloudinary(getUrl(frontFile?.filePath || ''), widthCap),
+          ...halves.slice(0, 4)
+        ].filter(Boolean);
+
+        await Promise.all(initialToPreload.map(url => new Promise(resolve => {
+          const img = new Image();
+          img.onload = resolve;
+          img.onerror = resolve; // don't block forever
+          img.src = url;
+        })));
 
       } catch (e) {
         console.error('Failed to load album or settings', e);
