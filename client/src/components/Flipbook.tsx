@@ -346,7 +346,7 @@ export const Flipbook = forwardRef(({
                 const isMobileLayout = window.innerWidth < 1024;
                 // react-pageflip's layout engine crashes if we hot-swap "hard" pages using windowing.
                 // Mobile GPU jitter is already fixed by removing the CSS transitions.
-                const isNear = isMobileLayout ? Math.abs(index - currentPage) <= 12 : Math.abs(index - currentPage) <= 8;
+                const isNear = isMobileLayout ? Math.abs(index - currentPage) <= 8 : Math.abs(index - currentPage) <= 8;
 
                 let pageClass = "page";
                 let pageDensity = "soft";

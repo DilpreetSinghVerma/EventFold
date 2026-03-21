@@ -39,22 +39,28 @@ import { TransformWrapper, TransformComponent } from 'react-zoom-pan-pinch';
 // Helper to get split halves via Cloudinary transformations for instant mobile loading
 function getCloudinaryHalves(url: string, widthCap?: number): [string, string] | null {
   if (!url.includes('res.cloudinary.com')) return null;
-  const parts = url.split('/upload/');
-  if (parts.length !== 2) return null;
+  const match = url.match(/(.*\/upload\/)(v[0-9]+\/)?(.*)/);
+  if (!match) return null;
+  const base = match[1];
+  const version = match[2] || '';
+  const tail = match[3];
 
   const w = widthCap ? `,w_${widthCap}` : '';
-  const left = `${parts[0]}/upload/c_crop,g_west,w_0.5,h_1.0,q_auto:eco,f_auto${w}/${parts[1]}`;
-  const right = `${parts[0]}/upload/c_crop,g_east,w_0.5,h_1.0,q_auto:eco,f_auto${w}/${parts[1]}`;
+  const left = `${base}c_crop,g_west,w_0.5,h_1.0,q_auto:eco,f_auto${w}/${version}${tail}`;
+  const right = `${base}c_crop,g_east,w_0.5,h_1.0,q_auto:eco,f_auto${w}/${version}${tail}`;
   return [left, right];
 }
 
 // Simple optimization for single images (covers)
 function optimizeCloudinary(url: string, widthCap?: number): string {
   if (!url.includes('res.cloudinary.com')) return url;
-  const parts = url.split('/upload/');
-  if (parts.length !== 2) return url;
+  const match = url.match(/(.*\/upload\/)(v[0-9]+\/)?(.*)/);
+  if (!match) return url;
+  const base = match[1];
+  const version = match[2] || '';
+  const tail = match[3];
   const w = widthCap ? `,w_${widthCap}` : '';
-  return `${parts[0]}/upload/q_auto:eco,f_auto${w}/${parts[1]}`;
+  return `${base}q_auto:eco,f_auto${w}/${version}${tail}`;
 }
 
 export default function Viewer() {
@@ -154,7 +160,7 @@ export default function Viewer() {
 
         const getUrl = (path: string) => (path.startsWith('/') || path.startsWith('http')) ? path : `/${path}`;
 
-        const widthCap = window.innerWidth < 1024 ? 1200 : undefined;
+        const widthCap = window.innerWidth < 1024 ? 800 : undefined;
 
         setLoadedFrontCover(optimizeCloudinary(getUrl(frontFile?.filePath || ''), widthCap));
         setLoadedBackCover(optimizeCloudinary(getUrl(backFile?.filePath || ''), widthCap));
@@ -183,7 +189,7 @@ export default function Viewer() {
         setLoadStatus('Pre-warming cinematic covers…');
         const initialToPreload = [
           optimizeCloudinary(getUrl(frontFile?.filePath || ''), widthCap),
-          ...halves.slice(0, 4)
+          ...halves.slice(0, 12)
         ].filter(Boolean);
 
         await Promise.all(initialToPreload.map(url => new Promise(resolve => {
