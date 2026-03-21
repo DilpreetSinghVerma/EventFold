@@ -377,8 +377,8 @@ export default function Viewer() {
     <motion.div
       initial={false}
       animate={{
-        y: (uiVisible && window.innerWidth < 1024) ? -120 : (uiVisible ? 0 : -120),
-        opacity: (uiVisible && window.innerWidth < 1024) ? 0 : (uiVisible ? 1 : 0)
+        y: uiVisible ? 0 : -120,
+        opacity: uiVisible ? 1 : 0
       }}
       className={`absolute top-0 left-0 right-0 p-3 md:p-6 z-[60] flex items-center justify-between pointer-events-none transition-all duration-500`}
     >
@@ -396,13 +396,13 @@ export default function Viewer() {
       </div>
 
       <div className="flex items-center gap-2 pointer-events-auto">
-        {settings?.contactWhatsApp && window.innerWidth >= 1024 && (
+        {settings?.contactWhatsApp && (
           <Button
             onClick={() => window.open(`https://wa.me/${settings.contactWhatsApp.replace(/[^0-9]/g, '')}`, '_blank')}
-            className={`rounded-xl bg-green-500 hover:bg-green-600 text-white border-none shadow-lg shadow-green-500/20 px-5 font-bold ${isSmallHeight ? 'h-9 px-3 text-xs' : 'h-11'}`}
+            className={`rounded-xl bg-green-500 hover:bg-green-600 text-white border-none shadow-lg shadow-green-500/20 px-5 font-bold ${isSmallHeight || window.innerWidth < 1024 ? 'h-9 px-3 text-[10px]' : 'h-11'}`}
           >
-            <MessageCircle className={`${isSmallHeight ? 'w-3 h-3' : 'w-4 h-4'} mr-2`} />
-            <span className="hidden sm:inline">Contact Studio</span>
+            <MessageCircle className={`${isSmallHeight || window.innerWidth < 1024 ? 'w-3 h-3' : 'w-4 h-4'} mr-2`} />
+            <span className="hidden xs:inline">Contact Studio</span>
           </Button>
         )}
       </div>
@@ -598,8 +598,8 @@ export default function Viewer() {
           <motion.div
             initial={false}
             animate={{
-              y: (uiVisible && window.innerWidth < 1024) ? -100 : ((uiVisible || !isSmallHeight) ? 0 : -60),
-              opacity: (uiVisible && window.innerWidth < 1024) ? 0 : ((uiVisible || !isSmallHeight) ? 1 : 0),
+              y: uiVisible || !isSmallHeight ? 0 : -60,
+              opacity: uiVisible || !isSmallHeight ? 1 : 0,
               scale: isSmallHeight ? 0.8 : 1
             }}
             className="glass-dark px-4 md:px-8 py-2 md:py-3 rounded-2xl border-white/5 flex items-center gap-3 md:gap-4"
