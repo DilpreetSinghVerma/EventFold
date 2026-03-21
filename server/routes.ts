@@ -501,6 +501,12 @@ export function registerRoutes(
       await db.execute(sql`ALTER TABLE albums ADD COLUMN IF NOT EXISTS is_public_demo TEXT NOT NULL DEFAULT 'false'`);
       await db.execute(sql`ALTER TABLE albums ADD COLUMN IF NOT EXISTS demo_category TEXT`);
       
+      // Force columns to exist in the users table
+      await db.execute(sql`ALTER TABLE users ADD COLUMN IF NOT EXISTS is_verified INTEGER NOT NULL DEFAULT 0`);
+      await db.execute(sql`ALTER TABLE users ADD COLUMN IF NOT EXISTS verification_code TEXT`);
+      await db.execute(sql`ALTER TABLE users ADD COLUMN IF NOT EXISTS password TEXT`);
+
+      
       console.log("DB Sync Success: Columns added/verified via SQL.");
       res.json({ success: true, message: "Database columns verified/added successfully." });
     } catch (e: any) {

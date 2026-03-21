@@ -45,7 +45,7 @@ export default function Login() {
                 toast({ 
                     variant: "destructive", 
                     title: isRegister ? "Registration Failed" : "Login Failed", 
-                    description: data.error || "Authentication failed." 
+                    description: data.error || data.message || "Authentication failed." 
                 });
             }
         } catch (err) {
