@@ -25,6 +25,7 @@ export default function Dashboard() {
   const [healthData, setHealthData] = useState<any>(null);
   const [settings, setSettings] = useState<any>(null);
   const [copiedId, setCopiedId] = useState<string | null>(null);
+  const isAdmin = ["admin@eventfold.com", "dilpreetsinghverma@gmail.com"].includes(user?.email || "");
 
   // Parse URL for success/cancel params
   const { search } = typeof window !== 'undefined' ? window.location : { search: '' };
@@ -561,6 +562,14 @@ export default function Dashboard() {
                     </div>
                     ELITE UNLIMITED · ACTIVE SUBSCRIPTION
                     <span className="ml-2 px-2 py-0.5 bg-primary text-white text-[8px] font-black rounded-md tracking-tighter uppercase">Unlimited Projects</span>
+                  </div>
+                ) : isAdmin ? (
+                  <div className="flex items-center gap-3 px-6 py-3 bg-cyan-500/10 border border-cyan-500/20 rounded-2xl text-sm font-bold text-cyan-300 shadow-2xl shadow-cyan-500/10">
+                    <div className="w-8 h-8 rounded-lg bg-cyan-500/20 flex items-center justify-center mr-1">
+                      <Sparkles className="w-5 h-5 text-cyan-400" />
+                    </div>
+                    ADMIN MASTER · UNLIMITED CREDITS
+                    <span className="ml-2 px-2 py-0.5 bg-cyan-500 text-white text-[8px] font-black rounded-md tracking-tighter uppercase">Founder Access</span>
                   </div>
                 ) : (
                   <>

@@ -339,13 +339,15 @@ export function registerRoutes(
   app.post("/api/albums", async (req, res) => {
     try {
       if (!req.isAuthenticated()) return res.status(401).json({ error: "Unauthorized" });
-
       const userId = (req.user as any).id;
       const user = await storage.getUser(userId);
       if (!user) return res.status(404).json({ error: "User not found" });
 
-      // Check if user has enough credits
-      if (user.credits <= 0) {
+      const adminEmails = ["admin@eventfold.com", "dilpreetsinghverma@gmail.com"];
+      const isAdmin = adminEmails.includes(user.email);
+
+      // Check if user has enough credits (Bypass for admins)
+      if (!isAdmin && user.credits <= 0) {
         return res.status(403).json({
           error: "No credits remaining",
           message: "Please purchase an album credit to continue."
@@ -354,7 +356,8 @@ export function registerRoutes(
 
       // Calculate Expiration Date
       let expiresAt: Date | null = null;
-      if (user.plan !== 'pro' && user.plan !== 'software_pro') {
+      // Admins and Pro users have no expiration
+      if (!isAdmin && user.plan !== 'pro' && user.plan !== 'software_pro') {
         const existingAlbums = await storage.getAlbumsByUser(userId);
         const days = existingAlbums.length === 0 ? 7 : 365;
         expiresAt = new Date();
@@ -367,9 +370,9 @@ export function registerRoutes(
         expiresAt: expiresAt
       });
 
-      // Deduct credit only if NOT in software mode (and NOT on Vercel)
+      // Deduct credit only if NOT in software mode (and NOT on Vercel) AND NOT Admin
       const isSoftwareMode = process.env.LOCAL_SOFTWARE_MODE === "true" && !process.env.VERCEL;
-      if (!isSoftwareMode) {
+      if (!isSoftwareMode && !isAdmin) {
         await storage.deductCredit(userId);
       }
       const album = await storage.createAlbum(data);
