@@ -1,4 +1,5 @@
-import { eq, asc, lte, and, isNotNull } from "drizzle-orm";
+import { eq, asc, lte, and, isNotNull, sql } from "drizzle-orm";
+import { db } from "./db";
 import type { Express, Request, Response, NextFunction } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
@@ -494,19 +495,17 @@ export function registerRoutes(
         return res.status(403).json({ error: "Admin privilege required" });
       }
 
-      console.log("ADMIN: Starting Database Schema Sync...");
-      const { exec } = await import("child_process");
+      console.log("ADMIN: Starting Direct SQL Database Sync...");
       
-      exec("npx drizzle-kit push", (error, stdout, stderr) => {
-        if (error) {
-          console.error(`DB Sync Error: ${error.message}`);
-          return res.status(500).json({ error: "Sync failed", details: error.message });
-        }
-        console.log(`DB Sync Success: ${stdout}`);
-        res.json({ success: true, output: stdout });
-      });
-    } catch (e) {
-      res.status(500).json({ error: "Failed to initiate sync" });
+      // Force columns to exist in the albums table
+      await db.execute(sql`ALTER TABLE albums ADD COLUMN IF NOT EXISTS is_public_demo TEXT NOT NULL DEFAULT 'false'`);
+      await db.execute(sql`ALTER TABLE albums ADD COLUMN IF NOT EXISTS demo_category TEXT`);
+      
+      console.log("DB Sync Success: Columns added/verified via SQL.");
+      res.json({ success: true, message: "Database columns verified/added successfully." });
+    } catch (e: any) {
+      console.error("Direct DB Sync Error:", e);
+      res.status(500).json({ error: "Sync failed", details: e.message });
     }
   });
 
