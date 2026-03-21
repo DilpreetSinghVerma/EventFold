@@ -614,7 +614,7 @@ export default function Viewer() {
         style={{ touchAction: 'none', minHeight: 0 }}
       >
         <TransformWrapper
-          initialScale={window.innerWidth < 1024 ? 0.9 : 1}
+          initialScale={window.innerWidth < 1024 ? 1.08 : 1}
           maxScale={window.innerWidth < 1024 ? 4 : 2}
           centerOnInit={true}
           centerZoomedOut={true}
