@@ -141,6 +141,15 @@ export default function CreateAlbum() {
       }
     }
 
+    // --- NEW: Video Size Validation ---
+    const oversizedVideos = formData.sheetVideos.filter(v => v && v.size > 30 * 1024 * 1024);
+    if (oversizedVideos.length > 0) {
+      alert(`⚠️ MOTION PORTRAIT TOO LARGE\n\nCloudinary has a limit of 30MB per video for this tier. One or more of your motion portraits is too big. \n\nTip: Please use short 2-3 second clips for motion portraits.`);
+      setLoading(false);
+      setStatus('');
+      return;
+    }
+
     setStatus('Initializing project workspace...');
 
     try {
@@ -600,7 +609,10 @@ export default function CreateAlbum() {
                                   <Video className="w-4 h-4" />
                                 </Button>
                                 {formData.sheetVideos[idx] && (
-                                  <div className="absolute -top-1 -right-1 w-2 h-2 bg-green-500 rounded-full animate-ping" />
+                                  <div className="absolute -top-1 -right-1 flex flex-col items-center">
+                                    <div className="w-2 h-2 bg-green-500 rounded-full animate-ping" />
+                                    <span className="text-[8px] text-white/40 mt-1 font-mono">{(formData.sheetVideos[idx]!.size / 1024 / 1024).toFixed(1)}MB</span>
+                                  </div>
                                 )}
                               </div>
 
