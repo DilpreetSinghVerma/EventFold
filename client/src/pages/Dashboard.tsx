@@ -121,6 +121,66 @@ export default function Dashboard() {
                     <Eye className="w-4 h-4 mr-2" /> Open
                   </Button>
                 </Link>
+                {/* Admin Demo Management */}
+                {["admin@eventfold.com", "dilpreetsinghv88@gmail.com"].includes(user?.email || "") && (
+                  <Dialog>
+                    <DialogTrigger asChild>
+                      <Button variant="secondary" size="icon" className={`rounded-xl glass border-none ${album.isPublicDemo === 'true' ? 'text-primary' : 'text-white/40'}`}>
+                        <Sparkles className="w-4 h-4" />
+                      </Button>
+                    </DialogTrigger>
+                    <DialogContent className="sm:max-w-md bg-[#0a0a0b] border-white/10 text-white rounded-3xl">
+                      <DialogHeader>
+                        <DialogTitle className="text-xl font-bold">Public Demo Management</DialogTitle>
+                        <DialogDescription className="text-white/40">
+                          Configure how this album appears in the public demos gallery.
+                        </DialogDescription>
+                      </DialogHeader>
+                      <div className="space-y-6 py-4">
+                        <div className="flex items-center justify-between p-4 bg-white/5 rounded-2xl border border-white/5">
+                          <span className="font-bold">Show in Public Gallery</span>
+                          <Button 
+                            onClick={async () => {
+                              const res = await fetch(`/api/albums/${album.id}/demo-status`, {
+                                method: 'PATCH',
+                                headers: { 'Content-Type': 'application/json' },
+                                body: JSON.stringify({ isPublicDemo: album.isPublicDemo !== 'true' })
+                              });
+                              if (res.ok) fetchAlbums();
+                            }}
+                            className={`rounded-xl font-bold ${album.isPublicDemo === 'true' ? 'bg-primary' : 'bg-white/10'}`}
+                          >
+                            {album.isPublicDemo === 'true' ? 'Enabled' : 'Disabled'}
+                          </Button>
+                        </div>
+                        {album.isPublicDemo === 'true' && (
+                          <div className="space-y-3">
+                            <label className="text-xs font-bold uppercase tracking-widest text-white/40">Demo Category</label>
+                            <div className="flex flex-wrap gap-2">
+                              {['Wedding', 'Pre-Wedding', 'Birthday', 'Event'].map(cat => (
+                                <Button
+                                  key={cat}
+                                  variant="ghost"
+                                  onClick={async () => {
+                                    const res = await fetch(`/api/albums/${album.id}/demo-status`, {
+                                      method: 'PATCH',
+                                      headers: { 'Content-Type': 'application/json' },
+                                      body: JSON.stringify({ isPublicDemo: true, demoCategory: cat })
+                                    });
+                                    if (res.ok) fetchAlbums();
+                                  }}
+                                  className={`rounded-xl text-xs h-9 border border-white/5 ${album.demoCategory === cat ? 'bg-primary/20 text-primary border-primary/30' : 'bg-white/5 text-white/40'}`}
+                                >
+                                  {cat}
+                                </Button>
+                              ))}
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    </DialogContent>
+                  </Dialog>
+                )}
                 <Dialog>
                   <DialogTrigger asChild>
                     <Button variant="secondary" size="icon" className="rounded-xl glass border-none">

@@ -442,6 +442,44 @@ export function registerRoutes(
       res.status(500).json({ error: "Failed to fetch album" });
     }
   });
+  
+  // Get all public demo albums (No auth needed)
+  app.get("/api/public-demos", async (_req, res) => {
+    try {
+      const demos = await storage.getPublicDemos();
+      const demosWithFiles = await Promise.all(
+        demos.map(async (demo: any) => {
+          const files = await storage.getFilesByAlbum(demo.id);
+          const branding = await storage.getSettings(demo.userId!);
+          return { ...demo, files, branding };
+        })
+      );
+      res.json(demosWithFiles);
+    } catch (e) {
+      res.status(500).json({ error: "Failed to fetch public demos" });
+    }
+  });
+
+  // Admin: Mark album as public demo
+  app.patch("/api/albums/:id/demo-status", async (req, res) => {
+    try {
+      if (!req.isAuthenticated()) return res.status(401).json({ error: "Unauthorized" });
+      
+      const adminEmails = ["admin@eventfold.com", "dilpreetsinghv88@gmail.com"]; // Add user emails here
+      if (!adminEmails.includes((req.user as any).email)) {
+        return res.status(403).json({ error: "Admin privilege required" });
+      }
+
+      const { isPublicDemo, demoCategory } = req.body;
+      const album = await storage.updateAlbum(req.params.id, { 
+        isPublicDemo: isPublicDemo ? 'true' : 'false',
+        demoCategory 
+      });
+      res.json(album);
+    } catch (e) {
+      res.status(500).json({ error: "Failed to update demo status" });
+    }
+  });
 
   // Unlock protected album
   app.post("/api/albums/:id/unlock", async (req, res) => {

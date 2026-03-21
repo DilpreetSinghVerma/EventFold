@@ -27,6 +27,8 @@ export const albums = pgTable("albums", {
   password: text("password"), // Optional password for protected albums
   views: integer("views").notNull().default(0), // View tracker for analytics
   expiresAt: timestamp("expires_at"), // For 7-day trials or 1-year credits
+  isPublicDemo: text("is_public_demo").notNull().default('false'), // 'true' or 'false'
+  demoCategory: text("demo_category"), // 'Wedding', 'Pre-Wedding', 'Birthday', etc.
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 

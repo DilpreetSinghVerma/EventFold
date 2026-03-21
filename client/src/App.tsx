@@ -10,6 +10,7 @@ import Dashboard from "@/pages/Dashboard";
 import CreateAlbum from "@/pages/CreateAlbum";
 import Viewer from "@/pages/Viewer";
 import DemoViewer from "@/pages/DemoViewer";
+import Demos from "@/pages/Demos";
 import Settings from "@/pages/Settings";
 import Login from "@/pages/Login";
 import Terms from "@/pages/Terms";
@@ -45,6 +46,7 @@ function Router() {
 
       <Route path="/album/:id" component={Viewer} />
       <Route path="/demo" component={DemoViewer} />
+      <Route path="/demos" component={Demos} />
       <Route path="/terms" component={Terms} />
       <Route path="/privacy" component={Privacy} />
       <Route component={NotFound} />

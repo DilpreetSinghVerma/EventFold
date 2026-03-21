@@ -27,6 +27,8 @@ export interface IStorage {
   addCredit(userId: string, amount: number): Promise<User>;
   incrementAlbumViews(id: string): Promise<void>;
   cleanupExpiredAlbums(): Promise<void>;
+  getPublicDemos(): Promise<Album[]>;
+  updateAlbum(id: string, data: Partial<Album>): Promise<Album>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -184,6 +186,18 @@ export class DatabaseStorage implements IStorage {
       )
     );
   }
+
+  async getPublicDemos(): Promise<Album[]> {
+    if (!db) return [];
+    return await db.select().from(albums).where(eq(albums.isPublicDemo, 'true')).orderBy(asc(albums.createdAt));
+  }
+
+  async updateAlbum(id: string, data: Partial<Album>): Promise<Album> {
+    if (!db) throw new Error("DB not connected");
+    const [row] = await db.update(albums).set(data).where(eq(albums.id, id)).returning();
+    if (!row) throw new Error("Album not found");
+    return row;
+  }
 }
 
 export class MemStorage implements IStorage {
@@ -215,6 +229,8 @@ export class MemStorage implements IStorage {
       password: insertAlbum.password || null,
       views: 0,
       expiresAt: insertAlbum.expiresAt || null,
+      isPublicDemo: insertAlbum.isPublicDemo || 'false',
+      demoCategory: insertAlbum.demoCategory || null,
       createdAt: new Date(),
     };
     this.albums.set(id, album);
@@ -370,6 +386,18 @@ export class MemStorage implements IStorage {
         }
       }
     }
+  }
+
+  async getPublicDemos(): Promise<Album[]> {
+    return Array.from(this.albums.values()).filter(a => a.isPublicDemo === 'true');
+  }
+
+  async updateAlbum(id: string, data: Partial<Album>): Promise<Album> {
+    const album = this.albums.get(id);
+    if (!album) throw new Error("Album not found");
+    const updated = { ...album, ...data };
+    this.albums.set(id, updated);
+    return updated;
   }
 }
 

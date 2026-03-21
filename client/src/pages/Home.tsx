@@ -86,7 +86,7 @@ export default function Home() {
                 <Button
                   variant="outline"
                   size="lg"
-                  onClick={() => window.open('/demo', '_blank')}
+                  onClick={() => window.open('/demos', '_self')}
                   className="rounded-[1.25rem] h-16 px-10 text-lg border-white/10 hover:bg-white/5 text-white font-bold group"
                 >
                   <Eye className="w-5 h-5 mr-3" /> Launch Demo Experience
@@ -103,7 +103,7 @@ export default function Home() {
             >
               {/* Cinematic Studio Environment - Simplified for better flow */}
               <div
-                onClick={() => window.open('/demo', '_blank')}
+                onClick={() => setLocation('/demos')}
                 className="h-[500px] w-full max-w-6xl mx-auto flex items-center justify-center relative rounded-[4rem] bg-[#080808] border border-white/5 shadow-[0_0_100px_rgba(0,0,0,1)] overflow-hidden group cursor-pointer"
               >
                 {/* Dynamic Spotlight */}
