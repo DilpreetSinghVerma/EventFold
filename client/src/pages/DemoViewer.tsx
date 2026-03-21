@@ -156,10 +156,13 @@ export default function DemoViewer() {
                     <Button
                         size="lg"
                         onClick={async () => {
-                            try {
-                                await document.documentElement.requestFullscreen();
-                            } catch (e) { }
-                            setTimeout(() => setHasStarted(true), 300);
+                            const isInstagram = /Instagram/i.test(navigator.userAgent);
+                            if (!isInstagram) {
+                                try {
+                                    await document.documentElement.requestFullscreen();
+                                } catch (e) { }
+                            }
+                            setTimeout(() => setHasStarted(true), isInstagram ? 600 : 300);
                         }}
                         className="w-full rounded-2xl h-16 bg-primary hover:bg-primary/90 text-white font-bold text-lg shadow-2xl shadow-primary/40 group overflow-hidden relative"
                     >

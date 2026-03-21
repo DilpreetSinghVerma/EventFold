@@ -143,8 +143,8 @@ export const Flipbook = forwardRef(({
 
   useEffect(() => {
     const handleResize = () => {
-      const screenW = window.innerWidth;
-      const screenH = window.innerHeight;
+      const screenW = window.visualViewport ? window.visualViewport.width : window.innerWidth;
+      const screenH = window.visualViewport ? window.visualViewport.height : window.innerHeight;
       const isMobile = screenW < 1024;
 
       // Single page ratio is 1.5. Spread is 3.0.
