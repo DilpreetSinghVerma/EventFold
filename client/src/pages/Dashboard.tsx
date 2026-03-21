@@ -495,6 +495,21 @@ export default function Dashboard() {
                 Support
               </Button>
             </ContactModal>
+            {isAdmin && (
+              <Button
+                variant="ghost"
+                className="rounded-xl text-primary/60 hover:text-primary glass border-none group"
+                onClick={async () => {
+                  if (window.confirm("SYNC DATABASE STRUCTURE?\n\nThis will update your database columns to match the latest features. Use this if you see errors when creating albums.")) {
+                    const res = await fetch('/api/admin/db-sync', { method: 'POST' });
+                    if (res.ok) alert("Database synced successfully! You can now upload albums with Demo categories.");
+                    else alert("Sync failed. Check if DATABASE_URL is set in Vercel.");
+                  }
+                }}
+              >
+                <Sparkles className="w-4 h-4 mr-2 group-hover:rotate-180 transition-transform" /> Sync DB
+              </Button>
+            )}
             {user?.plan === 'software_pro' ? (
               <Button onClick={() => (window as any).electron?.send('quit-app')} variant="ghost" className="rounded-xl text-white/40 hover:text-red-400 glass border-none group">
                 <LogOut className="w-4 h-4 mr-2 group-hover:rotate-180 transition-transform" /> Exit Studio

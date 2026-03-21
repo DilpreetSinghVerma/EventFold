@@ -484,6 +484,32 @@ export function registerRoutes(
     }
   });
 
+  // Admin: Sync Database Schema (Runs drizzle-kit push)
+  app.post("/api/admin/db-sync", async (req, res) => {
+    try {
+      if (!req.isAuthenticated()) return res.status(401).json({ error: "Unauthorized" });
+      
+      const adminEmails = ["admin@eventfold.com", "dilpreetsinghverma@gmail.com"];
+      if (!adminEmails.includes((req.user as any).email)) {
+        return res.status(403).json({ error: "Admin privilege required" });
+      }
+
+      console.log("ADMIN: Starting Database Schema Sync...");
+      const { exec } = await import("child_process");
+      
+      exec("npx drizzle-kit push", (error, stdout, stderr) => {
+        if (error) {
+          console.error(`DB Sync Error: ${error.message}`);
+          return res.status(500).json({ error: "Sync failed", details: error.message });
+        }
+        console.log(`DB Sync Success: ${stdout}`);
+        res.json({ success: true, output: stdout });
+      });
+    } catch (e) {
+      res.status(500).json({ error: "Failed to initiate sync" });
+    }
+  });
+
   // Unlock protected album
   app.post("/api/albums/:id/unlock", async (req, res) => {
     try {
