@@ -244,7 +244,69 @@ export default function Viewer() {
     );
   }
 
+  const isInstagram = /Instagram/i.test(navigator.userAgent);
+  const isFacebook = /FBAN|FBAV/i.test(navigator.userAgent);
+  const isIABB = isInstagram || isFacebook;
+  const isAndroid = /Android/i.test(navigator.userAgent);
+  const isIOS = /iPhone|iPad|iPod/i.test(navigator.userAgent);
+
   if (window.innerWidth < 1024 && !hasStarted && !loading) {
+    if (isIABB) {
+      const currentUrl = window.location.href.replace(/^https?:\/\//, '');
+      const chromeIntent = `intent://${currentUrl}#Intent;scheme=https;package=com.android.chrome;end`;
+      
+      return (
+        <div className="min-h-screen flex flex-col items-center justify-center bg-[#030303] text-white p-8 text-center relative overflow-hidden">
+          <div className="fixed inset-0 bg-primary/10 blur-[120px] rounded-full -z-10" />
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="max-w-sm w-full space-y-8"
+          >
+            <div className="space-y-4">
+              <div className="w-20 h-20 mx-auto bg-white/5 rounded-3xl flex items-center justify-center border border-white/10">
+                <Smartphone className="w-10 h-10 text-primary" />
+              </div>
+              <h2 className="text-3xl font-display font-bold tracking-tight">Better in Browser</h2>
+              <p className="text-white/60 text-sm leading-relaxed">
+                Instagram's browser is limited. For the full 3D cinematic experience, open this in your system browser.
+              </p>
+            </div>
+
+            <div className="space-y-4">
+              {isAndroid ? (
+                <Button
+                  size="lg"
+                  onClick={() => window.location.href = chromeIntent}
+                  className="w-full rounded-2xl h-16 bg-primary hover:bg-primary/90 text-white font-bold text-lg shadow-2xl shadow-primary/40"
+                >
+                  Open in Chrome
+                </Button>
+              ) : (
+                <div className="p-6 rounded-2xl bg-white/5 border border-white/10 space-y-4 text-left">
+                  <div className="flex items-center gap-3">
+                    <div className="w-8 h-8 rounded-full bg-primary/20 flex items-center justify-center text-primary font-bold">1</div>
+                    <p className="text-sm">Tap the <strong>三个圆点 (···)</strong> or <strong>分享 icon</strong></p>
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <div className="w-8 h-8 rounded-full bg-primary/20 flex items-center justify-center text-primary font-bold">2</div>
+                    <p className="text-sm">Select <strong>Open in Safari / Browser</strong></p>
+                  </div>
+                </div>
+              )}
+
+              <button
+                onClick={() => setHasStarted(true)}
+                className="text-white/40 text-xs uppercase tracking-widest hover:text-white/60 transition-colors"
+              >
+                Continue in Instagram anyway
+              </button>
+            </div>
+          </motion.div>
+        </div>
+      );
+    }
+
     return (
       <div className="min-h-screen flex flex-col items-center justify-center bg-[#030303] text-white p-8 text-center relative overflow-hidden">
         <div className="fixed inset-0 bg-primary/5 blur-[120px] rounded-full -z-10" />
@@ -262,14 +324,11 @@ export default function Viewer() {
           <Button
             size="lg"
             onClick={async () => {
-              const isInstagram = /Instagram/i.test(navigator.userAgent);
-              if (!isInstagram) {
-                try {
-                  await document.documentElement.requestFullscreen();
-                } catch (e) { }
-              }
+              try {
+                await document.documentElement.requestFullscreen();
+              } catch (e) { }
               // Wait for fullscreen transition (if any) and DOM to settle
-              setTimeout(() => setHasStarted(true), isInstagram ? 600 : 300);
+              setTimeout(() => setHasStarted(true), 300);
             }}
             className="w-full rounded-2xl h-16 bg-primary hover:bg-primary/90 text-white font-bold text-lg shadow-2xl shadow-primary/40 group overflow-hidden relative"
           >
