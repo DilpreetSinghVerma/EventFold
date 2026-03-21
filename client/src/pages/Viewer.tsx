@@ -398,7 +398,11 @@ export default function Viewer() {
       <div className="flex items-center gap-2 pointer-events-auto">
         {settings?.contactWhatsApp && (
           <Button
-            onClick={() => window.open(`https://wa.me/${settings.contactWhatsApp.replace(/[^0-9]/g, '')}`, '_blank')}
+            onClick={() => {
+              let num = settings.contactWhatsApp.replace(/[^0-9]/g, '');
+              if (num.length === 10) num = '91' + num;
+              window.open(`https://wa.me/${num}`, '_blank');
+            }}
             className={`rounded-xl bg-green-500 hover:bg-green-600 text-white border-none shadow-lg shadow-green-500/20 px-5 font-bold ${isSmallHeight || window.innerWidth < 1024 ? 'h-9 px-3 text-[10px]' : 'h-11'}`}
           >
             <MessageCircle className={`${isSmallHeight || window.innerWidth < 1024 ? 'w-3 h-3' : 'w-4 h-4'} mr-2`} />
