@@ -142,6 +142,7 @@ export default function Viewer() {
         if (!response.ok) throw new Error('Album not found on server');
         const albumData = await response.json();
         setAlbum(albumData);
+        setSettings(albumData.branding);
 
         const frontFile = albumData.files.find((f: any) => f.fileType === 'cover_front');
         const backFile = albumData.files.find((f: any) => f.fileType === 'cover_back');
