@@ -547,7 +547,15 @@ export default function Dashboard() {
               )}
               <div className="w-px h-6 bg-white/10 mx-2" />
               <div className="flex flex-wrap items-center gap-4 pt-4">
-                {user?.plan === 'software_pro' ? (
+                {isAdmin ? (
+                  <div className="flex items-center gap-3 px-6 py-3 bg-cyan-500/10 border border-cyan-500/20 rounded-2xl text-sm font-bold text-cyan-300 shadow-2xl shadow-cyan-500/10 transition-all hover:scale-[1.02]">
+                    <div className="w-8 h-8 rounded-lg bg-cyan-500/20 flex items-center justify-center mr-1">
+                      <Sparkles className="w-5 h-5 text-cyan-400" />
+                    </div>
+                    ADMIN MASTER · UNLIMITED CREDITS
+                    <span className="ml-2 px-2 py-0.5 bg-cyan-500 text-white text-[8px] font-black rounded-md tracking-tighter uppercase">Founder Access</span>
+                  </div>
+                ) : user?.plan === 'software_pro' ? (
                   <div className="flex items-center gap-3 px-6 py-3 bg-indigo-500/10 border border-indigo-500/20 rounded-2xl text-sm font-bold text-indigo-300 shadow-2xl shadow-indigo-500/10">
                     <div className="w-8 h-8 rounded-lg bg-indigo-500/20 flex items-center justify-center mr-1">
                       <Crown className="w-5 h-5 text-indigo-400" />
@@ -562,14 +570,6 @@ export default function Dashboard() {
                     </div>
                     ELITE UNLIMITED · ACTIVE SUBSCRIPTION
                     <span className="ml-2 px-2 py-0.5 bg-primary text-white text-[8px] font-black rounded-md tracking-tighter uppercase">Unlimited Projects</span>
-                  </div>
-                ) : isAdmin ? (
-                  <div className="flex items-center gap-3 px-6 py-3 bg-cyan-500/10 border border-cyan-500/20 rounded-2xl text-sm font-bold text-cyan-300 shadow-2xl shadow-cyan-500/10">
-                    <div className="w-8 h-8 rounded-lg bg-cyan-500/20 flex items-center justify-center mr-1">
-                      <Sparkles className="w-5 h-5 text-cyan-400" />
-                    </div>
-                    ADMIN MASTER · UNLIMITED CREDITS
-                    <span className="ml-2 px-2 py-0.5 bg-cyan-500 text-white text-[8px] font-black rounded-md tracking-tighter uppercase">Founder Access</span>
                   </div>
                 ) : (
                   <>
