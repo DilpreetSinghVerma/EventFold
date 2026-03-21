@@ -145,7 +145,7 @@ export const Flipbook = forwardRef(({
     const handleResize = () => {
       const screenW = window.innerWidth;
       const screenH = window.innerHeight;
-      const isMobile = screenW < 768;
+      const isMobile = screenW < 1024;
 
       // Single page ratio is 1.5. Spread is 3.0.
       const PAGE_RATIO = 1.5;
@@ -153,8 +153,8 @@ export const Flipbook = forwardRef(({
 
       // Vertical space usage: be more aggressive on mobile landscape to clear UI
       const isLandscape = screenW > screenH;
-      const verticalPadding = isMobile ? (isLandscape ? 60 : 140) : 340; // Reduced from 120 to 60 for larger view
-      const horizontalPadding = isMobile ? (isLandscape ? 100 : 40) : 500; // Reduced from 160 to 100 for larger view
+      const verticalPadding = isMobile ? (isLandscape ? 40 : 140) : 340;
+      const horizontalPadding = isMobile ? (isLandscape ? 40 : 40) : 500;
 
       let availW = screenW - horizontalPadding;
       let availH = screenH - verticalPadding;
@@ -267,8 +267,17 @@ export const Flipbook = forwardRef(({
             // Mobile: plain div, no 3D transforms — full GPU power goes to the flip animation
             <motion.div
               initial={{ opacity: 0, y: 40 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6, ease: 'easeOut' }}
+              animate={{
+                opacity: 1,
+                y: 0,
+                // Center the cover on mobile by shifting the book half-page to the left
+                x: (currentPage === 0 && window.innerWidth < 1024) ? -(pageWidth / 2) : 0
+              }}
+              transition={{
+                duration: 0.6,
+                ease: 'easeOut',
+                x: { type: 'spring', stiffness: 100, damping: 20 }
+              }}
               style={{ display: 'inline-block' }}
             >
             <HTMLFlipBook

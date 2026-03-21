@@ -587,7 +587,7 @@ export default function Viewer() {
               >
                 {window.innerWidth < 1024 && (
                   <>
-                    <Link href="/dashboard">
+                    <Link href={isShared ? "/" : "/dashboard"}>
                       <Button variant="ghost" size="icon" title="Close" className="text-white/60 hover:text-white hover:bg-white/10 rounded-xl w-8 h-8 md:w-10 md:h-10">
                         <ArrowLeft className="w-5 h-5" />
                       </Button>

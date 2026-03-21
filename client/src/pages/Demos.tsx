@@ -50,7 +50,7 @@ export default function Demos() {
       {/* Hero Header */}
       <header className="relative pt-20 pb-16 px-8 max-w-7xl mx-auto text-center">
         <Link href="/">
-          <Button variant="ghost" className="absolute top-20 left-8 rounded-xl text-white/40 hover:text-white glass border-none hidden lg:flex">
+          <Button variant="ghost" className="absolute top-8 lg:top-20 left-4 lg:left-8 rounded-xl text-white/40 hover:text-white glass border-none flex">
             <ArrowLeft className="w-4 h-4 mr-2" /> Back
           </Button>
         </Link>

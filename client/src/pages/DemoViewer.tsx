@@ -1,3 +1,4 @@
+import { Link } from 'wouter';
 import { Flipbook } from '@/components/Flipbook';
 import { Button } from '@/components/ui/button';
 import {
@@ -87,14 +88,15 @@ export default function DemoViewer() {
             className="absolute top-0 left-0 right-0 p-3 md:p-6 z-[60] flex items-center justify-between pointer-events-none transition-all duration-500"
         >
             <div className="flex items-center gap-4">
-                <Button
-                    variant="ghost"
-                    className="rounded-xl bg-black/50 backdrop-blur-3xl border border-white/10 hover:bg-black/70 text-white pl-3 pr-5 gap-3 pointer-events-auto shadow-2xl transition-all h-11 md:h-12"
-                    onClick={() => window.close()}
-                >
-                    <ArrowLeft className="w-5 h-5" />
-                    <span className="hidden sm:inline font-bold">Close Demo</span>
-                </Button>
+                <Link href="/">
+                    <Button
+                        variant="ghost"
+                        className="rounded-xl bg-black/50 backdrop-blur-3xl border border-white/10 hover:bg-black/70 text-white pl-3 pr-5 gap-3 pointer-events-auto shadow-2xl transition-all h-11 md:h-12"
+                    >
+                        <ArrowLeft className="w-5 h-5" />
+                        <span className="hidden sm:inline font-bold">Close Demo</span>
+                    </Button>
+                </Link>
 
                 <div className={`flex items-center gap-2 md:gap-4 bg-black/70 backdrop-blur-3xl border border-white/5 pointer-events-auto shadow-2xl transition-all duration-300 ${isSmallHeight || isMobileLandscape || window.innerWidth >= 1024 ? 'px-3 py-1.5 rounded-xl' : 'px-8 py-5 rounded-3xl'}`}>
                     <img src="/branding material/without bg version.png" alt="EventFold" className={`${isSmallHeight || isMobileLandscape || window.innerWidth >= 1024 ? 'h-5 md:h-7' : 'h-12'} w-auto object-contain`} />
@@ -230,12 +232,11 @@ export default function DemoViewer() {
                                 className={`${window.innerWidth < 1024 ? 'fixed top-4 left-1/2 -translate-x-1/2' : 'absolute bottom-10'} z-[70] flex gap-1 md:gap-2 glass-dark px-3 py-1.5 md:px-4 md:py-2 rounded-2xl border-white/5 shadow-2xl scale-90 md:scale-100 transition-all duration-500`}
                             >
                                 {window.innerWidth < 1024 && (
-                                    <>
-                                        <Button variant="ghost" size="icon" title="Close" onClick={() => window.close()} className="text-white/60 hover:text-white hover:bg-white/10 rounded-xl w-8 h-8 md:w-10 md:h-10">
-                                            <ArrowLeft className="w-5 h-5" />
-                                        </Button>
-                                        <div className="w-px h-6 bg-white/10 mx-1 self-center" />
-                                    </>
+                                        <Link href="/">
+                                            <Button variant="ghost" size="icon" title="Close" className="text-white/60 hover:text-white hover:bg-white/10 rounded-xl w-8 h-8 md:w-10 md:h-10">
+                                                <ArrowLeft className="w-5 h-5" />
+                                            </Button>
+                                        </Link>
                                 )}
                                 <Button variant="ghost" size="icon" onClick={() => zoomOut()} className="text-white/60 hover:text-white hover:bg-white/10 rounded-xl w-8 h-8 md:w-10 md:h-10"><ZoomOut className="w-4 h-4 md:w-5 h-5" /></Button>
                                 <div className="flex items-center px-2 md:px-3 text-white/90 text-[10px] md:text-sm font-bold min-w-[2.5rem] md:min-w-[3.5rem] justify-center tracking-tighter">{Math.round((scale || 1) * 100)}%</div>

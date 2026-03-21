@@ -86,7 +86,7 @@ export default function Home() {
                 <Button
                   variant="outline"
                   size="lg"
-                  onClick={() => window.open('/demos', '_self')}
+                  onClick={() => setLocation('/demos')}
                   className="rounded-[1.25rem] h-16 px-10 text-lg border-white/10 hover:bg-white/5 text-white font-bold group"
                 >
                   <Eye className="w-5 h-5 mr-3" /> Launch Demo Experience
