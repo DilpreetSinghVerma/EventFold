@@ -242,58 +242,58 @@ export default function CreateAlbum() {
         return data.secure_url;
       };
 
-      // 3. Compress and Upload all files directly from Browser to Cloudinary (Parallel)
+      // 3. Compress and Upload all files directly from Browser to Cloudinary with Concurrency Control
       setStatus('Compressing and streaming assets to cloud storage...');
 
-      const filesToProcess = [
-        { file: formData.frontCover, type: 'cover_front', order: 0 },
-        { file: formData.backCover, type: 'cover_back', order: 1 },
-        ...formData.sheets.map((s, i) => ({ file: s, type: 'sheet', order: i, video: formData.sheetVideos[i] }))
-      ];
-
-      // Build upload tasks
-      const uploadPromises: Promise<any>[] = [];
+      const uploadTasks: (() => Promise<any>)[] = [];
 
       // Add covers
-      uploadPromises.push((async () => {
+      uploadTasks.push(async () => {
         const compressed = await compressImage(formData.frontCover!);
         const url = await uploadToCloudinary(compressed, 'Front cover');
         return { filePath: url, fileType: 'cover_front', orderIndex: 0 };
-      })());
+      });
 
-      uploadPromises.push((async () => {
+      uploadTasks.push(async () => {
         const compressed = await compressImage(formData.backCover!);
         const url = await uploadToCloudinary(compressed, 'Back cover');
         return { filePath: url, fileType: 'cover_back', orderIndex: 1 };
-      })());
+      });
 
       // Add sheets and their optional videos
       formData.sheets.forEach((sheet, idx) => {
-        // Sheet image task
-        uploadPromises.push((async () => {
+        uploadTasks.push(async () => {
           const compressed = await compressImage(sheet);
           const url = await uploadToCloudinary(compressed, `Sheet ${idx + 1}`);
           return { filePath: url, fileType: 'sheet', orderIndex: idx };
-        })());
+        });
 
-        // Optional motion portrait task
         if (formData.sheetVideos[idx]) {
-          uploadPromises.push((async () => {
+          uploadTasks.push(async () => {
             const url = await uploadToCloudinary(formData.sheetVideos[idx]!, `Motion Portrait ${idx + 1}`, true);
             return { filePath: url, fileType: 'video', orderIndex: idx };
-          })());
+          });
         }
       });
 
-      // Add custom background music if provided
       if (formData.bgMusic) {
-        uploadPromises.push((async () => {
-          const url = await uploadToCloudinary(formData.bgMusic!, 'Background Music', true); // 'video' resource_type in Cloudinary accepts audio
+        uploadTasks.push(async () => {
+          const url = await uploadToCloudinary(formData.bgMusic!, 'Background Music', true);
           return { filePath: url, fileType: 'audio', orderIndex: 0 };
-        })());
+        });
       }
 
-      const uploadedFiles = await Promise.all(uploadPromises);
+      // Execute with concurrency limit of 4
+      const CONCURRENCY_LIMIT = 4;
+      const uploadedFiles: any[] = [];
+      for (let i = 0; i < uploadTasks.length; i += CONCURRENCY_LIMIT) {
+        const chunk = uploadTasks.slice(i, i + CONCURRENCY_LIMIT);
+        const results = await Promise.all(chunk.map(task => task()));
+        uploadedFiles.push(...results);
+        // Provide progress feedback
+        const progress = Math.round(((i + chunk.length) / uploadTasks.length) * 100);
+        setStatus(`Streaming assets (${progress}% complete)...`);
+      }
 
       // 4. Send the URLs to our server to link them to the album
       setStatus('Finalizing architecture...');
