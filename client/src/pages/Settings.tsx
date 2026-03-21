@@ -86,6 +86,8 @@ export default function Settings() {
             }
         } catch (e: any) {
             alert(`Network error: ${e.message}`);
+        } finally {
+            setSaving(false);
         }
     };
 
