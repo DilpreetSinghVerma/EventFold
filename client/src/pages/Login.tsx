@@ -11,30 +11,42 @@ export default function Login() {
     const [, setLocation] = useLocation();
     const { toast } = useToast();
     const [showEmailLogin, setShowEmailLogin] = useState(false);
+    const [isRegister, setIsRegister] = useState(false);
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
+    const [name, setName] = useState("");
     const [loading, setLoading] = useState(false);
+
     const handleGoogleLogin = () => {
         window.location.href = "/api/auth/google";
     };
 
-    const handleEmailLogin = async (e: React.FormEvent) => {
+    const handleEmailAuth = async (e: React.FormEvent) => {
         e.preventDefault();
         setLoading(true);
         try {
-            const res = await fetch("/api/auth/login", {
+            const endpoint = isRegister ? "/api/auth/register" : "/api/auth/login";
+            const payload = isRegister ? { email, password, name } : { email, password };
+            
+            const res = await fetch(endpoint, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ email, password }),
+                body: JSON.stringify(payload),
             });
 
             if (res.ok) {
-                toast({ title: "Welcome back!", description: "Successfully logged in." });
-                // Use full page reload to ensure the new auth cookie is picked up by Apollo/Auth hooks
+                toast({ 
+                    title: isRegister ? "Account created!" : "Welcome back!", 
+                    description: isRegister ? "Your premium account is ready." : "Successfully logged in." 
+                });
                 window.location.href = "/dashboard";
             } else {
                 const data = await res.json();
-                toast({ variant: "destructive", title: "Login Failed", description: data.error || "Invalid credentials." });
+                toast({ 
+                    variant: "destructive", 
+                    title: isRegister ? "Registration Failed" : "Login Failed", 
+                    description: data.error || "Authentication failed." 
+                });
             }
         } catch (err) {
             toast({ variant: "destructive", title: "Error", description: "Something went wrong. Please try again." });
@@ -42,6 +54,7 @@ export default function Login() {
             setLoading(false);
         }
     };
+
 
     return (
         <div className="min-h-screen bg-[#030303] text-white flex flex-col items-center justify-center p-6 relative overflow-hidden font-sans">
@@ -84,9 +97,14 @@ export default function Login() {
                 <Card className="glass border-white/5 rounded-[3rem] overflow-hidden shadow-[0_32px_80px_-16px_rgba(0,0,0,0.8)]">
                     <CardContent className="p-10 space-y-8">
                         <div className="text-center space-y-2">
-                            <h2 className="text-2xl font-bold tracking-tight">Studio Portal</h2>
-                            <p className="text-white/40 text-sm">Sign in to manage your premium collections.</p>
+                            <h2 className="text-2xl font-bold tracking-tight">
+                                {isRegister ? "Create Account" : "Studio Portal"}
+                            </h2>
+                            <p className="text-white/40 text-sm">
+                                {isRegister ? "Join the elite standard of album delivery." : "Sign in to manage your premium collections."}
+                            </p>
                         </div>
+
 
                         {!showEmailLogin ? (
                             <div className="space-y-4">
@@ -127,10 +145,23 @@ export default function Login() {
                             <motion.form
                                 initial={{ opacity: 0, scale: 0.95 }}
                                 animate={{ opacity: 1, scale: 1 }}
-                                onSubmit={handleEmailLogin}
+                                onSubmit={handleEmailAuth}
                                 className="space-y-4"
                             >
                                 <div className="space-y-4">
+                                    {isRegister && (
+                                        <div className="relative group">
+                                            <LogIn className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-white/20 group-focus-within:text-primary transition-colors" />
+                                            <Input
+                                                type="text"
+                                                placeholder="Full Name"
+                                                value={name}
+                                                onChange={(e) => setName(e.target.value)}
+                                                className="h-14 pl-12 bg-white/5 border-white/5 focus:border-primary/50 rounded-xl"
+                                                required={isRegister}
+                                            />
+                                        </div>
+                                    )}
                                     <div className="relative group">
                                         <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-white/20 group-focus-within:text-primary transition-colors" />
                                         <Input
@@ -160,18 +191,29 @@ export default function Login() {
                                         disabled={loading}
                                         className="h-14 rounded-xl bg-primary hover:bg-primary/90 text-white font-bold gap-2"
                                     >
-                                        {loading ? "Authenticating..." : "Sign In"}
+                                        {loading ? "Authenticating..." : (isRegister ? "Create Account" : "Sign In")}
                                         {!loading && <ArrowRight className="w-4 h-4" />}
                                     </Button>
-                                    <button
-                                        type="button"
-                                        onClick={() => setShowEmailLogin(false)}
-                                        className="text-white/20 hover:text-white/60 transition-colors text-[10px] uppercase font-bold tracking-widest"
-                                    >
-                                        Back to Google Login
-                                    </button>
+                                    
+                                    <div className="flex flex-col items-center gap-2">
+                                        <button
+                                            type="button"
+                                            onClick={() => setIsRegister(!isRegister)}
+                                            className="text-primary hover:text-primary/80 transition-colors text-xs font-bold uppercase tracking-widest"
+                                        >
+                                            {isRegister ? "Already have an account? Sign In" : "New Customer? Create Account"}
+                                        </button>
+                                        <button
+                                            type="button"
+                                            onClick={() => setShowEmailLogin(false)}
+                                            className="text-white/20 hover:text-white/60 transition-colors text-[10px] uppercase font-bold tracking-widest"
+                                        >
+                                            Back to Google Login
+                                        </button>
+                                    </div>
                                 </div>
                             </motion.form>
+
                         )}
 
                         <div className="grid grid-cols-3 gap-6 pt-4">

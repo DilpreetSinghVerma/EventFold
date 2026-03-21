@@ -5,6 +5,24 @@ import { type Express } from "express";
 import cookieSession from "cookie-session";
 import { storage } from "./storage";
 import { type User } from "../shared/schema";
+import { scrypt, randomBytes, timingSafeEqual } from "crypto";
+import { promisify } from "util";
+
+const scryptAsync = promisify(scrypt);
+
+async function hashPassword(password: string) {
+    const salt = randomBytes(16).toString("hex");
+    const buf = (await scryptAsync(password, salt, 64)) as Buffer;
+    return `${buf.toString("hex")}.${salt}`;
+}
+
+async function comparePasswords(supplied: string, stored: string) {
+    const [hashed, salt] = stored.split(".");
+    const hashedBuf = Buffer.from(hashed, "hex");
+    const suppliedBuf = (await scryptAsync(supplied, salt, 64)) as Buffer;
+    return timingSafeEqual(hashedBuf, suppliedBuf);
+}
+
 
 export function setupAuth(app: Express) {
     if (app.get("env") === "production") {
@@ -22,7 +40,8 @@ export function setupAuth(app: Express) {
                 email: 'studio@local',
                 name: 'Studio Master',
                 plan: 'software_pro',
-                credits: 9999
+                credits: 9999,
+                password: null
             };
             next();
         });
@@ -79,6 +98,11 @@ export function setupAuth(app: Express) {
                                 plan: 'free',
                                 stripeCustomerId: null,
                                 subscriptionId: null,
+                                razorpayCustomerId: null,
+                                razorpaySubscriptionId: null,
+                                password: null,
+                                isVerified: 1, // Google users are pre-verified
+                                verificationCode: null,
                             });
                         }
                     }
@@ -90,7 +114,7 @@ export function setupAuth(app: Express) {
         )
     );
 
-    // Local Strategy (Specific for Razorpay Reviewer)
+    // Local Strategy
     passport.use(
         new LocalStrategy(
             { usernameField: "email" },
@@ -108,11 +132,25 @@ export function setupAuth(app: Express) {
                                 plan: 'free',
                                 stripeCustomerId: null,
                                 subscriptionId: null,
+                                password: null, // Test account doesn't need hashed password for this check
+                                razorpayCustomerId: null,
+                                razorpaySubscriptionId: null,
                             });
                         }
                         return done(null, user);
                     }
-                    return done(null, false, { message: "Invalid credentials" });
+
+                    const user = await storage.getUserByEmail(email);
+                    if (!user || !user.password) {
+                        return done(null, false, { message: "Invalid credentials" });
+                    }
+
+                    const isMatch = await comparePasswords(password, user.password);
+                    if (!isMatch) {
+                        return done(null, false, { message: "Invalid credentials" });
+                    }
+
+                    return done(null, user);
                 } catch (e) {
                     return done(e);
                 }
@@ -144,7 +182,7 @@ export function setupAuth(app: Express) {
         }
     );
 
-    // Local Login Route (Used by Razorpay Reviewer)
+    // Local Login Route
     app.post("/api/auth/login", (req, res, next) => {
         passport.authenticate("local", (err: any, user: any, info: any) => {
             if (err) return next(err);
@@ -156,7 +194,91 @@ export function setupAuth(app: Express) {
         })(req, res, next);
     });
 
+    // Register Route
+    app.post("/api/auth/register", async (req, res, next) => {
+        try {
+            const { email, password, name } = req.body;
+            if (!email || !password) {
+                return res.status(400).json({ error: "Email and password are required" });
+            }
+
+            const existingUser = await storage.getUserByEmail(email);
+            if (existingUser) {
+                return res.status(400).json({ error: "User already exists" });
+            }
+
+            // Generate a 6-digit OTP
+            const otp = Math.floor(100000 + Math.random() * 900000).toString();
+            const hashedPassword = await hashPassword(password);
+            const { sendVerificationEmail } = await import("./lib/email");
+
+            const user = await storage.createUser({
+                googleId: null,
+                email,
+                name: name || email.split('@')[0],
+                avatar: null,
+                plan: 'free',
+                stripeCustomerId: null,
+                subscriptionId: null,
+                password: hashedPassword,
+                razorpayCustomerId: null,
+                razorpaySubscriptionId: null,
+                isVerified: 0,
+                verificationCode: otp,
+            });
+
+            await sendVerificationEmail(email, otp);
+
+            req.logIn(user, (err) => {
+                if (err) return next(err);
+                res.status(201).json({ ...user, requiresVerification: true });
+            });
+        } catch (e) {
+            next(e);
+        }
+    });
+
+    // Verification Route
+    app.post("/api/auth/verify", async (req, res) => {
+        if (!req.isAuthenticated()) return res.status(401).json({ error: "Not authenticated" });
+        const { code } = req.body;
+        const user = req.user as User;
+
+        if (user.isVerified === 1) {
+            return res.json({ success: true, message: "Already verified" });
+        }
+
+        if (user.verificationCode === code) {
+            const updatedUser = await storage.updateUser(user.id, { isVerified: 1, verificationCode: null });
+            // Update session user
+            Object.assign(req.user as any, updatedUser);
+            return res.json({ success: true, user: updatedUser });
+        }
+
+        res.status(400).json({ error: "Invalid verification code" });
+    });
+
+    // Resend Code Route
+    app.post("/api/auth/resend-code", async (req, res) => {
+        if (!req.isAuthenticated()) return res.status(401).json({ error: "Not authenticated" });
+        const user = req.user as User;
+
+        if (user.isVerified === 1) {
+            return res.json({ success: true, message: "Already verified" });
+        }
+
+        const otp = Math.floor(100000 + Math.random() * 900000).toString();
+        await storage.updateUser(user.id, { verificationCode: otp });
+        
+        const { sendVerificationEmail } = await import("./lib/email");
+        await sendVerificationEmail(user.email, otp);
+
+        res.json({ success: true, message: "New code sent" });
+    });
+
     app.get("/api/auth/me", (req, res) => {
+
+
         if (!req.isAuthenticated()) return res.status(401).json({ error: "Not authenticated" });
 
         const user = req.user as User;

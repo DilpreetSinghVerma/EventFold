@@ -15,6 +15,8 @@ import Settings from "@/pages/Settings";
 import Login from "@/pages/Login";
 import Terms from "@/pages/Terms";
 import Privacy from "@/pages/Privacy";
+import AuthVerify from "@/pages/AuthVerify";
+
 import { AuthProvider, useAuth } from "@/lib/auth";
 import { Loader2 } from "lucide-react";
 
@@ -30,19 +32,22 @@ function Router() {
         {user?.plan === 'software_pro' ? <Redirect to="/dashboard" /> : <Home />}
       </Route>
       <Route path="/login">
-        {user ? <Redirect to="/dashboard" /> : <Login />}
+        {user ? (user.isVerified === 1 ? <Redirect to="/dashboard" /> : <Redirect to="/verify" />) : <Login />}
       </Route>
+      <Route path="/verify" component={AuthVerify} />
+
 
       {/* Protected Routes */}
       <Route path="/dashboard">
-        {user ? <Dashboard /> : <Redirect to="/login" />}
+        {user ? (user.isVerified === 1 ? <Dashboard /> : <Redirect to="/verify" />) : <Redirect to="/login" />}
       </Route>
       <Route path="/create">
-        {user ? <CreateAlbum /> : <Redirect to="/login" />}
+        {user ? (user.isVerified === 1 ? <CreateAlbum /> : <Redirect to="/verify" />) : <Redirect to="/login" />}
       </Route>
       <Route path="/settings">
-        {user ? <Settings /> : <Redirect to="/login" />}
+        {user ? (user.isVerified === 1 ? <Settings /> : <Redirect to="/verify" />) : <Redirect to="/login" />}
       </Route>
+
 
       <Route path="/album/:id" component={Viewer} />
       <Route path="/demo" component={DemoViewer} />

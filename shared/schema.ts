@@ -15,6 +15,9 @@ export const users = pgTable("users", {
   subscriptionId: text("subscription_id"),
   razorpayCustomerId: text("razorpay_customer_id"),
   razorpaySubscriptionId: text("razorpay_subscription_id"),
+  password: text("password"),
+  isVerified: integer("is_verified").notNull().default(0), // 0: No, 1: Yes
+  verificationCode: text("verification_code"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 

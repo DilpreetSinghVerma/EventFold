@@ -108,6 +108,9 @@ export class DatabaseStorage implements IStorage {
             subscriptionId: null,
             razorpayCustomerId: null,
             razorpaySubscriptionId: null,
+            password: null,
+            isVerified: 1,
+            verificationCode: null,
             createdAt: new Date()
         };
     }
@@ -307,6 +310,9 @@ export class MemStorage implements IStorage {
             subscriptionId: null,
             razorpayCustomerId: null,
             razorpaySubscriptionId: null,
+            password: null,
+            isVerified: 1,
+            verificationCode: null,
             createdAt: new Date()
         };
     }
@@ -333,6 +339,9 @@ export class MemStorage implements IStorage {
       subscriptionId: insertUser.subscriptionId || null,
       razorpayCustomerId: insertUser.razorpayCustomerId || null,
       razorpaySubscriptionId: insertUser.razorpaySubscriptionId || null,
+      password: insertUser.password || null,
+      isVerified: insertUser.isVerified || 0,
+      verificationCode: insertUser.verificationCode || null,
       plan: insertUser.plan || 'free',
       credits: insertUser.credits ?? 1,
       createdAt: new Date()
@@ -423,7 +432,9 @@ function getStorage(): IStorage {
                         email: 'studio@local',
                         name: 'Studio Master',
                         plan: 'software_pro',
-                        credits: 9999
+                        credits: 9999,
+                        password: null,
+                        isVerified: 1
                     });
                     console.log("STORAGE: Provisioned 'local_studio_admin' user.");
                 }
