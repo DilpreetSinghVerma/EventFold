@@ -255,9 +255,12 @@ export default function Viewer() {
           <p className="text-white/40 text-sm font-mono uppercase tracking-[0.2em] mb-12">Tap below for the full immersive experience</p>
           <Button
             size="lg"
-            onClick={() => {
-              setHasStarted(true);
-              document.documentElement.requestFullscreen().catch(() => { });
+            onClick={async () => {
+              try {
+                await document.documentElement.requestFullscreen();
+              } catch (e) { }
+              // Wait for fullscreen transition and DOM to settle
+              setTimeout(() => setHasStarted(true), 300);
             }}
             className="w-full rounded-2xl h-16 bg-primary hover:bg-primary/90 text-white font-bold text-lg shadow-2xl shadow-primary/40 group overflow-hidden relative"
           >
@@ -511,7 +514,7 @@ export default function Viewer() {
         style={{ touchAction: 'none', minHeight: 0 }}
       >
         <TransformWrapper
-          initialScale={window.innerWidth < 1024 ? 1.3 : 1}
+          initialScale={1}
           maxScale={window.innerWidth < 1024 ? 4 : 2}
           centerOnInit={true}
           centerZoomedOut={true}

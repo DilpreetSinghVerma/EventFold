@@ -155,9 +155,11 @@ export default function DemoViewer() {
                     <p className="text-white/40 text-sm font-mono uppercase tracking-[0.2em] mb-12">Tap below for the full immersive experience</p>
                     <Button
                         size="lg"
-                        onClick={() => {
-                            setHasStarted(true);
-                            document.documentElement.requestFullscreen().catch(() => { });
+                        onClick={async () => {
+                            try {
+                                await document.documentElement.requestFullscreen();
+                            } catch (e) { }
+                            setTimeout(() => setHasStarted(true), 300);
                         }}
                         className="w-full rounded-2xl h-16 bg-primary hover:bg-primary/90 text-white font-bold text-lg shadow-2xl shadow-primary/40 group overflow-hidden relative"
                     >

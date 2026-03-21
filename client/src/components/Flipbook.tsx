@@ -177,10 +177,18 @@ export const Flipbook = forwardRef(({
 
     handleResize();
     window.addEventListener('resize', handleResize);
-    setReady(true);
+    
+    // Tiny delay to ensure DOM dimensions are stable
+    const timer = setTimeout(() => {
+        setReady(true);
+    }, 100);
+
     // Initial sync
     if (onPageChange) onPageChange(0, sheets.length + 2);
-    return () => window.removeEventListener('resize', handleResize);
+    return () => {
+        window.removeEventListener('resize', handleResize);
+        clearTimeout(timer);
+    };
   }, [sheets.length]);
 
   const playFlipSound = () => {
