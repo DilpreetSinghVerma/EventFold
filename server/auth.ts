@@ -7,6 +7,8 @@ import { storage } from "./storage";
 import { type User } from "../shared/schema";
 import { scrypt, randomBytes, timingSafeEqual } from "crypto";
 import { promisify } from "util";
+import { sendVerificationEmail } from "./lib/email";
+
 
 const scryptAsync = promisify(scrypt);
 
@@ -135,8 +137,11 @@ export function setupAuth(app: Express) {
                                 password: null, // Test account doesn't need hashed password for this check
                                 razorpayCustomerId: null,
                                 razorpaySubscriptionId: null,
+                                isVerified: 1, // Admin is auto-verified
+                                verificationCode: null,
                             });
                         }
+
                         return done(null, user);
                     }
 
@@ -187,12 +192,25 @@ export function setupAuth(app: Express) {
         passport.authenticate("local", (err: any, user: any, info: any) => {
             if (err) return next(err);
             if (!user) return res.status(401).json({ error: info?.message || "Login failed" });
-            req.logIn(user, (err) => {
+            req.logIn(user, async (err) => {
                 if (err) return next(err);
+                
+                // If user is not verified, auto-send a fresh OTP for convenience
+                if (user.isVerified === 0) {
+                    try {
+                        const otp = Math.floor(100000 + Math.random() * 900000).toString();
+                        await storage.updateUser(user.id, { verificationCode: otp });
+                        await sendVerificationEmail(user.email, otp);
+                    } catch (e) {
+                        console.error("Auto-OTP resent failed on login:", e);
+                    }
+                }
+                
                 res.json(user);
             });
         })(req, res, next);
     });
+
 
     // Register Route
     app.post("/api/auth/register", async (req, res, next) => {
@@ -202,7 +220,8 @@ export function setupAuth(app: Express) {
                 return res.status(400).json({ error: "Email and password are required" });
             }
 
-            const existingUser = await storage.getUserByEmail(email);
+            const cleanEmail = email.toLowerCase().trim();
+            const existingUser = await storage.getUserByEmail(cleanEmail);
             if (existingUser) {
                 return res.status(400).json({ error: "User already exists" });
             }
@@ -210,12 +229,11 @@ export function setupAuth(app: Express) {
             // Generate a 6-digit OTP
             const otp = Math.floor(100000 + Math.random() * 900000).toString();
             const hashedPassword = await hashPassword(password);
-            const { sendVerificationEmail } = await import("./lib/email");
 
             const user = await storage.createUser({
                 googleId: null,
-                email,
-                name: name || email.split('@')[0],
+                email: cleanEmail,
+                name: name || cleanEmail.split('@')[0],
                 avatar: null,
                 plan: 'free',
                 stripeCustomerId: null,
@@ -227,7 +245,8 @@ export function setupAuth(app: Express) {
                 verificationCode: otp,
             });
 
-            await sendVerificationEmail(email, otp);
+            await sendVerificationEmail(cleanEmail, otp);
+
 
             req.logIn(user, (err) => {
                 if (err) return next(err);
@@ -270,8 +289,8 @@ export function setupAuth(app: Express) {
         const otp = Math.floor(100000 + Math.random() * 900000).toString();
         await storage.updateUser(user.id, { verificationCode: otp });
         
-        const { sendVerificationEmail } = await import("./lib/email");
         await sendVerificationEmail(user.email, otp);
+
 
         res.json({ success: true, message: "New code sent" });
     });
