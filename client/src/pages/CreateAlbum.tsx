@@ -36,7 +36,7 @@ export default function CreateAlbum() {
     frontCover: File | null;
     backCover: File | null;
     sheets: File[];
-    sheetVideos: (File | null)[];
+    sheetVideos: { file: File | null; side: 'left' | 'right' }[];
     password: string;
     bgMusic: File | null;
   }>({
@@ -83,7 +83,7 @@ export default function CreateAlbum() {
     setFormData((prev) => ({
       ...prev,
       sheets: [...prev.sheets, ...acceptedFiles],
-      sheetVideos: [...prev.sheetVideos, ...acceptedFiles.map(() => null)],
+      sheetVideos: [...prev.sheetVideos, ...acceptedFiles.map(() => ({ file: null, side: 'left' as const }))],
     }));
   }, []);
 
@@ -142,7 +142,7 @@ export default function CreateAlbum() {
     }
 
     // --- NEW: Video Size Validation ---
-    const oversizedVideos = formData.sheetVideos.filter(v => v && v.size > 100 * 1024 * 1024);
+    const oversizedVideos = formData.sheetVideos.filter(v => v.file && v.file.size > 100 * 1024 * 1024);
     if (oversizedVideos.length > 0) {
       alert(`⚠️ MOTION PORTRAIT TOO LARGE\n\nCloudinary has a limit of 100MB per video. One or more of your motion portraits is too big. \n\nTip: Please use short 2-3 second clips for motion portraits if you experience upload issues.`);
       setLoading(false);
@@ -277,10 +277,12 @@ export default function CreateAlbum() {
           return { filePath: url, fileType: 'sheet', orderIndex: idx };
         });
 
-        if (formData.sheetVideos[idx]) {
+        const vidObj = formData.sheetVideos[idx];
+        if (vidObj && vidObj.file) {
           uploadTasks.push(async () => {
-            const url = await uploadToCloudinary(formData.sheetVideos[idx]!, `Motion Portrait ${idx + 1}`, true);
-            return { filePath: url, fileType: 'video', orderIndex: idx };
+            const url = await uploadToCloudinary(vidObj.file!, `Motion Portrait ${idx + 1}`, true);
+            const pageNum = (idx * 2) + (vidObj.side === 'right' ? 1 : 0);
+            return { filePath: url, fileType: 'video', orderIndex: pageNum };
           });
         }
       });
@@ -587,7 +589,7 @@ export default function CreateAlbum() {
                                 <Button
                                   variant="secondary"
                                   size="icon"
-                                  className={`w-8 h-8 rounded-lg ${formData.sheetVideos[idx] ? 'bg-primary text-white border-none' : 'bg-white/10 hover:bg-white/20'}`}
+                                  className={`w-8 h-8 rounded-lg ${formData.sheetVideos[idx]?.file ? 'bg-primary text-white border-none' : 'bg-white/10 hover:bg-white/20'}`}
                                   onClick={(e) => {
                                     e.stopPropagation();
                                     const input = document.createElement('input');
@@ -598,21 +600,47 @@ export default function CreateAlbum() {
                                       if (vid) {
                                         setFormData(p => ({
                                           ...p,
-                                          sheetVideos: p.sheetVideos.map((v, i) => i === idx ? vid : v)
+                                          sheetVideos: p.sheetVideos.map((v, i) => i === idx ? { ...v, file: vid } : v)
                                         }));
                                       }
                                     };
                                     input.click();
                                   }}
-                                  title={formData.sheetVideos[idx] ? "Video Attached" : "Add Motion Portrait"}
+                                  title={formData.sheetVideos[idx]?.file ? "Video Attached" : "Add Motion Portrait"}
                                 >
                                   <Video className="w-4 h-4" />
                                 </Button>
-                                {formData.sheetVideos[idx] && (
-                                  <div className="absolute -top-1 -right-1 flex flex-col items-center">
-                                    <div className="w-2 h-2 bg-green-500 rounded-full animate-ping" />
-                                    <span className="text-[8px] text-white/40 mt-1 font-mono">{(formData.sheetVideos[idx]!.size / 1024 / 1024).toFixed(1)}MB</span>
-                                  </div>
+                                {formData.sheetVideos[idx]?.file && (
+                                  <>
+                                    {/* Side Selection Toggle */}
+                                    <div className="absolute -top-12 left-1/2 -translate-x-1/2 flex bg-black/90 rounded-xl p-1 border border-white/10 shadow-2xl backdrop-blur-md min-w-[90px] z-50">
+                                      <button
+                                        onClick={(e) => {
+                                          e.stopPropagation();
+                                          setFormData(p => ({
+                                            ...p,
+                                            sheetVideos: p.sheetVideos.map((v, i) => i === idx ? { ...v, side: 'left' } : v)
+                                          }));
+                                        }}
+                                        className={`flex-1 px-2 py-1 text-[8px] font-bold rounded-lg transition-all ${formData.sheetVideos[idx].side === 'left' ? 'bg-primary text-white shadow-lg' : 'text-white/40 hover:text-white'}`}
+                                      >LEFT</button>
+                                      <button
+                                        onClick={(e) => {
+                                          e.stopPropagation();
+                                          setFormData(p => ({
+                                            ...p,
+                                            sheetVideos: p.sheetVideos.map((v, i) => i === idx ? { ...v, side: 'right' } : v)
+                                          }));
+                                        }}
+                                        className={`flex-1 px-2 py-1 text-[8px] font-bold rounded-lg transition-all ${formData.sheetVideos[idx].side === 'right' ? 'bg-primary text-white shadow-lg' : 'text-white/40 hover:text-white'}`}
+                                      >RIGHT</button>
+                                    </div>
+
+                                    <div className="absolute -top-1 -right-1 flex flex-col items-center">
+                                      <div className="w-2 h-2 bg-green-500 rounded-full animate-ping" />
+                                      <span className="text-[8px] text-white/40 mt-1 font-mono">{(formData.sheetVideos[idx].file!.size / 1024 / 1024).toFixed(1)}MB</span>
+                                    </div>
+                                  </>
                                 )}
                               </div>
 
