@@ -614,7 +614,7 @@ export default function Viewer() {
         style={{ touchAction: 'none', minHeight: 0 }}
       >
         <TransformWrapper
-          initialScale={1}
+          initialScale={window.innerWidth < 1024 ? 0.9 : 1}
           maxScale={window.innerWidth < 1024 ? 4 : 2}
           centerOnInit={true}
           centerZoomedOut={true}
@@ -699,9 +699,9 @@ export default function Viewer() {
                 }}
                 className={`${window.innerWidth < 1024 ? 'fixed top-4 left-1/2 -translate-x-1/2' : 'absolute bottom-10'} z-[70] flex gap-1 md:gap-2 glass-dark px-3 py-1.5 md:px-4 md:py-2 rounded-2xl border-white/5 shadow-2xl scale-90 md:scale-100 transition-all duration-500`}
               >
-                {window.innerWidth < 1024 && (
+                {window.innerWidth < 1024 && !isShared && (
                   <>
-                    <Link href={isShared ? "/" : "/dashboard"}>
+                    <Link href="/dashboard">
                       <Button variant="ghost" size="icon" title="Close" className="text-white/60 hover:text-white hover:bg-white/10 rounded-xl w-8 h-8 md:w-10 md:h-10">
                         <ArrowLeft className="w-5 h-5" />
                       </Button>
