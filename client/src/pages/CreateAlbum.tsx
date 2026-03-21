@@ -142,9 +142,9 @@ export default function CreateAlbum() {
     }
 
     // --- NEW: Video Size Validation ---
-    const oversizedVideos = formData.sheetVideos.filter(v => v && v.size > 30 * 1024 * 1024);
+    const oversizedVideos = formData.sheetVideos.filter(v => v && v.size > 100 * 1024 * 1024);
     if (oversizedVideos.length > 0) {
-      alert(`⚠️ MOTION PORTRAIT TOO LARGE\n\nCloudinary has a limit of 30MB per video for this tier. One or more of your motion portraits is too big. \n\nTip: Please use short 2-3 second clips for motion portraits.`);
+      alert(`⚠️ MOTION PORTRAIT TOO LARGE\n\nCloudinary has a limit of 100MB per video. One or more of your motion portraits is too big. \n\nTip: Please use short 2-3 second clips for motion portraits if you experience upload issues.`);
       setLoading(false);
       setStatus('');
       return;
