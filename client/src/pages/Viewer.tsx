@@ -566,16 +566,17 @@ export default function Viewer() {
                   <Share2 className="w-4 h-4 mr-2" /> Share Feed
                 </Button>
               </DialogTrigger>
-              <DialogContent className="glass-dark border-white/5 rounded-[2.5rem] sm:max-w-md p-8 overflow-hidden">
+              <DialogContent className="glass-dark border-white/5 rounded-[2.5rem] sm:max-w-md p-0 overflow-hidden shadow-[0_0_100px_rgba(0,0,0,1)]">
                 <div className="absolute inset-0 bg-primary/5 blur-[80px] -z-10" />
-                <DialogHeader>
-                  <DialogTitle className="font-display text-2xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-white to-white/60 mb-2">Cinematic Sharing</DialogTitle>
-                  <DialogDescription className="text-white/40 font-mono text-xs uppercase tracking-[0.2em] mb-6">
-                    Scan to view on any mobile device
-                  </DialogDescription>
-                </DialogHeader>
-                <div className="flex flex-col items-center gap-8 py-4">
-                  <div className="p-6 bg-white rounded-[2rem] shadow-[0_0_50px_rgba(139,92,246,0.3)] relative group transition-transform hover:scale-105 duration-500 qr-code-canvas">
+                <div className="max-h-[90vh] overflow-y-auto w-full p-8 scrollbar-hide">
+                  <DialogHeader>
+                    <DialogTitle className="font-display text-2xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-white to-white/60 mb-2">Cinematic Sharing</DialogTitle>
+                    <DialogDescription className="text-white/40 font-mono text-xs uppercase tracking-[0.2em] mb-6">
+                      Scan to view on any mobile device
+                    </DialogDescription>
+                  </DialogHeader>
+                  <div className="flex flex-col items-center gap-8 py-4">
+                    <div className="p-6 bg-white rounded-[2rem] shadow-[0_0_50px_rgba(139,92,246,0.3)] relative group transition-transform hover:scale-105 duration-500 qr-code-canvas">
                     <QRCodeSVG
                       value={shareUrl}
                       size={200}
@@ -714,6 +715,7 @@ export default function Viewer() {
                       {copied ? <><Check className="w-5 h-5" /> Copied Secure Link</> : <><Share2 className="w-5 h-5" /> Copy Shareable Link</>}
                     </Button>
                   </div>
+                </div>
                 </div>
               </DialogContent>
             </Dialog>
