@@ -254,9 +254,22 @@ export function registerRoutes(
           await storage.addCredit(userId, 1);
           console.log(`Credits added for user ${userId} via Razorpay`);
         } else if (type === 'subscription') {
+          const isYearly = plan === 'yearly' || plan === 'elite';
+          const planType = isYearly ? 'elite' : 'pro';
+          
+          const startedAt = new Date();
+          const expiresAt = new Date();
+          if (isYearly) {
+            expiresAt.setFullYear(expiresAt.getFullYear() + 1);
+          } else {
+            expiresAt.setDate(expiresAt.getDate() + 30);
+          }
+
           await storage.updateUser(userId, {
-            plan: plan === 'yearly' ? 'pro' : 'pro', // Map to your pro plan
-            razorpayCustomerId: payment.customer_id
+            plan: planType,
+            razorpayCustomerId: payment.customer_id,
+            subscriptionStartedAt: startedAt,
+            subscriptionExpiresAt: expiresAt
           });
 
           // Make all user's albums permanent upon subscription
