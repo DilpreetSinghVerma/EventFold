@@ -32,20 +32,45 @@ export default function Home() {
     <div className="min-h-screen bg-[#030303] text-white selection:bg-primary/30 selection:text-white overflow-x-hidden">
       {/* Royal Background Elements */}
       <div className="fixed top-0 left-0 w-full h-full pointer-events-none overflow-hidden">
-        {/* Top Right Decorative Mandala */}
-        <div className="absolute top-[-10%] right-[-10%] w-[800px] h-[800px] opacity-10 animate-slow-spin pointer-events-none">
+        {/* Top Right Decorative Intricate Mandala */}
+        <div className="absolute top-[-15%] right-[-10%] w-[900px] h-[900px] opacity-10 animate-slow-spin pointer-events-none">
           <svg viewBox="0 0 100 100" className="w-full h-full text-primary">
-             <path fill="currentColor" d="M50 0 L55 35 L90 20 L65 45 L100 50 L65 55 L90 80 L55 65 L50 100 L45 65 L100 80 L35 55 L0 50 L35 45 L10 20 L45 35 Z" />
-             <circle cx="50" cy="50" r="15" fill="none" stroke="currentColor" strokeWidth="0.5" />
-             <circle cx="50" cy="50" r="30" fill="none" stroke="currentColor" strokeWidth="0.2" strokeDasharray="1 1" />
+            <defs>
+              <pattern id="mandala-petal" width="10" height="10" patternUnits="userSpaceOnUse">
+                <path d="M5 0 Q10 5 5 10 Q0 5 5 0" fill="currentColor" opacity="0.5" />
+              </pattern>
+            </defs>
+            <circle cx="50" cy="50" r="48" fill="none" stroke="currentColor" strokeWidth="0.2" strokeDasharray="1 1" />
+            <circle cx="50" cy="50" r="40" fill="none" stroke="currentColor" strokeWidth="0.5" />
+            {/* Layers of petals */}
+            {[0, 45, 90, 135, 180, 225, 270, 315].map((angle) => (
+              <g key={angle} transform={`rotate(${angle} 50 50)`}>
+                <path d="M50 10 Q60 25 50 40 Q40 25 50 10" fill="currentColor" opacity="0.3" />
+                <path d="M50 5 Q65 25 50 45 Q35 25 50 5" fill="none" stroke="currentColor" strokeWidth="0.2" />
+              </g>
+            ))}
+            {[22.5, 67.5, 112.5, 157.5, 202.5, 247.5, 292.5, 337.5].map((angle) => (
+              <g key={angle} transform={`rotate(${angle} 50 50)`}>
+                <path d="M50 15 Q55 25 50 35 Q45 25 50 15" fill="currentColor" opacity="0.2" />
+              </g>
+            ))}
+            <circle cx="50" cy="50" r="8" fill="none" stroke="currentColor" strokeWidth="1" />
+            <path d="M50 42 A8 8 0 0 1 50 58 A8 8 0 0 1 50 42" fill="none" stroke="currentColor" strokeWidth="0.1" strokeDasharray="0.5 0.5" />
           </svg>
         </div>
         
-        {/* Bottom Left Decorative Mandala */}
-        <div className="absolute bottom-[-20%] left-[-15%] w-[1000px] h-[1000px] opacity-[0.07] animate-slow-spin pointer-events-none [animation-direction:reverse]">
+        {/* Bottom Left Decorative Intricate Mandala */}
+        <div className="absolute bottom-[-20%] left-[-15%] w-[1200px] h-[1200px] opacity-[0.08] animate-slow-spin pointer-events-none [animation-direction:reverse]">
           <svg viewBox="0 0 100 100" className="w-full h-full text-[#FF9933]">
-             <path fill="currentColor" d="M50 0 L55 35 L90 20 L65 45 L100 50 L65 55 L90 80 L55 65 L50 100 L45 65 L10 80 L35 55 L0 50 L35 45 L10 20 L45 35 Z" />
-             <circle cx="50" cy="50" r="20" fill="none" stroke="currentColor" strokeWidth="0.3" />
+            <circle cx="50" cy="50" r="45" fill="none" stroke="currentColor" strokeWidth="0.1" />
+            {[0, 30, 60, 90, 120, 150, 180, 210, 240, 270, 300, 330].map((angle) => (
+              <g key={angle} transform={`rotate(${angle} 50 50)`}>
+                <path d="M50 5 C60 15 65 30 50 45 C35 30 40 15 50 5" fill="currentColor" opacity="0.15" />
+                <circle cx="50" cy="15" r="1.5" fill="currentColor" />
+              </g>
+            ))}
+            <circle cx="50" cy="50" r="12" fill="none" stroke="currentColor" strokeWidth="0.5" />
+            <circle cx="50" cy="50" r="18" fill="none" stroke="currentColor" strokeWidth="0.2" strokeDasharray="2 1" />
           </svg>
         </div>
       </div>
