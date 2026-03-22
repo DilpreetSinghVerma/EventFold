@@ -655,19 +655,51 @@ export default function Viewer() {
                           ctx.shadowBlur = 0;
                           ctx.drawImage(img, x + 50, y + 50, qrBoxSize - 100, qrBoxSize - 100);
                           
-                          // 5. Draw Album Title & Branding
+                          // 5. Draw Album Title
                           ctx.fillStyle = 'white';
-                          ctx.font = 'bold 60px "Outfit", sans-serif';
-                          ctx.fillText(album?.title?.toUpperCase() || 'WEDDING MEMORIES', canvas.width/2, y + qrBoxSize + 200);
+                          ctx.font = 'bold 50px "Outfit", sans-serif';
+                          ctx.fillText(album?.title?.toUpperCase() || 'WEDDING MEMORIES', canvas.width/2, y + qrBoxSize + 150);
                           
-                          ctx.fillStyle = 'rgba(255,255,255,0.4)';
-                          ctx.font = 'bold 40px "Outfit", sans-serif';
-                          ctx.fillText('POWERED BY EVENTFOLD STUDIO', canvas.width/2, canvas.height - 200);
+                          // 6. Draw Studio Branding if available
+                          const studioName = settings?.businessName || 'EVENTFOLD STUDIO';
+                          ctx.fillStyle = '#FF9933';
+                          ctx.font = 'bold 70px "Outfit", sans-serif';
+                          ctx.fillText(studioName.toUpperCase(), canvas.width/2, canvas.height - 350);
 
-                          const link = document.createElement('a');
-                          link.download = `${album?.title || 'album'}-story-card.png`;
-                          link.href = canvas.toDataURL('image/png');
-                          link.click();
+                          ctx.fillStyle = 'rgba(255,255,255,0.3)';
+                          ctx.font = 'medium 30px "Outfit", sans-serif';
+                          ctx.fillText('CINEMATIC 3D EXPERIENCE', canvas.width/2, canvas.height - 270);
+
+                          // Attempt to draw Logo if exists
+                          if (settings?.businessLogo) {
+                            const logoImg = new Image();
+                            logoImg.crossOrigin = "anonymous";
+                            logoImg.src = settings.businessLogo;
+                            logoImg.onload = () => {
+                              const logoW = 300;
+                              const logoH = 150; // Max bounds
+                              const aspect = logoImg.width / logoImg.height;
+                              let fixW = logoW;
+                              let fixH = logoW / aspect;
+                              if (fixH > logoH) {
+                                fixH = logoH;
+                                fixW = logoH * aspect;
+                              }
+                              ctx.drawImage(logoImg, (canvas.width - fixW)/2, canvas.height - 600, fixW, fixH);
+                              
+                              finish();
+                            };
+                            logoImg.onerror = () => finish();
+                          } else {
+                            finish();
+                          }
+
+                          function finish() {
+                            const link = document.createElement('a');
+                            link.download = `${album?.title || 'album'}-story-card.png`;
+                            link.href = canvas.toDataURL('image/png');
+                            link.click();
+                          }
                         };
                       }}
                       className="w-full h-14 rounded-2xl bg-white/5 hover:bg-white/10 text-white font-bold gap-3 text-lg border border-white/10"
