@@ -6,13 +6,11 @@ import { LogIn, Globe, ShieldCheck, Zap, Sparkles, ImagePlus, ArrowRight, Mail, 
 import { motion, AnimatePresence } from "framer-motion";
 import { useState } from "react";
 import { useToast } from "@/hooks/use-toast";
-import { PhoneAuth } from "@/components/PhoneAuth";
 
 export default function Login() {
     const [, setLocation] = useLocation();
     const { toast } = useToast();
     const [showEmailLogin, setShowEmailLogin] = useState(false);
-    const [showPhoneLogin, setShowPhoneLogin] = useState(false);
     const [isRegister, setIsRegister] = useState(false);
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
@@ -103,12 +101,12 @@ export default function Login() {
                                 {isRegister ? "Create Account" : "Studio Portal"}
                             </h2>
                             <p className="text-white/40 text-sm">
-                                {isRegister ? "Join the elite standard of album delivery." : (showPhoneLogin ? "Enter your phone number to continue." : "Sign in to manage your premium collections.")}
+                                {isRegister ? "Join the elite standard of album delivery." : "Sign in to manage your premium collections."}
                             </p>
                         </div>
 
 
-                        {(!showEmailLogin && !showPhoneLogin) ? (
+                        {!showEmailLogin ? (
                             <div className="space-y-4">
                                 <Button
                                     onClick={handleGoogleLogin}
@@ -129,42 +127,20 @@ export default function Login() {
                                             fill="#FBBC05"
                                         />
                                         <path
-                                            d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"
+                                            d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"
                                             fill="#EA4335"
                                         />
                                     </svg>
                                     <span className="z-10">Continue with Google</span>
                                 </Button>
 
-                                <div className="grid grid-cols-2 gap-4 pt-2">
-                                    <button
-                                        onClick={() => setShowEmailLogin(true)}
-                                        className="py-3 rounded-xl border border-white/5 bg-white/5 text-white/40 hover:text-white/80 hover:bg-white/10 transition-all text-[10px] font-bold uppercase tracking-[0.2em] flex items-center justify-center gap-2"
-                                    >
-                                        <Mail className="w-3 h-3" /> Email
-                                    </button>
-                                    <button
-                                        onClick={() => setShowPhoneLogin(true)}
-                                        className="py-3 rounded-xl border border-white/5 bg-white/5 text-white/40 hover:text-white/80 hover:bg-white/10 transition-all text-[10px] font-bold uppercase tracking-[0.2em] flex items-center justify-center gap-2"
-                                    >
-                                        <LogIn className="w-3 h-3 rotate-90" /> Phone OTP
-                                    </button>
-                                </div>
-                            </div>
-                        ) : showPhoneLogin ? (
-                            <motion.div
-                                initial={{ opacity: 0, y: 10 }}
-                                animate={{ opacity: 1, y: 0 }}
-                                className="space-y-6"
-                            >
-                                <PhoneAuth />
                                 <button
-                                    onClick={() => setShowPhoneLogin(false)}
-                                    className="w-full text-center text-white/20 hover:text-white/60 transition-colors text-[10px] font-bold uppercase tracking-widest"
+                                    onClick={() => setShowEmailLogin(true)}
+                                    className="w-full text-center text-white/20 hover:text-white/60 transition-colors text-xs font-semibold uppercase tracking-widest pt-2"
                                 >
-                                    Back to Options
+                                    Sign in with email
                                 </button>
-                            </motion.div>
+                            </div>
                         ) : (
                             <motion.form
                                 initial={{ opacity: 0, scale: 0.95 }}
@@ -232,11 +208,12 @@ export default function Login() {
                                             onClick={() => setShowEmailLogin(false)}
                                             className="text-white/20 hover:text-white/60 transition-colors text-[10px] uppercase font-bold tracking-widest"
                                         >
-                                            Back to Options
+                                            Back to Google Login
                                         </button>
                                     </div>
                                 </div>
                             </motion.form>
+
                         )}
 
                         <div className="grid grid-cols-3 gap-6 pt-4">

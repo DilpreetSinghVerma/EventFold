@@ -8,7 +8,6 @@ import { type User } from "../shared/schema";
 import { scrypt, randomBytes, timingSafeEqual } from "crypto";
 import { promisify } from "util";
 import { sendVerificationEmail } from "./lib/email";
-import * as admin from "firebase-admin";
 
 
 const scryptAsync = promisify(scrypt);
@@ -26,26 +25,6 @@ async function comparePasswords(supplied: string, stored: string) {
     return timingSafeEqual(hashedBuf, suppliedBuf);
 }
 
-
-let firebaseApp: admin.app.App | null = null;
-function getFirebase() {
-    if (firebaseApp) return firebaseApp;
-    const serviceAccount = process.env.FIREBASE_SERVICE_ACCOUNT;
-    if (!serviceAccount) {
-        console.warn("FIREBASE_SERVICE_ACCOUNT is missing. Phone login will fail.");
-        return null;
-    }
-    try {
-        const config = JSON.parse(serviceAccount);
-        firebaseApp = admin.initializeApp({
-            credential: admin.credential.cert(config)
-        });
-        return firebaseApp;
-    } catch (e) {
-        console.error("Failed to initialize Firebase:", e);
-        return null;
-    }
-}
 
 export function setupAuth(app: Express) {
     if (app.get("env") === "production") {
@@ -208,49 +187,6 @@ export function setupAuth(app: Express) {
         })(req, res, next);
     });
 
-    // Firebase Phone Auth Route
-    app.post("/api/auth/firebase", async (req, res, next) => {
-        try {
-            const { idToken } = req.body;
-            if (!idToken) return res.status(400).json({ error: "No ID token provided" });
-
-            const firebase = getFirebase();
-            if (!firebase) return res.status(500).json({ error: "Firebase not configured on server" });
-
-            const decodedToken = await firebase.auth().verifyIdToken(idToken);
-            const phoneNumber = decodedToken.phone_number;
-
-            if (!phoneNumber) return res.status(400).json({ error: "Token did not contain a phone number" });
-
-            let user = await storage.getUserByPhone(phoneNumber);
-            if (!user) {
-                user = await storage.createUser({
-                    googleId: null,
-                    phoneNumber: phoneNumber,
-                    email: null,
-                    name: `User ${phoneNumber.slice(-4)}`,
-                    avatar: null,
-                    plan: 'free',
-                    credits: 1,
-                    stripeCustomerId: null,
-                    subscriptionId: null,
-                    razorpayCustomerId: null,
-                    razorpaySubscriptionId: null,
-                    password: null,
-                    isVerified: 1, // Phone users are pre-verified via Firebase
-                    verificationCode: null,
-                });
-            }
-
-            req.logIn(user, (err) => {
-                if (err) return next(err);
-                res.json(user);
-            });
-        } catch (e: any) {
-            console.error("Firebase auth error:", e);
-            res.status(401).json({ error: "Invalid Firebase token" });
-        }
-    });
 
     // Register Route
     app.post("/api/auth/register", async (req, res, next) => {
