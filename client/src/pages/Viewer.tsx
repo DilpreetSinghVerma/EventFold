@@ -575,7 +575,7 @@ export default function Viewer() {
                   </DialogDescription>
                 </DialogHeader>
                 <div className="flex flex-col items-center gap-8 py-4">
-                  <div className="p-6 bg-white rounded-[2rem] shadow-[0_0_50px_rgba(139,92,246,0.3)] relative group transition-transform hover:scale-105 duration-500">
+                  <div className="p-6 bg-white rounded-[2rem] shadow-[0_0_50px_rgba(139,92,246,0.3)] relative group transition-transform hover:scale-105 duration-500 qr-code-canvas">
                     <QRCodeSVG
                       value={shareUrl}
                       size={200}
@@ -590,8 +590,94 @@ export default function Viewer() {
                     </p>
 
                     <Button
+                      onClick={() => {
+                        const svg = document.querySelector('.qr-code-canvas svg') as SVGGraphicsElement;
+                        if (!svg) return;
+                        
+                        const canvas = document.createElement('canvas');
+                        const ctx = canvas.getContext('2d');
+                        if (!ctx) return;
+                        
+                        // Increase resolution for high-end print/story quality
+                        const scale = 4;
+                        canvas.width = 1080 * (scale / 4); // Standard story width
+                        canvas.height = 1920 * (scale / 4); // Standard story height
+                        
+                        // 1. Draw Royal Gradient Background
+                        const grad = ctx.createLinearGradient(0, 0, 0, canvas.height);
+                        grad.addColorStop(0, '#0a0a0a');
+                        grad.addColorStop(0.5, '#1a1a1a');
+                        grad.addColorStop(1, '#050505');
+                        ctx.fillStyle = grad;
+                        ctx.fillRect(0, 0, canvas.width, canvas.height);
+                        
+                        // 2. Draw Decorative mandala-like glow
+                        ctx.globalAlpha = 0.2;
+                        ctx.fillStyle = '#8b5cf6';
+                        ctx.beginPath();
+                        ctx.arc(canvas.width/2, canvas.height/2, 600, 0, Math.PI*2);
+                        ctx.fill();
+                        ctx.globalAlpha = 1.0;
+
+                        // 3. Draw Story Text
+                        ctx.fillStyle = 'white';
+                        ctx.textAlign = 'center';
+                        ctx.font = 'bold 80px "Outfit", sans-serif'; 
+                        ctx.fillText('SCAN TO EXPERIENCE', canvas.width/2, 400);
+                        
+                        ctx.fillStyle = '#FF9933';
+                        ctx.font = 'bold 120px "Outfit", sans-serif';
+                        ctx.fillText('CINEMATIC 3D ALBUM', canvas.width/2, 540);
+
+                        // 4. Convert SVG QR to Image and Draw
+                        const svgData = new XMLSerializer().serializeToString(svg);
+                        const img = new Image();
+                        img.src = 'data:image/svg+xml;base64,' + btoa(svgData);
+                        img.onload = () => {
+                          // Draw a nice white rounded box for the QR
+                          ctx.shadowColor = 'rgba(139, 92, 246, 0.5)';
+                          ctx.shadowBlur = 100;
+                          ctx.fillStyle = 'white';
+                          const qrBoxSize = 700;
+                          const x = (canvas.width - qrBoxSize) / 2;
+                          const y = (canvas.height - qrBoxSize) / 2 - 100;
+                          
+                          // Rounded Rect
+                          const r = 80;
+                          ctx.beginPath();
+                          ctx.moveTo(x + r, y);
+                          ctx.arcTo(x + qrBoxSize, y, x + qrBoxSize, y + qrBoxSize, r);
+                          ctx.arcTo(x + qrBoxSize, y + qrBoxSize, x, y + qrBoxSize, r);
+                          ctx.arcTo(x, y + qrBoxSize, x, y, r);
+                          ctx.arcTo(x, y, x + qrBoxSize, y, r);
+                          ctx.fill();
+                          
+                          ctx.shadowBlur = 0;
+                          ctx.drawImage(img, x + 50, y + 50, qrBoxSize - 100, qrBoxSize - 100);
+                          
+                          // 5. Draw Album Title & Branding
+                          ctx.fillStyle = 'white';
+                          ctx.font = 'bold 60px "Outfit", sans-serif';
+                          ctx.fillText(album?.title?.toUpperCase() || 'WEDDING MEMORIES', canvas.width/2, y + qrBoxSize + 200);
+                          
+                          ctx.fillStyle = 'rgba(255,255,255,0.4)';
+                          ctx.font = 'bold 40px "Outfit", sans-serif';
+                          ctx.fillText('POWERED BY EVENTFOLD STUDIO', canvas.width/2, canvas.height - 200);
+
+                          const link = document.createElement('a');
+                          link.download = `${album?.title || 'album'}-story-card.png`;
+                          link.href = canvas.toDataURL('image/png');
+                          link.click();
+                        };
+                      }}
+                      className="w-full h-14 rounded-2xl bg-white/5 hover:bg-white/10 text-white font-bold gap-3 text-lg border border-white/10"
+                    >
+                      <Smartphone className="w-5 h-5" /> Download Story QR Card
+                    </Button>
+
+                    <Button
                       onClick={handleShare}
-                      className="w-full h-14 rounded-2xl bg-primary hover:bg-primary/90 transition-all font-bold gap-3 text-lg"
+                      className="w-full h-14 rounded-2xl bg-primary hover:bg-primary/90 transition-all font-bold gap-3 text-lg shadow-lg shadow-primary/20"
                     >
                       {copied ? <><Check className="w-5 h-5" /> Copied Secure Link</> : <><Share2 className="w-5 h-5" /> Copy Shareable Link</>}
                     </Button>
