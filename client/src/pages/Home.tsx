@@ -263,6 +263,10 @@ export default function Home() {
         <div className="flex items-center justify-center gap-6 mb-8 text-[10px] uppercase tracking-[0.2em] font-bold text-white/30">
           <Link href="/terms" className="hover:text-[#FF9933] transition-colors">Terms of Service</Link>
           <span className="w-1 h-1 rounded-full bg-white/10" />
+          <a href="https://www.instagram.com/eventfoldstudio/" target="_blank" rel="noopener noreferrer" className="hover:text-[#FF9933] transition-colors flex items-center gap-2">
+            <Share2 className="w-3 h-3" /> Instagram
+          </a>
+          <span className="w-1 h-1 rounded-full bg-white/10" />
           <Link href="/privacy" className="hover:text-[#FF9933] transition-colors">Privacy Policy</Link>
         </div>
         <p className="text-white/20 text-xs uppercase tracking-[0.4em]">Designed for India's Elite Wedding Creators</p>
