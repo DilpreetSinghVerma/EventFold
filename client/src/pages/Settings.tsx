@@ -161,15 +161,13 @@ export default function Settings() {
                                 >
                                     <Building2 className="w-4 h-4" /> Studio Identity
                                 </Button>
-                                {user?.plan === 'software_pro' ? null : (
-                                    <Button
-                                        variant="ghost"
-                                        onClick={() => setActiveTab('billing')}
-                                        className={`w-full justify-start rounded-xl h-12 gap-3 transition-all ${activeTab === 'billing' ? 'bg-white/10 text-white' : 'text-white/40 hover:text-white'}`}
-                                    >
-                                        <CreditCard className="w-4 h-4" /> Billing & Plan
-                                    </Button>
-                                )}
+                                <Button
+                                    variant="ghost"
+                                    onClick={() => setActiveTab('billing')}
+                                    className={`w-full justify-start rounded-xl h-12 gap-3 transition-all ${activeTab === 'billing' ? 'bg-white/10 text-white' : 'text-white/40 hover:text-white'}`}
+                                >
+                                    <CreditCard className="w-4 h-4" /> Billing & Plan
+                                </Button>
                             </div>
                         </div>
 
@@ -299,7 +297,7 @@ export default function Settings() {
                                             </div>
                                             <div>
                                                 <p className="text-xs font-bold text-white/40 uppercase tracking-widest mb-1">Current Plan</p>
-                                                <h3 className="text-2xl font-bold capitalize">{user?.plan === 'pro' ? 'Elite Unlimited' : user?.plan === 'software_pro' ? 'Studio Elite' : 'Basic Plan'}</h3>
+                                                <h3 className="text-2xl font-bold capitalize">{user?.plan === 'pro' ? 'Elite Unlimited' : 'Basic Plan'}</h3>
                                             </div>
                                             {user?.plan === 'free' && (
                                                 <Button onClick={() => startRazorpayCheckout('monthly')} className="w-full rounded-xl bg-primary shadow-lg shadow-primary/20 mt-2">
@@ -314,7 +312,7 @@ export default function Settings() {
                                             </div>
                                             <div>
                                                 <p className="text-xs font-bold text-white/40 uppercase tracking-widest mb-1">Available Credits</p>
-                                                <h3 className="text-2xl font-bold">{user?.plan === 'software_pro' || user?.plan === 'pro' ? 'Unlimited' : `${user?.credits || 0} Album Credits`}</h3>
+                                                <h3 className="text-2xl font-bold">{user?.plan === 'pro' ? 'Unlimited' : `${user?.credits || 0} Album Credits`}</h3>
                                             </div>
                                             {user?.plan === 'free' && (
                                                 <Button onClick={buyAlbumCredit} variant="outline" className="w-full rounded-xl border-white/10 hover:bg-white/5 mt-2">
@@ -344,7 +342,7 @@ export default function Settings() {
                                         </CardContent>
                                     </Card>
 
-                                    {user?.plan !== 'pro' && user?.plan !== 'software_pro' && (
+                                    {user?.plan !== 'pro' && (
                                         <div className="p-8 rounded-[2.5rem] bg-gradient-to-r from-primary/20 to-indigo-600/10 border border-primary/20 flex flex-col md:flex-row items-center justify-between gap-8">
                                             <div className="space-y-2">
                                                 <div className="flex items-center gap-2">

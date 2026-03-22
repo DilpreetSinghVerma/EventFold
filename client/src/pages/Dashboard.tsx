@@ -510,15 +510,9 @@ export default function Dashboard() {
                 <Sparkles className="w-4 h-4 mr-2 group-hover:rotate-180 transition-transform" /> Sync DB
               </Button>
             )}
-            {user?.plan === 'software_pro' ? (
-              <Button onClick={() => (window as any).electron?.send('quit-app')} variant="ghost" className="rounded-xl text-white/40 hover:text-red-400 glass border-none group">
-                <LogOut className="w-4 h-4 mr-2 group-hover:rotate-180 transition-transform" /> Exit Studio
-              </Button>
-            ) : (
-              <Button onClick={() => logout()} variant="ghost" className="rounded-xl text-white/40 hover:text-red-400 glass border-none group">
-                <LogOut className="w-4 h-4 mr-2 group-hover:rotate-180 transition-transform" /> Sign Out
-              </Button>
-            )}
+            <Button onClick={() => logout()} variant="ghost" className="rounded-xl text-white/40 hover:text-red-400 glass border-none group">
+              <LogOut className="w-4 h-4 mr-2 group-hover:rotate-180 transition-transform" /> Sign Out
+            </Button>
             <Link href="/create">
               <Button className="rounded-xl px-6 bg-primary hover:bg-primary/90 text-white shadow-lg shadow-primary/20">
                 <Plus className="w-4 h-4 mr-2" /> New Album
@@ -569,14 +563,6 @@ export default function Dashboard() {
                     </div>
                     ADMIN MASTER · UNLIMITED CREDITS
                     <span className="ml-2 px-2 py-0.5 bg-cyan-500 text-white text-[8px] font-black rounded-md tracking-tighter uppercase">Founder Access</span>
-                  </div>
-                ) : user?.plan === 'software_pro' ? (
-                  <div className="flex items-center gap-3 px-6 py-3 bg-indigo-500/10 border border-indigo-500/20 rounded-2xl text-sm font-bold text-indigo-300 shadow-2xl shadow-indigo-500/10">
-                    <div className="w-8 h-8 rounded-lg bg-indigo-500/20 flex items-center justify-center mr-1">
-                      <Crown className="w-5 h-5 text-indigo-400" />
-                    </div>
-                    STUDIO ELITE · LIFETIME PRO VERSION
-                    <span className="ml-2 px-2 py-0.5 bg-indigo-500 text-white text-[8px] font-black rounded-md tracking-tighter uppercase">No Credits Required</span>
                   </div>
                 ) : user?.plan === 'pro' ? (
                   <div className="flex items-center gap-3 px-6 py-3 bg-primary/10 border border-primary/20 rounded-2xl text-sm font-bold text-primary shadow-2xl shadow-primary/10">

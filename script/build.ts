@@ -63,17 +63,7 @@ async function buildAll() {
     logLevel: "info",
   });
 
-  // Copy to api/ so Vercel uses pre-bundled server (avoids @vercel/node "No exports found")
-  await mkdir("api", { recursive: true });
-  await copyFile("dist/index.cjs", "api/index.js");
-
-  // CRITICAL: Force append module.exports for Vercel compatibility
-  // Vercel's @vercel/node expects the Express app to be module.exports,
-  // but esbuild's CJS format often uses exports.default.
-  const { appendFile } = await import("fs/promises");
-  await appendFile("api/index.js", "\nmodule.exports = exports.default || module.exports;\n");
-
-  console.log("api/index.js updated from build with Vercel compatibility hack");
+  console.log("server/index.ts bundled to dist/index.cjs");
 }
 
 buildAll().catch((err) => {

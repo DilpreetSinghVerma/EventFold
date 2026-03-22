@@ -8,19 +8,11 @@ const getFilename = () => typeof __filename !== 'undefined' ? __filename : fileU
 const getDirname = () => typeof __dirname !== 'undefined' ? __dirname : path.dirname(getFilename());
 
 export function serveStatic(app: Express) {
-  // We prioritize the path set by Electron's main process, otherwise fallback to current directory
-  const baseDir = process.env.APP_PATH || process.cwd();
+  const baseDir = process.cwd();
   
-  // Possible locations for the static files in different build environments
   const possiblePaths = [
     path.join(baseDir, "dist", "public"),
     path.join(baseDir, "public"),
-    path.join(baseDir, "server", "public"),
-    // In Electron with ASAR, the files are often inside the asar archive
-    path.join(baseDir, "app.asar", "dist", "public"),
-    // Or in the unpacked directory next to it
-    path.join(baseDir, "app.asar.unpacked", "dist", "public"),
-    // Fallback for development
     path.join(getDirname(), "..", "dist", "public")
   ];
 

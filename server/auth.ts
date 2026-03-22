@@ -31,23 +31,6 @@ export function setupAuth(app: Express) {
         app.set("trust proxy", 1);
     }
 
-    // Software mode is ONLY for local development or standalone Electron builds.
-    // It is dangerous on Vercel because it makes every user the same master admin.
-    const isSoftwareMode = process.env.LOCAL_SOFTWARE_MODE === "true" && !process.env.VERCEL;
-    if (isSoftwareMode) {
-        app.use((req: any, _res, next) => {
-            req.isAuthenticated = () => true;
-            req.user = {
-                id: 'local_studio_admin',
-                email: 'studio@local',
-                name: 'Studio Master',
-                plan: 'software_pro',
-                credits: 9999,
-                password: null
-            };
-            next();
-        });
-    }
 
     app.use(cookieSession({
         name: 'session',
@@ -302,13 +285,6 @@ export function setupAuth(app: Express) {
 
         const user = req.user as User;
 
-        if (isSoftwareMode) {
-            return res.json({
-                ...user,
-                plan: 'software_pro', // Special elevated plan
-                credits: 9999,      // Effectively unlimited
-            });
-        }
 
         res.json(user);
     });

@@ -22,15 +22,12 @@ import { Loader2 } from "lucide-react";
 
 function Router() {
   const { user, isLoading } = useAuth();
-  const isStudio = !!(window as any).electron;
 
   if (isLoading) return <div className="min-h-screen flex items-center justify-center bg-background"><Loader2 className="w-10 h-10 animate-spin text-primary opacity-20" /></div>;
 
   return (
     <Switch>
-      <Route path="/">
-        {user?.plan === 'software_pro' ? <Redirect to="/dashboard" /> : <Home />}
-      </Route>
+      <Route path="/" component={Home} />
       <Route path="/login">
         {user ? (user.isVerified === 1 ? <Redirect to="/dashboard" /> : <Redirect to="/verify" />) : <Login />}
       </Route>

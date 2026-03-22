@@ -358,7 +358,7 @@ export function registerRoutes(
       // Calculate Expiration Date
       let expiresAt: Date | null = null;
       // Admins and Pro users have no expiration
-      if (!isAdmin && user.plan !== 'pro' && user.plan !== 'software_pro') {
+      if (!isAdmin && user.plan !== 'pro') {
         const existingAlbums = await storage.getAlbumsByUser(userId);
         const days = existingAlbums.length === 0 ? 7 : 365;
         expiresAt = new Date();
@@ -371,9 +371,8 @@ export function registerRoutes(
         expiresAt: expiresAt
       });
 
-      // Deduct credit only if NOT in software mode (and NOT on Vercel) AND NOT Admin
-      const isSoftwareMode = process.env.LOCAL_SOFTWARE_MODE === "true" && !process.env.VERCEL;
-      if (!isSoftwareMode && !isAdmin) {
+      // Deduct credit only if NOT Admin
+      if (!isAdmin) {
         await storage.deductCredit(userId);
       }
       const album = await storage.createAlbum(data);

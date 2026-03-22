@@ -27,7 +27,6 @@ export default function CreateAlbum() {
 
   const isAdmin = ["admin@eventfold.com", "dilpreetsinghverma@gmail.com"].includes(user?.email || "");
   const isLimitReached = !isAdmin && user?.plan === 'free' && (albums?.length || 0) >= 1 && (user?.credits || 0) <= 0;
-  const isSoftwareMode = user?.plan === 'software_pro';
 
   const [formData, setFormData] = useState<{
     title: string;
@@ -677,7 +676,7 @@ export default function CreateAlbum() {
 
       {/* Plan Limit Overlay */}
       <AnimatePresence>
-        {isLimitReached && !isSoftwareMode && (
+        {isLimitReached && (
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
