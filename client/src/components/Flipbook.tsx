@@ -313,7 +313,7 @@ export const Flipbook = forwardRef(({
               startPage={0}
               drawShadow={window.innerWidth >= 768}
               onChangeState={(e: any) => {
-                if (e.data === 'flipping') {
+                if (e.data === 'flipping' || e.data === 'user_fold' || e.data === 'fold_corner') {
                   playFlipSound();
                 }
               }}
@@ -521,7 +521,7 @@ export const Flipbook = forwardRef(({
               startPage={0}
               drawShadow={true}
               onChangeState={(e: any) => {
-                if (e.data === 'flipping') {
+                if (e.data === 'flipping' || e.data === 'user_fold' || e.data === 'fold_corner') {
                   playFlipSound();
                 }
               }}
