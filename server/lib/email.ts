@@ -55,6 +55,55 @@ export async function sendVerificationEmail(email: string, code: string) {
     console.log(`[EMAIL SIMULATION] Verification code for ${email}: ${code}`);
 }
 
+export async function sendSubscriptionReminder(email: string, daysLeft: number, plan: string) {
+    if (GMAIL_PASSWORD) {
+        const transporter = nodemailer.createTransport({
+            service: 'gmail',
+            auth: { user: GMAIL_EMAIL, pass: GMAIL_PASSWORD },
+        });
+
+        const mailOptions = {
+            from: `"EventFold" <${GMAIL_EMAIL}>`,
+            to: email,
+            subject: `Action Required: Your EventFold ${plan.toUpperCase()} Access Expires in ${daysLeft} Days`,
+            html: reminderTemplate(daysLeft, plan),
+        };
+
+        try {
+            await transporter.sendMail(mailOptions);
+            console.log(`[GMAIL] Reminder sent to ${email}`);
+            return;
+        } catch (error) {
+            console.error('[GMAIL] Failed to send reminder:', error);
+        }
+    }
+}
+
+function reminderTemplate(daysLeft: number, plan: string) {
+    return `
+        <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; padding: 40px; border: 1px solid #1e1e2e; border-radius: 24px; background: #030303; color: white;">
+            <div style="text-align: center; margin-bottom: 30px;">
+                <h1 style="color: #8b5cf6; font-size: 32px; margin-bottom: 5px;">EventFold Cinematic</h1>
+                <p style="text-transform: uppercase; letter-spacing: 5px; font-size: 10px; color: rgba(255,255,255,0.4);">Elite Platform Access</p>
+            </div>
+            
+            <div style="background: rgba(139, 92, 246, 0.1); border: 1px solid rgba(139, 92, 246, 0.2); padding: 30px; border-radius: 16px; text-align: center; margin-bottom: 30px;">
+                <p style="font-size: 14px; margin: 0; color: rgba(255,255,255,0.6);">YOUR COLLECTION ACCESS IS EXPIRING</p>
+                <h2 style="font-size: 48px; margin: 10px 0; color: white;">${daysLeft} DAYS</h2>
+                <p style="font-size: 14px; margin: 0; font-weight: bold; color: #8b5cf6;">${plan.toUpperCase()} UNLIMITED</p>
+            </div>
+
+            <p style="line-height: 1.6; color: rgba(255,255,255,0.7); text-align: center;">Your professional cinematic workspace and all shared client albums will move to a limited state in ${daysLeft} days. Renew now to maintain your elite standing and unlimited cloud delivery.</p>
+            
+            <div style="text-align: center; margin-top: 40px;">
+                <a href="https://www.eventfoldstudio.com/dashboard" style="background: #8b5cf6; color: white; padding: 18px 40px; border-radius: 12px; text-decoration: none; font-weight: bold; font-size: 16px; display: inline-block; box-shadow: 0 10px 20px rgba(139, 92, 246, 0.3);">RENEW ACCESS NOW</a>
+            </div>
+
+            <p style="color: rgba(255,255,255,0.2); font-size: 10px; text-align: center; margin-top: 50px; text-transform: uppercase; letter-spacing: 2px;">Automated Security Notification · Do not reply</p>
+        </div>
+    `;
+}
+
 function verificationTemplate(code: string) {
     return `
         <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #eee; border-radius: 10px;">

@@ -217,8 +217,17 @@ export default function Viewer() {
   const origin = import.meta.env.VITE_PUBLIC_VIEWER_URL || 'https://eventfold.vercel.app';
   // Extract custom uploaded music from the album, or fall back to default theme music
   const customAudio = album?.files?.find((f: any) => f.fileType === 'audio')?.filePath;
-  const defaultMusicUrl = album?.theme === 'royal' ? 'https://res.cloudinary.com/dzp0f9u5u/video/upload/v1740393962/royalty_wedding_bg_music_oc9z3p.mp3' : 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3';
-  const musicUrl = customAudio || defaultMusicUrl;
+  
+  const getThemeMusic = (theme: string) => {
+    switch (theme) {
+      case 'emerald': return 'https://res.cloudinary.com/dzp0f9u5u/video/upload/v1740393950/indian_flute_bg_music_emerald_tguzq2.mp3';
+      case 'saffron': return 'https://res.cloudinary.com/dzp0f9u5u/video/upload/v1740393940/saffron_royal_sitar_p2o0qx.mp3';
+      case 'velvet': return 'https://res.cloudinary.com/dzp0f9u5u/video/upload/v1740393930/velvet_indian_violin_bg_ay3z2v.mp3';
+      default: return 'https://res.cloudinary.com/dzp0f9u5u/video/upload/v1740393962/royalty_wedding_bg_music_oc9z3p.mp3';
+    }
+  };
+
+  const musicUrl = customAudio || getThemeMusic(album?.theme || 'royal');
   const shareUrl = `${origin}/album/${id}?shared=true`;
 
   const handleShare = async () => {
@@ -527,7 +536,7 @@ export default function Viewer() {
   }
 
   return (
-    <div className="min-h-screen bg-background flex flex-col relative overflow-hidden selection:bg-primary/30">
+    <div className="min-h-screen bg-background flex flex-col relative overflow-hidden selection:bg-primary/30" data-theme={album.theme || 'royal'}>
       {/* Background Orbs */}
       <div className="fixed top-0 left-0 w-[600px] h-[600px] bg-primary/5 rounded-full blur-[140px] pointer-events-none" />
       <div className="fixed bottom-0 right-0 w-[600px] h-[600px] bg-indigo-500/5 rounded-full blur-[140px] pointer-events-none" />

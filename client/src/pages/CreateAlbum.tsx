@@ -449,6 +449,39 @@ export default function CreateAlbum() {
                   </div>
                 </div>
 
+                <div className="space-y-6 pt-6 border-t border-white/5">
+                  <div className="flex items-center gap-2 mb-2 pl-1">
+                    <Palette className="w-5 h-5 text-primary" />
+                    <Label className="text-sm font-bold uppercase tracking-[0.15em] text-white/40">Select Indian Royal Style</Label>
+                  </div>
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                    {[
+                      { id: 'royal', name: 'Majestic Purple', color: 'bg-indigo-600', desc: 'Regal Mandalas' },
+                      { id: 'emerald', name: 'Royal Emerald', color: 'bg-emerald-600', desc: 'Luxury Green' },
+                      { id: 'saffron', name: 'Saffron Gold', color: 'bg-amber-600', desc: 'Royal Festive' },
+                      { id: 'velvet', name: 'Velvet Maroon', color: 'bg-red-800', desc: 'Indian Velvet' },
+                    ].map((t) => (
+                      <button
+                        key={t.id}
+                        type="button"
+                        onClick={() => setFormData({ ...formData, theme: t.id })}
+                        className={`relative group h-32 rounded-[2rem] border-2 transition-all duration-500 overflow-hidden flex flex-col items-center justify-center gap-2 ${formData.theme === t.id ? 'border-primary bg-primary/5 ring-4 ring-primary/10' : 'border-white/5 hover:border-white/10 hover:bg-white/[0.02]'}`}
+                      >
+                        <div className={`w-10 h-10 rounded-2xl ${t.color} shadow-lg shadow-black/40 group-hover:scale-110 transition-transform`} />
+                        <div className="text-center px-2">
+                          <p className="text-[10px] font-black uppercase tracking-tighter text-white">{t.name}</p>
+                          <p className="text-[8px] text-white/40 uppercase tracking-widest">{t.desc}</p>
+                        </div>
+                        {formData.theme === t.id && (
+                          <div className="absolute top-3 right-3">
+                            <CheckCircle2 className="w-4 h-4 text-primary fill-black" />
+                          </div>
+                        )}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
                 <div className="space-y-6">
                   <div className="flex flex-col space-y-1">
                     <Label className="text-sm font-bold uppercase tracking-[0.15em] text-white/40 ml-1">Cover Architecture</Label>

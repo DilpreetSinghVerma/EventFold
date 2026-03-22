@@ -55,6 +55,34 @@
   --color-sidebar-ring: #8b5cf6;
 }
 
+[data-theme='emerald'] {
+  --color-primary: #10b981;
+  --color-ring: #059669;
+  --color-accent: rgba(5, 150, 105, 0.1);
+  --color-accent-foreground: #34d399;
+}
+
+[data-theme='saffron'] {
+  --color-primary: #f59e0b;
+  --color-ring: #d97706;
+  --color-accent: rgba(217, 119, 6, 0.1);
+  --color-accent-foreground: #fbbf24;
+}
+
+[data-theme='velvet'] {
+  --color-primary: #b91c1c;
+  --color-ring: #991b1b;
+  --color-accent: rgba(153, 27, 27, 0.1);
+  --color-accent-foreground: #f87171;
+}
+
+[data-theme='royal'] {
+  --color-primary: #8b5cf6;
+  --color-ring: #7c3aed;
+  --color-accent: rgba(124, 58, 237, 0.1);
+  --color-accent-foreground: #a78bfa;
+}
+
 @layer base {
   * {
     @apply border-border outline-ring/50;

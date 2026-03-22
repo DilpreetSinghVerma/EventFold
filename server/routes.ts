@@ -625,6 +625,42 @@ export function registerRoutes(
     }
   });
 
+  // Admin: Dispatch Expiry Reminders (7-day window check)
+  app.post("/api/admin/dispatch-reminders", async (req, res) => {
+    try {
+      if (!req.isAuthenticated()) return res.status(401).json({ error: "Unauthorized" });
+      const user = req.user as any;
+      if (user.role !== 'admin' && user.email !== 'dilpreetsinghverma@gmail.com') {
+        return res.status(403).json({ error: "High-level clearing required" });
+      }
+
+      const allUsers = await storage.getUsers();
+      const now = new Date();
+      const sevenDaysFromNow = new Date();
+      sevenDaysFromNow.setDate(now.getDate() + 8);
+      const sixDaysFromNow = new Date();
+      sixDaysFromNow.setDate(now.getDate() + 6);
+
+      let sentCount = 0;
+      const { sendSubscriptionReminder } = await import("./lib/email");
+
+      for (const u of allUsers) {
+        if (u.subscriptionExpiresAt && u.plan !== 'free') {
+          const expiry = new Date(u.subscriptionExpiresAt);
+          if (expiry > sixDaysFromNow && expiry < sevenDaysFromNow) {
+            await sendSubscriptionReminder(u.email, 7, u.plan);
+            sentCount++;
+          }
+        }
+      }
+
+      res.json({ success: true, count: sentCount });
+    } catch (e) {
+      console.error("Reminder dispatch failed:", e);
+      res.status(500).json({ error: "Failed to dispatch reminders" });
+    }
+  });
+
 
   // Unlock protected album
   app.post("/api/albums/:id/unlock", async (req, res) => {

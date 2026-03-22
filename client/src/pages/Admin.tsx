@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import { Loader2, Plus, Minus, Trash2, Eye, LayoutDashboard, Users, BookCopy, ShieldAlert, TrendingUp, Activity, Database, Globe, Search, ArrowUpCircle, CheckCircle2, XCircle } from "lucide-react";
+import { Loader2, Plus, Minus, Trash2, Eye, LayoutDashboard, Users, BookCopy, ShieldAlert, TrendingUp, Activity, Database, Globe, Search, ArrowUpCircle, CheckCircle2, XCircle, Sparkles } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { Link, useLocation } from "wouter";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -149,8 +149,24 @@ export default function Admin() {
               className="pl-12 bg-white/5 border-white/10 rounded-xl h-12 focus:border-primary/50 transition-all font-medium"
             />
           </div>
-          <Button variant="secondary" className="h-12 rounded-xl bg-green-500/10 text-green-400 border border-green-400/20 flex gap-2">
+          <Button 
+            variant="secondary" 
+            className="h-12 rounded-xl bg-green-500/10 text-green-400 border border-green-400/20 flex gap-2"
+          >
             <CheckCircle2 className="w-4 h-4" /> System Health: Cinematic Engine Active
+          </Button>
+          <Button 
+            onClick={async () => {
+              if (window.confirm("BROADCAST EXPIRY REMINDERS?\n\nThis will scan all users and send a luxury email to anyone whose subscription expires in exactly 7 days.")) {
+                const res = await apiRequest("POST", "/api/admin/dispatch-reminders");
+                const data = await res.json();
+                toast({ title: `Reminders dispatched to ${data.count} users` });
+              }
+            }}
+            variant="outline" 
+            className="h-12 rounded-xl border-primary/20 bg-primary/5 text-primary hover:bg-primary/10 flex gap-2 font-bold"
+          >
+            <Sparkles className="w-4 h-4" /> Dispatch Retention Alerts
           </Button>
         </div>
 
