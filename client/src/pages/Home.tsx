@@ -31,15 +31,26 @@ export default function Home() {
   return (
     <div className="min-h-screen bg-[#030303] text-white selection:bg-primary/30 selection:text-white overflow-x-hidden">
       {/* Royal Background Elements */}
-      <div className="fixed top-0 left-0 w-full h-full pointer-events-none overflow-hidden opacity-20">
-        <svg className="absolute top-[-10%] right-[-5%] w-[600px] h-[600px] text-primary/10 animate-[spin_60s_linear_infinite]" viewBox="0 0 100 100">
-           <path fill="currentColor" d="M50 0 L60 40 L100 50 L60 60 L50 100 L40 60 L0 50 L40 40 Z" />
-           <circle cx="50" cy="50" r="10" fill="none" stroke="currentColor" strokeWidth="1" />
-           <circle cx="50" cy="50" r="30" fill="none" stroke="currentColor" strokeWidth="0.5" strokeDasharray="2 2" />
-        </svg>
+      <div className="fixed top-0 left-0 w-full h-full pointer-events-none overflow-hidden">
+        {/* Top Right Decorative Mandala */}
+        <div className="absolute top-[-10%] right-[-10%] w-[800px] h-[800px] opacity-10 animate-slow-spin pointer-events-none">
+          <svg viewBox="0 0 100 100" className="w-full h-full text-primary">
+             <path fill="currentColor" d="M50 0 L55 35 L90 20 L65 45 L100 50 L65 55 L90 80 L55 65 L50 100 L45 65 L100 80 L35 55 L0 50 L35 45 L10 20 L45 35 Z" />
+             <circle cx="50" cy="50" r="15" fill="none" stroke="currentColor" strokeWidth="0.5" />
+             <circle cx="50" cy="50" r="30" fill="none" stroke="currentColor" strokeWidth="0.2" strokeDasharray="1 1" />
+          </svg>
+        </div>
+        
+        {/* Bottom Left Decorative Mandala */}
+        <div className="absolute bottom-[-20%] left-[-15%] w-[1000px] h-[1000px] opacity-[0.07] animate-slow-spin pointer-events-none [animation-direction:reverse]">
+          <svg viewBox="0 0 100 100" className="w-full h-full text-[#FF9933]">
+             <path fill="currentColor" d="M50 0 L55 35 L90 20 L65 45 L100 50 L65 55 L90 80 L55 65 L50 100 L45 65 L10 80 L35 55 L0 50 L35 45 L10 20 L45 35 Z" />
+             <circle cx="50" cy="50" r="20" fill="none" stroke="currentColor" strokeWidth="0.3" />
+          </svg>
+        </div>
       </div>
       
-      <div className="fixed top-0 left-0 w-[500px] h-[500px] bg-[#FF9933]/5 rounded-full blur-[120px] pointer-events-none" />
+      <div className="fixed top-0 left-0 w-[500px] h-[500px] bg-[#FF9933]/10 rounded-full blur-[120px] pointer-events-none" />
       <div className="fixed bottom-0 right-0 w-[500px] h-[500px] bg-primary/10 rounded-full blur-[120px] pointer-events-none" />
 
       {/* Navigation */}

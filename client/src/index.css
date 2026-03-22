@@ -104,6 +104,24 @@
   .perspective-2000 {
     perspective: 2000px;
   }
+
+  @keyframes float {
+    0%, 100% { transform: translateY(0) rotate(0); }
+    50% { transform: translateY(-20px) rotate(5deg); }
+  }
+
+  @keyframes slow-spin {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+  }
+
+  .animate-slow-spin {
+    animation: slow-spin 60s linear infinite;
+  }
+
+  .animate-float {
+    animation: float 10s ease-in-out infinite;
+  }
 }
 
 /* Custom Scrollbar */
