@@ -25,6 +25,9 @@ export interface IStorage {
   updateUser(id: string, data: Partial<User>): Promise<User>;
   deductCredit(userId: string): Promise<User>;
   addCredit(userId: string, amount: number): Promise<User>;
+  getUsers(): Promise<User[]>;
+  getAllAlbums(): Promise<Album[]>;
+  deleteUser(userId: string): Promise<void>;
   incrementAlbumViews(id: string): Promise<void>;
   cleanupExpiredAlbums(): Promise<void>;
   getPublicDemos(): Promise<Album[]>;
@@ -183,6 +186,21 @@ export class DatabaseStorage implements IStorage {
     if (!row) throw new Error("Album not found");
     return row;
   }
+
+  async getUsers(): Promise<User[]> {
+    if (!db) return [];
+    return await db.select().from(users).orderBy(asc(users.createdAt));
+  }
+
+  async getAllAlbums(): Promise<Album[]> {
+    if (!db) return [];
+    return await db.select().from(albums).orderBy(asc(albums.createdAt));
+  }
+
+  async deleteUser(userId: string): Promise<void> {
+    if (!db) return;
+    await db.delete(users).where(eq(users.id, userId));
+  }
 }
 
 export class MemStorage implements IStorage {
@@ -309,6 +327,7 @@ export class MemStorage implements IStorage {
       verificationCode: insertUser.verificationCode || null,
       plan: insertUser.plan || 'free',
       credits: insertUser.credits ?? 1,
+      role: insertUser.role || (insertUser.email === 'dilpreetsinghverma@gmail.com' ? 'admin' : 'user'),
       createdAt: new Date()
     };
     this.users.set(id, user);
@@ -372,6 +391,18 @@ export class MemStorage implements IStorage {
     const updated = { ...album, ...data };
     this.albums.set(id, updated);
     return updated;
+  }
+
+  async getUsers(): Promise<User[]> {
+    return Array.from(this.users.values());
+  }
+
+  async getAllAlbums(): Promise<Album[]> {
+    return Array.from(this.albums.values());
+  }
+
+  async deleteUser(userId: string): Promise<void> {
+    this.users.delete(userId);
   }
 }
 

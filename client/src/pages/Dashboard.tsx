@@ -2,7 +2,7 @@ import { Link } from 'wouter';
 import { Card, CardContent, CardFooter } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Plus, QrCode, Eye, Trash2, LayoutGrid, Calendar, LogOut, Settings as SettingsIcon, Lock, Loader2, Sparkles, User as UserIcon, Crown, Copy, Download, Share2, Check } from 'lucide-react';
+import { Plus, QrCode, Eye, Trash2, LayoutGrid, Calendar, LogOut, Settings as SettingsIcon, Lock, Loader2, Sparkles, User as UserIcon, Crown, Copy, Download, Share2, Check, ShieldAlert } from 'lucide-react';
 import { QRCodeSVG } from 'qrcode.react';
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -25,7 +25,7 @@ export default function Dashboard() {
   const [healthData, setHealthData] = useState<any>(null);
   const [settings, setSettings] = useState<any>(null);
   const [copiedId, setCopiedId] = useState<string | null>(null);
-  const isAdmin = ["admin@eventfold.com", "dilpreetsinghverma@gmail.com"].includes(user?.email || "");
+  const isAdmin = user?.role === 'admin' || ["admin@eventfold.com", "dilpreetsinghverma@gmail.com"].includes(user?.email || "");
 
   // Parse URL for success/cancel params
   const { search } = typeof window !== 'undefined' ? window.location : { search: '' };
@@ -495,6 +495,15 @@ export default function Dashboard() {
                 Support
               </Button>
             </ContactModal>
+            
+            {isAdmin && (
+              <Link href="/admin">
+                <Button variant="ghost" className="rounded-xl text-primary font-bold bg-primary/10 border border-primary/20 hover:bg-primary/20 group">
+                  <ShieldAlert className="w-4 h-4 mr-2 group-hover:scale-110 transition-transform" /> Command Center
+                </Button>
+              </Link>
+            )}
+
             {isAdmin && (
               <Button
                 variant="ghost"

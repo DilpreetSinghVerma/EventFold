@@ -16,6 +16,7 @@ import Login from "@/pages/Login";
 import Terms from "@/pages/Terms";
 import Privacy from "@/pages/Privacy";
 import AuthVerify from "@/pages/AuthVerify";
+import Admin from "@/pages/Admin";
 
 import { AuthProvider, useAuth } from "@/lib/auth";
 import { Loader2 } from "lucide-react";
@@ -43,6 +44,9 @@ function Router() {
       </Route>
       <Route path="/settings">
         {user ? (user.isVerified === 1 ? <Settings /> : <Redirect to="/verify" />) : <Redirect to="/login" />}
+      </Route>
+      <Route path="/admin">
+        {user ? (user.role === 'admin' || user.email === 'dilpreetsinghverma@gmail.com' ? <Admin /> : <Redirect to="/dashboard" />) : <Redirect to="/login" />}
       </Route>
 
 

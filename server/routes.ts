@@ -514,6 +514,84 @@ export function registerRoutes(
     }
   });
 
+  // Admin: Get all users
+  app.get("/api/admin/users", async (req, res) => {
+    try {
+      if (!req.isAuthenticated()) return res.status(401).json({ error: "Unauthorized" });
+      const user = req.user as any;
+      if (user.role !== 'admin' && user.email !== 'dilpreetsinghverma@gmail.com') {
+        return res.status(403).json({ error: "Admin privilege required" });
+      }
+      const u = await storage.getUsers();
+      res.json(u);
+    } catch (e) {
+      res.status(500).json({ error: "Failed to fetch users" });
+    }
+  });
+
+  // Admin: Delete user
+  app.delete("/api/admin/users/:id", async (req, res) => {
+    try {
+      if (!req.isAuthenticated()) return res.status(401).json({ error: "Unauthorized" });
+      const user = req.user as any;
+      if (user.role !== 'admin' && user.email !== 'dilpreetsinghverma@gmail.com') {
+        return res.status(403).json({ error: "Admin privilege required" });
+      }
+      await storage.deleteUser(req.params.id);
+      res.json({ success: true });
+    } catch (e) {
+      res.status(500).json({ error: "Failed to delete user" });
+    }
+  });
+
+  // Admin: Add credits to user
+  app.post("/api/admin/users/:id/credits", async (req, res) => {
+    try {
+      if (!req.isAuthenticated()) return res.status(401).json({ error: "Unauthorized" });
+      const user = req.user as any;
+      if (user.role !== 'admin' && user.email !== 'dilpreetsinghverma@gmail.com') {
+        return res.status(403).json({ error: "Admin privilege required" });
+      }
+      const { amount } = req.body;
+      const u = await storage.addCredit(req.params.id, amount || 1);
+      res.json(u);
+    } catch (e) {
+      res.status(500).json({ error: "Failed to add credits" });
+    }
+  });
+
+  // Admin: Get all albums across platform
+  app.get("/api/admin/albums", async (req, res) => {
+    try {
+      if (!req.isAuthenticated()) return res.status(401).json({ error: "Unauthorized" });
+      const user = req.user as any;
+      if (user.role !== 'admin' && user.email !== 'dilpreetsinghverma@gmail.com') {
+        return res.status(403).json({ error: "Admin privilege required" });
+      }
+      const a = await storage.getAllAlbums();
+      res.json(a);
+    } catch (e) {
+      res.status(500).json({ error: "Failed to fetch all albums" });
+    }
+  });
+
+  // Admin: Change user role
+  app.patch("/api/admin/users/:id/role", async (req, res) => {
+    try {
+      if (!req.isAuthenticated()) return res.status(401).json({ error: "Unauthorized" });
+      const user = req.user as any;
+      if (user.role !== 'admin' && user.email !== 'dilpreetsinghverma@gmail.com') {
+        return res.status(403).json({ error: "Admin privilege required" });
+      }
+      const { role } = req.body;
+      const u = await storage.updateUser(req.params.id, { role });
+      res.json(u);
+    } catch (e) {
+      res.status(500).json({ error: "Failed to update user role" });
+    }
+  });
+
+
   // Unlock protected album
   app.post("/api/albums/:id/unlock", async (req, res) => {
     try {
