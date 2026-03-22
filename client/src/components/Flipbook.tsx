@@ -58,6 +58,7 @@ export const Flipbook = forwardRef(({
   // Background music audio element
   const bgMusic = useRef<HTMLAudioElement | null>(null);
   const flipAudio = useRef<HTMLAudioElement | null>(null);
+  const lastFlipTime = useRef(0);
 
   useEffect(() => {
     // Soft piano / wedding-style royalty-free background music or custom upload
@@ -190,6 +191,9 @@ export const Flipbook = forwardRef(({
 
   const playFlipSound = () => {
     if (isMuted || !flipAudio.current) return;
+    const now = Date.now();
+    if (now - lastFlipTime.current < 200) return; // Zero-latency debounce
+    lastFlipTime.current = now;
     try {
       flipAudio.current.currentTime = 0;
       flipAudio.current.play().catch(() => { });
@@ -301,6 +305,11 @@ export const Flipbook = forwardRef(({
               style={{ display: 'block' }}
               startPage={0}
               drawShadow={window.innerWidth >= 768}
+              onChangeState={(e: any) => {
+                if (e.data === 'flipping') {
+                  playFlipSound();
+                }
+              }}
               flippingTime={800}
               usePortrait={false}
               startZIndex={0}
@@ -505,6 +514,11 @@ export const Flipbook = forwardRef(({
               style={{ display: 'block' }}
               startPage={0}
               drawShadow={true}
+              onChangeState={(e: any) => {
+                if (e.data === 'flipping') {
+                  playFlipSound();
+                }
+              }}
               flippingTime={800}
               usePortrait={false}
               startZIndex={0}
