@@ -6,10 +6,11 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import { Loader2, Plus, Minus, Trash2, Eye, LayoutDashboard, Users, BookCopy, ShieldAlert } from "lucide-react";
+import { Loader2, Plus, Minus, Trash2, Eye, LayoutDashboard, Users, BookCopy, ShieldAlert, TrendingUp, Activity, Database, Globe } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { Link, useLocation } from "wouter";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Progress } from "@/components/ui/progress";
 
 export default function Admin() {
   const { user } = useAuth();
@@ -66,14 +67,17 @@ export default function Admin() {
     },
   });
 
+  const totalCredits = users?.reduce((acc, u) => acc + u.credits, 0) || 0;
+  const totalViews = albums?.reduce((acc, a) => acc + (a.views || 0), 0) || 0;
+
   if (!user || (user.role !== 'admin' && user.email !== 'dilpreetsinghverma@gmail.com')) {
     return (
-      <div className="flex flex-col items-center justify-center min-h-screen p-4 text-center">
-        <ShieldAlert className="w-16 h-16 text-destructive mb-4" />
-        <h1 className="text-2xl font-bold mb-2">Access Denied</h1>
-        <p className="text-muted-foreground mb-4">You do not have permission to access the Command Center.</p>
+      <div className="flex flex-col items-center justify-center min-h-screen p-4 text-center bg-[#030303] text-white">
+        <ShieldAlert className="w-16 h-16 text-primary mb-4" />
+        <h1 className="text-2xl font-bold mb-2 uppercase tracking-widest">Access Denied</h1>
+        <p className="text-white/40 mb-8 max-w-sm">You do not have the required security clearing to access the Platform Command Center.</p>
         <Link href="/dashboard">
-          <Button variant="outline">Return to Dashboard</Button>
+          <Button className="rounded-xl px-8 border-white/10 hover:bg-white/5" variant="outline">Return to Safety</Button>
         </Link>
       </div>
     );
@@ -82,16 +86,75 @@ export default function Admin() {
   return (
     <div className="min-h-screen bg-[#030303] text-white p-8">
       <div className="max-w-7xl mx-auto">
-        <div className="flex items-center justify-between mb-8">
+        <div className="flex flex-col md:flex-row items-start md:items-center justify-between mb-12 gap-6">
           <div>
-            <h1 className="text-4xl font-bold tracking-tight mb-2 flex items-center gap-3">
-              <LayoutDashboard className="text-primary w-10 h-10" /> Admin Command Center
-            </h1>
-            <p className="text-white/40">Manage all users, credits, and global albums from one place.</p>
+            <div className="flex items-center gap-3 mb-2">
+              <div className="w-12 h-12 rounded-2xl bg-primary/20 flex items-center justify-center border border-primary/30 shadow-[0_0_20px_rgba(139,92,246,0.2)]">
+                <ShieldAlert className="text-primary w-6 h-6" />
+              </div>
+              <h1 className="text-4xl font-bold tracking-tight">Admin Command Center</h1>
+            </div>
+            <p className="text-white/40 max-w-xl">Ultimate oversight for the EventFold Cinematic Engine. Manage users, monitor growth, and control global content.</p>
           </div>
           <Link href="/dashboard">
-            <Button variant="outline" className="border-white/10 hover:bg-white/5">Back to Personal Dashboard</Button>
+            <Button variant="outline" className="border-white/10 hover:bg-white/5 rounded-xl h-12 px-6">Return to Personal Workspace</Button>
           </Link>
+        </div>
+
+        {/* Global Intelligence Bar */}
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-12">
+          <Card className="bg-white/[0.03] border-white/5 rounded-2xl overflow-hidden glass">
+            <CardContent className="p-6">
+              <div className="flex items-center gap-4">
+                <div className="w-10 h-10 rounded-xl bg-blue-500/10 flex items-center justify-center border border-blue-500/20 text-blue-400">
+                  <Users className="w-5 h-5" />
+                </div>
+                <div>
+                  <p className="text-[10px] font-bold uppercase tracking-widest text-white/30">Total Creators</p>
+                  <p className="text-2xl font-black">{users?.length || 0}</p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+          <Card className="bg-white/[0.03] border-white/5 rounded-2xl overflow-hidden glass">
+            <CardContent className="p-6">
+              <div className="flex items-center gap-4">
+                <div className="w-10 h-10 rounded-xl bg-purple-500/10 flex items-center justify-center border border-purple-500/20 text-purple-400">
+                  <BookCopy className="w-5 h-5" />
+                </div>
+                <div>
+                  <p className="text-[10px] font-bold uppercase tracking-widest text-white/30">Platform Albums</p>
+                  <p className="text-2xl font-black">{albums?.length || 0}</p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+          <Card className="bg-white/[0.03] border-white/5 rounded-2xl overflow-hidden glass">
+            <CardContent className="p-6">
+              <div className="flex items-center gap-4">
+                <div className="w-10 h-10 rounded-xl bg-green-500/10 flex items-center justify-center border border-green-500/20 text-green-400">
+                  <Globe className="w-5 h-5" />
+                </div>
+                <div>
+                  <p className="text-[10px] font-bold uppercase tracking-widest text-white/30">Global Reach</p>
+                  <p className="text-2xl font-black">{totalViews.toLocaleString()}</p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+          <Card className="bg-white/[0.03] border-white/5 rounded-2xl overflow-hidden glass">
+            <CardContent className="p-6">
+              <div className="flex items-center gap-4">
+                <div className="w-10 h-10 rounded-xl bg-amber-500/10 flex items-center justify-center border border-amber-500/20 text-amber-400">
+                  <TrendingUp className="w-5 h-5" />
+                </div>
+                <div>
+                  <p className="text-[10px] font-bold uppercase tracking-widest text-white/30">Circulating Credits</p>
+                  <p className="text-2xl font-black">{totalCredits}</p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
         </div>
 
         <Tabs defaultValue="users" className="space-y-8">
