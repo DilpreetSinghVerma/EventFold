@@ -30,9 +30,17 @@ export default function Home() {
 
   return (
     <div className="min-h-screen bg-[#030303] text-white selection:bg-primary/30 selection:text-white overflow-x-hidden">
-      {/* Decorative Blur Orbs */}
-      <div className="fixed top-0 left-0 w-[500px] h-[500px] bg-primary/5 rounded-full blur-[120px] pointer-events-none" />
-      <div className="fixed bottom-0 right-0 w-[500px] h-[500px] bg-indigo-500/5 rounded-full blur-[120px] pointer-events-none" />
+      {/* Royal Background Elements */}
+      <div className="fixed top-0 left-0 w-full h-full pointer-events-none overflow-hidden opacity-20">
+        <svg className="absolute top-[-10%] right-[-5%] w-[600px] h-[600px] text-primary/10 animate-[spin_60s_linear_infinite]" viewBox="0 0 100 100">
+           <path fill="currentColor" d="M50 0 L60 40 L100 50 L60 60 L50 100 L40 60 L0 50 L40 40 Z" />
+           <circle cx="50" cy="50" r="10" fill="none" stroke="currentColor" strokeWidth="1" />
+           <circle cx="50" cy="50" r="30" fill="none" stroke="currentColor" strokeWidth="0.5" strokeDasharray="2 2" />
+        </svg>
+      </div>
+      
+      <div className="fixed top-0 left-0 w-[500px] h-[500px] bg-[#FF9933]/5 rounded-full blur-[120px] pointer-events-none" />
+      <div className="fixed bottom-0 right-0 w-[500px] h-[500px] bg-primary/10 rounded-full blur-[120px] pointer-events-none" />
 
       {/* Navigation */}
       <nav className="relative z-50 flex items-center justify-between px-8 py-6 max-w-7xl mx-auto">
@@ -67,14 +75,15 @@ export default function Home() {
               transition={{ duration: 0.8 }}
               className="max-w-3xl"
             >
-              <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-primary/10 border border-primary/20 text-primary text-[10px] font-bold tracking-[0.2em] uppercase mb-4">
-                <Sparkles className="w-3 h-3" /> The Modern Standard for Wedding Studios
+              <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-[#FF9933]/10 border border-[#FF9933]/20 text-[#FF9933] text-[10px] font-bold tracking-[0.2em] uppercase mb-4 shadow-[0_0_20px_rgba(255,153,51,0.1)]">
+                <Sparkles className="w-3 h-3" /> Digital Shagun for the Modern Studio
               </div>
               <h1 className="text-5xl md:text-7xl lg:text-8xl font-display font-bold leading-[1.0] mb-4 tracking-tighter">
-                Breathtaking <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary to-indigo-400">3D Digital</span> Albums.
+                Cinematic <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#FF9933] via-primary to-indigo-400">Royal Digital</span> Albums.
               </h1>
-              <p className="text-lg md:text-xl text-white/50 mb-8 leading-relaxed max-w-2xl mx-auto">
-                Transform your paper albums into a stunning interactive 3D experience. Upload your first album for <strong>free</strong> and wow your clients today.
+              <p className="text-lg md:text-xl text-white/50 mb-8 leading-relaxed max-w-2xl mx-auto italic">
+                Preserve your "Shubh-Vivah" memories in an interactive 3D royal experience.
+                Upload your first "Shaadi" project for <strong>free</strong> and honor your traditions.
               </p>
 
               <div className="flex flex-col sm:flex-row gap-5 justify-center">
@@ -201,11 +210,11 @@ export default function Home() {
           <ContactForm />
         </div>
         <div className="flex items-center justify-center gap-6 mb-8 text-[10px] uppercase tracking-[0.2em] font-bold text-white/30">
-          <Link href="/terms" className="hover:text-primary transition-colors">Terms of Service</Link>
+          <Link href="/terms" className="hover:text-[#FF9933] transition-colors">Terms of Service</Link>
           <span className="w-1 h-1 rounded-full bg-white/10" />
-          <Link href="/privacy" className="hover:text-primary transition-colors">Privacy Policy</Link>
+          <Link href="/privacy" className="hover:text-[#FF9933] transition-colors">Privacy Policy</Link>
         </div>
-        <p className="text-white/20 text-xs uppercase tracking-[0.4em]">Crafted for the World's Best Photographers</p>
+        <p className="text-white/20 text-xs uppercase tracking-[0.4em]">Designed for India's Elite Wedding Creators</p>
       </footer>
     </div>
   );
