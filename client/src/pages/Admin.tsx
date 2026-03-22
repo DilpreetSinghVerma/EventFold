@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { User, Album } from "@shared/schema";
 import { useAuth } from "@/lib/auth";
@@ -6,16 +7,19 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import { Loader2, Plus, Minus, Trash2, Eye, LayoutDashboard, Users, BookCopy, ShieldAlert, TrendingUp, Activity, Database, Globe } from "lucide-react";
+import { Loader2, Plus, Minus, Trash2, Eye, LayoutDashboard, Users, BookCopy, ShieldAlert, TrendingUp, Activity, Database, Globe, Search, ArrowUpCircle, CheckCircle2, XCircle } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { Link, useLocation } from "wouter";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Progress } from "@/components/ui/progress";
+import { Input } from "@/components/ui/input";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 export default function Admin() {
   const { user } = useAuth();
   const { toast } = useToast();
   const [, setLocation] = useLocation();
+  const [searchTerm, setSearchTerm] = useState("");
 
   const { data: users, isLoading: usersLoading } = useQuery<User[]>({
     queryKey: ["/api/admin/users"],
@@ -24,6 +28,17 @@ export default function Admin() {
   const { data: albums, isLoading: albumsLoading } = useQuery<Album[]>({
     queryKey: ["/api/admin/albums"],
   });
+
+  const filteredUsers = users?.filter(u => 
+    u.name?.toLowerCase().includes(searchTerm.toLowerCase()) || 
+    u.email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    u.id.includes(searchTerm)
+  );
+
+  const filteredAlbums = albums?.filter(a => 
+    a.title.toLowerCase().includes(searchTerm.toLowerCase()) || 
+    a.userId?.toLowerCase().includes(searchTerm.toLowerCase())
+  );
 
   const creditMutation = useMutation({
     mutationFn: async ({ userId, amount }: { userId: string; amount: number }) => {
@@ -44,6 +59,28 @@ export default function Admin() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/admin/users"] });
       toast({ title: "User role updated" });
+    },
+  });
+
+  const planMutation = useMutation({
+    mutationFn: async ({ userId, plan }: { userId: string; plan: string }) => {
+      const res = await apiRequest("PATCH", `/api/admin/users/${userId}/role`, { plan }); // Reusing role route for simplicity on server
+      return res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/users"] });
+      toast({ title: "User plan updated" });
+    },
+  });
+
+  const demoMutation = useMutation({
+    mutationFn: async ({ albumId, isPublicDemo }: { albumId: string; isPublicDemo: boolean }) => {
+      const res = await apiRequest("PATCH", `/api/albums/${albumId}/demo-status`, { isPublicDemo });
+      return res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/albums"] });
+      toast({ title: "Demo status updated" });
     },
   });
 
@@ -99,6 +136,22 @@ export default function Admin() {
           <Link href="/dashboard">
             <Button variant="outline" className="border-white/10 hover:bg-white/5 rounded-xl h-12 px-6">Return to Personal Workspace</Button>
           </Link>
+        </div>
+
+        {/* Search & Filter Bar */}
+        <div className="flex flex-col md:flex-row gap-4 mb-8">
+          <div className="relative flex-1">
+            <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-white/20" />
+            <Input 
+              placeholder="Search Users, Emails or Album Titles..." 
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="pl-12 bg-white/5 border-white/10 rounded-xl h-12 focus:border-primary/50 transition-all font-medium"
+            />
+          </div>
+          <Button variant="secondary" className="h-12 rounded-xl bg-green-500/10 text-green-400 border border-green-400/20 flex gap-2">
+            <CheckCircle2 className="w-4 h-4" /> System Health: Cinematic Engine Active
+          </Button>
         </div>
 
         {/* Global Intelligence Bar */}
@@ -190,7 +243,7 @@ export default function Admin() {
                       </TableRow>
                     </TableHeader>
                     <TableBody>
-                      {users?.map((u) => (
+                      {filteredUsers?.map((u) => (
                         <TableRow key={u.id} className="border-white/5 hover:bg-white/[0.02] transition-colors">
                           <TableCell className="font-medium underline decoration-primary/30 underline-offset-4">{u.name || "N/A"}</TableCell>
                           <TableCell className="text-white/60">{u.email || "Google ID User"}</TableCell>
@@ -218,9 +271,19 @@ export default function Admin() {
                             </div>
                           </TableCell>
                           <TableCell>
-                            <Badge variant={u.plan === 'pro' ? 'default' : 'outline'} className={u.plan === 'pro' ? 'bg-indigo-600' : 'border-white/20'}>
-                              {u.plan.toUpperCase()}
-                            </Badge>
+                            <Select 
+                              defaultValue={u.plan} 
+                              onValueChange={(val) => planMutation.mutate({ userId: u.id, plan: val })}
+                            >
+                              <SelectTrigger className="w-[100px] bg-white/5 border-white/10 h-8 rounded-lg text-xs">
+                                <SelectValue />
+                              </SelectTrigger>
+                              <SelectContent className="bg-[#0a0a0b] border-white/10 text-white">
+                                <SelectItem value="free">FREE</SelectItem>
+                                <SelectItem value="pro">PRO</SelectItem>
+                                <SelectItem value="elite">ELITE</SelectItem>
+                              </SelectContent>
+                            </Select>
                           </TableCell>
                           <TableCell>
                             <Button 
@@ -272,17 +335,19 @@ export default function Admin() {
                       </TableRow>
                     </TableHeader>
                     <TableBody>
-                      {albums?.map((a) => (
+                      {filteredAlbums?.map((a) => (
                         <TableRow key={a.id} className="border-white/5 hover:bg-white/[0.02] transition-colors">
                           <TableCell className="font-bold">{a.title}</TableCell>
                           <TableCell className="font-mono text-[10px] text-white/40">{a.userId}</TableCell>
                           <TableCell className="text-white/60">{new Date(a.createdAt).toLocaleDateString()}</TableCell>
                           <TableCell>
-                            {a.isPublicDemo === 'true' ? (
-                              <Badge className="bg-green-500/20 text-green-400 border-green-500/30">PUBLIC DEMO</Badge>
-                            ) : (
-                              <Badge variant="outline" className="text-white/30 border-white/5">USER PROJECT</Badge>
-                            )}
+                            <Button
+                              variant="ghost"
+                              className={`h-7 px-3 text-[10px] font-bold uppercase rounded-full ${a.isPublicDemo === 'true' ? 'bg-green-500/20 text-green-400 border border-green-500/30' : 'bg-white/5 text-white/20'}`}
+                              onClick={() => demoMutation.mutate({ albumId: a.id, isPublicDemo: a.isPublicDemo !== 'true' })}
+                            >
+                              {a.isPublicDemo === 'true' ? 'PUBLIC DEMO' : 'PRIVATE'}
+                            </Button>
                           </TableCell>
                           <TableCell className="text-right flex items-center justify-end gap-2">
                             <Link href={`/viewer/${a.id}`}>

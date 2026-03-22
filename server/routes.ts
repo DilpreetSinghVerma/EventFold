@@ -583,8 +583,8 @@ export function registerRoutes(
       if (user.role !== 'admin' && user.email !== 'dilpreetsinghverma@gmail.com') {
         return res.status(403).json({ error: "Admin privilege required" });
       }
-      const { role } = req.body;
-      const u = await storage.updateUser(req.params.id, { role });
+      const { role, plan } = req.body;
+      const u = await storage.updateUser(req.params.id, { role, plan });
       res.json(u);
     } catch (e) {
       res.status(500).json({ error: "Failed to update user role" });
