@@ -573,12 +573,12 @@ export default function Dashboard() {
                     ADMIN MASTER · UNLIMITED CREDITS
                     <span className="ml-2 px-2 py-0.5 bg-cyan-500 text-white text-[8px] font-black rounded-md tracking-tighter uppercase">Founder Access</span>
                   </div>
-                ) : user?.plan === 'pro' ? (
-                  <div className="flex items-center gap-3 px-6 py-3 bg-primary/10 border border-primary/20 rounded-2xl text-sm font-bold text-primary shadow-2xl shadow-primary/10">
+                ) : (user?.plan === 'pro' || user?.plan === 'elite') ? (
+                  <div className="flex items-center gap-3 px-6 py-3 bg-primary/10 border border-primary/20 rounded-2xl text-sm font-bold text-primary shadow-2xl shadow-primary/10 transition-all hover:scale-[1.01]">
                     <div className="w-8 h-8 rounded-lg bg-primary/20 flex items-center justify-center mr-1">
                       <Crown className="w-5 h-5 text-primary" />
                     </div>
-                    ELITE UNLIMITED · ACTIVE SUBSCRIPTION
+                    {user?.plan === 'elite' ? 'SUPREME ELITE' : 'PRO'} UNLIMITED · ACTIVE SUBSCRIPTION
                     <span className="ml-2 px-2 py-0.5 bg-primary text-white text-[8px] font-black rounded-md tracking-tighter uppercase">Unlimited Projects</span>
                   </div>
                 ) : (
