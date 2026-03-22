@@ -313,7 +313,7 @@ export const Flipbook = forwardRef(({
               startPage={0}
               drawShadow={window.innerWidth >= 768}
               onChangeState={(e: any) => {
-                if (e.data === 'flipping' || e.data === 'user_fold' || e.data === 'fold_corner') {
+                if (e.data === 'flipping') {
                   playFlipSound();
                 }
               }}
@@ -327,6 +327,7 @@ export const Flipbook = forwardRef(({
               showPageCorners={window.innerWidth >= 1024}
               disableFlipByClick={window.innerWidth < 1024}
               onFlip={(e: any) => {
+                playFlipSound();
                 const pg = e.data;
                 setCurrentPage(pg);
                 if (onPageChange) onPageChange(pg, totalPageCount);
@@ -521,7 +522,7 @@ export const Flipbook = forwardRef(({
               startPage={0}
               drawShadow={true}
               onChangeState={(e: any) => {
-                if (e.data === 'flipping' || e.data === 'user_fold' || e.data === 'fold_corner') {
+                if (e.data === 'flipping') {
                   playFlipSound();
                 }
               }}
@@ -535,6 +536,7 @@ export const Flipbook = forwardRef(({
               showPageCorners={true}
               disableFlipByClick={false}
               onFlip={(e: any) => {
+                playFlipSound();
                 const pg = e.data;
                 setCurrentPage(pg);
                 if (onPageChange) onPageChange(pg, totalPageCount);
