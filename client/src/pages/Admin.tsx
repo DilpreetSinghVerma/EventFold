@@ -284,6 +284,18 @@ export default function Admin() {
                                 <SelectItem value="elite">ELITE</SelectItem>
                               </SelectContent>
                             </Select>
+                            {u.subscriptionExpiresAt && (
+                              <div className="mt-2 flex flex-col gap-1">
+                                <div className="text-[8px] uppercase tracking-tighter text-white/30 flex justify-between">
+                                  <span>Start:</span>
+                                  <span className="text-white/60 font-mono">{u.subscriptionStartedAt ? new Date(u.subscriptionStartedAt).toLocaleDateString() : 'N/A'}</span>
+                                </div>
+                                <div className="text-[8px] uppercase tracking-tighter text-white/30 flex justify-between">
+                                  <span>End:</span>
+                                  <span className="text-primary font-mono font-bold">{new Date(u.subscriptionExpiresAt).toLocaleDateString()}</span>
+                                </div>
+                              </div>
+                            )}
                           </TableCell>
                           <TableCell>
                             <Button 

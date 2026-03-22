@@ -585,20 +585,27 @@ export function registerRoutes(
       }
       const { role, plan } = req.body;
       let subscriptionExpiresAt = undefined;
+      let subscriptionStartedAt = undefined;
       
-      if (plan === 'pro') {
+      if (plan === 'pro' || plan === 'elite') {
         const d = new Date();
-        d.setDate(d.getDate() + 30);
-        subscriptionExpiresAt = d;
-      } else if (plan === 'elite') {
-        const d = new Date();
-        d.setFullYear(d.getFullYear() + 1);
-        subscriptionExpiresAt = d;
+        subscriptionStartedAt = d;
+        
+        if (plan === 'pro') {
+          const exp = new Date();
+          exp.setDate(exp.getDate() + 30);
+          subscriptionExpiresAt = exp;
+        } else {
+          const exp = new Date();
+          exp.setFullYear(exp.getFullYear() + 1);
+          subscriptionExpiresAt = exp;
+        }
       } else if (plan === 'free') {
         subscriptionExpiresAt = null;
+        subscriptionStartedAt = null;
       }
 
-      const u = await storage.updateUser(req.params.id, { role, plan, subscriptionExpiresAt });
+      const u = await storage.updateUser(req.params.id, { role, plan, subscriptionStartedAt, subscriptionExpiresAt });
       res.json(u);
     } catch (e) {
       res.status(500).json({ error: "Failed to update user role" });

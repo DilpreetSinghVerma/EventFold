@@ -19,6 +19,7 @@ export const users = pgTable("users", {
   isVerified: integer("is_verified").notNull().default(0), // 0: No, 1: Yes
   verificationCode: text("verification_code"),
   role: varchar("role", { length: 20 }).notNull().default('user'), // 'user', 'admin'
+  subscriptionStartedAt: timestamp("subscription_started_at"),
   subscriptionExpiresAt: timestamp("subscription_expires_at"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
