@@ -6,11 +6,13 @@ import { LogIn, Globe, ShieldCheck, Zap, Sparkles, ImagePlus, ArrowRight, Mail, 
 import { motion, AnimatePresence } from "framer-motion";
 import { useState } from "react";
 import { useToast } from "@/hooks/use-toast";
+import { PhoneAuth } from "@/components/PhoneAuth";
 
 export default function Login() {
     const [, setLocation] = useLocation();
     const { toast } = useToast();
     const [showEmailLogin, setShowEmailLogin] = useState(false);
+    const [showPhoneLogin, setShowPhoneLogin] = useState(false);
     const [isRegister, setIsRegister] = useState(false);
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
@@ -101,12 +103,12 @@ export default function Login() {
                                 {isRegister ? "Create Account" : "Studio Portal"}
                             </h2>
                             <p className="text-white/40 text-sm">
-                                {isRegister ? "Join the elite standard of album delivery." : "Sign in to manage your premium collections."}
+                                {isRegister ? "Join the elite standard of album delivery." : (showPhoneLogin ? "Enter your phone number to continue." : "Sign in to manage your premium collections.")}
                             </p>
                         </div>
 
 
-                        {!showEmailLogin ? (
+                        {(!showEmailLogin && !showPhoneLogin) ? (
                             <div className="space-y-4">
                                 <Button
                                     onClick={handleGoogleLogin}
@@ -134,13 +136,35 @@ export default function Login() {
                                     <span className="z-10">Continue with Google</span>
                                 </Button>
 
-                                <button
-                                    onClick={() => setShowEmailLogin(true)}
-                                    className="w-full text-center text-white/20 hover:text-white/60 transition-colors text-xs font-semibold uppercase tracking-widest pt-2"
-                                >
-                                    Sign in with email
-                                </button>
+                                <div className="grid grid-cols-2 gap-4 pt-2">
+                                    <button
+                                        onClick={() => setShowEmailLogin(true)}
+                                        className="py-3 rounded-xl border border-white/5 bg-white/5 text-white/40 hover:text-white/80 hover:bg-white/10 transition-all text-[10px] font-bold uppercase tracking-[0.2em] flex items-center justify-center gap-2"
+                                    >
+                                        <Mail className="w-3 h-3" /> Email
+                                    </button>
+                                    <button
+                                        onClick={() => setShowPhoneLogin(true)}
+                                        className="py-3 rounded-xl border border-white/5 bg-white/5 text-white/40 hover:text-white/80 hover:bg-white/10 transition-all text-[10px] font-bold uppercase tracking-[0.2em] flex items-center justify-center gap-2"
+                                    >
+                                        <LogIn className="w-3 h-3 rotate-90" /> Phone OTP
+                                    </button>
+                                </div>
                             </div>
+                        ) : showPhoneLogin ? (
+                            <motion.div
+                                initial={{ opacity: 0, y: 10 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                className="space-y-6"
+                            >
+                                <PhoneAuth />
+                                <button
+                                    onClick={() => setShowPhoneLogin(false)}
+                                    className="w-full text-center text-white/20 hover:text-white/60 transition-colors text-[10px] font-bold uppercase tracking-widest"
+                                >
+                                    Back to Options
+                                </button>
+                            </motion.div>
                         ) : (
                             <motion.form
                                 initial={{ opacity: 0, scale: 0.95 }}
@@ -208,12 +232,11 @@ export default function Login() {
                                             onClick={() => setShowEmailLogin(false)}
                                             className="text-white/20 hover:text-white/60 transition-colors text-[10px] uppercase font-bold tracking-widest"
                                         >
-                                            Back to Google Login
+                                            Back to Options
                                         </button>
                                     </div>
                                 </div>
                             </motion.form>
-
                         )}
 
                         <div className="grid grid-cols-3 gap-6 pt-4">

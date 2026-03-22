@@ -345,7 +345,7 @@ export function registerRoutes(
       if (!user) return res.status(404).json({ error: "User not found" });
 
       const adminEmails = ["admin@eventfold.com", "dilpreetsinghverma@gmail.com"];
-      const isAdmin = adminEmails.includes(user.email);
+      const isAdmin = user.email ? adminEmails.includes(user.email) : false;
 
       // Check if user has enough credits (Bypass for admins)
       if (!isAdmin && user.credits <= 0) {

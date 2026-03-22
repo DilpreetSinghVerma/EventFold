@@ -21,6 +21,7 @@ export interface IStorage {
   getUser(id: string): Promise<User | undefined>;
   getUserByEmail(email: string): Promise<User | undefined>;
   getUserByGoogleId(googleId: string): Promise<User | undefined>;
+  getUserByPhone(phoneNumber: string): Promise<User | undefined>;
   createUser(user: InsertUser): Promise<User>;
   updateUser(id: string, data: Partial<User>): Promise<User>;
   deductCredit(userId: string): Promise<User>;
@@ -108,6 +109,12 @@ export class DatabaseStorage implements IStorage {
   async getUserByGoogleId(googleId: string): Promise<User | undefined> {
     if (!db) return;
     const [row] = await db.select().from(users).where(eq(users.googleId, googleId));
+    return row;
+  }
+
+  async getUserByPhone(phoneNumber: string): Promise<User | undefined> {
+    if (!db) return;
+    const [row] = await db.select().from(users).where(eq(users.phoneNumber, phoneNumber));
     return row;
   }
 
@@ -287,12 +294,18 @@ export class MemStorage implements IStorage {
     return Array.from(this.users.values()).find(u => u.googleId === googleId);
   }
 
+  async getUserByPhone(phoneNumber: string): Promise<User | undefined> {
+    return Array.from(this.users.values()).find(u => u.phoneNumber === phoneNumber);
+  }
+
   async createUser(insertUser: InsertUser): Promise<User> {
     const id = String(this.userIdCounter++);
     const user: User = {
       ...insertUser,
       id,
       name: insertUser.name || null,
+      phoneNumber: insertUser.phoneNumber || null,
+      email: insertUser.email || null,
       avatar: insertUser.avatar || null,
       googleId: insertUser.googleId || null,
       stripeCustomerId: insertUser.stripeCustomerId || null,
