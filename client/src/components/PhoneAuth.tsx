@@ -6,10 +6,25 @@ import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
 import { Phone, ArrowRight, ShieldCheck } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
+import { ChevronDown } from "lucide-react";
+
+const countries = [
+    { name: "India", code: "+91", flag: "🇮🇳" },
+    { name: "USA", code: "+1", flag: "🇺🇸" },
+    { name: "UK", code: "+44", flag: "🇬🇧" },
+    { name: "Canada", code: "+1", flag: "🇨🇦" },
+    { name: "UAE", code: "+971", flag: "🇦🇪" },
+    { name: "Australia", code: "+61", flag: "🇦🇺" },
+    { name: "Singapore", code: "+65", flag: "🇸🇬" },
+    { name: "Germany", code: "+49", flag: "🇩🇪" },
+    { name: "France", code: "+33", flag: "🇫🇷" },
+    { name: "Japan", code: "+81", flag: "🇯🇵" },
+];
 
 export function PhoneAuth() {
     const { toast } = useToast();
-    const [phoneNumber, setPhoneNumber] = useState("");
+    const [country, setCountry] = useState(countries[0]);
+    const [rawPhone, setRawPhone] = useState("");
     const [verificationCode, setVerificationCode] = useState("");
     const [confirmationResult, setConfirmationResult] = useState<ConfirmationResult | null>(null);
     const [loading, setLoading] = useState(false);
@@ -34,15 +49,17 @@ export function PhoneAuth() {
 
     const handleSendCode = async (e: React.FormEvent) => {
         e.preventDefault();
-        if (!phoneNumber || phoneNumber.length < 10) {
-            return toast({ variant: "destructive", title: "Invalid Phone", description: "Please enter a valid phone number with country code." });
+        const fullNumber = `${country.code}${rawPhone}`;
+        
+        if (!rawPhone || rawPhone.length < 8) {
+            return toast({ variant: "destructive", title: "Invalid Phone", description: "Please enter a valid phone number." });
         }
 
         setLoading(true);
         try {
             setupRecaptcha();
             const appVerifier = (window as any).recaptchaVerifier;
-            const confirmation = await signInWithPhoneNumber(auth, phoneNumber, appVerifier);
+            const confirmation = await signInWithPhoneNumber(auth, fullNumber, appVerifier);
             setConfirmationResult(confirmation);
             setTimer(60);
             toast({ title: "OTP Sent", description: "Verification code sent to your phone." });
@@ -101,16 +118,37 @@ export function PhoneAuth() {
                         onSubmit={handleSendCode}
                         className="space-y-4"
                     >
-                        <div className="relative group">
-                            <Phone className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-white/20 group-focus-within:text-primary transition-colors" />
-                            <Input
-                                type="tel"
-                                placeholder="+91 98765-43210"
-                                value={phoneNumber}
-                                onChange={(e) => setPhoneNumber(e.target.value)}
-                                className="h-14 pl-12 bg-white/5 border-white/5 focus:border-primary/50 rounded-xl"
-                                required
-                            />
+                        <div className="flex gap-2">
+                            <div className="relative shrink-0">
+                                <span className="absolute left-4 top-1/2 -translate-y-1/2 text-lg">{country.flag}</span>
+                                <select 
+                                    className="h-14 pl-12 pr-10 bg-white/5 border border-white/5 focus:border-primary/50 rounded-xl appearance-none text-sm font-bold cursor-pointer outline-none"
+                                    value={country.code}
+                                    onChange={(e) => {
+                                        const c = countries.find(x => x.code === e.target.value);
+                                        if (c) setCountry(c);
+                                    }}
+                                >
+                                    {countries.map(c => (
+                                        <option key={c.name} value={c.code} className="bg-[#1a1a1a]">
+                                            {c.flag} {c.code} ({c.name})
+                                        </option>
+                                    ))}
+                                </select>
+                                <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-3 h-3 text-white/40 pointer-events-none" />
+                            </div>
+                            
+                            <div className="relative group flex-1">
+                                <Phone className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-white/20 group-focus-within:text-primary transition-colors" />
+                                <Input
+                                    type="tel"
+                                    placeholder="98765-43210"
+                                    value={rawPhone}
+                                    onChange={(e) => setRawPhone(e.target.value)}
+                                    className="h-14 pl-12 bg-white/5 border-white/5 focus:border-primary/50 rounded-xl"
+                                    required
+                                />
+                            </div>
                         </div>
                         <Button 
                             type="submit" 
