@@ -68,8 +68,8 @@ export const Flipbook = forwardRef(({
     music.volume = 0;
     bgMusic.current = music;
 
-    const flip = new Audio('https://www.soundjay.com/misc/sounds/page-flip-01a.mp3');
-    flip.volume = 0.3;
+    const flip = new Audio('/page flip sound.mp3');
+    flip.volume = 0.5; // Slightly louder for premium tactile feel
     flipAudio.current = flip;
 
     // Prefetch audio
