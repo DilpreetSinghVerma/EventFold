@@ -193,7 +193,7 @@ export const Flipbook = forwardRef(({
   const playFlipSound = () => {
     if (isMuted || !flipAudio.current || isFlipPlaying.current) return;
     const now = Date.now();
-    if (now - lastFlipTime.current < 500) return; 
+    if (now - lastFlipTime.current < 1200) return; 
     
     isFlipPlaying.current = true;
     lastFlipTime.current = now;
@@ -202,7 +202,7 @@ export const Flipbook = forwardRef(({
       flipAudio.current.currentTime = 0;
       flipAudio.current.play().then(() => {
         // Reset lock once the audio is decently along or after animation
-        setTimeout(() => { isFlipPlaying.current = false; }, 700);
+        setTimeout(() => { isFlipPlaying.current = false; }, 1100);
       }).catch(() => { isFlipPlaying.current = false; });
     } catch (e) { isFlipPlaying.current = false; }
   };
