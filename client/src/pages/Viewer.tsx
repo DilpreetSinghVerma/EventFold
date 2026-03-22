@@ -626,7 +626,7 @@ export default function Viewer() {
                         ctx.fillText('SCAN TO EXPERIENCE', canvas.width/2, 400);
                         
                         ctx.fillStyle = '#FF9933';
-                        ctx.font = 'bold 120px "Outfit", sans-serif';
+                        ctx.font = 'bold 90px "Outfit", sans-serif'; // Reduced to 90px to avoid overflow
                         ctx.fillText('CINEMATIC 3D ALBUM', canvas.width/2, 540);
 
                         // 4. Convert SVG QR to Image and Draw
