@@ -192,7 +192,7 @@ export const Flipbook = forwardRef(({
   const playFlipSound = () => {
     if (isMuted || !flipAudio.current) return;
     const now = Date.now();
-    if (now - lastFlipTime.current < 500) return; // 500ms cooldown to prevent double-firing
+    if (now - lastFlipTime.current < 1000) return; // 1s cooldown to prevent double-firing
     lastFlipTime.current = now;
     try {
       flipAudio.current.currentTime = 0;
