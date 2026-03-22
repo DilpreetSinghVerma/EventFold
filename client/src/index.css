@@ -92,9 +92,40 @@
     @apply font-sans antialiased;
     background-color: var(--color-background, #020609);
     color: var(--color-foreground, #f8fafc);
-    background-image:
-      radial-gradient(circle at 10% 20%, rgba(99, 102, 241, 0.05) 0%, transparent 40%),
-      radial-gradient(circle at 90% 80%, rgba(139, 92, 246, 0.05) 0%, transparent 40%);
+  }
+
+  [data-theme] {
+    background-image: 
+      radial-gradient(circle at 10% 20%, var(--color-primary) 0%, transparent 40%),
+      radial-gradient(circle at 90% 80%, var(--color-primary) 0%, transparent 40%);
+    position: relative;
+  }
+
+  [data-theme]::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    opacity: 0.03;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  [data-theme='emerald']::before {
+    background-image: url("https://www.transparenttextures.com/patterns/mandala.png");
+    opacity: 0.05;
+  }
+
+  [data-theme='saffron']::before {
+    background-image: url("https://www.transparenttextures.com/patterns/natural-paper.png");
+    opacity: 0.1;
+  }
+
+  [data-theme='velvet']::before {
+    background-image: url("https://www.transparenttextures.com/patterns/pinstripe-dark.png");
+  }
+
+  [data-theme='royal']::before {
+    background-image: url("https://www.transparenttextures.com/patterns/decorative-printing.png");
   }
 
   ::selection {

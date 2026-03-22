@@ -105,9 +105,9 @@ export const Flipbook = forwardRef(({
 
     if (fadeInterval.current) clearInterval(fadeInterval.current);
 
-    if (!isMuted) {
+    // Only play music if album is opened at least once OR if explicitly unmuted
+    if (!isMuted && isOpened) {
       bgMusic.current.play().then(() => {
-        // Fade in to 0.15 volume
         fadeInterval.current = setInterval(() => {
           if (!bgMusic.current) return;
           let newVol = bgMusic.current.volume + 0.01;
@@ -118,11 +118,8 @@ export const Flipbook = forwardRef(({
             bgMusic.current.volume = newVol;
           }
         }, 50);
-      }).catch((err) => {
-        console.warn("Autoplay still blocked, will retry on interaction:", err);
-      });
+      }).catch(err => console.warn("Audio blocked:", err));
     } else {
-      // Fade out and pause
       fadeInterval.current = setInterval(() => {
         if (!bgMusic.current) return;
         let newVol = bgMusic.current.volume - 0.02;
@@ -139,7 +136,7 @@ export const Flipbook = forwardRef(({
     return () => {
       if (fadeInterval.current) clearInterval(fadeInterval.current);
     };
-  }, [isMuted]); // Removed isOpened requirement
+  }, [isMuted, isOpened, audioUrl]); // Added isOpened and audioUrl as triggers
 
   useEffect(() => {
     const handleResize = () => {

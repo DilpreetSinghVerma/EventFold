@@ -537,9 +537,7 @@ export default function Viewer() {
 
   return (
     <div className="min-h-screen bg-background flex flex-col relative overflow-hidden selection:bg-primary/30" data-theme={album.theme || 'royal'}>
-      {/* Background Orbs */}
-      <div className="fixed top-0 left-0 w-[600px] h-[600px] bg-primary/5 rounded-full blur-[140px] pointer-events-none" />
-      <div className="fixed bottom-0 right-0 w-[600px] h-[600px] bg-indigo-500/5 rounded-full blur-[140px] pointer-events-none" />
+      {/* Dynamic Background handled via CSS [data-theme] */}
 
       {/* Floating Brand Header (Only in shared view) */}
       {isShared && <BrandingHeader />}
