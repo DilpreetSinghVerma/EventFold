@@ -73,7 +73,12 @@ export function setupAuth(app: Express) {
                     if (!user) {
                         user = await storage.getUserByEmail(email);
                         if (user) {
-                            // Link Google account to existing user email if needed
+                            // Link Google account and ensure verified
+                            user = await storage.updateUser(user.id, { 
+                                googleId: profile.id,
+                                isVerified: 1,
+                                avatar: user.avatar || profile.photos?.[0].value || null
+                            });
                         } else {
                             user = await storage.createUser({
                                 googleId: profile.id,
@@ -175,20 +180,8 @@ export function setupAuth(app: Express) {
         passport.authenticate("local", (err: any, user: any, info: any) => {
             if (err) return next(err);
             if (!user) return res.status(401).json({ error: info?.message || "Login failed" });
-            req.logIn(user, async (err) => {
+            req.logIn(user, (err) => {
                 if (err) return next(err);
-                
-                // If user is not verified, auto-send a fresh OTP for convenience
-                if (user.isVerified === 0) {
-                    try {
-                        const otp = Math.floor(100000 + Math.random() * 900000).toString();
-                        await storage.updateUser(user.id, { verificationCode: otp });
-                        await sendVerificationEmail(user.email, otp);
-                    } catch (e) {
-                        console.error("Auto-OTP resent failed on login:", e);
-                    }
-                }
-                
                 res.json(user);
             });
         })(req, res, next);
