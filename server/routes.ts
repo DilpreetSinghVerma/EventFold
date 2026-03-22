@@ -584,7 +584,21 @@ export function registerRoutes(
         return res.status(403).json({ error: "Admin privilege required" });
       }
       const { role, plan } = req.body;
-      const u = await storage.updateUser(req.params.id, { role, plan });
+      let subscriptionExpiresAt = undefined;
+      
+      if (plan === 'pro') {
+        const d = new Date();
+        d.setDate(d.getDate() + 30);
+        subscriptionExpiresAt = d;
+      } else if (plan === 'elite') {
+        const d = new Date();
+        d.setFullYear(d.getFullYear() + 1);
+        subscriptionExpiresAt = d;
+      } else if (plan === 'free') {
+        subscriptionExpiresAt = null;
+      }
+
+      const u = await storage.updateUser(req.params.id, { role, plan, subscriptionExpiresAt });
       res.json(u);
     } catch (e) {
       res.status(500).json({ error: "Failed to update user role" });

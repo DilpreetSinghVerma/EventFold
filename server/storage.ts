@@ -328,6 +328,7 @@ export class MemStorage implements IStorage {
       plan: insertUser.plan || 'free',
       credits: insertUser.credits ?? 1,
       role: insertUser.role || (insertUser.email === 'dilpreetsinghverma@gmail.com' ? 'admin' : 'user'),
+      subscriptionExpiresAt: insertUser.subscriptionExpiresAt || null,
       createdAt: new Date()
     };
     this.users.set(id, user);

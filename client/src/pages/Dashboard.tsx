@@ -578,8 +578,18 @@ export default function Dashboard() {
                     <div className="w-8 h-8 rounded-lg bg-primary/20 flex items-center justify-center mr-1">
                       <Crown className="w-5 h-5 text-primary" />
                     </div>
-                    {user?.plan === 'elite' ? 'SUPREME ELITE' : 'PRO'} UNLIMITED · ACTIVE SUBSCRIPTION
-                    <span className="ml-2 px-2 py-0.5 bg-primary text-white text-[8px] font-black rounded-md tracking-tighter uppercase">Unlimited Projects</span>
+                    <div>
+                      <div className="text-[10px] font-bold tracking-tight uppercase opacity-50 mb-0.5">Active Premium Tier</div>
+                      <div className="flex items-center gap-2 font-black leading-none uppercase">
+                        {user?.plan === 'elite' ? 'SUPREME ELITE' : 'STORYTELLER PRO'} UNLIMITED
+                        <span className="px-1.5 py-0.5 rounded-md bg-primary text-white text-[8px] animate-pulse">ACTIVE</span>
+                      </div>
+                      {user?.subscriptionExpiresAt && (
+                        <div className="text-[9px] text-white/40 mt-1 uppercase tracking-widest font-bold">
+                          Expires: {new Date(user.subscriptionExpiresAt).toLocaleDateString()}
+                        </div>
+                      )}
+                    </div>
                   </div>
                 ) : (
                   <>
