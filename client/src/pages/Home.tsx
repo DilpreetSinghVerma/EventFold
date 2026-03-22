@@ -195,12 +195,17 @@ export default function Home() {
             {/* Pay Per Album (Mid-Tier) */}
             <div className="glass p-8 rounded-[2.5rem] border-white/5 relative overflow-hidden group hover:border-primary/20 transition-all duration-500">
               <div className="space-y-6">
-                <span className="text-[10px] font-bold uppercase tracking-[0.3em] text-white/40">Pay As You Go</span>
-                <h3 className="text-2xl font-bold">Standard Credit</h3>
-                <div className="text-4xl font-display font-bold">₹99</div>
-                <p className="text-sm text-white/40 leading-relaxed">Perfect for single events. High-resolution textures and 1 year of cloud storage included.</p>
+                <span className="text-[10px] font-bold uppercase tracking-[0.3em] text-white/40">Studio Credit</span>
+                <h3 className="text-2xl font-bold">Single Project</h3>
+                <div className="text-4xl font-display font-bold">₹99 <span className="text-sm font-medium text-white/20">/ album</span></div>
+                <div className="space-y-3">
+                  <div className="flex items-center gap-2 text-xs text-white/60"><CheckCircle2 className="w-4 h-4 text-primary" /> Full 3D Cinematic Engine</div>
+                  <div className="flex items-center gap-2 text-xs text-white/60"><CheckCircle2 className="w-4 h-4 text-primary" /> Theme-Specific Soundtracks</div>
+                  <div className="flex items-center gap-2 text-xs text-white/60"><CheckCircle2 className="w-4 h-4 text-primary" /> Password Protection</div>
+                  <div className="flex items-center gap-2 text-xs text-white/60"><CheckCircle2 className="w-4 h-4 text-primary" /> 1 Year Secure Hosting</div>
+                </div>
                 <Button onClick={() => user ? buyAlbumCredit() : setLocation('/login')} className="w-full h-12 rounded-xl bg-white/5 hover:bg-white/10 text-white border border-white/10 font-bold">
-                  Buy 1 Credit
+                  Purchase 1 Credit
                 </Button>
               </div>
             </div>
@@ -209,15 +214,20 @@ export default function Home() {
             <div className="p-8 rounded-[2.5rem] bg-gradient-to-b from-primary/20 to-indigo-600/10 border border-primary/40 relative shadow-2xl overflow-hidden scale-105 z-10">
               <div className="absolute top-4 left-1/2 -translate-x-1/2 px-4 py-1 bg-primary rounded-full text-[10px] font-bold uppercase tracking-widest shadow-xl">Most Popular</div>
               <div className="space-y-6 pt-6">
-                <span className="text-[10px] font-bold uppercase tracking-[0.3em] text-primary">Monthly Elite</span>
-                <h3 className="text-2xl font-bold">Unlimited Albums</h3>
+                <span className="text-[10px] font-bold uppercase tracking-[0.3em] text-primary">Elite Studio</span>
+                <h3 className="text-2xl font-bold">Unlimited Events</h3>
                 <div className="flex items-baseline gap-1">
                   <span className="text-4xl font-display font-bold">₹499</span>
                   <span className="text-sm font-medium text-white/20">/month</span>
                 </div>
-                <p className="text-sm text-white/60 leading-relaxed">Unlimited project creation for busy studios. Includes lifetime storage for all albums and custom branding.</p>
+                <div className="space-y-3">
+                  <div className="flex items-center gap-2 text-xs text-white/80"><CheckCircle2 className="w-4 h-4 text-primary" /> **Unlimited** 3D Projects</div>
+                  <div className="flex items-center gap-2 text-xs text-white/80"><CheckCircle2 className="w-4 h-4 text-primary" /> Custom Business Logo</div>
+                  <div className="flex items-center gap-2 text-xs text-white/80"><CheckCircle2 className="w-4 h-4 text-primary" /> Direct WhatsApp Booking</div>
+                  <div className="flex items-center gap-2 text-xs text-white/80"><CheckCircle2 className="w-4 h-4 text-primary" /> Lifetime Cloud Archiving</div>
+                </div>
                 <Button onClick={() => handleSubscribe('monthly')} className="w-full h-14 rounded-xl bg-primary hover:bg-primary/90 text-white font-bold shadow-lg shadow-primary/20">
-                  Select Pro Monthly
+                  Select Studio Monthly
                 </Button>
               </div>
             </div>
@@ -225,13 +235,18 @@ export default function Home() {
             {/* Yearly */}
             <div className="glass p-8 rounded-[2.5rem] border-white/5 relative overflow-hidden group hover:border-primary/20 transition-all duration-500">
               <div className="space-y-6">
-                <span className="text-[10px] font-bold uppercase tracking-[0.3em] text-white/40">Best Value</span>
-                <h3 className="text-2xl font-bold">Elite Yearly</h3>
+                <span className="text-[10px] font-bold uppercase tracking-[0.3em] text-white/40">Agency Special</span>
+                <h3 className="text-2xl font-bold">Elite Agency</h3>
                 <div className="flex items-baseline gap-1">
                   <span className="text-4xl font-display font-bold">₹3,999</span>
                   <span className="text-sm font-medium text-white/20">/year</span>
                 </div>
-                <p className="text-sm text-white/40 leading-relaxed">The ultimate studio package. Includes white-labeling and lifetime storage for all albums.</p>
+                <div className="space-y-3">
+                  <div className="flex items-center gap-2 text-xs text-white/60"><CheckCircle2 className="w-4 h-4 text-primary" /> Everything in Monthly</div>
+                  <div className="flex items-center gap-2 text-xs text-white/60"><CheckCircle2 className="w-4 h-4 text-primary" /> Early-Access to New Themes</div>
+                  <div className="flex items-center gap-2 text-xs text-white/60"><CheckCircle2 className="w-4 h-4 text-primary" /> Priority Customer Support</div>
+                  <div className="flex items-center gap-2 text-xs text-white/60"><CheckCircle2 className="w-4 h-4 text-primary" /> White-Labeling Ready</div>
+                </div>
                 <Button onClick={() => handleSubscribe('yearly')} className="w-full h-12 rounded-xl bg-white/5 hover:bg-white/10 text-white border border-white/10 font-bold">
                   Get Elite Yearly
                 </Button>
