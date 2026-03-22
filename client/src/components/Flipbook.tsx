@@ -59,6 +59,7 @@ export const Flipbook = forwardRef(({
   const bgMusic = useRef<HTMLAudioElement | null>(null);
   const flipAudio = useRef<HTMLAudioElement | null>(null);
   const lastFlipTime = useRef(0);
+  const isFlipPlaying = useRef(false);
 
   useEffect(() => {
     // Soft piano / wedding-style royalty-free background music or custom upload
@@ -190,14 +191,20 @@ export const Flipbook = forwardRef(({
   }, [sheets.length]);
 
   const playFlipSound = () => {
-    if (isMuted || !flipAudio.current) return;
+    if (isMuted || !flipAudio.current || isFlipPlaying.current) return;
     const now = Date.now();
-    if (now - lastFlipTime.current < 1000) return; // 1s cooldown to prevent double-firing
+    if (now - lastFlipTime.current < 500) return; 
+    
+    isFlipPlaying.current = true;
     lastFlipTime.current = now;
+    
     try {
       flipAudio.current.currentTime = 0;
-      flipAudio.current.play().catch(() => { });
-    } catch (e) { }
+      flipAudio.current.play().then(() => {
+        // Reset lock once the audio is decently along or after animation
+        setTimeout(() => { isFlipPlaying.current = false; }, 700);
+      }).catch(() => { isFlipPlaying.current = false; });
+    } catch (e) { isFlipPlaying.current = false; }
   };
 
   const toggleFullscreen = () => {
