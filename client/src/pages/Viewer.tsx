@@ -628,7 +628,7 @@ export default function Viewer() {
         style={{ touchAction: 'none', minHeight: 0 }}
       >
         <TransformWrapper
-          initialScale={1}
+          initialScale={window.innerWidth < 1024 ? 1.08 : 1}
           maxScale={window.innerWidth < 1024 ? 4 : 2}
           centerOnInit={true}
           centerZoomedOut={true}
@@ -640,7 +640,7 @@ export default function Viewer() {
           doubleClick={{ disabled: false }}
           pinch={{ disabled: false }}
           panning={{
-            disabled: window.innerWidth >= 1024 || scale <= 1
+            disabled: window.innerWidth >= 1024
           }}
         >
           {({ zoomIn, zoomOut, resetTransform, ...rest }) => (

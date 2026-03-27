@@ -22,7 +22,7 @@ interface FlipbookProps {
   audioUrl?: string;
 }
 
-export const Flipbook = React.memo(forwardRef(({
+export const Flipbook = forwardRef(({
   sheets,
   frontCover,
   backCover,
@@ -247,21 +247,18 @@ export const Flipbook = React.memo(forwardRef(({
 
   if (!ready) return null;
 
-  const pages = React.useMemo(() => {
-    const p: { type: string; image?: string; video?: string; key: string }[] = [];
-    p.push({ type: 'cover', image: frontCover, key: 'cover-front' });
-    sheets.forEach((half, idx) => {
-      const videoForSheet = (videos || []).find(v => v.orderIndex === idx);
-      p.push({
-        type: 'sheet',
-        image: half,
-        video: videoForSheet?.filePath,
-        key: `half-${idx}`
-      });
+  const pages: { type: string; image?: string; video?: string; key: string }[] = [];
+  pages.push({ type: 'cover', image: frontCover, key: 'cover-front' });
+  sheets.forEach((half, idx) => {
+    const videoForSheet = (videos || []).find(v => v.orderIndex === idx);
+    pages.push({
+      type: 'sheet',
+      image: half,
+      video: videoForSheet?.filePath,
+      key: `half-${idx}`
     });
-    p.push({ type: 'cover', image: backCover, key: 'cover-back' });
-    return p;
-  }, [sheets, frontCover, backCover, videos]);
+  });
+  pages.push({ type: 'cover', image: backCover, key: 'cover-back' });
 
   const pageBase: React.CSSProperties = {
     width: '100%',
@@ -367,8 +364,6 @@ export const Flipbook = React.memo(forwardRef(({
                 const isMobileLayout = window.innerWidth < 1024;
                 // react-pageflip's layout engine crashes if we hot-swap "hard" pages using windowing.
                 // Mobile GPU jitter is already fixed by removing the CSS transitions.
-                // Increase pre-loading distance on mobile as well for smoother video/image swaps
-                const isNear = Math.abs(index - currentPage) <= 8;
 
                 let pageClass = "page";
                 let pageDensity = "soft";
@@ -381,9 +376,6 @@ export const Flipbook = React.memo(forwardRef(({
                   pageDensity = isMobileLayout ? 'hard' : 'soft';
                 }
 
-                if (!isNear) {
-                  return <div key={page.key} className={pageClass} data-density={pageDensity} style={{ ...pageBase, backgroundColor: '#000' }} />;
-                }
 
                 if (page.type === 'cover') {
                   return (
@@ -584,21 +576,16 @@ export const Flipbook = React.memo(forwardRef(({
               }}
             >
               {pages.map((page, index) => {
-                const isNear = Math.abs(index - currentPage) <= 8;
                 if (page.type === 'cover') {
                   return (
                     <div key={page.key} className="page hard" data-density="hard"
                       style={{ ...pageBase }}>
-                      {isNear && (
-                        <>
-                          <img src={page.image} alt="cover" loading="eager"
-                            style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
-                          <div className="absolute inset-0 opacity-[0.03] pointer-events-none" style={{ backgroundImage: `url("https://www.transparenttextures.com/patterns/leather.png")` }} />
-                          <div className="absolute inset-0 bg-gradient-to-tr from-black/60 via-transparent to-white/10 pointer-events-none" />
-                          <div className="absolute inset-4 border border-white/10 rounded-sm pointer-events-none" />
-                          <div style={{ position: 'absolute', inset: 0, boxShadow: 'inset 0 0 100px rgba(0,0,0,0.8)', pointerEvents: 'none' }} />
-                        </>
-                      )}
+                        <img src={page.image} alt="cover" loading="eager"
+                          style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
+                        <div className="absolute inset-0 opacity-[0.03] pointer-events-none" style={{ backgroundImage: `url("https://www.transparenttextures.com/patterns/leather.png")` }} />
+                        <div className="absolute inset-0 bg-gradient-to-tr from-black/60 via-transparent to-white/10 pointer-events-none" />
+                        <div className="absolute inset-4 border border-white/10 rounded-sm pointer-events-none" />
+                        <div style={{ position: 'absolute', inset: 0, boxShadow: 'inset 0 0 100px rgba(0,0,0,0.8)', pointerEvents: 'none' }} />
                     </div>
                   );
                 }
@@ -608,55 +595,51 @@ export const Flipbook = React.memo(forwardRef(({
                   return (
                     <div key={page.key} className="page" data-density="soft"
                       style={{ ...pageBase, backgroundColor: '#0a0a0a' }}>
-                      {isNear && (
-                        <>
-                          <img
-                            src={page.image}
-                            alt="sheet"
-                            loading="eager"
-                            style={{
-                              width: '100%',
-                              height: '100%',
-                              objectFit: 'cover',
-                              objectPosition: isLeftHalf ? 'right' : 'left',
-                              display: 'block',
-                              backgroundColor: '#0a0a0a',
+                        <img
+                          src={page.image}
+                          alt="sheet"
+                          loading="eager"
+                          style={{
+                            width: '100%',
+                            height: '100%',
+                            objectFit: 'cover',
+                            objectPosition: isLeftHalf ? 'right' : 'left',
+                            display: 'block',
+                            backgroundColor: '#0a0a0a',
+                            position: 'absolute',
+                            top: 0,
+                            left: 0,
+                            zIndex: 1
+                          }}
+                        />
+                        {page.video && (
+                          <video 
+                            src={page.video} 
+                            autoPlay 
+                            loop 
+                            muted 
+                            playsInline
+                            preload="auto"
+                            style={{ 
+                              width: '100%', 
+                              height: '100%', 
+                              objectFit: 'cover', 
+                              objectPosition: isLeftHalf ? 'right' : 'left', 
+                              display: 'block', 
+                              backgroundColor: 'transparent',
                               position: 'absolute',
                               top: 0,
                               left: 0,
-                              zIndex: 1
-                            }}
+                              zIndex: 2
+                            }} 
                           />
-                          {page.video && (
-                            <video 
-                              src={page.video} 
-                              autoPlay 
-                              loop 
-                              muted 
-                              playsInline
-                              preload="auto"
-                              style={{ 
-                                width: '100%', 
-                                height: '100%', 
-                                objectFit: 'cover', 
-                                objectPosition: isLeftHalf ? 'right' : 'left', 
-                                display: 'block', 
-                                backgroundColor: 'transparent',
-                                position: 'absolute',
-                                top: 0,
-                                left: 0,
-                                zIndex: 2
-                              }} 
-                            />
-                          )}
-                          <div className="absolute inset-0 opacity-[0.02] pointer-events-none" style={{ backgroundImage: `url("https://www.transparenttextures.com/patterns/paper-fibers.png")`, zIndex: 3 }} />
-                          <div style={{ position: 'absolute', top: 0, [isLeftHalf ? 'right' : 'left']: 0, width: 30, height: '100%',
-                            background: isLeftHalf
-                              ? 'linear-gradient(to left, rgba(0,0,0,0.4) 0%, rgba(0,0,0,0.1) 40%, transparent 100%)'
-                              : 'linear-gradient(to right, rgba(0,0,0,0.4) 0%, rgba(0,0,0,0.1) 40%, transparent 100%)',
-                            pointerEvents: 'none', zIndex: 10 }} />
-                        </>
-                      )}
+                        )}
+                        <div className="absolute inset-0 opacity-[0.02] pointer-events-none" style={{ backgroundImage: `url("https://www.transparenttextures.com/patterns/paper-fibers.png")`, zIndex: 3 }} />
+                        <div style={{ position: 'absolute', top: 0, [isLeftHalf ? 'right' : 'left']: 0, width: 30, height: '100%',
+                          background: isLeftHalf
+                            ? 'linear-gradient(to left, rgba(0,0,0,0.4) 0%, rgba(0,0,0,0.1) 40%, transparent 100%)'
+                            : 'linear-gradient(to right, rgba(0,0,0,0.4) 0%, rgba(0,0,0,0.1) 40%, transparent 100%)',
+                          pointerEvents: 'none', zIndex: 10 }} />
                     </div>
                   );
                 }
@@ -668,6 +651,6 @@ export const Flipbook = React.memo(forwardRef(({
       </div>
     </div>
   );
-}));
+});
 
 Flipbook.displayName = 'Flipbook';
