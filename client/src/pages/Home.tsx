@@ -1,7 +1,7 @@
 import { Link, useLocation } from 'wouter';
 import { Button } from '@/components/ui/button';
 import { motion } from 'framer-motion';
-import { Sparkles, ImagePlus, Eye, Smartphone, Zap, ArrowRight, LayoutGrid, CheckCircle2, ShoppingCart, ShieldCheck, Upload, Share2, BookOpen, Crown, CreditCard, Rocket, Play, Linkedin, Youtube, Palette, MessageCircle } from "lucide-react";
+import { Sparkles, ImagePlus, Eye, Smartphone, Zap, ArrowRight, LayoutGrid, CheckCircle2, ShoppingCart, ShieldCheck, Upload, Share2, BookOpen, Crown, CreditCard, Rocket, Play, Linkedin, Youtube, Palette, MessageCircle, Star, Quote } from "lucide-react";
 import { useAuth } from "@/lib/auth";
 import weddingCover from '@assets/generated_images/wedding_album_cover_art.png';
 import { ContactForm } from '@/components/ContactForm';
@@ -288,6 +288,68 @@ export default function Home() {
                 </div>
               ))}
             </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Wall of Love - Testimonials */}
+      <section className="py-24 relative overflow-hidden">
+        <div className="max-w-7xl mx-auto px-8">
+          <div className="text-center mb-16 space-y-4">
+            <h2 className="text-4xl md:text-5xl font-display font-bold">Wall of <span className="text-primary italic">Love.</span></h2>
+            <p className="text-white/40 text-[10px] uppercase tracking-[0.3em] font-bold">Trusted by India's most creative minds</p>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+            {[
+              {
+                name: "Rahul Sharma",
+                role: "Lead Photographer",
+                studio: "RS Films, Mumbai",
+                quote: "This changed how we deliver weddings. Our clients love the 3D flip effect! It feels more personal than a standard gallery."
+              },
+              {
+                name: "Priya Varma",
+                role: "Creative Director",
+                studio: "Lux Wedding Studio, Delhi",
+                quote: "The easiest way to share cinematic links. The WhatsApp booking feature inside the album is a total game changer for us."
+              },
+              {
+                name: "Amit Singh",
+                role: "Founder",
+                studio: "Royal Memories, Punjab",
+                quote: "EventFold is truly international standard for Indian weddings. It has become our default delivery tool for every premium client."
+              }
+            ].map((testimonial, i) => (
+              <motion.div
+                key={i}
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                transition={{ delay: i * 0.1 }}
+                viewport={{ once: true }}
+                className="glass p-10 rounded-[2.5rem] border-white/5 space-y-6 relative group hover:border-primary/20 transition-all duration-500"
+              >
+                <div className="flex gap-1 text-[#FF9933]">
+                  {[...Array(5)].map((_, i) => <Star key={i} className="w-4 h-4 fill-current" />)}
+                </div>
+                
+                <Quote className="absolute top-10 right-10 w-12 h-12 text-white/5 -z-10" />
+                
+                <p className="text-white/70 text-lg leading-relaxed italic font-medium">
+                  "{testimonial.quote}"
+                </p>
+
+                <div className="pt-4 flex items-center gap-4">
+                  <div className="w-12 h-12 rounded-full bg-gradient-to-br from-primary/20 to-[#FF9933]/20 border border-white/10 flex items-center justify-center text-primary font-bold text-xl">
+                    {testimonial.name[0]}
+                  </div>
+                  <div>
+                    <h4 className="font-bold text-white text-sm">{testimonial.name}</h4>
+                    <p className="text-[10px] text-white/40 uppercase tracking-widest font-bold">{testimonial.role} @ {testimonial.studio}</p>
+                  </div>
+                </div>
+              </motion.div>
+            ))}
           </div>
         </div>
       </section>
