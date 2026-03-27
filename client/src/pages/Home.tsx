@@ -102,7 +102,7 @@ export default function Home() {
             <path d="M50 42 A8 8 0 0 1 50 58 A8 8 0 0 1 50 42" fill="none" stroke="currentColor" strokeWidth="0.1" strokeDasharray="0.5 0.5" />
           </svg>
         </div>
-        
+
         {/* Bottom Left Decorative Intricate Mandala */}
         <div className="absolute bottom-[-20%] left-[-15%] w-[1200px] h-[1200px] opacity-[0.08] animate-slow-spin pointer-events-none [animation-direction:reverse]">
           <svg viewBox="0 0 100 100" className="w-full h-full text-[#FF9933]">
@@ -118,7 +118,7 @@ export default function Home() {
           </svg>
         </div>
       </div>
-      
+
       <div className="fixed top-0 left-0 w-[500px] h-[500px] bg-[#FF9933]/10 rounded-full blur-[120px] pointer-events-none" />
       <div className="fixed bottom-0 right-0 w-[500px] h-[500px] bg-primary/10 rounded-full blur-[120px] pointer-events-none" />
 
@@ -235,10 +235,10 @@ export default function Home() {
             Trusted by <span className="text-white">500+ Elite Studios</span> across India & Abroad
           </p>
           <div className="flex flex-wrap justify-center gap-12 items-center grayscale opacity-50">
-             {/* Abstract labels representing the elite standard */}
-             <span className="text-sm font-display font-medium tracking-widest italic select-none">Wedding Film Awards</span>
-             <span className="text-sm font-display font-medium tracking-widest italic select-none">Modern Studio Tech</span>
-             <span className="text-sm font-display font-medium tracking-widest italic select-none">Royal Cinematic Standard</span>
+            {/* Abstract labels representing the elite standard */}
+            <span className="text-sm font-display font-medium tracking-widest italic select-none">Wedding Film Awards</span>
+            <span className="text-sm font-display font-medium tracking-widest italic select-none">Modern Studio Tech</span>
+            <span className="text-sm font-display font-medium tracking-widest italic select-none">Royal Cinematic Standard</span>
           </div>
         </div>
       </div>
@@ -263,24 +263,24 @@ export default function Home() {
 
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 flex-1">
               {[
-                { 
-                  icon: <Upload className="w-8 h-8" />, 
-                  title: "Upload", 
-                  desc: "Drop your high-res photos into our secure dashboard." 
+                {
+                  icon: <Upload className="w-8 h-8" />,
+                  title: "Upload",
+                  desc: "Drop your high-res photos into our secure dashboard."
                 },
-                { 
-                  icon: <Palette className="w-8 h-8" />, 
-                  title: "Theme", 
-                  desc: "Select a Royal theme and cinematic background score." 
+                {
+                  icon: <Palette className="w-8 h-8" />,
+                  title: "Theme",
+                  desc: "Select a Royal theme and cinematic background score."
                 },
-                { 
-                  icon: <Share2 className="w-8 h-8" />, 
-                  title: "Share", 
-                  desc: "Get your custom QR code and wow your clients instantly." 
+                {
+                  icon: <Share2 className="w-8 h-8" />,
+                  title: "Share",
+                  desc: "Get your custom QR code and wow your clients instantly."
                 }
               ].map((step, i) => (
                 <div key={i} className="glass p-8 rounded-[2.5rem] border-white/5 space-y-6 relative group hover:border-primary/20 transition-all duration-500">
-                  <div className="absolute top-4 right-4 text-4xl font-black text-white/5 italic select-none">0{i+1}</div>
+                  <div className="absolute top-4 right-4 text-4xl font-black text-white/5 italic select-none">0{i + 1}</div>
                   <div className="w-16 h-16 rounded-2xl bg-primary/10 border border-primary/20 flex items-center justify-center text-primary group-hover:scale-110 transition-transform duration-500">
                     {step.icon}
                   </div>
@@ -335,9 +335,9 @@ export default function Home() {
                 <div className="flex gap-1 text-[#FF9933]">
                   {[...Array(5)].map((_, i) => <Star key={i} className="w-4 h-4 fill-current" />)}
                 </div>
-                
+
                 <Quote className="absolute top-10 right-10 w-12 h-12 text-white/5 -z-10" />
-                
+
                 <p className="text-white/70 text-lg leading-relaxed italic font-medium">
                   "{testimonial.quote}"
                 </p>
@@ -457,7 +457,7 @@ export default function Home() {
       </Footer>
 
       {/* Floating WhatsApp Button */}
-      <a 
+      <a
         href="https://wa.me/919464377328?text=Hello%20EventFold%20Studio!%20I'm%20interested%20in%20creating%20digital%20albums."
         target="_blank"
         rel="noopener noreferrer"

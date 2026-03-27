@@ -200,7 +200,7 @@ export default function DemoViewer() {
 
             <main className="relative w-full flex-1 flex flex-col items-center justify-center bg-transparent lg:overflow-visible" style={{ touchAction: 'none', minHeight: 0 }}>
                 <TransformWrapper
-                    initialScale={window.innerWidth < 1024 ? 1.3 : 1}
+                    initialScale={1}
                     maxScale={window.innerWidth < 1024 ? 4 : 2}
                     centerOnInit={true}
                     centerZoomedOut={true}
@@ -211,7 +211,7 @@ export default function DemoViewer() {
                     wheel={{ step: 0.1, disabled: window.innerWidth >= 1024 }}
                     doubleClick={{ disabled: false }}
                     pinch={{ disabled: false }}
-                    panning={{ disabled: window.innerWidth >= 1024 }}
+                    panning={{ disabled: window.innerWidth >= 1024 || scale <= 1 }}
                 >
                     {({ zoomIn, zoomOut, resetTransform }) => (
                         <>

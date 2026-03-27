@@ -22,7 +22,7 @@ interface FlipbookProps {
   audioUrl?: string;
 }
 
-export const Flipbook = forwardRef(({
+export const Flipbook = React.memo(forwardRef(({
   sheets,
   frontCover,
   backCover,
@@ -247,18 +247,21 @@ export const Flipbook = forwardRef(({
 
   if (!ready) return null;
 
-  const pages: { type: string; image?: string; video?: string; key: string }[] = [];
-  pages.push({ type: 'cover', image: frontCover, key: 'cover-front' });
-  sheets.forEach((half, idx) => {
-    const videoForSheet = videos.find(v => v.orderIndex === idx);
-    pages.push({
-      type: 'sheet',
-      image: half,
-      video: videoForSheet?.filePath,
-      key: `half-${idx}`
+  const pages = React.useMemo(() => {
+    const p: { type: string; image?: string; video?: string; key: string }[] = [];
+    p.push({ type: 'cover', image: frontCover, key: 'cover-front' });
+    sheets.forEach((half, idx) => {
+      const videoForSheet = (videos || []).find(v => v.orderIndex === idx);
+      p.push({
+        type: 'sheet',
+        image: half,
+        video: videoForSheet?.filePath,
+        key: `half-${idx}`
+      });
     });
-  });
-  pages.push({ type: 'cover', image: backCover, key: 'cover-back' });
+    p.push({ type: 'cover', image: backCover, key: 'cover-back' });
+    return p;
+  }, [sheets, frontCover, backCover, videos]);
 
   const pageBase: React.CSSProperties = {
     width: '100%',
@@ -322,7 +325,7 @@ export const Flipbook = forwardRef(({
                   playFlipSound();
                 }
               }}
-              flippingTime={800}
+              flippingTime={600}
               usePortrait={false}
               startZIndex={0}
               autoSize={false}
@@ -364,7 +367,8 @@ export const Flipbook = forwardRef(({
                 const isMobileLayout = window.innerWidth < 1024;
                 // react-pageflip's layout engine crashes if we hot-swap "hard" pages using windowing.
                 // Mobile GPU jitter is already fixed by removing the CSS transitions.
-                const isNear = isMobileLayout ? Math.abs(index - currentPage) <= 4 : Math.abs(index - currentPage) <= 8;
+                // Increase pre-loading distance on mobile as well for smoother video/image swaps
+                const isNear = Math.abs(index - currentPage) <= 8;
 
                 let pageClass = "page";
                 let pageDensity = "soft";
@@ -425,38 +429,50 @@ export const Flipbook = forwardRef(({
                         backgroundColor: '#0a0a0a',
                       }}
                     >
-                      {page.video ? (
+                      {/* Always show image as fallback/background */}
+                      <img
+                        src={page.image}
+                        alt="sheet"
+                        loading="eager"
+                        style={{
+                          width: '100%',
+                          height: '100%',
+                          objectFit: 'cover',
+                          objectPosition: isLeftHalf ? 'right' : 'left',
+                          display: 'block',
+                          backgroundColor: '#0a0a0a',
+                          position: 'absolute',
+                          top: 0,
+                          left: 0,
+                          zIndex: 1
+                        }}
+                      />
+
+                      {page.video && (
                         <video
                           src={page.video}
                           autoPlay
                           loop
                           muted
                           playsInline
+                          webkit-playsinline="true"
+                          preload="auto"
                           style={{
                             width: '100%',
                             height: '100%',
                             objectFit: 'cover',
                             objectPosition: isLeftHalf ? 'right' : 'left',
                             display: 'block',
-                            backgroundColor: '#0a0a0a',
-                          }}
-                        />
-                      ) : (
-                        <img
-                          src={page.image}
-                          alt="sheet"
-                          loading="eager"
-                          style={{
-                            width: '100%',
-                            height: '100%',
-                            objectFit: 'cover',
-                            objectPosition: isLeftHalf ? 'right' : 'left',
-                            display: 'block',
-                            backgroundColor: '#0a0a0a',
+                            backgroundColor: 'transparent',
+                            position: 'absolute',
+                            top: 0,
+                            left: 0,
+                            zIndex: 2
                           }}
                         />
                       )}
-                      <div className="absolute inset-0 opacity-[0.02] pointer-events-none" style={{ backgroundImage: `url("https://www.transparenttextures.com/patterns/paper-fibers.png")` }} />
+
+                      <div className="absolute inset-0 opacity-[0.02] pointer-events-none" style={{ backgroundImage: `url("https://www.transparenttextures.com/patterns/paper-fibers.png")`, zIndex: 3 }} />
                       <div style={{
                         position: 'absolute',
                         top: 0,
@@ -529,7 +545,7 @@ export const Flipbook = forwardRef(({
                   playFlipSound();
                 }
               }}
-              flippingTime={800}
+              flippingTime={600}
               usePortrait={false}
               startZIndex={0}
               autoSize={false}
@@ -594,14 +610,46 @@ export const Flipbook = forwardRef(({
                       style={{ ...pageBase, backgroundColor: '#0a0a0a' }}>
                       {isNear && (
                         <>
-                          {page.video ? (
-                            <video src={page.video} autoPlay loop muted playsInline
-                              style={{ width: '100%', height: '100%', objectFit: 'cover', objectPosition: isLeftHalf ? 'right' : 'left', display: 'block', backgroundColor: '#0a0a0a' }} />
-                          ) : (
-                            <img src={page.image} alt="sheet" loading="eager"
-                              style={{ width: '100%', height: '100%', objectFit: 'cover', objectPosition: isLeftHalf ? 'right' : 'left', display: 'block', backgroundColor: '#0a0a0a' }} />
+                          <img
+                            src={page.image}
+                            alt="sheet"
+                            loading="eager"
+                            style={{
+                              width: '100%',
+                              height: '100%',
+                              objectFit: 'cover',
+                              objectPosition: isLeftHalf ? 'right' : 'left',
+                              display: 'block',
+                              backgroundColor: '#0a0a0a',
+                              position: 'absolute',
+                              top: 0,
+                              left: 0,
+                              zIndex: 1
+                            }}
+                          />
+                          {page.video && (
+                            <video 
+                              src={page.video} 
+                              autoPlay 
+                              loop 
+                              muted 
+                              playsInline
+                              preload="auto"
+                              style={{ 
+                                width: '100%', 
+                                height: '100%', 
+                                objectFit: 'cover', 
+                                objectPosition: isLeftHalf ? 'right' : 'left', 
+                                display: 'block', 
+                                backgroundColor: 'transparent',
+                                position: 'absolute',
+                                top: 0,
+                                left: 0,
+                                zIndex: 2
+                              }} 
+                            />
                           )}
-                          <div className="absolute inset-0 opacity-[0.02] pointer-events-none" style={{ backgroundImage: `url("https://www.transparenttextures.com/patterns/paper-fibers.png")` }} />
+                          <div className="absolute inset-0 opacity-[0.02] pointer-events-none" style={{ backgroundImage: `url("https://www.transparenttextures.com/patterns/paper-fibers.png")`, zIndex: 3 }} />
                           <div style={{ position: 'absolute', top: 0, [isLeftHalf ? 'right' : 'left']: 0, width: 30, height: '100%',
                             background: isLeftHalf
                               ? 'linear-gradient(to left, rgba(0,0,0,0.4) 0%, rgba(0,0,0,0.1) 40%, transparent 100%)'
@@ -620,4 +668,6 @@ export const Flipbook = forwardRef(({
       </div>
     </div>
   );
-});
+}));
+
+Flipbook.displayName = 'Flipbook';
