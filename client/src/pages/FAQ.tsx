@@ -2,7 +2,7 @@ import { Link } from 'wouter';
 import { Button } from '@/components/ui/button';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useState, useEffect } from 'react';
-import { ArrowLeft, Plus, Minus, HelpCircle, Sparkles, Smartphone, ShieldCheck, Zap, Heart, CreditCard, Share2 } from "lucide-react";
+import { ArrowLeft, Plus, Minus, HelpCircle, Sparkles, Smartphone, ShieldCheck, Zap, Heart, CreditCard, Share2, Linkedin, Youtube } from "lucide-react";
 import { useAuth } from "@/lib/auth";
 
 const faqs = [
@@ -196,6 +196,18 @@ export default function FAQ() {
           <Link href="/" className="hover:text-primary transition-colors">Home</Link>
           <span className="w-1 h-1 rounded-full bg-white/10" />
           <Link href="/about" className="hover:text-primary transition-colors">Our Story</Link>
+          <span className="w-1 h-1 rounded-full bg-white/10" />
+          <a href="https://www.instagram.com/eventfoldstudio/" target="_blank" rel="noopener noreferrer" className="hover:text-[#FF9933] transition-colors flex items-center gap-2">
+            <Share2 className="w-3 h-3" /> Instagram
+          </a>
+          <span className="w-1 h-1 rounded-full bg-white/10" />
+          <a href="https://www.linkedin.com/company/eventfoldstudio/" target="_blank" rel="noopener noreferrer" className="hover:text-primary transition-colors flex items-center gap-2">
+            <Linkedin className="w-3 h-3" /> LinkedIn
+          </a>
+          <span className="w-1 h-1 rounded-full bg-white/10" />
+          <a href="https://www.youtube.com/@eventfoldstudio" target="_blank" rel="noopener noreferrer" className="hover:text-red-500 transition-colors flex items-center gap-2">
+            <Youtube className="w-3 h-3" /> YouTube
+          </a>
           <span className="w-1 h-1 rounded-full bg-white/10" />
           <Link href="/terms" className="hover:text-[#FF9933] transition-colors">Terms of Service</Link>
           <span className="w-1 h-1 rounded-full bg-white/10" />

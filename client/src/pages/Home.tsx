@@ -1,7 +1,7 @@
 import { Link, useLocation } from 'wouter';
 import { Button } from '@/components/ui/button';
 import { motion } from 'framer-motion';
-import { Sparkles, ImagePlus, Eye, Smartphone, Zap, ArrowRight, LayoutGrid, CheckCircle2, ShoppingCart, ShieldCheck, Upload, Share2, BookOpen, Crown, CreditCard, Rocket, Play } from "lucide-react";
+import { Sparkles, ImagePlus, Eye, Smartphone, Zap, ArrowRight, LayoutGrid, CheckCircle2, ShoppingCart, ShieldCheck, Upload, Share2, BookOpen, Crown, CreditCard, Rocket, Play, Linkedin, Youtube } from "lucide-react";
 import { useAuth } from "@/lib/auth";
 import weddingCover from '@assets/generated_images/wedding_album_cover_art.png';
 import { ContactForm } from '@/components/ContactForm';
@@ -330,6 +330,14 @@ export default function Home() {
           <span className="w-1 h-1 rounded-full bg-white/10" />
           <a href="https://www.instagram.com/eventfoldstudio/" target="_blank" rel="noopener noreferrer" className="hover:text-[#FF9933] transition-colors flex items-center gap-2">
             <Share2 className="w-3 h-3" /> Instagram
+          </a>
+          <span className="w-1 h-1 rounded-full bg-white/10" />
+          <a href="https://www.linkedin.com/company/eventfoldstudio/" target="_blank" rel="noopener noreferrer" className="hover:text-primary transition-colors flex items-center gap-2">
+            <Linkedin className="w-3 h-3" /> LinkedIn
+          </a>
+          <span className="w-1 h-1 rounded-full bg-white/10" />
+          <a href="https://www.youtube.com/@eventfoldstudio" target="_blank" rel="noopener noreferrer" className="hover:text-red-500 transition-colors flex items-center gap-2">
+            <Youtube className="w-3 h-3" /> YouTube
           </a>
           <span className="w-1 h-1 rounded-full bg-white/10" />
           <Link href="/privacy" className="hover:text-[#FF9933] transition-colors">Privacy Policy</Link>
