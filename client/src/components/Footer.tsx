@@ -50,11 +50,11 @@ export function Footer({ children }: { children?: React.ReactNode }) {
               </div>
               
               <div className="space-y-3 pt-2">
-                <a href="mailto:admin@eventfold.com" className="flex items-center gap-4 text-white/40 hover:text-white transition-colors group">
+                <a href="mailto:eventfoldstudio@gmail.com" className="flex items-center gap-4 text-white/40 hover:text-white transition-colors group">
                   <div className="w-10 h-10 rounded-xl bg-white/5 flex items-center justify-center group-hover:bg-primary/10 transition-colors">
                     <Mail className="w-4 h-4 transition-transform group-hover:scale-110" />
                   </div>
-                  <span className="text-xs font-bold uppercase tracking-widest">admin@eventfold.com</span>
+                  <span className="text-xs font-bold uppercase tracking-widest">eventfoldstudio@gmail.com</span>
                 </a>
                 <div className="flex items-center gap-4 text-white/40 group">
                   <div className="w-10 h-10 rounded-xl bg-white/5 flex items-center justify-center group-hover:bg-primary/10 transition-colors">
