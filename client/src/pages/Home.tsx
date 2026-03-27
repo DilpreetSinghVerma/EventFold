@@ -133,7 +133,10 @@ export default function Home() {
             />
           </div>
         </Link>
-        <div className="flex items-center gap-6">
+        <div className="flex items-center gap-8">
+          <a href="#pricing" className="text-sm font-medium text-white/50 hover:text-white transition-colors cursor-pointer hidden md:block">
+            Pricing
+          </a>
           <Link href="/dashboard" className="text-sm font-medium text-white/50 hover:text-white transition-colors">
             {user ? "Dashboard" : "Studio Log In"}
           </Link>
@@ -355,7 +358,7 @@ export default function Home() {
       </section>
 
       {/* Pricing / Plan Section */}
-      <section className="py-32 relative">
+      <section id="pricing" className="py-32 relative scroll-mt-24">
         <div className="max-w-7xl mx-auto px-8">
           <div className="text-center mb-20">
             <h2 className="text-5xl md:text-6xl font-display font-bold mb-6 tracking-tight">Simple <span className="text-primary">Pricing</span></h2>

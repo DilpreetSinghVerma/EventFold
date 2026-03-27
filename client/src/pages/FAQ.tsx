@@ -132,11 +132,16 @@ export default function FAQ() {
             <img src="/branding material/without bg version.png" alt="EventFold" className="h-full w-auto object-contain transition-transform duration-500 group-hover:scale-110" />
           </div>
         </Link>
-        <Link href="/">
-          <Button variant="ghost" className="text-sm font-medium text-white/50 hover:text-white transition-colors gap-2">
-            <ArrowLeft className="w-4 h-4" /> Back to Home
-          </Button>
-        </Link>
+        <div className="flex items-center gap-8">
+          <Link href="/#pricing" className="text-sm font-medium text-white/50 hover:text-white transition-colors cursor-pointer hidden md:block">
+            Pricing
+          </Link>
+          <Link href="/">
+            <Button variant="ghost" className="text-sm font-medium text-white/50 hover:text-white transition-colors gap-2">
+              <ArrowLeft className="w-4 h-4" /> Back to Home
+            </Button>
+          </Link>
+        </div>
       </nav>
 
       {/* Content */}

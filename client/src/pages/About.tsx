@@ -47,7 +47,10 @@ export default function About() {
             />
           </div>
         </Link>
-        <div className="flex items-center gap-6">
+        <div className="flex items-center gap-8">
+          <Link href="/#pricing" className="text-sm font-medium text-white/50 hover:text-white transition-colors cursor-pointer hidden md:block">
+            Pricing
+          </Link>
           <Link href="/">
             <Button variant="ghost" className="text-sm font-medium text-white/50 hover:text-white transition-colors gap-2">
               <ArrowLeft className="w-4 h-4" /> Back to Home
