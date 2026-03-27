@@ -316,7 +316,7 @@ export default function Settings() {
                                             </div>
                                             {user?.plan === 'free' && (
                                                 <Button onClick={buyAlbumCredit} variant="outline" className="w-full rounded-xl border-white/10 hover:bg-white/5 mt-2">
-                                                    Add 1 Credit (₹99)
+                                                    Add 1 Credit (₹49) <span className="ml-2 text-[10px] line-through opacity-50">₹99</span>
                                                 </Button>
                                             )}
                                         </Card>
@@ -352,7 +352,7 @@ export default function Settings() {
                                                 <p className="text-sm text-white/60">Unlock unlimited albums, custom branding, and 50GB vault storage.</p>
                                             </div>
                                             <Button onClick={() => startRazorpayCheckout('monthly')} className="h-14 px-8 rounded-2xl bg-primary hover:bg-primary/90 text-white font-bold shadow-xl shadow-primary/30 shrink-0">
-                                                Upgrade Now (₹449)
+                                                Upgrade Now (₹199) <span className="ml-2 text-[10px] line-through opacity-70">₹499</span>
                                             </Button>
                                         </div>
                                     )}

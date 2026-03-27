@@ -197,7 +197,11 @@ export default function Home() {
               <div className="space-y-6">
                 <span className="text-[10px] font-bold uppercase tracking-[0.3em] text-white/40">Studio Credit</span>
                 <h3 className="text-2xl font-bold">Single Project</h3>
-                <div className="text-4xl font-display font-bold">₹99 <span className="text-sm font-medium text-white/20">/ album</span></div>
+                <div className="flex items-baseline gap-2">
+                  <span className="text-4xl font-display font-bold text-white">₹49</span>
+                  <span className="text-xl text-white/20 line-through">₹99</span>
+                  <span className="text-sm font-medium text-white/20">/ album</span>
+                </div>
                 <div className="space-y-3">
                   <div className="flex items-center gap-2 text-xs text-white/60"><CheckCircle2 className="w-4 h-4 text-primary" /> Full 3D Cinematic Engine</div>
                   <div className="flex items-center gap-2 text-xs text-white/60"><CheckCircle2 className="w-4 h-4 text-primary" /> Theme-Specific Soundtracks</div>
@@ -216,8 +220,9 @@ export default function Home() {
               <div className="space-y-6 pt-6">
                 <span className="text-[10px] font-bold uppercase tracking-[0.3em] text-primary">Elite Studio</span>
                 <h3 className="text-2xl font-bold">Unlimited Events</h3>
-                <div className="flex items-baseline gap-1">
-                  <span className="text-4xl font-display font-bold">₹499</span>
+                <div className="flex items-baseline gap-2">
+                  <span className="text-4xl font-display font-bold text-white">₹199</span>
+                  <span className="text-xl text-white/20 line-through">₹499</span>
                   <span className="text-sm font-medium text-white/20">/month</span>
                 </div>
                 <div className="space-y-3">
@@ -237,8 +242,9 @@ export default function Home() {
               <div className="space-y-6">
                 <span className="text-[10px] font-bold uppercase tracking-[0.3em] text-white/40">Agency Special</span>
                 <h3 className="text-2xl font-bold">Elite Agency</h3>
-                <div className="flex items-baseline gap-1">
-                  <span className="text-4xl font-display font-bold">₹3,999</span>
+                <div className="flex items-baseline gap-2">
+                  <span className="text-4xl font-display font-bold text-white">₹899</span>
+                  <span className="text-xl text-white/20 line-through">₹3,999</span>
                   <span className="text-sm font-medium text-white/20">/year</span>
                 </div>
                 <div className="space-y-3">

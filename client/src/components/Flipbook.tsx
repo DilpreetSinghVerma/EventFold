@@ -266,6 +266,11 @@ export const Flipbook = forwardRef(({
     overflow: 'hidden',
     position: 'relative',
     display: 'block',
+    backgroundColor: '#000',
+    WebkitBackfaceVisibility: 'hidden',
+    backfaceVisibility: 'hidden',
+    transform: 'translateZ(0)',
+    WebkitTransform: 'translateZ(0)',
   };
 
   return (
@@ -275,11 +280,11 @@ export const Flipbook = forwardRef(({
         ref={container}
         className="flex items-center justify-center w-full h-full lg:overflow-visible"
         style={{
-          perspective: window.innerWidth < 768 ? 'none' : '1400px',
+          perspective: window.innerWidth < 1024 ? 'none' : '1400px',
           touchAction: 'auto'
         }}
       >
-          {window.innerWidth < 768 ? (
+          {window.innerWidth < 1024 ? (
             // Mobile: plain div, no 3D transforms — full GPU power goes to the flip animation
             <motion.div
               initial={{ opacity: 0, y: 40 }}
@@ -311,7 +316,7 @@ export const Flipbook = forwardRef(({
               className="shadow-2xl"
               style={{ display: 'block' }}
               startPage={0}
-              drawShadow={window.innerWidth >= 768}
+              drawShadow={window.innerWidth >= 1024}
               onChangeState={(e: any) => {
                 if (e.data === 'flipping') {
                   playFlipSound();
@@ -323,7 +328,7 @@ export const Flipbook = forwardRef(({
               autoSize={false}
               clickEventForward={true}
               useMouseEvents={window.innerWidth >= 1024}
-              swipeDistance={window.innerWidth < 768 ? 15 : 30}
+              swipeDistance={window.innerWidth < 1024 ? 15 : 30}
               showPageCorners={window.innerWidth >= 1024}
               disableFlipByClick={window.innerWidth < 1024}
               onFlip={(e: any) => {
@@ -359,7 +364,7 @@ export const Flipbook = forwardRef(({
                 const isMobileLayout = window.innerWidth < 1024;
                 // react-pageflip's layout engine crashes if we hot-swap "hard" pages using windowing.
                 // Mobile GPU jitter is already fixed by removing the CSS transitions.
-                const isNear = isMobileLayout ? Math.abs(index - currentPage) <= 8 : Math.abs(index - currentPage) <= 8;
+                const isNear = isMobileLayout ? Math.abs(index - currentPage) <= 4 : Math.abs(index - currentPage) <= 8;
 
                 let pageClass = "page";
                 let pageDensity = "soft";
@@ -392,7 +397,6 @@ export const Flipbook = forwardRef(({
                         src={page.image}
                         alt="cover"
                         loading="eager"
-                        decoding="async"
                         style={{
                           width: '100%',
                           height: '100%',
@@ -442,7 +446,6 @@ export const Flipbook = forwardRef(({
                           src={page.image}
                           alt="sheet"
                           loading="eager"
-                          decoding="async"
                           style={{
                             width: '100%',
                             height: '100%',
@@ -569,12 +572,11 @@ export const Flipbook = forwardRef(({
                 if (page.type === 'cover') {
                   return (
                     <div key={page.key} className="page hard" data-density="hard"
-                      style={{ ...pageBase, backgroundColor: '#000' }}>
+                      style={{ ...pageBase }}>
                       {isNear && (
                         <>
-                          <img src={page.image} alt="cover" loading="eager" decoding="async"
-                            onLoad={(e) => { (e.target as HTMLImageElement).style.opacity = '1'; }}
-                            style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block', opacity: 0, transition: 'opacity 0.4s ease-in-out' }} />
+                          <img src={page.image} alt="cover" loading="eager"
+                            style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
                           <div className="absolute inset-0 opacity-[0.03] pointer-events-none" style={{ backgroundImage: `url("https://www.transparenttextures.com/patterns/leather.png")` }} />
                           <div className="absolute inset-0 bg-gradient-to-tr from-black/60 via-transparent to-white/10 pointer-events-none" />
                           <div className="absolute inset-4 border border-white/10 rounded-sm pointer-events-none" />
@@ -596,9 +598,8 @@ export const Flipbook = forwardRef(({
                             <video src={page.video} autoPlay loop muted playsInline
                               style={{ width: '100%', height: '100%', objectFit: 'cover', objectPosition: isLeftHalf ? 'right' : 'left', display: 'block', backgroundColor: '#0a0a0a' }} />
                           ) : (
-                            <img src={page.image} alt="sheet" loading="eager" decoding="async"
-                              onLoad={(e) => { (e.target as HTMLImageElement).style.opacity = '1'; }}
-                              style={{ width: '100%', height: '100%', objectFit: 'cover', objectPosition: isLeftHalf ? 'right' : 'left', display: 'block', backgroundColor: '#0a0a0a', opacity: 0, transition: 'opacity 0.4s ease-in-out' }} />
+                            <img src={page.image} alt="sheet" loading="eager"
+                              style={{ width: '100%', height: '100%', objectFit: 'cover', objectPosition: isLeftHalf ? 'right' : 'left', display: 'block', backgroundColor: '#0a0a0a' }} />
                           )}
                           <div className="absolute inset-0 opacity-[0.02] pointer-events-none" style={{ backgroundImage: `url("https://www.transparenttextures.com/patterns/paper-fibers.png")` }} />
                           <div style={{ position: 'absolute', top: 0, [isLeftHalf ? 'right' : 'left']: 0, width: 30, height: '100%',
