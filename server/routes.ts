@@ -84,13 +84,25 @@ export function registerRoutes(
     try {
       if (!req.isAuthenticated()) return res.status(401).json({ error: "Unauthorized" });
       const timestamp = Math.round(new Date().getTime() / 1000);
+      
+      const params: any = {
+        timestamp: timestamp,
+        folder: "flipbook_albums",
+      };
+
+      // Support eager transformations for video compression if requested
+      if (req.query.eager) {
+        params.eager = req.query.eager;
+      }
+      if (req.query.resource_type) {
+        params.resource_type = req.query.resource_type;
+      }
+
       const signature = cloudinary.utils.api_sign_request(
-        {
-          timestamp: timestamp,
-          folder: "flipbook_albums",
-        },
+        params,
         process.env.CLOUDINARY_API_SECRET!
       );
+      
       res.json({
         signature,
         timestamp,

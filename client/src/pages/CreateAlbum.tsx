@@ -38,6 +38,7 @@ export default function CreateAlbum() {
     sheetVideos: { file: File | null; side: 'left' | 'right' }[];
     password: string;
     bgMusic: File | null;
+    autoCompressVideos: boolean;
   }>({
     title: '',
     date: new Date().toISOString().split('T')[0],
@@ -48,6 +49,7 @@ export default function CreateAlbum() {
     sheetVideos: [],
     password: '',
     bgMusic: null,
+    autoCompressVideos: true,
   });
 
   const [previewOpen, setPreviewOpen] = useState(false);
@@ -227,14 +229,32 @@ export default function CreateAlbum() {
       }
       const { signature, timestamp, cloud_name, api_key, folder } = await sigResponse.json();
 
-      // Helper to upload a single file to Cloudinary
+      // Helper to upload a single file to Cloudinary with optional compression
       const uploadToCloudinary = async (file: File, label: string, isVideo = false) => {
+        let currentSig = signature;
+        let currentTimestamp = timestamp;
+        const eager = (isVideo && formData.autoCompressVideos) ? 'q_auto,vc_auto' : '';
+
+        // If we need special video compression, we need a specific signature for it
+        if (eager) {
+          const vSigRes = await fetch(`/api/cloudinary-signature?eager=${eager}&resource_type=video`);
+          if (vSigRes.ok) {
+            const vData = await vSigRes.json();
+            currentSig = vData.signature;
+            currentTimestamp = vData.timestamp;
+          }
+        }
+
         const cloudFormData = new FormData();
         cloudFormData.append('file', file);
-        cloudFormData.append('signature', signature);
-        cloudFormData.append('timestamp', timestamp);
+        cloudFormData.append('signature', currentSig);
+        cloudFormData.append('timestamp', currentTimestamp);
         cloudFormData.append('api_key', api_key);
         cloudFormData.append('folder', folder);
+        
+        if (eager) {
+          cloudFormData.append('eager', eager);
+        }
 
         const resourceType = isVideo ? 'video' : 'image';
         const res = await fetch(`https://api.cloudinary.com/v1_1/${cloud_name}/${resourceType}/upload`, {
@@ -591,7 +611,20 @@ export default function CreateAlbum() {
                         Preview Album
                       </Button>
                       {formData.sheets.length > 0 && (
-                        <Button variant="ghost" size="sm" className="text-xs text-destructive hover:bg-destructive/10" onClick={() => setFormData(p => ({ ...p, sheets: [] }))}>Clear All</Button>
+                        <div className="flex items-center gap-4 bg-white/5 px-4 py-1.5 rounded-xl border border-white/5">
+                          <div className="flex items-center gap-2">
+                            <input
+                              type="checkbox"
+                              id="compress"
+                              checked={formData.autoCompressVideos}
+                              onChange={(e) => setFormData(p => ({ ...p, autoCompressVideos: e.target.checked }))}
+                              className="w-4 h-4 rounded border-white/20 bg-black/40 text-primary focus:ring-primary/20"
+                            />
+                            <Label htmlFor="compress" className="text-[10px] font-bold uppercase tracking-widest cursor-pointer select-none">Auto-Compress for Mobile</Label>
+                          </div>
+                          <div className="w-px h-4 bg-white/10" />
+                          <Button variant="ghost" size="sm" className="text-xs text-destructive hover:bg-destructive/10 h-6 px-2" onClick={() => setFormData(p => ({ ...p, sheets: [] }))}>Clear All</Button>
+                        </div>
                       )}
                     </div>
                   </div>
