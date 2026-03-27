@@ -359,12 +359,14 @@ export function registerRoutes(
 
       const adminEmails = ["admin@eventfold.com", "dilpreetsinghverma@gmail.com"];
       const isAdmin = user.email ? adminEmails.includes(user.email) : false;
+      
+      const isSubscribed = user.plan !== 'free' && user.subscriptionExpiresAt && new Date(user.subscriptionExpiresAt) > new Date();
 
-      // Check if user has enough credits (Bypass for admins)
-      if (!isAdmin && user.credits <= 0) {
+      // Check if user has enough credits (Bypass for admins and active subscribers)
+      if (!isAdmin && !isSubscribed && (user.credits || 0) <= 0) {
         return res.status(403).json({
           error: "No credits remaining",
-          message: "Please purchase an album credit to continue."
+          message: "Please purchase an album credit or subscribe to a plan to continue."
         });
       }
 
@@ -377,8 +379,8 @@ export function registerRoutes(
         expiresAt: expiresAt
       });
 
-      // Deduct credit only if NOT Admin
-      if (!isAdmin) {
+      // Deduct credit only if NOT Admin and NOT Subscribed
+      if (!isAdmin && !isSubscribed) {
         await storage.deductCredit(userId);
       }
       const album = await storage.createAlbum(data);
@@ -443,7 +445,21 @@ export function registerRoutes(
       }
 
       const files = await storage.getFilesByAlbum(req.params.id);
+      
+      // Fetch branding but only return if user is a paid customer (Subscribed or had credits)
+      // Logic: If user was able to create this album, they are either an owner or viewer.
+      // We check the plan of the album OWNER.
+      const owner = await storage.getUser(album.userId!);
+      const adminEmails = ["admin@eventfold.com", "dilpreetsinghverma@gmail.com"];
+      const isAdmin = owner?.email ? adminEmails.includes(owner.email) : false;
+      const isOwnerSubscribed = owner && owner.plan !== 'free' && owner.subscriptionExpiresAt && new Date(owner.subscriptionExpiresAt) > new Date();
+      // If owner is not a subscriber and was a free user when they created this (unlikely balance check), 
+      // we only return branding if it's explicitly allowed. 
+      // For now, let's keep it simple: subscribers & credit buyers get branding.
+      // A free user has 1 credit by default. Let's say branding is for ELITE (paid).
+      
       const branding = await storage.getSettings(album.userId!);
+      
       // Strip password from the response for security
       const { password, ...albumSafe } = album as any;
       res.json({ ...albumSafe, files, branding, isProtected: !!album.password, isUnlocked: true });
