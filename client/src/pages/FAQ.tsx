@@ -1,7 +1,7 @@
 import { Link } from 'wouter';
 import { Button } from '@/components/ui/button';
 import { motion, AnimatePresence } from 'framer-motion';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { ArrowLeft, Plus, Minus, HelpCircle, Sparkles, Smartphone, ShieldCheck, Zap, Heart, CreditCard, Share2 } from "lucide-react";
 import { useAuth } from "@/lib/auth";
 
@@ -87,6 +87,10 @@ function FAQItem({ item, isOpen, onClick }: { item: typeof faqs[0], isOpen: bool
 export default function FAQ() {
   const { user } = useAuth();
   const [openIndex, setOpenIndex] = useState<number | null>(0);
+
+  useEffect(() => {
+    document.title = "Frequently Asked Questions | EventFold Studio Support";
+  }, []);
 
   // JSON-LD for Answer Engine Optimization (AEO)
   const jsonLd = {

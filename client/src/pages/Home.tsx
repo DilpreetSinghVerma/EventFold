@@ -5,6 +5,7 @@ import { Sparkles, ImagePlus, Eye, Smartphone, Zap, ArrowRight, LayoutGrid, Chec
 import { useAuth } from "@/lib/auth";
 import weddingCover from '@assets/generated_images/wedding_album_cover_art.png';
 import { ContactForm } from '@/components/ContactForm';
+import { useEffect } from 'react';
 
 // Local demo assets
 import demoFront from '@assets/demo_album/cover_front.png';
@@ -17,6 +18,10 @@ import demoSheet2R from '@assets/demo_album/sheet2_r.png';
 export default function Home() {
   const { user, startRazorpayCheckout, buyAlbumCredit } = useAuth();
   const [, setLocation] = useLocation();
+
+  useEffect(() => {
+    document.title = "EventFold Studio | Elite 3D Digital Albums for Photographers";
+  }, []);
 
   const organizationLd = {
     "@context": "https://schema.org",
@@ -122,7 +127,7 @@ export default function Home() {
           <div className="h-20 cursor-pointer group">
             <img
               src="/branding material/without bg version.png"
-              alt="EventFold"
+              alt="EventFold Studio Logo - Elite 3D Digital Albums"
               className="h-full w-auto object-contain transition-transform duration-500 group-hover:scale-110"
             />
           </div>

@@ -3,9 +3,14 @@ import { Button } from '@/components/ui/button';
 import { motion } from 'framer-motion';
 import { ArrowLeft, Heart, Sparkles, BookOpen, Share2, Smartphone, ShieldCheck, Zap } from "lucide-react";
 import { useAuth } from "@/lib/auth";
+import { useEffect } from 'react';
 
 export default function About() {
   const { user } = useAuth();
+  
+  useEffect(() => {
+    document.title = "Our Story | The Vision Behind EventFold Studio";
+  }, []);
 
   const containerVariants = {
     hidden: { opacity: 0 },
