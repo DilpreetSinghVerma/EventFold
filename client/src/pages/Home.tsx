@@ -336,7 +336,7 @@ export default function Home() {
             <Linkedin className="w-3 h-3" /> LinkedIn
           </a>
           <span className="w-1 h-1 rounded-full bg-white/10" />
-          <a href="https://www.youtube.com/@eventfoldstudio" target="_blank" rel="noopener noreferrer" className="hover:text-red-500 transition-colors flex items-center gap-2">
+          <a href="https://www.youtube.com/@eventfold_studio" target="_blank" rel="noopener noreferrer" className="hover:text-red-500 transition-colors flex items-center gap-2">
             <Youtube className="w-3 h-3" /> YouTube
           </a>
           <span className="w-1 h-1 rounded-full bg-white/10" />
