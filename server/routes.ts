@@ -368,15 +368,8 @@ export function registerRoutes(
         });
       }
 
-      // Calculate Expiration Date
+      // All albums now have lifetime hosting (no expiration)
       let expiresAt: Date | null = null;
-      // Admins and Pro users have no expiration
-      if (!isAdmin && user.plan !== 'pro') {
-        const existingAlbums = await storage.getAlbumsByUser(userId);
-        const days = existingAlbums.length === 0 ? 7 : 365;
-        expiresAt = new Date();
-        expiresAt.setDate(expiresAt.getDate() + days);
-      }
 
       const data = insertAlbumSchema.parse({
         ...req.body,

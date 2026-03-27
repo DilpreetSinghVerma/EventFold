@@ -206,7 +206,7 @@ export default function Home() {
                   <div className="flex items-center gap-2 text-xs text-white/60"><CheckCircle2 className="w-4 h-4 text-primary" /> Full 3D Cinematic Engine</div>
                   <div className="flex items-center gap-2 text-xs text-white/60"><CheckCircle2 className="w-4 h-4 text-primary" /> Theme-Specific Soundtracks</div>
                   <div className="flex items-center gap-2 text-xs text-white/60"><CheckCircle2 className="w-4 h-4 text-primary" /> Password Protection</div>
-                  <div className="flex items-center gap-2 text-xs text-white/60"><CheckCircle2 className="w-4 h-4 text-primary" /> 1 Year Secure Hosting</div>
+                  <div className="flex items-center gap-2 text-xs text-white/60"><CheckCircle2 className="w-4 h-4 text-primary" /> Secure Lifetime Hosting</div>
                 </div>
                 <Button onClick={() => user ? buyAlbumCredit() : setLocation('/login')} className="w-full h-12 rounded-xl bg-white/5 hover:bg-white/10 text-white border border-white/10 font-bold">
                   Purchase 1 Credit
