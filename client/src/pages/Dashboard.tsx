@@ -2,7 +2,7 @@ import { Link } from 'wouter';
 import { Card, CardContent, CardFooter } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Plus, QrCode, Eye, Trash2, LayoutGrid, Calendar, LogOut, Settings as SettingsIcon, Lock, Loader2, Sparkles, User as UserIcon, Crown, Copy, Download, Share2, Check, ShieldAlert, BarChart3, FolderHeart, ChevronDown, Clock, Activity, TrendingUp } from 'lucide-react';
+import { Plus, QrCode, Eye, Trash2, LayoutGrid, Calendar, LogOut, Settings as SettingsIcon, Lock, Loader2, Sparkles, User as UserIcon, Crown, Copy, Download, Share2, Check, ShieldAlert, BarChart3, FolderHeart, ChevronDown, Clock, Activity, TrendingUp, ExternalLink } from 'lucide-react';
 import { QRCodeSVG } from 'qrcode.react';
 import { Badge } from '@/components/ui/badge';
 import { useState, useEffect } from 'react';
@@ -568,6 +568,12 @@ export default function Dashboard() {
                 <SettingsIcon className="w-4 h-4 mr-2" /> Settings
               </Button>
             </Link>
+            <Link href={`/portfolio/${user?.id}`} target="_blank">
+              <Button variant="ghost" className="rounded-xl text-primary font-bold bg-primary/10 border border-primary/20 hover:bg-primary/20 group">
+                <ExternalLink className="w-4 h-4 mr-2 group-hover:scale-110 transition-transform" /> My Studio Portfolio
+              </Button>
+            </Link>
+
             <ContactModal>
               <Button variant="ghost" className="rounded-xl text-white/40 hover:text-white glass border-none">
                 Support
