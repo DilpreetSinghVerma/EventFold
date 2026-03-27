@@ -1,7 +1,7 @@
 import React, { useRef, useState, useEffect, forwardRef, useImperativeHandle } from 'react';
 import HTMLFlipBook from 'react-pageflip';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ChevronLeft, ChevronRight, Heart, Volume2, VolumeX, ZoomIn, ZoomOut, RotateCcw, Maximize2, Play, Pause, MessageCircle } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Volume2, VolumeX, ZoomIn, ZoomOut, RotateCcw, Maximize2, Play, Pause, MessageCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
 interface FlipbookProps {
@@ -57,7 +57,6 @@ export const Flipbook = forwardRef(({
 
   // Background music audio element
   const [isFlipping, setIsFlipping] = useState(false);
-  const [likedSheets, setLikedSheets] = useState<Record<string, boolean>>({});
   const bgMusic = useRef<HTMLAudioElement | null>(null);
   const flipAudio = useRef<HTMLAudioElement | null>(null);
   const lastFlipTime = useRef(0);
@@ -418,16 +417,6 @@ export const Flipbook = forwardRef(({
                 }
                 if (page.type === 'sheet') {
                   const isLeftHalf = (index - 1) % 2 === 0;
-                  const id = page.id || '';
-
-                  const handleLike = async (e: React.MouseEvent) => {
-                    e.stopPropagation();
-                    if (likedSheets[id]) return;
-                    setLikedSheets(prev => ({ ...prev, [id]: true }));
-                    try {
-                      await fetch(`/api/files/${id}/favorite`, { method: 'POST' });
-                    } catch (err) {}
-                  };
 
                   const driftAnimate = isSlideshowActive && !isFlipping ? {
                     scale: [1, 1.05],
@@ -491,27 +480,6 @@ export const Flipbook = forwardRef(({
                               }}
                             />
                           )}
-
-                          {/* Favorite Heart Button */}
-                          <div className={`absolute top-2 ${isLeftHalf ? 'left-3' : 'right-3'} z-50`}>
-                             <motion.button
-                                whileHover={{ scale: 1.1 }}
-                                whileTap={{ scale: 0.8 }}
-                                onClick={handleLike}
-                                animate={{
-                                  backgroundColor: likedSheets[id] ? 'rgba(239, 68, 68, 1)' : 'rgba(0, 0, 0, 0.4)',
-                                  color: likedSheets[id] ? '#ffffff' : 'rgba(255, 255, 255, 0.5)',
-                                  scale: likedSheets[id] ? [1, 1.2, 1] : 1
-                                }}
-                                transition={{ scale: { duration: 0.3 } }}
-                                className={`w-8 h-8 rounded-full flex items-center justify-center transition-all border border-white/5 ${
-                                  !likedSheets[id] ? 'opacity-0 group-hover:opacity-100' : 'opacity-100 shadow-[0_0_15px_rgba(239,68,68,0.5)]'
-                                }`}
-                                style={{ opacity: (window.innerWidth < 1024 || likedSheets[id]) ? 1 : undefined }}
-                             >
-                                <Heart className={`w-4 h-4 ${likedSheets[id] ? 'fill-current' : ''}`} />
-                             </motion.button>
-                          </div>
 
                           <div className="absolute inset-0 opacity-[0.02] pointer-events-none" style={{ backgroundImage: `url("https://www.transparenttextures.com/patterns/paper-fibers.png")`, zIndex: 3 }} />
                           <div style={{

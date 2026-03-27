@@ -806,21 +806,6 @@ export function registerRoutes(
     }
   });
 
-  // Favorite (Like) a specific sheet
-  app.post("/api/files/:id/favorite", async (req, res) => {
-    try {
-      const { id } = req.params;
-      const { files } = await import("../shared/schema");
-      
-      await db.update(files)
-        .set({ favoritesCount: sql`favorites_count + 1` })
-        .where(eq(files.id, id));
-
-      res.json({ success: true });
-    } catch (e) {
-      res.status(500).json({ error: "Failed to save favorite" });
-    }
-  });
 
   // Serve uploaded files
   app.get("/uploads/:filename", (req, res) => {
