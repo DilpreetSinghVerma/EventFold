@@ -3,6 +3,7 @@ import { Button } from '@/components/ui/button';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useState, useEffect } from 'react';
 import { ArrowLeft, Plus, Minus, HelpCircle, Sparkles, Smartphone, ShieldCheck, Zap, Heart, CreditCard, Share2, Linkedin, Youtube } from "lucide-react";
+import { Footer } from '@/components/Footer';
 import { useAuth } from "@/lib/auth";
 
 const faqs = [
@@ -191,29 +192,7 @@ export default function FAQ() {
         </motion.div>
       </main>
 
-      <footer className="py-20 border-t border-white/5 text-center">
-        <div className="flex items-center justify-center gap-6 text-[10px] uppercase tracking-[0.2em] font-bold text-white/30">
-          <Link href="/" className="hover:text-primary transition-colors">Home</Link>
-          <span className="w-1 h-1 rounded-full bg-white/10" />
-          <Link href="/about" className="hover:text-primary transition-colors">Our Story</Link>
-          <span className="w-1 h-1 rounded-full bg-white/10" />
-          <a href="https://www.instagram.com/eventfoldstudio/" target="_blank" rel="noopener noreferrer" className="hover:text-[#FF9933] transition-colors flex items-center gap-2">
-            <Share2 className="w-3 h-3" /> Instagram
-          </a>
-          <span className="w-1 h-1 rounded-full bg-white/10" />
-          <a href="https://www.linkedin.com/company/eventfoldstudio/" target="_blank" rel="noopener noreferrer" className="hover:text-primary transition-colors flex items-center gap-2">
-            <Linkedin className="w-3 h-3" /> LinkedIn
-          </a>
-          <span className="w-1 h-1 rounded-full bg-white/10" />
-          <a href="https://www.youtube.com/@eventfold_studio" target="_blank" rel="noopener noreferrer" className="hover:text-red-500 transition-colors flex items-center gap-2">
-            <Youtube className="w-3 h-3" /> YouTube
-          </a>
-          <span className="w-1 h-1 rounded-full bg-white/10" />
-          <Link href="/terms" className="hover:text-[#FF9933] transition-colors">Terms of Service</Link>
-          <span className="w-1 h-1 rounded-full bg-white/10" />
-          <Link href="/privacy" className="hover:text-[#FF9933] transition-colors">Privacy Policy</Link>
-        </div>
-      </footer>
+      <Footer />
     </div>
   );
 }
