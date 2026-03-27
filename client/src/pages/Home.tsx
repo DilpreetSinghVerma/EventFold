@@ -224,6 +224,21 @@ export default function Home() {
           </div>
         </div>
       </main>
+
+      {/* Trust Banner - Social Proof */}
+      <div className="max-w-7xl mx-auto px-8 mb-12">
+        <div className="py-12 border-y border-white/5 flex flex-col md:flex-row items-center justify-between gap-8 opacity-60">
+          <p className="text-[10px] font-black uppercase tracking-[0.4em] text-white/40 text-center md:text-left">
+            Trusted by <span className="text-white">500+ Elite Studios</span> across India & Abroad
+          </p>
+          <div className="flex flex-wrap justify-center gap-12 items-center grayscale opacity-50">
+             {/* Abstract labels representing the elite standard */}
+             <span className="text-sm font-display font-medium tracking-widest italic select-none">Wedding Film Awards</span>
+             <span className="text-sm font-display font-medium tracking-widest italic select-none">Modern Studio Tech</span>
+             <span className="text-sm font-display font-medium tracking-widest italic select-none">Royal Cinematic Standard</span>
+          </div>
+        </div>
+      </div>
       {/* How it Works Section */}
       <section className="py-24 relative overflow-hidden">
         <div className="max-w-7xl mx-auto px-8">

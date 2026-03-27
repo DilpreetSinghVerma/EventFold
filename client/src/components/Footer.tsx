@@ -29,23 +29,40 @@ export function Footer({ children }: { children?: React.ReactNode }) {
             <p className="text-white/40 text-sm leading-relaxed max-w-sm">
               EventFold Studio transforms traditional albums into breathtaking cinematic 3D digital experiences. Designed for India's elite wedding creators to tell stories that live forever.
             </p>
-            <div className="flex items-center gap-4">
-              {[
-                { icon: <Instagram className="w-4 h-4" />, href: "https://www.instagram.com/eventfoldstudio/", color: "hover:text-pink-500", label: "Instagram" },
-                { icon: <Linkedin className="w-4 h-4" />, href: "https://www.linkedin.com/company/eventfoldstudio/", color: "hover:text-primary", label: "LinkedIn" },
-                { icon: <Youtube className="w-4 h-4" />, href: "https://www.youtube.com/@eventfold_studio", color: "hover:text-red-500", label: "YouTube" }
-              ].map((social, i) => (
-                <a
-                  key={i}
-                  href={social.href}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className={`w-10 h-10 rounded-xl bg-white/5 border border-white/5 flex items-center justify-center text-white/40 transition-all duration-300 hover:scale-110 hover:border-white/20 ${social.color}`}
-                  title={social.label}
-                >
-                  {social.icon}
+            <div className="flex flex-col gap-6">
+              <div className="flex items-center gap-4">
+                {[
+                  { icon: <Instagram className="w-4 h-4" />, href: "https://www.instagram.com/eventfoldstudio/", color: "hover:text-pink-500", label: "Instagram" },
+                  { icon: <Linkedin className="w-4 h-4" />, href: "https://www.linkedin.com/company/eventfoldstudio/", color: "hover:text-primary", label: "LinkedIn" },
+                  { icon: <Youtube className="w-4 h-4" />, href: "https://www.youtube.com/@eventfold_studio", color: "hover:text-red-500", label: "YouTube" }
+                ].map((social, i) => (
+                  <a
+                    key={i}
+                    href={social.href}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className={`w-10 h-10 rounded-xl bg-white/5 border border-white/5 flex items-center justify-center text-white/40 transition-all duration-300 hover:scale-110 hover:border-white/20 ${social.color}`}
+                    title={social.label}
+                  >
+                    {social.icon}
+                  </a>
+                ))}
+              </div>
+              
+              <div className="space-y-3 pt-2">
+                <a href="mailto:admin@eventfold.com" className="flex items-center gap-4 text-white/40 hover:text-white transition-colors group">
+                  <div className="w-10 h-10 rounded-xl bg-white/5 flex items-center justify-center group-hover:bg-primary/10 transition-colors">
+                    <Mail className="w-4 h-4 transition-transform group-hover:scale-110" />
+                  </div>
+                  <span className="text-xs font-bold uppercase tracking-widest">admin@eventfold.com</span>
                 </a>
-              ))}
+                <div className="flex items-center gap-4 text-white/40 group">
+                  <div className="w-10 h-10 rounded-xl bg-white/5 flex items-center justify-center group-hover:bg-primary/10 transition-colors">
+                    <MapPin className="w-4 h-4 transition-transform group-hover:scale-110" />
+                  </div>
+                  <span className="text-xs font-bold uppercase tracking-widest">Punjab, India</span>
+                </div>
+              </div>
             </div>
           </div>
 
