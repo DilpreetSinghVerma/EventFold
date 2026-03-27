@@ -220,10 +220,16 @@ export default function Home() {
               <div className="space-y-6 pt-6">
                 <span className="text-[10px] font-bold uppercase tracking-[0.3em] text-primary">Elite Studio</span>
                 <h3 className="text-2xl font-bold">Unlimited Events</h3>
-                <div className="flex items-baseline gap-2">
-                  <span className="text-4xl font-display font-bold text-white">₹199</span>
-                  <span className="text-xl text-white/20 line-through">₹499</span>
-                  <span className="text-sm font-medium text-white/20">/month</span>
+                <div className="flex flex-col mb-4">
+                  <div className="flex items-baseline gap-2">
+                    <span className="text-4xl font-display font-bold text-white">₹199</span>
+                    <span className="text-sm font-medium text-white/40 line-through">₹499</span>
+                    <span className="text-sm font-medium text-white/20">/mo</span>
+                  </div>
+                  <div className="flex flex-col gap-0.5 mt-1">
+                    <span className="text-[10px] text-primary font-black uppercase tracking-widest">Only ~₹20 / project</span>
+                    <span className="text-[9px] text-white/40 font-bold uppercase">Save 60% vs. Single Credit</span>
+                  </div>
                 </div>
                 <div className="space-y-3">
                   <div className="flex items-center gap-2 text-xs text-white/80"><CheckCircle2 className="w-4 h-4 text-primary" /> **Unlimited** 3D Projects</div>
@@ -242,10 +248,16 @@ export default function Home() {
               <div className="space-y-6">
                 <span className="text-[10px] font-bold uppercase tracking-[0.3em] text-white/40">Agency Special</span>
                 <h3 className="text-2xl font-bold">Elite Agency</h3>
-                <div className="flex items-baseline gap-2">
-                  <span className="text-4xl font-display font-bold text-white">₹899</span>
-                  <span className="text-xl text-white/20 line-through">₹3,999</span>
-                  <span className="text-sm font-medium text-white/20">/year</span>
+                <div className="flex flex-col mb-4">
+                  <div className="flex items-baseline gap-2">
+                    <span className="text-4xl font-display font-bold text-white">₹899</span>
+                    <span className="text-sm font-medium text-white/40 line-through">₹3,999</span>
+                    <span className="text-sm font-medium text-white/20">/yr</span>
+                  </div>
+                  <div className="flex flex-col gap-0.5 mt-1">
+                    <span className="text-[10px] text-primary font-black uppercase tracking-widest">Only ~₹7 / project</span>
+                    <span className="text-[9px] text-white/40 font-bold uppercase">Save 85% vs. Single Credit</span>
+                  </div>
                 </div>
                 <div className="space-y-3">
                   <div className="flex items-center gap-2 text-xs text-white/60"><CheckCircle2 className="w-4 h-4 text-primary" /> Everything in Monthly</div>
