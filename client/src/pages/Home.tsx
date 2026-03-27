@@ -378,7 +378,7 @@ export default function Home() {
 
       {/* Floating WhatsApp Button */}
       <a 
-        href="https://wa.me/917814238541?text=Hello%20EventFold%20Studio!%20I'm%20interested%20in%20creating%20digital%20albums."
+        href="https://wa.me/919464377328?text=Hello%20EventFold%20Studio!%20I'm%20interested%20in%20creating%20digital%20albums."
         target="_blank"
         rel="noopener noreferrer"
         className="fixed bottom-8 right-8 z-[100] group"
