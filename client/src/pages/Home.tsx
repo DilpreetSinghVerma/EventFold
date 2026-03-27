@@ -1,7 +1,7 @@
 import { Link, useLocation } from 'wouter';
 import { Button } from '@/components/ui/button';
 import { motion } from 'framer-motion';
-import { Sparkles, ImagePlus, Eye, Smartphone, Zap, ArrowRight, LayoutGrid, CheckCircle2, ShoppingCart, ShieldCheck, Upload, Share2, BookOpen, Crown, CreditCard, Rocket, Play, Linkedin, Youtube } from "lucide-react";
+import { Sparkles, ImagePlus, Eye, Smartphone, Zap, ArrowRight, LayoutGrid, CheckCircle2, ShoppingCart, ShieldCheck, Upload, Share2, BookOpen, Crown, CreditCard, Rocket, Play, Linkedin, Youtube, Palette, MessageCircle } from "lucide-react";
 import { useAuth } from "@/lib/auth";
 import weddingCover from '@assets/generated_images/wedding_album_cover_art.png';
 import { ContactForm } from '@/components/ContactForm';
@@ -224,6 +224,58 @@ export default function Home() {
           </div>
         </div>
       </main>
+      {/* How it Works Section */}
+      <section className="py-24 relative overflow-hidden">
+        <div className="max-w-7xl mx-auto px-8">
+          <div className="flex flex-col md:flex-row items-center justify-between gap-16">
+            <div className="max-w-md space-y-8">
+              <h2 className="text-4xl md:text-5xl font-display font-bold leading-tight">
+                From Raw Photos <br />
+                <span className="text-primary italic">to 3D Magic.</span>
+              </h2>
+              <p className="text-white/40 text-lg">
+                Our cinematic engine does the heavy lifting. You just focus on capturing the beauty.
+              </p>
+              <Link href="/create">
+                <Button className="rounded-2xl h-14 px-8 bg-white/5 border border-white/10 hover:bg-white/10 text-white font-bold group">
+                  Try it Yourself <ArrowRight className="w-4 h-4 ml-2 group-hover:translate-x-1 transition-transform" />
+                </Button>
+              </Link>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 flex-1">
+              {[
+                { 
+                  icon: <Upload className="w-8 h-8" />, 
+                  title: "Upload", 
+                  desc: "Drop your high-res photos into our secure dashboard." 
+                },
+                { 
+                  icon: <Palette className="w-8 h-8" />, 
+                  title: "Theme", 
+                  desc: "Select a Royal theme and cinematic background score." 
+                },
+                { 
+                  icon: <Share2 className="w-8 h-8" />, 
+                  title: "Share", 
+                  desc: "Get your custom QR code and wow your clients instantly." 
+                }
+              ].map((step, i) => (
+                <div key={i} className="glass p-8 rounded-[2.5rem] border-white/5 space-y-6 relative group hover:border-primary/20 transition-all duration-500">
+                  <div className="absolute top-4 right-4 text-4xl font-black text-white/5 italic select-none">0{i+1}</div>
+                  <div className="w-16 h-16 rounded-2xl bg-primary/10 border border-primary/20 flex items-center justify-center text-primary group-hover:scale-110 transition-transform duration-500">
+                    {step.icon}
+                  </div>
+                  <div className="space-y-2">
+                    <h3 className="text-xl font-bold">{step.title}</h3>
+                    <p className="text-xs text-white/40 leading-relaxed">{step.desc}</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      </section>
 
       {/* Pricing / Plan Section */}
       <section className="py-32 relative">
@@ -323,6 +375,22 @@ export default function Home() {
           <ContactForm />
         </div>
       </Footer>
+
+      {/* Floating WhatsApp Button */}
+      <a 
+        href="https://wa.me/917814238541?text=Hello%20EventFold%20Studio!%20I'm%20interested%20in%20creating%20digital%20albums."
+        target="_blank"
+        rel="noopener noreferrer"
+        className="fixed bottom-8 right-8 z-[100] group"
+      >
+        <div className="absolute inset-0 bg-green-500 rounded-full blur-[20px] opacity-0 group-hover:opacity-40 transition-opacity duration-500" />
+        <div className="relative h-16 w-16 bg-green-500 rounded-[20px] flex items-center justify-center text-white shadow-2xl shadow-green-500/20 transform transition-all duration-500 group-hover:scale-110 group-active:scale-95 group-hover:rotate-[360deg]">
+          <MessageCircle className="w-8 h-8 fill-current" />
+          <div className="absolute right-full mr-4 top-1/2 -translate-y-1/2 px-4 py-2 bg-white text-black text-[10px] font-black uppercase tracking-widest rounded-xl whitespace-nowrap opacity-0 group-hover:opacity-100 transition-all duration-500 translate-x-4 group-hover:translate-x-0 pointer-events-none shadow-xl border border-black/5">
+            Chat with Experts
+          </div>
+        </div>
+      </a>
     </div>
   );
 }
