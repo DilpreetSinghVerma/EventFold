@@ -88,8 +88,28 @@ export default function FAQ() {
   const { user } = useAuth();
   const [openIndex, setOpenIndex] = useState<number | null>(0);
 
+  // JSON-LD for Answer Engine Optimization (AEO)
+  const jsonLd = {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    "mainEntity": faqs.map(faq => ({
+      "@type": "Question",
+      "name": faq.question,
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": faq.answer
+      }
+    }))
+  };
+
   return (
     <div className="min-h-screen bg-[#030303] text-white selection:bg-primary/30 selection:text-white overflow-x-hidden">
+      {/* Structured Data for SEO/AEO */}
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+      />
+
       {/* Royal Background Elements */}
       <div className="fixed top-0 left-0 w-full h-full pointer-events-none overflow-hidden -z-10 text-primary/5">
         <div className="absolute top-[-20%] right-[-10%] w-[1000px] h-[1000px] animate-slow-spin opacity-20">

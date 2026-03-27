@@ -18,6 +18,35 @@ export default function Home() {
   const { user, startRazorpayCheckout, buyAlbumCredit } = useAuth();
   const [, setLocation] = useLocation();
 
+  const organizationLd = {
+    "@context": "https://schema.org",
+    "@type": "Organization",
+    "name": "EventFold Studio",
+    "url": "https://eventfoldstudio.com",
+    "logo": "https://eventfoldstudio.com/branding material/without bg version.png",
+    "sameAs": [
+      "https://www.instagram.com/eventfoldstudio/"
+    ]
+  };
+
+  const productLd = {
+    "@context": "https://schema.org",
+    "@type": "Product",
+    "name": "EventFold Digital Album Engine",
+    "description": "Transform traditional albums into cinematic 3D digital flipbooks with secure lifetime hosting.",
+    "brand": {
+      "@type": "Brand",
+      "name": "EventFold"
+    },
+    "offers": {
+      "@type": "Offer",
+      "priceCurrency": "INR",
+      "price": "49",
+      "availability": "https://schema.org/InStock",
+      "url": "https://eventfoldstudio.com"
+    }
+  };
+
   const handleSubscribe = (plan: string) => {
     if (user) {
       startRazorpayCheckout(plan);
@@ -30,6 +59,15 @@ export default function Home() {
 
   return (
     <div className="min-h-screen bg-[#030303] text-white selection:bg-primary/30 selection:text-white overflow-x-hidden">
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(organizationLd) }}
+      />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(productLd) }}
+      />
+
       {/* Royal Background Elements */}
       <div className="fixed top-0 left-0 w-full h-full pointer-events-none overflow-hidden">
         {/* Top Right Decorative Intricate Mandala */}
