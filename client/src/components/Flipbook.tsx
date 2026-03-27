@@ -90,7 +90,7 @@ export const Flipbook = forwardRef(({
         });
       };
       // Preload the first few pages immediately plus covers
-      preloadNext([frontCover, backCover, ...sheets.map(s => s.url).slice(0, 12)]);
+      preloadNext([frontCover, backCover, ...sheets.map(s => (s as any).url || s).slice(0, 12)]);
     }
 
     return () => {
@@ -493,21 +493,23 @@ export const Flipbook = forwardRef(({
                           )}
 
                           {/* Favorite Heart Button */}
-                          <div className={`absolute top-4 ${isLeftHalf ? 'left-6' : 'right-6'} z-50`}>
+                          <div className={`absolute top-2 ${isLeftHalf ? 'left-3' : 'right-3'} z-50`}>
                              <motion.button
-                                whileHover={{ scale: 1.15 }}
-                                whileTap={{ scale: 0.85 }}
+                                whileHover={{ scale: 1.1 }}
+                                whileTap={{ scale: 0.8 }}
                                 onClick={handleLike}
-                                className={`w-10 h-10 rounded-full flex items-center justify-center transition-all ${
-                                  likedSheets[id] 
-                                    ? 'bg-red-500 text-white shadow-[0_0_20px_rgba(239,68,68,0.6)]' 
-                                    : 'bg-black/30 text-white/60 hover:text-white hover:bg-black/50 border border-white/5 opacity-0 group-hover:opacity-100'
+                                animate={{
+                                  backgroundColor: likedSheets[id] ? 'rgba(239, 68, 68, 1)' : 'rgba(0, 0, 0, 0.4)',
+                                  color: likedSheets[id] ? '#ffffff' : 'rgba(255, 255, 255, 0.5)',
+                                  scale: likedSheets[id] ? [1, 1.2, 1] : 1
+                                }}
+                                transition={{ scale: { duration: 0.3 } }}
+                                className={`w-8 h-8 rounded-full flex items-center justify-center transition-all border border-white/5 ${
+                                  !likedSheets[id] ? 'opacity-0 group-hover:opacity-100' : 'opacity-100 shadow-[0_0_15px_rgba(239,68,68,0.5)]'
                                 }`}
                                 style={{ opacity: (window.innerWidth < 1024 || likedSheets[id]) ? 1 : undefined }}
                              >
-                                <motion.div animate={likedSheets[id] ? { scale: [1, 1.3, 1] } : {}}>
-                                   <Heart className={`w-5 h-5 ${likedSheets[id] ? 'fill-current' : ''}`} />
-                                </motion.div>
+                                <Heart className={`w-4 h-4 ${likedSheets[id] ? 'fill-current' : ''}`} />
                              </motion.button>
                           </div>
 
