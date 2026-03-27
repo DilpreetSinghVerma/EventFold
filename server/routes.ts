@@ -91,11 +91,9 @@ export function registerRoutes(
       };
 
       // Support eager transformations for video compression if requested
+      // Note: resource_type is NOT part of the signature, it's part of the URL.
       if (req.query.eager) {
         params.eager = req.query.eager;
-      }
-      if (req.query.resource_type) {
-        params.resource_type = req.query.resource_type;
       }
 
       const signature = cloudinary.utils.api_sign_request(
