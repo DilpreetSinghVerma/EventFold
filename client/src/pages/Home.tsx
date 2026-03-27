@@ -447,67 +447,6 @@ export default function Home() {
               </div>
             </div>
           </div>
-
-          {/* Detailed Comparison Table */}
-          <div className="mt-40 hidden md:block">
-            <div className="text-center mb-16">
-              <h3 className="text-3xl font-display font-bold mb-4 italic text-primary">Comparison Tier.</h3>
-              <p className="text-white/40 text-[10px] uppercase tracking-[0.3em] font-bold">Choose the plan that fits your studio's scale</p>
-            </div>
-
-            <div className="glass rounded-[3rem] border-white/5 overflow-hidden">
-              <table className="w-full text-left border-collapse">
-                <thead>
-                  <tr className="border-b border-white/5 bg-white/[0.02]">
-                    <th className="p-10 text-xs font-black uppercase tracking-[0.2em] text-white/40 w-[40%]">Features</th>
-                    <th className="p-10 text-xs font-black uppercase tracking-[0.2em] text-white/40 text-center">Freelancer (Free)</th>
-                    <th className="p-10 text-xs font-black uppercase tracking-[0.2em] text-white/40 text-center">Single Credit (₹49)</th>
-                    <th className="p-10 text-xs font-black uppercase tracking-[0.2em] text-[#FF9933] text-center bg-primary/5">Elite Studio (₹199+)</th>
-                  </tr>
-                </thead>
-                <tbody className="text-sm">
-                  {[
-                    { feature: "3D Cinematic Flipbook Engine", free: true, credit: true, elite: true },
-                    { feature: "Lifetime Cloud Hosting", free: true, credit: true, elite: true },
-                    { feature: "Panoramic 12×36 Spread Support", free: true, credit: true, elite: true },
-                    { feature: "High-Res Image Processing", free: true, credit: true, elite: true },
-                    { feature: "EventFold Branding", free: "Yes (Always)", credit: "Optional", elite: "No (Whitelabel)" },
-                    { feature: "Studio Logo & Name Personalization", free: false, credit: true, elite: true },
-                    { feature: "WhatsApp Direct Customer Contact", free: false, credit: true, elite: true },
-                    { feature: "Custom Background Score Support", free: "Theme Only", credit: true, elite: true },
-                    { feature: "Unlimited Project Creation", free: false, credit: false, elite: true },
-                    { feature: "Batch Image Upload (Fast)", free: false, credit: true, elite: true },
-                    { feature: "Password Protection for Clients", free: false, credit: true, elite: true },
-                    { feature: "Priority Customer Support", free: false, credit: false, elite: true },
-                    { feature: "New Themes Early Access", free: false, credit: false, elite: true },
-                  ].map((row, i) => (
-                    <tr key={i} className="border-b border-white/5 hover:bg-white/[0.01] transition-colors">
-                      <td className="p-8 font-medium text-white/60">{row.feature}</td>
-                      <td className="p-8 text-center">
-                        {typeof row.free === 'boolean' ? (row.free ? <CheckCircle2 className="w-5 h-5 text-white/20 mx-auto" /> : <div className="w-5 h-5 rounded-full border border-white/5 mx-auto opacity-20" />) : <span className="text-[10px] uppercase font-bold text-white/20 tracking-widest">{row.free}</span>}
-                      </td>
-                      <td className="p-8 text-center">
-                        {typeof row.credit === 'boolean' ? (row.credit ? <CheckCircle2 className="w-5 h-5 text-primary mx-auto" /> : <div className="w-5 h-5 rounded-full border border-white/5 mx-auto opacity-20" />) : <span className="text-[10px] uppercase font-bold text-white/60 tracking-widest">{row.credit}</span>}
-                      </td>
-                      <td className="p-8 text-center bg-primary/[0.02]">
-                        {typeof row.elite === 'boolean' ? (row.elite ? <CheckCircle2 className="w-5 h-5 text-primary mx-auto" /> : <div className="w-5 h-5 rounded-full border border-white/5 mx-auto opacity-20" />) : <span className="text-[10px] uppercase font-bold text-primary tracking-widest">{row.elite}</span>}
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-              <div className="p-12 bg-white/[0.02] flex items-center justify-between">
-                <p className="text-xs text-white/20 font-bold uppercase tracking-widest italic leading-loose max-w-md">
-                  * Note: All paid projects (Credit or Subscription) are archived permanently. Free tier projects may be subject to periodic cleanup if inactive for 90 days.
-                </p>
-                <Link href="/create">
-                   <Button className="rounded-2xl h-14 px-8 bg-primary text-white font-bold shadow-lg shadow-primary/20">
-                      Get Started and Create Now
-                   </Button>
-                </Link>
-              </div>
-            </div>
-          </div>
         </div>
       </section>
 
