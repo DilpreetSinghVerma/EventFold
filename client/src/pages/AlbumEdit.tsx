@@ -14,7 +14,10 @@ import {
   LayoutGrid,
   ShieldCheck,
   Music2,
-  Image as ImageIcon
+  Image as ImageIcon,
+  CloudUpload,
+  Trash2,
+  Volume2
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -34,12 +37,49 @@ export default function AlbumEdit() {
   const [theme, setTheme] = useState('');
   const [bgMusicUrl, setBgMusicUrl] = useState('');
 
-  const soundtracks = [
-    { name: 'Royal Wedding (Classic)', url: 'https://res.cloudinary.com/dn6en7m6s/video/upload/v1740685655/royal_wedding_soundtrack.mp3' },
-    { name: 'Cinematic Drift', url: 'https://res.cloudinary.com/dn6en7m6s/video/upload/v1740693450/cinematic_drift.mp3' },
-    { name: 'Soulful Sufi', url: 'https://res.cloudinary.com/dn6en7m6s/video/upload/v1740685655/sufi_soul.mp3' },
-    { name: 'Modern Pop', url: 'https://res.cloudinary.com/dn6en7m6s/video/upload/v1740693450/modern_shagun.mp3' }
-  ];
+  const musicInputRef = React.useRef<HTMLInputElement>(null);
+  const [uploadingMusic, setUploadingMusic] = useState(false);
+
+  const handleMusicUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (file.size > 15 * 1024 * 1024) {
+      toast({ title: "File too large", description: "Please upload music under 15MB", variant: "destructive" });
+      return;
+    }
+
+    setUploadingMusic(true);
+    try {
+      const sigRes = await fetch('/api/cloudinary-signature?resource_type=video');
+      const { signature, timestamp, cloud_name, api_key, folder } = await sigRes.json();
+
+      const cloudFormData = new FormData();
+      cloudFormData.append('file', file);
+      cloudFormData.append('signature', signature);
+      cloudFormData.append('timestamp', timestamp);
+      cloudFormData.append('api_key', api_key);
+      cloudFormData.append('folder', folder);
+
+      const res = await fetch(`https://api.cloudinary.com/v1_1/${cloud_name}/video/upload`, {
+        method: 'POST',
+        body: cloudFormData,
+      });
+
+      const data = await res.json();
+      if (res.ok) {
+        setBgMusicUrl(data.secure_url);
+        toast({ title: "Music Uploaded!", description: "Save changes to apply this track to the album.", className: "bg-green-500 text-white" });
+      } else {
+        throw new Error(data.error?.message || "Upload failed");
+      }
+    } catch (err: any) {
+      toast({ title: "Upload Failed", description: err.message, variant: "destructive" });
+    } finally {
+      setUploadingMusic(false);
+      if (musicInputRef.current) musicInputRef.current.value = '';
+    }
+  };
 
   useEffect(() => {
     const fetchData = async () => {
@@ -178,25 +218,70 @@ export default function AlbumEdit() {
                   <h2 className="text-lg font-bold italic">Soundtrack Settings</h2>
                </div>
 
-               <div className="grid gap-3">
-                 {soundtracks.map((track) => (
-                   <button
-                     key={track.url}
-                     onClick={() => setBgMusicUrl(track.url)}
-                     className={`flex items-center justify-between p-4 rounded-xl border transition-all text-left group ${
-                       bgMusicUrl === track.url 
-                         ? 'bg-primary/20 border-primary/50 text-white' 
-                         : 'bg-white/5 border-white/5 text-white/40 hover:bg-white/10 hover:border-white/10'
-                     }`}
-                   >
-                     <div className="flex items-center gap-3">
-                        <Music className={`w-4 h-4 ${bgMusicUrl === track.url ? 'text-primary' : 'text-white/10 group-hover:text-white/20'}`} />
-                        <span className="text-xs font-bold">{track.name}</span>
-                     </div>
-                     {bgMusicUrl === track.url && <Check className="w-4 h-4 text-primary" />}
-                   </button>
-                 ))}
-               </div>
+                <div className="space-y-4">
+                  <input
+                    type="file"
+                    ref={musicInputRef}
+                    onChange={handleMusicUpload}
+                    accept="audio/*"
+                    className="hidden"
+                  />
+                  
+                  {bgMusicUrl ? (
+                    <div className="space-y-4">
+                      <div className="p-4 rounded-2xl bg-primary/5 border border-primary/20 flex items-center justify-between">
+                        <div className="flex items-center gap-3 overflow-hidden">
+                          <div className="w-10 h-10 shrink-0 rounded-xl bg-primary/10 flex items-center justify-center">
+                            <Volume2 className="w-5 h-5 text-primary" />
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <p className="text-xs font-bold text-white truncate">Project Soundtrack</p>
+                            <p className="text-[10px] text-white/40 uppercase tracking-widest truncate">{bgMusicUrl.split('/').pop()?.split('?')[0] || 'Custom Audio Active'}</p>
+                          </div>
+                        </div>
+                        <Button 
+                          variant="ghost" 
+                          size="icon" 
+                          onClick={() => setBgMusicUrl('')}
+                          className="text-red-400 hover:text-red-500 hover:bg-red-500/10 rounded-xl shrink-0"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </Button>
+                      </div>
+                      
+                      <Button
+                        onClick={() => musicInputRef.current?.click()}
+                        disabled={uploadingMusic}
+                        className="w-full h-12 rounded-xl border border-white/5 bg-white/5 hover:bg-white/10 text-white/60 font-bold text-xs gap-2"
+                      >
+                        {uploadingMusic ? <Loader2 className="w-4 h-4 animate-spin" /> : <Music className="w-4 h-4" />}
+                        Change Soundtrack
+                      </Button>
+                    </div>
+                  ) : (
+                    <div 
+                      onClick={() => musicInputRef.current?.click()}
+                      className="group cursor-pointer border-2 border-dashed border-white/10 hover:border-primary/50 rounded-[1.5rem] p-10 text-center transition-all bg-white/[0.02] hover:bg-primary/5"
+                    >
+                      {uploadingMusic ? (
+                        <div className="space-y-4">
+                          <Loader2 className="w-10 h-10 animate-spin text-primary mx-auto" />
+                          <p className="text-xs font-bold uppercase tracking-widest text-primary">Uploading track...</p>
+                        </div>
+                      ) : (
+                        <div className="space-y-4">
+                          <div className="w-12 h-12 rounded-2xl bg-white/5 flex items-center justify-center mx-auto text-white/20 group-hover:bg-primary/10 group-hover:text-primary transition-all">
+                             <CloudUpload className="w-6 h-6" />
+                          </div>
+                          <div>
+                            <p className="text-xs font-bold text-white/60 group-hover:text-white transition-colors">Upload Custom Audio</p>
+                            <p className="text-[10px] text-white/20 uppercase tracking-widest mt-1">MP3, WAV under 15MB</p>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </div>
             </section>
           </div>
 

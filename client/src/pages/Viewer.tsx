@@ -234,7 +234,7 @@ export default function Viewer() {
     }
   };
 
-  const musicUrl = customAudio || getThemeMusic(album?.theme || 'royal');
+  const musicUrl = album?.bgMusicUrl || customAudio || getThemeMusic(album?.theme || 'royal');
   const shareUrl = `${origin}/album/${id}?shared=true`;
 
   const handleShare = async () => {
