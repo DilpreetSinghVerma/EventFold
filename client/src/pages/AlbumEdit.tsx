@@ -44,23 +44,19 @@ export default function AlbumEdit() {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const [albumRes, filesRes] = await Promise.all([
-          fetch(`/api/albums/${id}`),
-          fetch(`/api/albums/${id}/files`)
-        ]);
+        const res = await fetch(`/api/albums/${id}`);
+        if (!res.ok) throw new Error('Not found');
 
-        if (!albumRes.ok || !filesRes.ok) throw new Error('Not found');
+        const data = await res.json();
 
-        const albumData = await albumRes.json();
-        const filesData = await filesRes.json();
-
-        setAlbum(albumData);
-        setTitle(albumData.title);
-        setDate(albumData.date);
-        setTheme(albumData.theme);
-        setBgMusicUrl(albumData.bgMusicUrl || '');
+        setAlbum(data);
+        setTitle(data.title);
+        setDate(data.date);
+        setTheme(data.theme);
+        setBgMusicUrl(data.bgMusicUrl || '');
         
-        // Only re-arrange "sheets"
+        // Use files included in the main album response
+        const filesData = data.files || [];
         setFiles(filesData.filter((f: any) => f.fileType === 'sheet').sort((a: any, b: any) => a.orderIndex - b.orderIndex));
       } catch (err) {
         toast({ title: "Error", description: "Failed to load album data", variant: "destructive" });
