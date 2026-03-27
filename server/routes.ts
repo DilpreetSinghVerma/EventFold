@@ -536,6 +536,9 @@ export function registerRoutes(
       await db.execute(sql`ALTER TABLE users ADD COLUMN IF NOT EXISTS is_verified INTEGER NOT NULL DEFAULT 0`);
       await db.execute(sql`ALTER TABLE users ADD COLUMN IF NOT EXISTS verification_code TEXT`);
       await db.execute(sql`ALTER TABLE users ADD COLUMN IF NOT EXISTS password TEXT`);
+      
+      // Force columns to exist in the files table
+      await db.execute(sql`ALTER TABLE files ADD COLUMN IF NOT EXISTS favorites_count INTEGER NOT NULL DEFAULT 0`);
 
       
       console.log("DB Sync Success: Columns added/verified via SQL.");
@@ -800,6 +803,22 @@ export function registerRoutes(
         error: "Server synchronization failed",
         message: e instanceof Error ? e.message : "Internal error"
       });
+    }
+  });
+
+  // Favorite (Like) a specific sheet
+  app.post("/api/files/:id/favorite", async (req, res) => {
+    try {
+      const { id } = req.params;
+      const { files } = await import("../shared/schema");
+      
+      await db.update(files)
+        .set({ favoritesCount: sql`favorites_count + 1` })
+        .where(eq(files.id, id));
+
+      res.json({ success: true });
+    } catch (e) {
+      res.status(500).json({ error: "Failed to save favorite" });
     }
   });
 

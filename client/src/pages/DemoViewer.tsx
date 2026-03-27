@@ -30,11 +30,11 @@ import demoSheet2L from '@assets/demo_album/sheet2_l.png';
 import demoSheet2R from '@assets/demo_album/sheet2_r.png';
 
 export default function DemoViewer() {
-    const [loadedSheets] = useState<string[]>([
-        demoSheet1L,
-        demoSheet1R,
-        demoSheet2L,
-        demoSheet2R,
+    const [loadedSheets] = useState<{ url: string; id: string }[]>([
+        { url: demoSheet1L, id: 'demo1l' },
+        { url: demoSheet1R, id: 'demo1r' },
+        { url: demoSheet2L, id: 'demo2l' },
+        { url: demoSheet2R, id: 'demo2r' },
     ]);
     const [loading, setLoading] = useState(true);
     const [hasStarted, setHasStarted] = useState(false);

@@ -44,6 +44,7 @@ export const files = pgTable("files", {
   filePath: text("file_path").notNull(),
   fileType: varchar("file_type", { length: 20 }).notNull(), // 'cover_front', 'cover_back', 'sheet', 'video'
   orderIndex: integer("order_index").notNull().default(0),
+  favoritesCount: integer("favorites_count").notNull().default(0),
 });
 
 export const settings = pgTable("settings", {

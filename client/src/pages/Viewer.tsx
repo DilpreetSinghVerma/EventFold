@@ -69,7 +69,7 @@ export default function Viewer() {
 
   const isShared = new URLSearchParams(window.location.search).get('shared') === 'true';
 
-  const [loadedSheets, setLoadedSheets] = useState<string[]>([]);
+  const [loadedSheets, setLoadedSheets] = useState<{ url: string; id: string }[]>([]);
   const [loadedFrontCover, setLoadedFrontCover] = useState<string>('');
   const [loadedBackCover, setLoadedBackCover] = useState<string>('');
   const [loadedVideos, setLoadedVideos] = useState<{ filePath: string; orderIndex: number }[]>([]);
@@ -167,37 +167,44 @@ export default function Viewer() {
         setLoadedBackCover(optimizeCloudinary(getUrl(backFile?.filePath || ''), widthCap));
 
         setLoadStatus(`Processing ${sheetFiles.length} cinematic spreads…`);
-        const halves: string[] = [];
+        const halves: { url: string; id: string }[] = [];
         for (let i = 0; i < sheetFiles.length; i++) {
-          const url = getUrl(sheetFiles[i].filePath);
+          const sheet = sheetFiles[i];
+          const url = getUrl(sheet.filePath);
 
           // TRY CLOUDINARY SPLIT FIRST (Instant)
           const cloudHalves = getCloudinaryHalves(url, widthCap);
           if (cloudHalves) {
-            halves.push(...cloudHalves);
+            halves.push(
+              { url: cloudHalves[0], id: sheet.id }, 
+              { url: cloudHalves[1], id: sheet.id }
+            );
           } else {
             // Fallback for local blobs/manual uploads (Slow)
             setLoadStatus(`Rendering spread ${i + 1}/${sheetFiles.length}…`);
             const [left, right] = await splitPanoramicSheet(url);
-            halves.push(left, right);
+            halves.push(
+                { url: left, id: sheet.id }, 
+                { url: right, id: sheet.id }
+            );
           }
         }
 
-        splitUrlsRef.current = halves;
-        setLoadedSheets(halves);
+        splitUrlsRef.current = halves.map(h => h.url);
+        setLoadedSheets(halves as any);
 
         // Proactive Initial Pre-warming
         setLoadStatus('Pre-warming cinematic covers…');
         const initialToPreload = [
           optimizeCloudinary(getUrl(frontFile?.filePath || ''), widthCap),
-          ...halves.slice(0, 12)
+          ...halves.map(h => h.url).slice(0, 12)
         ].filter(Boolean);
 
         await Promise.all(initialToPreload.map(url => new Promise(resolve => {
           const img = new Image();
           img.onload = resolve;
           img.onerror = resolve; // don't block forever
-          img.src = url;
+          img.src = typeof url === 'string' ? url : (url as any).url;
         })));
 
       } catch (e) {
@@ -513,18 +520,43 @@ export default function Viewer() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-background text-white overflow-hidden relative">
-        <div className="fixed inset-0 bg-primary/5 blur-[120px] rounded-full -z-10 animate-pulse" />
+      <div className="min-h-screen flex items-center justify-center bg-[#020202] text-white overflow-hidden relative">
+        <div className="fixed inset-0 bg-primary/10 blur-[150px] rounded-full -z-10 animate-pulse" />
 
-        <BrandingHeader />
+        <div className="text-center relative max-w-sm px-8">
+           <AnimatePresence mode="wait">
+             <motion.div
+               key="branding-splash"
+               initial={{ opacity: 0, scale: 0.9 }}
+               animate={{ opacity: 1, scale: 1 }}
+               exit={{ opacity: 0, scale: 1.1 }}
+               transition={{ duration: 0.8 }}
+             >
+                {settings?.businessLogo ? (
+                   <img src={settings.businessLogo} alt="Logo" className="h-16 mb-12 mx-auto object-contain opacity-80" />
+                ) : (
+                   <Building2 className="w-16 h-16 mb-12 mx-auto text-primary opacity-40 shadow-[0_0_40px_rgba(var(--primary),0.3)]" />
+                )}
 
-        <div className="text-center relative pt-20">
-          <div className="w-20 h-20 mb-8 mx-auto relative flex items-center justify-center">
-            <Loader2 className="w-20 h-20 animate-spin text-primary opacity-20 absolute" />
-            <div className="w-4 h-4 bg-primary rounded-full animate-ping" />
-          </div>
-          <p className="font-display font-bold text-2xl mb-3 tracking-tight">Initializing Cinematic Feed</p>
-          <p className="text-white/40 text-sm font-mono uppercase tracking-[0.2em]">{loadStatus}</p>
+                <div className="space-y-6">
+                   <div className="relative">
+                      <div className="h-1 w-full bg-white/5 rounded-full overflow-hidden border border-white/5">
+                        <motion.div 
+                          className="h-full bg-gradient-to-r from-primary/40 via-primary to-primary/40"
+                          initial={{ width: "0%" }}
+                          animate={{ width: "100%" }}
+                          transition={{ duration: 4, ease: "easeInOut" }}
+                        />
+                      </div>
+                   </div>
+                   
+                   <div className="space-y-2">
+                      <p className="font-display font-bold text-2xl tracking-tight text-white/90">Curating Moments</p>
+                      <p className="text-primary/60 text-[10px] font-mono uppercase tracking-[0.3em] h-4">{loadStatus}</p>
+                   </div>
+                </div>
+             </motion.div>
+           </AnimatePresence>
         </div>
       </div>
     );

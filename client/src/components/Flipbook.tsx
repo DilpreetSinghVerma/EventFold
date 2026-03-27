@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button';
 
 interface FlipbookProps {
   /** Pre-split 12×18 half-pages in order: [lh0, rh0, lh1, rh1, …] */
-  sheets: string[];
+  sheets: { url: string; id: string }[];
   frontCover: string;
   backCover: string;
   title?: string;
@@ -56,6 +56,8 @@ export const Flipbook = forwardRef(({
   const totalPageCount = 2 + sheets.length; // Front + Back + Sheets
 
   // Background music audio element
+  const [isFlipping, setIsFlipping] = useState(false);
+  const [likedSheets, setLikedSheets] = useState<Record<string, boolean>>({});
   const bgMusic = useRef<HTMLAudioElement | null>(null);
   const flipAudio = useRef<HTMLAudioElement | null>(null);
   const lastFlipTime = useRef(0);
@@ -78,7 +80,7 @@ export const Flipbook = forwardRef(({
     music.load();
     flip.load();
 
-    // Background preloader for images
+    // Preload the first few pages immediately plus covers
     if (sheets.length > 0) {
       const preloadNext = (urls: string[]) => {
         urls.forEach(url => {
@@ -88,7 +90,7 @@ export const Flipbook = forwardRef(({
         });
       };
       // Preload the first few pages immediately plus covers
-      preloadNext([frontCover, backCover, ...sheets.slice(0, 12)]);
+      preloadNext([frontCover, backCover, ...sheets.map(s => s.url).slice(0, 12)]);
     }
 
     return () => {
@@ -247,15 +249,16 @@ export const Flipbook = forwardRef(({
 
   if (!ready) return null;
 
-  const pages: { type: string; image?: string; video?: string; key: string }[] = [];
+  const pages: { type: string; image?: string; video?: string; key: string; id?: string }[] = [];
   pages.push({ type: 'cover', image: frontCover, key: 'cover-front' });
   sheets.forEach((half, idx) => {
     const videoForSheet = (videos || []).find(v => v.orderIndex === idx);
     pages.push({
       type: 'sheet',
-      image: half,
+      image: half.url,
       video: videoForSheet?.filePath,
-      key: `half-${idx}`
+      key: `half-${idx}`,
+      id: half.id
     });
   });
   pages.push({ type: 'cover', image: backCover, key: 'cover-back' });
@@ -415,8 +418,25 @@ export const Flipbook = forwardRef(({
                 }
                 if (page.type === 'sheet') {
                   const isLeftHalf = (index - 1) % 2 === 0;
+                  const id = page.id || '';
+
+                  const handleLike = async (e: React.MouseEvent) => {
+                    e.stopPropagation();
+                    if (likedSheets[id]) return;
+                    setLikedSheets(prev => ({ ...prev, [id]: true }));
+                    try {
+                      await fetch(`/api/files/${id}/favorite`, { method: 'POST' });
+                    } catch (err) {}
+                  };
+
+                  const driftAnimate = isSlideshowActive && !isFlipping ? {
+                    scale: [1, 1.05],
+                    x: [0, isLeftHalf ? -20 : 20],
+                    y: [0, 8]
+                  } : { scale: 1, x: 0, y: 0 };
+
                   return (
-                    <div key={page.key} className={pageClass}
+                    <div key={page.key} className={`${pageClass} group`}
                       data-density={pageDensity}
                       onClickCapture={(e) => {
                         if (window.innerWidth < 1024) e.stopPropagation();
@@ -428,10 +448,12 @@ export const Flipbook = forwardRef(({
                     >
                       {isNear && (
                         <>
-                          <img
+                          <motion.img
                             src={page.image}
                             alt="sheet"
                             loading="eager"
+                            animate={driftAnimate}
+                            transition={{ duration: 10, repeat: Infinity, repeatType: "reverse", ease: "easeInOut" }}
                             style={{
                               width: '100%',
                               height: '100%',
@@ -446,13 +468,14 @@ export const Flipbook = forwardRef(({
                             }}
                           />
                           {page.video && (
-                            <video
+                            <motion.video
                               src={page.video}
                               autoPlay
                               loop
                               muted
                               playsInline
-                              webkit-playsinline="true"
+                              animate={driftAnimate}
+                              transition={{ duration: 10, repeat: Infinity, repeatType: "reverse", ease: "easeInOut" }}
                               preload="auto"
                               style={{
                                 width: '100%',
@@ -468,6 +491,26 @@ export const Flipbook = forwardRef(({
                               }}
                             />
                           )}
+
+                          {/* Favorite Heart Button */}
+                          <div className={`absolute top-6 ${isLeftHalf ? 'left-8' : 'right-8'} z-50`}>
+                             <motion.button
+                                whileHover={{ scale: 1.1 }}
+                                whileTap={{ scale: 0.9 }}
+                                onClick={handleLike}
+                                className={`w-12 h-12 rounded-full flex items-center justify-center transition-all ${
+                                  likedSheets[id] 
+                                    ? 'bg-red-500 text-white shadow-[0_0_20px_rgba(239,68,68,0.5)]' 
+                                    : 'bg-black/40 text-neutral-300 hover:text-white hover:bg-black/60 border border-white/10 opacity-0 group-hover:opacity-100'
+                                }`}
+                                style={{ opacity: (window.innerWidth < 1024 || likedSheets[id]) ? 1 : undefined }}
+                             >
+                                <motion.div animate={likedSheets[id] ? { scale: [1, 1.4, 1] } : {}}>
+                                   <ChevronRight className={`w-6 h-6 rotate-45 ${likedSheets[id] ? 'fill-current' : ''}`} />
+                                </motion.div>
+                             </motion.button>
+                          </div>
+
                           <div className="absolute inset-0 opacity-[0.02] pointer-events-none" style={{ backgroundImage: `url("https://www.transparenttextures.com/patterns/paper-fibers.png")`, zIndex: 3 }} />
                           <div style={{
                             position: 'absolute',
