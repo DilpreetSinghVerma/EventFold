@@ -18,6 +18,7 @@ import Privacy from "@/pages/Privacy";
 import AuthVerify from "@/pages/AuthVerify";
 import Admin from "@/pages/Admin";
 import About from "@/pages/About";
+import FAQ from "@/pages/FAQ";
 
 import { AuthProvider, useAuth } from "@/lib/auth";
 import { Loader2 } from "lucide-react";
@@ -57,6 +58,7 @@ function Router() {
       <Route path="/terms" component={Terms} />
       <Route path="/privacy" component={Privacy} />
       <Route path="/about" component={About} />
+      <Route path="/faq" component={FAQ} />
       <Route component={NotFound} />
     </Switch>
   );
