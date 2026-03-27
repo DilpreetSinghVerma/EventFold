@@ -414,8 +414,7 @@ export const Flipbook = forwardRef(({
                   );
                 }
                 if (page.type === 'sheet') {
-                  const pageIndex = pages.indexOf(page);
-                  const isLeftHalf = (pageIndex - 1) % 2 === 0;
+                  const isLeftHalf = (index - 1) % 2 === 0;
                   return (
                     <div key={page.key} className={pageClass}
                       data-density={pageDensity}
@@ -437,7 +436,7 @@ export const Flipbook = forwardRef(({
                               width: '100%',
                               height: '100%',
                               objectFit: 'cover',
-                              objectPosition: 'center',
+                              objectPosition: isLeftHalf ? 'left' : 'right',
                               display: 'block',
                               backgroundColor: '#0a0a0a',
                               position: 'absolute',
@@ -459,7 +458,7 @@ export const Flipbook = forwardRef(({
                                 width: '100%',
                                 height: '100%',
                                 objectFit: 'cover',
-                                objectPosition: 'center',
+                                objectPosition: isLeftHalf ? 'left' : 'right',
                                 display: 'block',
                                 backgroundColor: 'transparent',
                                 position: 'absolute',
@@ -603,8 +602,7 @@ export const Flipbook = forwardRef(({
                   );
                 }
                 if (page.type === 'sheet') {
-                  const pageIndex = pages.indexOf(page);
-                  const isLeftHalf = (pageIndex - 1) % 2 === 0;
+                  const isLeftHalf = (index - 1) % 2 === 0;
                   return (
                     <div key={page.key} className="page" data-density="soft"
                       style={{ ...pageBase, backgroundColor: '#0a0a0a' }}>
@@ -618,7 +616,7 @@ export const Flipbook = forwardRef(({
                               width: '100%',
                               height: '100%',
                               objectFit: 'cover',
-                              objectPosition: 'center',
+                              objectPosition: isLeftHalf ? 'left' : 'right',
                               display: 'block',
                               backgroundColor: '#0a0a0a',
                               position: 'absolute',
@@ -639,7 +637,7 @@ export const Flipbook = forwardRef(({
                                 width: '100%', 
                                 height: '100%', 
                                 objectFit: 'cover', 
-                                objectPosition: 'center', 
+                                objectPosition: isLeftHalf ? 'left' : 'right', 
                                 display: 'block', 
                                 backgroundColor: 'transparent',
                                 position: 'absolute',
