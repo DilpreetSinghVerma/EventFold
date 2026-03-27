@@ -322,7 +322,7 @@ export const Flipbook = forwardRef(({
                   playFlipSound();
                 }
               }}
-              flippingTime={600}
+              flippingTime={1000}
               usePortrait={false}
               startZIndex={0}
               autoSize={false}
@@ -543,7 +543,7 @@ export const Flipbook = forwardRef(({
                   playFlipSound();
                 }
               }}
-              flippingTime={600}
+              flippingTime={1000}
               usePortrait={false}
               startZIndex={0}
               autoSize={false}
