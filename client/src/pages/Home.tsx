@@ -149,8 +149,8 @@ export default function Home() {
       </nav>
 
       {/* Hero Section */}
-      <main className="relative pt-12 pb-16 overflow-hidden">
-        <div className="max-w-7xl mx-auto px-8">
+      <main className="relative pt-8 md:pt-12 pb-16 overflow-hidden">
+        <div className="max-w-7xl mx-auto px-4 md:px-8">
           <div className="flex flex-col items-center text-center gap-6">
             <motion.div
               initial={{ opacity: 0, y: 20 }}
@@ -191,12 +191,12 @@ export default function Home() {
               initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
               transition={{ delay: 0.4, duration: 1.2, ease: "easeOut" }}
-              className="w-full relative py-12"
+              className="w-full relative py-6 md:py-12"
             >
               {/* Cinematic Studio Environment - Simplified for better flow */}
               <div
                 onClick={() => setLocation('/demos')}
-                className="h-[500px] w-full max-w-6xl mx-auto flex items-center justify-center relative rounded-[4rem] bg-[#080808] border border-white/5 shadow-[0_0_100px_rgba(0,0,0,1)] overflow-hidden group cursor-pointer"
+                className="h-[350px] md:h-[500px] w-full max-w-6xl mx-auto flex items-center justify-center relative rounded-[2rem] md:rounded-[4rem] bg-[#080808] border border-white/5 shadow-[0_0_100px_rgba(0,0,0,1)] overflow-hidden group cursor-pointer"
               >
                 {/* Dynamic Spotlight */}
                 <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_0%,rgba(139,92,246,0.15),transparent_60%)] pointer-events-none" />
@@ -206,7 +206,7 @@ export default function Home() {
                     <img
                       src={demoFront}
                       alt="Demo Album"
-                      className="w-80 h-auto rounded-lg shadow-2xl transition-all duration-500 group-hover:shadow-primary/20 rotate-[-4deg] group-hover:rotate-0"
+                      className="w-64 md:w-80 h-auto rounded-lg shadow-2xl transition-all duration-500 group-hover:shadow-primary/20 rotate-[-4deg] group-hover:rotate-0"
                     />
                     <div className="absolute inset-0 rounded-lg bg-primary/20 opacity-0 group-hover:opacity-100 transition-opacity" />
                   </div>
@@ -229,7 +229,7 @@ export default function Home() {
       </main>
 
       {/* Trust Banner - Social Proof */}
-      <div className="max-w-7xl mx-auto px-8 mb-12">
+      <div className="max-w-7xl mx-auto px-4 md:px-8 mb-12">
         <div className="py-12 border-y border-white/5 flex flex-col md:flex-row items-center justify-between gap-8 opacity-60">
           <p className="text-[10px] font-black uppercase tracking-[0.4em] text-white/40 text-center md:text-left">
             Trusted by <span className="text-white">500+ Elite Studios</span> across India & Abroad
@@ -244,7 +244,7 @@ export default function Home() {
       </div>
       {/* How it Works Section */}
       <section className="py-24 relative overflow-hidden">
-        <div className="max-w-7xl mx-auto px-8">
+        <div className="max-w-7xl mx-auto px-4 md:px-8">
           <div className="flex flex-col md:flex-row items-center justify-between gap-16">
             <div className="max-w-md space-y-8">
               <h2 className="text-4xl md:text-5xl font-display font-bold leading-tight">
@@ -296,8 +296,8 @@ export default function Home() {
       </section>
 
       {/* Wall of Love - Testimonials */}
-      <section className="py-24 relative overflow-hidden">
-        <div className="max-w-7xl mx-auto px-8">
+      <section className="py-24 relative overflow-hidden bg-white/[0.01]">
+        <div className="max-w-7xl mx-auto px-4 md:px-8">
           <div className="text-center mb-16 space-y-4">
             <h2 className="text-4xl md:text-5xl font-display font-bold">Wall of <span className="text-primary italic">Love.</span></h2>
             <p className="text-white/40 text-[10px] uppercase tracking-[0.3em] font-bold">Trusted by India's most creative minds</p>
@@ -358,8 +358,8 @@ export default function Home() {
       </section>
 
       {/* Pricing / Plan Section */}
-      <section id="pricing" className="py-32 relative scroll-mt-24">
-        <div className="max-w-7xl mx-auto px-8">
+      <section id="pricing" className="py-24 md:py-32 relative scroll-mt-24">
+        <div className="max-w-7xl mx-auto px-4 md:px-8">
           <div className="text-center mb-20">
             <h2 className="text-5xl md:text-6xl font-display font-bold mb-6 tracking-tight">Simple <span className="text-primary">Pricing</span></h2>
             <p className="text-white/40 text-lg max-w-2xl mx-auto leading-relaxed">

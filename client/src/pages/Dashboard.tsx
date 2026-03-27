@@ -430,7 +430,7 @@ export default function Dashboard() {
 
       {/* Navbar Overlay */}
       <nav className="sticky top-0 z-50 w-full border-b border-white/5 bg-background/80 backdrop-blur-3xl">
-        <div className="max-w-7xl mx-auto px-8 h-20 flex items-center justify-between">
+        <div className="max-w-7xl mx-auto px-4 md:px-8 h-20 flex items-center justify-between">
           <Link href="/">
             <div className="h-14 group cursor-pointer py-0.5">
               <img
@@ -532,7 +532,7 @@ export default function Dashboard() {
       </nav>
 
       {success === 'true' && (
-        <div className="max-w-7xl mx-auto px-8 py-4">
+        <div className="max-w-7xl mx-auto px-4 md:px-8 py-4">
           <div className="bg-green-500/10 border border-green-500/20 text-green-400 p-4 rounded-2xl flex items-center justify-between">
             <span className="font-bold">Payment Successful! Your credit has been added.</span>
             <Button variant="ghost" size="sm" onClick={() => window.history.replaceState({}, '', '/dashboard')}>Dismiss</Button>
@@ -540,7 +540,7 @@ export default function Dashboard() {
         </div>
       )}
 
-      <header className="max-w-7xl mx-auto px-8 pt-6 pb-2">
+      <header className="max-w-7xl mx-auto px-4 md:px-8 pt-6 pb-2">
         <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-8">
           <div className="space-y-4">
             <div className="flex items-center gap-3 mb-2">
@@ -549,7 +549,7 @@ export default function Dashboard() {
               </div>
               <span className="text-xs font-bold font-mono text-primary uppercase tracking-[0.2em]">Dashboard Terminal</span>
             </div>
-            <h2 className="text-5xl font-display font-bold tracking-tight">Welcome back, <span className="text-primary">{user?.name?.split(' ')[0]}</span></h2>
+            <h2 className="text-3xl md:text-5xl font-display font-bold tracking-tight">Welcome back, <span className="text-primary">{user?.name?.split(' ')[0]}</span></h2>
             <div className="flex items-center gap-6">
               {dbConnected === false && (
                 <div className="hidden lg:flex items-center gap-2 px-3 py-1 bg-red-500/10 border border-red-500/20 rounded-full">
@@ -619,9 +619,9 @@ export default function Dashboard() {
         </div>
       </header>
 
-      <main className="max-w-7xl mx-auto px-8 pt-4">
+      <main className="max-w-7xl mx-auto px-4 md:px-8 pt-4">
         <div className="mb-12">
-          <h1 className="text-4xl font-bold mb-2">My Collections</h1>
+          <h1 className="text-3xl md:text-4xl font-bold mb-2">My Collections</h1>
           <p className="text-white/40">Manage and share your digital storytelling projects.</p>
         </div>
 
