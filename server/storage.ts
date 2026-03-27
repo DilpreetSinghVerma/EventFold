@@ -1,7 +1,7 @@
 import crypto from "crypto";
 import { type InsertAlbum, type Album, type InsertFile, type File, type User, type InsertUser, albums, files, settings, users } from "../shared/schema";
 import { db } from "./db";
-import { eq, asc, lte, and, isNotNull } from "drizzle-orm";
+import { eq, asc, lte, and, isNotNull, sql } from "drizzle-orm";
 
 export interface IStorage {
   createAlbum(album: InsertAlbum): Promise<Album>;
@@ -14,6 +14,7 @@ export interface IStorage {
   getFilesByAlbum(albumId: string): Promise<File[]>;
   getFile(id: string): Promise<File | undefined>;
   deleteFilesByAlbum(albumId: string): Promise<void>;
+  updateFile(id: string, data: Partial<File>): Promise<File>;
 
   getSettings(userId: string): Promise<any>;
   updateSettings(userId: string, data: any): Promise<void>;
@@ -187,6 +188,13 @@ export class DatabaseStorage implements IStorage {
     return row;
   }
 
+  async updateFile(id: string, data: Partial<File>): Promise<File> {
+    if (!db) throw new Error("DB not connected");
+    const [row] = await db.update(files).set(data).where(eq(files.id, id)).returning();
+    if (!row) throw new Error("File not found");
+    return row;
+  }
+
   async getUsers(): Promise<User[]> {
     if (!db) return [];
     return await db.select().from(users).orderBy(asc(users.createdAt));
@@ -234,6 +242,7 @@ export class MemStorage implements IStorage {
       expiresAt: insertAlbum.expiresAt || null,
       isPublicDemo: insertAlbum.isPublicDemo || 'false',
       demoCategory: insertAlbum.demoCategory || null,
+      bgMusicUrl: insertAlbum.bgMusicUrl || null,
       createdAt: new Date(),
     };
     this.albums.set(id, album);
@@ -262,6 +271,7 @@ export class MemStorage implements IStorage {
       ...insertFile,
       id,
       orderIndex: insertFile.orderIndex ?? 0,
+      favoritesCount: insertFile.favoritesCount ?? 0,
     };
     this.files.set(id, file);
     return file;
@@ -392,6 +402,14 @@ export class MemStorage implements IStorage {
     if (!album) throw new Error("Album not found");
     const updated = { ...album, ...data };
     this.albums.set(id, updated);
+    return updated;
+  }
+
+  async updateFile(id: string, data: Partial<File>): Promise<File> {
+    const file = this.files.get(id);
+    if (!file) throw new Error("File not found");
+    const updated = { ...file, ...data };
+    this.files.set(id, updated);
     return updated;
   }
 

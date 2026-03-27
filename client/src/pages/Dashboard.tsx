@@ -118,8 +118,13 @@ export default function Dashboard() {
             <div className="absolute inset-0 flex flex-col justify-end p-6 translate-y-4 group-hover:translate-y-0 transition-transform duration-500">
               <div className="flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300 delay-100">
                 <Link href={`/album/${album.id}`} className="flex-1">
-                  <Button className="w-full rounded-xl bg-white text-black hover:bg-white/90">
+                  <Button className="w-full h-11 rounded-xl bg-white text-black hover:bg-white/90 font-bold">
                     <Eye className="w-4 h-4 mr-2" /> Open
+                  </Button>
+                </Link>
+                <Link href={`/album/${album.id}/edit`}>
+                  <Button variant="secondary" size="icon" className="w-11 h-11 rounded-xl glass border-none hover:bg-white/20 transition-all">
+                    <SettingsIcon className="w-4 h-4" />
                   </Button>
                 </Link>
                 {/* Admin Demo Management */}

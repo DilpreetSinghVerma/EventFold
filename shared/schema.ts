@@ -35,6 +35,7 @@ export const albums = pgTable("albums", {
   expiresAt: timestamp("expires_at"), // For 7-day trials or 1-year credits
   isPublicDemo: text("is_public_demo").notNull().default('false'), // 'true' or 'false'
   demoCategory: text("demo_category"), // 'Wedding', 'Pre-Wedding', 'Birthday', etc.
+  bgMusicUrl: text("bg_music_url"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 

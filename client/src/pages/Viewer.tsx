@@ -656,8 +656,9 @@ export default function Viewer() {
       )}
 
       <main
-        className="relative w-full flex-1 flex flex-col items-center justify-center bg-transparent lg:overflow-visible"
+        className="relative w-full flex-1 flex flex-col items-center justify-center bg-transparent lg:overflow-visible theft-protection"
         style={{ touchAction: 'none', minHeight: 0 }}
+        onContextMenu={(e) => e.preventDefault()}
       >
         <TransformWrapper
           initialScale={window.innerWidth < 1024 ? 1.08 : 1}
@@ -696,22 +697,24 @@ export default function Viewer() {
                 <div
                   className="w-full h-full flex items-center justify-center lg:overflow-visible"
                 >
-                  <Flipbook
-                    ref={flipbookRef}
-                    sheets={loadedSheets}
-                    frontCover={loadedFrontCover}
-                    backCover={loadedBackCover}
-                    title={album.title}
-                    contactWhatsApp={isShared ? settings?.contactWhatsApp : undefined}
-                    businessName={settings?.businessName}
-                    videos={loadedVideos}
-                    uiVisible={uiVisible}
-                    isMuted={isMuted}
-                    isSlideshowActive={isSlideshowActive}
-                    onSlideshowEnd={() => setIsSlideshowActive(false)}
-                    onPageChange={(current, total) => setPageInfo({ current, total })}
-                    audioUrl={musicUrl}
-                  />
+                  <div onContextMenu={(e) => e.preventDefault()} className="theft-protection">
+                    <Flipbook
+                      ref={flipbookRef}
+                      sheets={loadedSheets}
+                      frontCover={loadedFrontCover}
+                      backCover={loadedBackCover}
+                      title={album.title}
+                      contactWhatsApp={isShared ? settings?.contactWhatsApp : undefined}
+                      businessName={settings?.businessName}
+                      videos={loadedVideos}
+                      uiVisible={uiVisible}
+                      isMuted={isMuted}
+                      isSlideshowActive={isSlideshowActive}
+                      onSlideshowEnd={() => setIsSlideshowActive(false)}
+                      onPageChange={(current, total) => setPageInfo({ current, total })}
+                      audioUrl={musicUrl}
+                    />
+                  </div>
                 </div>
               </TransformComponent>
 

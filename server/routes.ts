@@ -370,6 +370,7 @@ export function registerRoutes(
       const adminEmails = ["admin@eventfold.com", "dilpreetsinghverma@gmail.com"];
       const isAdmin = user.email ? adminEmails.includes(user.email) : false;
       
+
       const isSubscribed = user.plan !== 'free' && user.subscriptionExpiresAt && new Date(user.subscriptionExpiresAt) > new Date();
 
       // Check if user has enough credits (Bypass for admins and active subscribers)
@@ -531,6 +532,7 @@ export function registerRoutes(
       // Force columns to exist in the albums table
       await db.execute(sql`ALTER TABLE albums ADD COLUMN IF NOT EXISTS is_public_demo TEXT NOT NULL DEFAULT 'false'`);
       await db.execute(sql`ALTER TABLE albums ADD COLUMN IF NOT EXISTS demo_category TEXT`);
+      await db.execute(sql`ALTER TABLE albums ADD COLUMN IF NOT EXISTS bg_music_url TEXT`);
       
       // Force columns to exist in the users table
       await db.execute(sql`ALTER TABLE users ADD COLUMN IF NOT EXISTS is_verified INTEGER NOT NULL DEFAULT 0`);
@@ -680,6 +682,47 @@ export function registerRoutes(
     } catch (e) {
       console.error("Reminder dispatch failed:", e);
       res.status(500).json({ error: "Failed to dispatch reminders" });
+    }
+  });
+
+
+  // Update album metadata
+  app.patch("/api/albums/:id", async (req, res) => {
+    try {
+      if (!req.isAuthenticated()) return res.status(401).json({ error: "Unauthorized" });
+      const album = await storage.getAlbum(req.params.id);
+      if (!album) return res.status(404).json({ error: "Album not found" });
+      if (album.userId !== (req.user as any).id && (req.user as any).role !== 'admin') {
+        return res.status(403).json({ error: "Forbidden" });
+      }
+
+      const updatedAlbum = await storage.updateAlbum(req.params.id, req.body);
+      res.json(updatedAlbum);
+    } catch (e) {
+      res.status(500).json({ error: "Failed to update album" });
+    }
+  });
+
+  // Re-arrange album sheets
+  app.patch("/api/albums/:id/files/order", async (req, res) => {
+    try {
+      if (!req.isAuthenticated()) return res.status(401).json({ error: "Unauthorized" });
+      const album = await storage.getAlbum(req.params.id);
+      if (!album) return res.status(404).json({ error: "Album not found" });
+      if (album.userId !== (req.user as any).id && (req.user as any).role !== 'admin') {
+        return res.status(403).json({ error: "Forbidden" });
+      }
+
+      const { fileOrders } = req.body; // Array of { id: string, orderIndex: number }
+      if (!Array.isArray(fileOrders)) return res.status(400).json({ error: "Invalid order data" });
+
+      await Promise.all(
+        fileOrders.map((f: any) => storage.updateFile(f.id, { orderIndex: f.orderIndex }))
+      );
+
+      res.json({ success: true });
+    } catch (e) {
+      res.status(500).json({ error: "Failed to update sheet order" });
     }
   });
 

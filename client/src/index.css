@@ -195,3 +195,18 @@
 ::-webkit-scrollbar-thumb {
   @apply bg-muted-foreground/10 rounded-full border-4 border-solid border-background hover:bg-muted-foreground/20 transition-colors;
 }
+/* Elite Studio Theft Protection */
+.theft-protection {
+  -webkit-user-select: none !important;
+  -moz-user-select: none !important;
+  -ms-user-select: none !important;
+  user-select: none !important;
+  -webkit-touch-callout: none !important;
+  -webkit-user-drag: none !important;
+}
+
+.theft-protection img, 
+.theft-protection video {
+  pointer-events: none !important; 
+  -webkit-user-drag: none !important;
+}
