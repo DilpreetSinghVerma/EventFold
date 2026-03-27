@@ -19,6 +19,7 @@ import AuthVerify from "@/pages/AuthVerify";
 import Admin from "@/pages/Admin";
 import About from "@/pages/About";
 import FAQ from "@/pages/FAQ";
+import ScrollToTop from "@/components/ScrollToTop";
 
 import { AuthProvider, useAuth } from "@/lib/auth";
 import { Loader2 } from "lucide-react";
@@ -70,6 +71,7 @@ function App() {
       <TooltipProvider>
         <AuthProvider>
           <Toaster />
+          <ScrollToTop />
           <Router />
         </AuthProvider>
       </TooltipProvider>
