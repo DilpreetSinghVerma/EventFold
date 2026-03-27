@@ -2,8 +2,9 @@ import { Link } from 'wouter';
 import { Card, CardContent, CardFooter } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Plus, QrCode, Eye, Trash2, LayoutGrid, Calendar, LogOut, Settings as SettingsIcon, Lock, Loader2, Sparkles, User as UserIcon, Crown, Copy, Download, Share2, Check, ShieldAlert } from 'lucide-react';
+import { Plus, QrCode, Eye, Trash2, LayoutGrid, Calendar, LogOut, Settings as SettingsIcon, Lock, Loader2, Sparkles, User as UserIcon, Crown, Copy, Download, Share2, Check, ShieldAlert, BarChart3, FolderHeart, ChevronDown, Clock, Activity, TrendingUp } from 'lucide-react';
 import { QRCodeSVG } from 'qrcode.react';
+import { Badge } from '@/components/ui/badge';
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
@@ -26,6 +27,8 @@ export default function Dashboard() {
   const [settings, setSettings] = useState<any>(null);
   const [copiedId, setCopiedId] = useState<string | null>(null);
   const isAdmin = user?.role === 'admin' || ["admin@eventfold.com", "dilpreetsinghverma@gmail.com"].includes(user?.email || "");
+  const [activeCategory, setActiveCategory] = useState<string>('All');
+  const [searchQuery, setSearchQuery] = useState('');
 
   // Parse URL for success/cancel params
   const { search } = typeof window !== 'undefined' ? window.location : { search: '' };
@@ -112,6 +115,13 @@ export default function Dashboard() {
               </div>
             )}
 
+            {/* Category Tag */}
+            <div className="absolute top-4 right-4 z-20">
+              <Badge className="bg-black/60 backdrop-blur-md border-white/10 text-[9px] font-black uppercase tracking-widest text-primary/80 px-2 py-0.5 rounded-lg group-hover:bg-primary group-hover:text-white transition-all duration-500">
+                {album.category || 'Uncategorized'}
+              </Badge>
+            </div>
+
             {/* Overlay */}
             <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent opacity-60 group-hover:opacity-80 transition-opacity" />
 
@@ -127,6 +137,69 @@ export default function Dashboard() {
                     <SettingsIcon className="w-4 h-4" />
                   </Button>
                 </Link>
+                
+                {/* Insights Portal */}
+                <Dialog>
+                  <DialogTrigger asChild>
+                    <Button variant="secondary" size="icon" className="w-11 h-11 rounded-xl glass border-none hover:bg-primary/20 hover:text-primary transition-all">
+                      <BarChart3 className="w-4 h-4" />
+                    </Button>
+                  </DialogTrigger>
+                  <DialogContent className="max-w-2xl bg-[#0a0a0b] border-white/10 text-white rounded-[2rem] p-8">
+                    <DialogHeader className="mb-8">
+                      <div className="flex items-center gap-3">
+                         <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center text-primary">
+                            <TrendingUp className="w-5 h-5" />
+                         </div>
+                         <div>
+                            <DialogTitle className="text-2xl font-bold">Studio Insights</DialogTitle>
+                            <DialogDescription className="text-white/40 uppercase text-[10px] font-black tracking-widest">Analytics report for {album.title}</DialogDescription>
+                         </div>
+                      </div>
+                    </DialogHeader>
+                    
+                    <div className="grid grid-cols-3 gap-4 mb-10">
+                       <div className="p-5 rounded-2xl bg-white/5 border border-white/5 space-y-2">
+                          <Eye className="w-4 h-4 text-primary" />
+                          <p className="text-2xl font-bold">{album.views || 0}</p>
+                          <p className="text-[10px] text-white/40 uppercase font-bold tracking-widest">Total Views</p>
+                       </div>
+                       <div className="p-5 rounded-2xl bg-white/5 border border-white/5 space-y-2">
+                          <Clock className="w-4 h-4 text-emerald-400" />
+                          <p className="text-2xl font-bold">{Math.round((album.totalEngagementTime || 0) / 60)}m</p>
+                          <p className="text-[10px] text-white/40 uppercase font-bold tracking-widest">Avg Duration</p>
+                       </div>
+                       <div className="p-5 rounded-2xl bg-white/5 border border-white/5 space-y-2">
+                          <Activity className="w-4 h-4 text-purple-400" />
+                          <p className="text-2xl font-bold">{album.files?.length || 0}</p>
+                          <p className="text-[10px] text-white/40 uppercase font-bold tracking-widest">Assets Processed</p>
+                       </div>
+                    </div>
+                    
+                    <div className="space-y-4">
+                       <h4 className="text-[10px] font-black uppercase tracking-widest text-white/40 mb-4 px-1">Spread Performance</h4>
+                       <div className="space-y-2 max-h-[300px] overflow-y-auto pr-2 custom-scrollbar">
+                          {album.files?.filter((f: any) => f.fileType === 'sheet').map((sheet: any, idx: number) => (
+                             <div key={sheet.id} className="flex items-center justify-between p-3 rounded-xl bg-white/5 border border-white/5">
+                                <div className="flex items-center gap-4">
+                                   <div className="w-10 h-10 rounded-lg overflow-hidden bg-black/40">
+                                      <img src={sheet.filePath} className="w-full h-full object-cover opacity-60" />
+                                   </div>
+                                   <div>
+                                      <p className="text-xs font-bold text-white/80">Spread #{idx + 1}</p>
+                                      <p className="text-[9px] text-white/20 uppercase font-bold tracking-widest">Index: {sheet.orderIndex}</p>
+                                   </div>
+                                </div>
+                                <div className="text-right">
+                                   <p className="text-xs font-bold text-primary">{sheet.views || 0}</p>
+                                   <p className="text-[9px] text-white/40 font-bold uppercase">Views</p>
+                                </div>
+                             </div>
+                          ))}
+                       </div>
+                    </div>
+                  </DialogContent>
+                </Dialog>
                 {/* Admin Demo Management */}
                 {["admin@eventfold.com", "dilpreetsinghverma@gmail.com"].includes(user?.email || "") && (
                   <Dialog>
@@ -630,6 +703,37 @@ export default function Dashboard() {
           <p className="text-white/40">Manage and share your digital storytelling projects.</p>
         </div>
 
+        {/* Gallery Controls: Categories & Search */}
+        <div className="flex flex-col md:flex-row gap-6 items-center justify-between mb-12 bg-white/[0.02] border border-white/5 p-4 rounded-3xl backdrop-blur-md">
+           <div className="flex items-center gap-2 overflow-x-auto pb-2 md:pb-0 w-full md:w-auto no-scrollbar">
+              <FolderHeart className="w-4 h-4 text-primary mr-2 shrink-0 hidden md:block" />
+              {['All', ...Array.from(new Set(albums.map(a => a.category).filter(Boolean)))].map(cat => (
+                 <Button
+                    key={cat}
+                    variant={activeCategory === cat ? 'default' : 'ghost'}
+                    onClick={() => setActiveCategory(cat as string)}
+                    className={`rounded-xl px-5 h-10 text-[10px] font-black uppercase tracking-widest transition-all ${
+                       activeCategory === cat 
+                       ? 'bg-primary text-white shadow-lg shadow-primary/20' 
+                       : 'text-white/40 hover:text-white hover:bg-white/5'
+                    }`}
+                 >
+                    {cat}
+                 </Button>
+              ))}
+           </div>
+           
+           <div className="relative w-full md:w-80 group">
+              <Plus className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-white/20 group-hover:text-primary transition-colors" />
+              <Input 
+                 placeholder="SEARCH GALLERIES..." 
+                 value={searchQuery}
+                 onChange={(e) => setSearchQuery(e.target.value)}
+                 className="w-full h-11 pl-12 bg-black/40 border-white/5 rounded-2xl text-[10px] font-black uppercase tracking-widest focus:ring-primary/20 transition-all"
+              />
+           </div>
+        </div>
+
         {albums.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-32 glass rounded-[3rem] border-dashed border-white/10">
             <div className="w-20 h-20 rounded-full bg-white/5 flex items-center justify-center mb-6">
@@ -644,7 +748,12 @@ export default function Dashboard() {
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
             <AnimatePresence>
-              {albums.map((album, i) => (
+              {albums.filter(album => {
+                 const matchesCategory = activeCategory === 'All' || album.category === activeCategory;
+                 const matchesSearch = album.title.toLowerCase().includes(searchQuery.toLowerCase()) || 
+                                       (album.category?.toLowerCase() || '').includes(searchQuery.toLowerCase());
+                 return matchesCategory && matchesSearch;
+              }).map((album, i) => (
                 <AlbumCard key={album.id} album={album} index={i} />
               ))}
             </AnimatePresence>

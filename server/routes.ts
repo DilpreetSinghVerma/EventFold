@@ -533,6 +533,8 @@ export function registerRoutes(
       await db.execute(sql`ALTER TABLE albums ADD COLUMN IF NOT EXISTS is_public_demo TEXT NOT NULL DEFAULT 'false'`);
       await db.execute(sql`ALTER TABLE albums ADD COLUMN IF NOT EXISTS demo_category TEXT`);
       await db.execute(sql`ALTER TABLE albums ADD COLUMN IF NOT EXISTS bg_music_url TEXT`);
+      await db.execute(sql`ALTER TABLE albums ADD COLUMN IF NOT EXISTS category TEXT NOT NULL DEFAULT 'Uncategorized'`);
+      await db.execute(sql`ALTER TABLE albums ADD COLUMN IF NOT EXISTS total_engagement_time INTEGER NOT NULL DEFAULT 0`);
       
       // Force columns to exist in the users table
       await db.execute(sql`ALTER TABLE users ADD COLUMN IF NOT EXISTS is_verified INTEGER NOT NULL DEFAULT 0`);
@@ -541,6 +543,7 @@ export function registerRoutes(
       
       // Force columns to exist in the files table
       await db.execute(sql`ALTER TABLE files ADD COLUMN IF NOT EXISTS favorites_count INTEGER NOT NULL DEFAULT 0`);
+      await db.execute(sql`ALTER TABLE files ADD COLUMN IF NOT EXISTS views INTEGER NOT NULL DEFAULT 0`);
 
       
       console.log("DB Sync Success: Columns added/verified via SQL.");
@@ -700,6 +703,28 @@ export function registerRoutes(
       res.json(updatedAlbum);
     } catch (e) {
       res.status(500).json({ error: "Failed to update album" });
+    }
+  });
+
+  // Track Slide View (Analytics)
+  app.post("/api/files/:id/view", async (req, res) => {
+    try {
+      await storage.incrementFileViews(req.params.id);
+      res.json({ success: true });
+    } catch (e) {
+      res.status(500).json({ error: "Failed to track view" });
+    }
+  });
+
+  // Track Album Engagement (Timer)
+  app.post("/api/albums/:id/engage", async (req, res) => {
+    try {
+      const { seconds } = req.body;
+      if (typeof seconds !== 'number') return res.status(400).json({ error: "Invalid duration" });
+      await storage.incrementEngagementTime(req.params.id, seconds);
+      res.json({ success: true });
+    } catch (e) {
+      res.status(500).json({ error: "Failed to track duration" });
     }
   });
 

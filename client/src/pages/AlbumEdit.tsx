@@ -17,7 +17,8 @@ import {
   Image as ImageIcon,
   CloudUpload,
   Trash2,
-  Volume2
+  Volume2,
+  FolderHeart
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -36,6 +37,7 @@ export default function AlbumEdit() {
   const [date, setDate] = useState('');
   const [theme, setTheme] = useState('');
   const [bgMusicUrl, setBgMusicUrl] = useState('');
+  const [category, setCategory] = useState('');
 
   const musicInputRef = React.useRef<HTMLInputElement>(null);
   const [uploadingMusic, setUploadingMusic] = useState(false);
@@ -94,6 +96,7 @@ export default function AlbumEdit() {
         setDate(data.date);
         setTheme(data.theme);
         setBgMusicUrl(data.bgMusicUrl || '');
+        setCategory(data.category || 'Uncategorized');
         
         // Use files included in the main album response
         const filesData = data.files || [];
@@ -115,7 +118,7 @@ export default function AlbumEdit() {
       await fetch(`/api/albums/${id}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ title, date, theme, bgMusicUrl })
+        body: JSON.stringify({ title, date, theme, bgMusicUrl, category })
       });
 
       // 2. Update sheet order
@@ -203,6 +206,19 @@ export default function AlbumEdit() {
                         type="date"
                         value={date} 
                         onChange={(e) => setDate(e.target.value)}
+                        className="bg-white/5 border-white/10 rounded-xl h-12 pl-12 focus:border-primary/50 transition-all font-medium"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label className="text-xs text-white/40 uppercase font-bold tracking-widest">Project Category / Folder</Label>
+                    <div className="relative group">
+                      <FolderHeart className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-white/20 group-focus-within:text-primary transition-colors" />
+                      <Input 
+                        value={category} 
+                        onChange={(e) => setCategory(e.target.value)}
+                        placeholder="e.g. Wedding 2026, Pre-Wedding..."
                         className="bg-white/5 border-white/10 rounded-xl h-12 pl-12 focus:border-primary/50 transition-all font-medium"
                       />
                     </div>

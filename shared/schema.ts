@@ -35,7 +35,9 @@ export const albums = pgTable("albums", {
   expiresAt: timestamp("expires_at"), // For 7-day trials or 1-year credits
   isPublicDemo: text("is_public_demo").notNull().default('false'), // 'true' or 'false'
   demoCategory: text("demo_category"), // 'Wedding', 'Pre-Wedding', 'Birthday', etc.
+  category: text("category").notNull().default('Uncategorized'), // User-defined folders
   bgMusicUrl: text("bg_music_url"),
+  totalEngagementTime: integer("total_engagement_time").notNull().default(0), // Total seconds spent by viewers
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 
@@ -43,9 +45,10 @@ export const files = pgTable("files", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   albumId: varchar("album_id").notNull().references(() => albums.id, { onDelete: 'cascade' }),
   filePath: text("file_path").notNull(),
-  fileType: varchar("file_type", { length: 20 }).notNull(), // 'cover_front', 'cover_back', 'sheet', 'video'
+  fileType: varchar("file_type", { length: 20 }).notNull(), // 'sheet', 'video', 'cover_front', 'cover_back', 'audio'
   orderIndex: integer("order_index").notNull().default(0),
   favoritesCount: integer("favorites_count").notNull().default(0),
+  views: integer("views").notNull().default(0), // Slide-specific analytics
 });
 
 export const settings = pgTable("settings", {

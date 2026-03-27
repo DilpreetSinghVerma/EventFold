@@ -15,6 +15,8 @@ export interface IStorage {
   getFile(id: string): Promise<File | undefined>;
   deleteFilesByAlbum(albumId: string): Promise<void>;
   updateFile(id: string, data: Partial<File>): Promise<File>;
+  incrementFileViews(id: string): Promise<void>;
+  incrementEngagementTime(albumId: string, seconds: number): Promise<void>;
 
   getSettings(userId: string): Promise<any>;
   updateSettings(userId: string, data: any): Promise<void>;
@@ -195,6 +197,24 @@ export class DatabaseStorage implements IStorage {
     return row;
   }
 
+  async incrementFileViews(id: string): Promise<void> {
+    if (!db) return;
+    const file = await this.getFile(id);
+    if (!file) return;
+    await db.update(files)
+      .set({ views: (file.views || 0) + 1 })
+      .where(eq(files.id, id));
+  }
+
+  async incrementEngagementTime(albumId: string, seconds: number): Promise<void> {
+    if (!db) return;
+    const album = await this.getAlbum(albumId);
+    if (!album) return;
+    await db.update(albums)
+      .set({ totalEngagementTime: (album.totalEngagementTime || 0) + seconds })
+      .where(eq(albums.id, albumId));
+  }
+
   async getUsers(): Promise<User[]> {
     if (!db) return [];
     return await db.select().from(users).orderBy(asc(users.createdAt));
@@ -242,7 +262,9 @@ export class MemStorage implements IStorage {
       expiresAt: insertAlbum.expiresAt || null,
       isPublicDemo: insertAlbum.isPublicDemo || 'false',
       demoCategory: insertAlbum.demoCategory || null,
+      category: insertAlbum.category || 'Uncategorized',
       bgMusicUrl: insertAlbum.bgMusicUrl || null,
+      totalEngagementTime: 0,
       createdAt: new Date(),
     };
     this.albums.set(id, album);
@@ -272,6 +294,7 @@ export class MemStorage implements IStorage {
       id,
       orderIndex: insertFile.orderIndex ?? 0,
       favoritesCount: insertFile.favoritesCount ?? 0,
+      views: 0,
     };
     this.files.set(id, file);
     return file;
@@ -411,6 +434,20 @@ export class MemStorage implements IStorage {
     const updated = { ...file, ...data };
     this.files.set(id, updated);
     return updated;
+  }
+
+  async incrementFileViews(id: string): Promise<void> {
+    const file = this.files.get(id);
+    if (file) {
+      this.files.set(id, { ...file, views: (file.views || 0) + 1 });
+    }
+  }
+
+  async incrementEngagementTime(albumId: string, seconds: number): Promise<void> {
+    const album = this.albums.get(albumId);
+    if (album) {
+      this.albums.set(albumId, { ...album, totalEngagementTime: (album.totalEngagementTime || 0) + seconds });
+    }
   }
 
   async getUsers(): Promise<User[]> {

@@ -218,6 +218,22 @@ export default function Viewer() {
     fetchAndLoad();
   }, [id]);
 
+  // Analytics: Active Engagement Timer (Studio Insights)
+  useEffect(() => {
+    if (loading || !id || isShared === false) return; // Only track for actual viewers (shared links)
+    
+    const interval = setInterval(() => {
+      if (document.hidden) return;
+      fetch(`/api/albums/${id}/engage`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ seconds: 15 })
+      }).catch(() => {});
+    }, 15000);
+    
+    return () => clearInterval(interval);
+  }, [loading, id, isShared]);
+
   const [shareModalOpen, setShareModalOpen] = useState(false);
 
   // Always use the live internet viewer (Vercel) for Customer links
@@ -711,7 +727,18 @@ export default function Viewer() {
                       isMuted={isMuted}
                       isSlideshowActive={isSlideshowActive}
                       onSlideshowEnd={() => setIsSlideshowActive(false)}
-                      onPageChange={(current, total) => setPageInfo({ current, total })}
+                      onPageChange={(current, total) => {
+                        setPageInfo({ current, total });
+                        // Track spread view (Analytics)
+                        // current: 0=front, 1=lh0, 2=rh0, 3=lh1, 4=rh1... total-1=back
+                        if (current > 0 && current < total - 1) {
+                           const spreadIndex = Math.floor((current - 1) / 2);
+                           const sheetId = (loadedSheets as any)[spreadIndex * 2]?.id;
+                           if (sheetId) {
+                              fetch(`/api/files/${sheetId}/view`, { method: 'POST' }).catch(() => {});
+                           }
+                        }
+                      }}
                       audioUrl={musicUrl}
                     />
                   </div>
