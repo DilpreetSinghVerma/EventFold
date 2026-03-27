@@ -121,7 +121,7 @@ export default function Viewer() {
         [loadedFrontCover, loadedBackCover, ...loadedSheets].forEach(url => {
           if (!url) return;
           const img = new Image();
-          img.src = url;
+          img.src = typeof url === 'string' ? url : (url as any).url;
         });
       };
       

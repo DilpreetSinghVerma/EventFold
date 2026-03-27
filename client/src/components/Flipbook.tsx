@@ -1,7 +1,7 @@
 import React, { useRef, useState, useEffect, forwardRef, useImperativeHandle } from 'react';
 import HTMLFlipBook from 'react-pageflip';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ChevronLeft, ChevronRight, Volume2, VolumeX, ZoomIn, ZoomOut, RotateCcw, Maximize2, Play, Pause, MessageCircle } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Heart, Volume2, VolumeX, ZoomIn, ZoomOut, RotateCcw, Maximize2, Play, Pause, MessageCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
 interface FlipbookProps {
@@ -493,20 +493,20 @@ export const Flipbook = forwardRef(({
                           )}
 
                           {/* Favorite Heart Button */}
-                          <div className={`absolute top-6 ${isLeftHalf ? 'left-8' : 'right-8'} z-50`}>
+                          <div className={`absolute top-4 ${isLeftHalf ? 'left-6' : 'right-6'} z-50`}>
                              <motion.button
-                                whileHover={{ scale: 1.1 }}
-                                whileTap={{ scale: 0.9 }}
+                                whileHover={{ scale: 1.15 }}
+                                whileTap={{ scale: 0.85 }}
                                 onClick={handleLike}
-                                className={`w-12 h-12 rounded-full flex items-center justify-center transition-all ${
+                                className={`w-10 h-10 rounded-full flex items-center justify-center transition-all ${
                                   likedSheets[id] 
-                                    ? 'bg-red-500 text-white shadow-[0_0_20px_rgba(239,68,68,0.5)]' 
-                                    : 'bg-black/40 text-neutral-300 hover:text-white hover:bg-black/60 border border-white/10 opacity-0 group-hover:opacity-100'
+                                    ? 'bg-red-500 text-white shadow-[0_0_20px_rgba(239,68,68,0.6)]' 
+                                    : 'bg-black/30 text-white/60 hover:text-white hover:bg-black/50 border border-white/5 opacity-0 group-hover:opacity-100'
                                 }`}
                                 style={{ opacity: (window.innerWidth < 1024 || likedSheets[id]) ? 1 : undefined }}
                              >
-                                <motion.div animate={likedSheets[id] ? { scale: [1, 1.4, 1] } : {}}>
-                                   <ChevronRight className={`w-6 h-6 rotate-45 ${likedSheets[id] ? 'fill-current' : ''}`} />
+                                <motion.div animate={likedSheets[id] ? { scale: [1, 1.3, 1] } : {}}>
+                                   <Heart className={`w-5 h-5 ${likedSheets[id] ? 'fill-current' : ''}`} />
                                 </motion.div>
                              </motion.button>
                           </div>

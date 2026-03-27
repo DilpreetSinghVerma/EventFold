@@ -70,7 +70,7 @@ export default function DemoViewer() {
                 const img = new Image();
                 img.onload = resolve;
                 img.onerror = resolve;
-                img.src = url;
+                img.src = typeof url === 'string' ? url : (url as any).url;
             })));
             setLoading(false);
         };
