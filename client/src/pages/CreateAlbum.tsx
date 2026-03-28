@@ -597,13 +597,13 @@ export default function CreateAlbum() {
                 </div>
 
                 <div className="space-y-4">
-                  <div className="flex items-center justify-between">
-                    <h4 className="text-xs font-bold uppercase tracking-widest text-white/40">Queue ({formData.sheets.length})</h4>
-                    <div className="flex gap-2">
+                  <div className="flex flex-col md:flex-row items-center justify-between gap-4 mb-4">
+                    <h4 className="text-xs font-bold uppercase tracking-widest text-white/40 w-full md:w-auto">Queue ({formData.sheets.length})</h4>
+                    <div className="flex flex-wrap items-center gap-2 w-full md:w-auto">
                       <Button
                         variant="outline"
                         size="sm"
-                        className="text-xs glass border-primary/20 hover:bg-primary/10 text-primary font-bold px-4"
+                        className="text-[10px] md:text-xs glass border-primary/20 hover:bg-primary/10 text-primary font-bold px-3 md:px-4 h-10 md:h-9 flex-1 md:flex-none"
                         onClick={handleLivePreview}
                         disabled={formData.sheets.length === 0 || !formData.frontCover || isPreviewLoading}
                       >
@@ -611,7 +611,7 @@ export default function CreateAlbum() {
                         Preview Album
                       </Button>
                       {formData.sheets.length > 0 && (
-                        <div className="flex items-center gap-4 bg-white/5 px-4 py-1.5 rounded-xl border border-white/5">
+                        <div className="flex items-center gap-4 bg-white/5 px-4 py-1 rounded-xl border border-white/5 flex-1 md:flex-none justify-between md:justify-start h-10 md:h-9">
                           <div className="flex items-center gap-2">
                             <input
                               type="checkbox"
@@ -620,10 +620,10 @@ export default function CreateAlbum() {
                               onChange={(e) => setFormData(p => ({ ...p, autoCompressVideos: e.target.checked }))}
                               className="w-4 h-4 rounded border-white/20 bg-black/40 text-primary focus:ring-primary/20"
                             />
-                            <Label htmlFor="compress" className="text-[10px] font-bold uppercase tracking-widest cursor-pointer select-none">Auto-Compress for Mobile</Label>
+                            <Label htmlFor="compress" className="text-[9px] md:text-[10px] font-bold uppercase tracking-widest cursor-pointer select-none whitespace-nowrap">Auto-Compress</Label>
                           </div>
-                          <div className="w-px h-4 bg-white/10" />
-                          <Button variant="ghost" size="sm" className="text-xs text-destructive hover:bg-destructive/10 h-6 px-2" onClick={() => setFormData(p => ({ ...p, sheets: [] }))}>Clear All</Button>
+                          <div className="w-px h-4 bg-white/10 hidden md:block" />
+                          <Button variant="ghost" size="sm" className="text-[10px] text-destructive hover:bg-destructive/10 h-6 px-2" onClick={() => setFormData(p => ({ ...p, sheets: [] }))}>Clear</Button>
                         </div>
                       )}
                     </div>
@@ -723,15 +723,15 @@ export default function CreateAlbum() {
                   </div>
                 </div>
 
-                <div className="pt-10 flex justify-between items-center border-t border-white/5">
-                  <Button variant="ghost" className="rounded-xl h-14 px-8 text-muted-foreground" onClick={() => setStep(1)}>Prerequisites</Button>
+                <div className="pt-10 flex flex-col md:flex-row gap-4 justify-between items-center border-t border-white/5">
+                  <Button variant="ghost" className="rounded-xl h-14 px-8 text-muted-foreground w-full md:w-auto" onClick={() => setStep(1)}>Prerequisites</Button>
                   <Button
                     onClick={handleSubmit}
                     disabled={formData.sheets.length === 0 || loading}
-                    className="h-16 rounded-[1.25rem] px-14 text-lg bg-primary hover:bg-primary/90 text-white font-bold shadow-xl shadow-primary/20 transition-all hover:scale-105 active:scale-95"
+                    className="h-16 rounded-[1.25rem] px-14 text-lg bg-primary hover:bg-primary/90 text-white font-bold shadow-xl shadow-primary/20 transition-all hover:scale-105 active:scale-95 w-full md:w-auto"
                   >
                     {loading ? <Loader2 className="w-6 h-6 animate-spin mr-3" /> : null}
-                    {loading ? status || 'Processing...' : 'Finalize Generation'}
+                    {loading ? status || 'Processing...' : 'Stream to Showcase'}
                   </Button>
                 </div>
               </motion.div>
@@ -808,7 +808,7 @@ export default function CreateAlbum() {
 
             <div className="flex-1 w-full relative">
               <Flipbook
-                sheets={previewSheets}
+                sheets={previewSheets.map((url, i) => ({ id: `preview-${i}`, url }))}
                 frontCover={previewFront}
                 backCover={previewBack}
                 title={formData.title || "Studio Draft"}
