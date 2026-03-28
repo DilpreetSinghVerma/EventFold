@@ -417,11 +417,10 @@ export const Flipbook = forwardRef(({
                 }
                 if (page.type === 'sheet') {
                   const isLeftHalf = (index - 1) % 2 === 0;
-                  const isCurrent = Math.abs(index - currentPage) <= 1;
-                  const driftAnimate = isCurrent && !isFlipping ? {
-                    scale: [1, 1.04],
-                    x: [0, isLeftHalf ? -10 : 10],
-                    y: [0, -5]
+                  const driftAnimate = isSlideshowActive && !isFlipping ? {
+                    scale: [1, 1.05],
+                    x: [0, isLeftHalf ? -20 : 20],
+                    y: [0, 8]
                   } : { scale: 1, x: 0, y: 0 };
 
                   return (
@@ -441,9 +440,8 @@ export const Flipbook = forwardRef(({
                             src={page.image}
                             alt="sheet"
                             loading="eager"
-                            initial={false}
                             animate={driftAnimate}
-                            transition={{ duration: 15, repeat: Infinity, repeatType: "reverse", ease: "linear" }}
+                            transition={{ duration: 10, repeat: Infinity, repeatType: "reverse", ease: "easeInOut" }}
                             style={{
                               width: '100%',
                               height: '100%',

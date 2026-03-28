@@ -626,8 +626,14 @@ export function registerRoutes(
   app.get("/api/studios/:userId/albums", async (req, res) => {
     try {
       const { userId } = req.params;
-      const albums = await storage.getAlbumsByUser(userId);
-      res.json(albums);
+      const userAlbums = await storage.getAlbumsByUser(userId);
+      const albumsWithFiles = await Promise.all(
+        userAlbums.map(async (album: any) => {
+          const files = await storage.getFilesByAlbum(album.id);
+          return { ...album, files };
+        })
+      );
+      res.json(albumsWithFiles);
     } catch (e) {
       res.status(500).json({ error: "Failed to fetch studio albums" });
     }

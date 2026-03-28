@@ -51,6 +51,17 @@ export default function Portfolio() {
 
   const categories = ['All', ...Array.from(new Set(albums.map((a: any) => a.category).filter(Boolean)))];
 
+  const getUrl = (path: string) => {
+    if (!path) return '';
+    return (path.startsWith('/') || path.startsWith('http')) ? path : `/${path}`;
+  };
+
+  const optimizeCloudinary = (url: string, width?: number) => {
+    if (!url || !url.includes('cloudinary.com')) return url;
+    if (width) return url.replace('/upload/', `/upload/w_${width},c_limit,q_auto,f_auto/`);
+    return url.replace('/upload/', '/upload/q_auto,f_auto/');
+  };
+
   return (
     <div className="min-h-screen bg-[#030303] text-white selection:bg-primary/30">
       {/* Decorative Elements */}
@@ -66,7 +77,7 @@ export default function Portfolio() {
             className="w-24 h-24 rounded-3xl bg-white/5 border border-white/10 p-4 mb-8 backdrop-blur-3xl"
           >
             {studio?.logo ? (
-              <img src={studio.logo} alt={studio.name} className="w-full h-full object-contain" />
+              <img src={optimizeCloudinary(getUrl(studio.logo))} alt={studio.name} className="w-full h-full object-contain" />
             ) : (
               <div className="w-full h-full flex items-center justify-center text-primary">
                 <Sparkles className="w-10 h-10" />
@@ -151,6 +162,8 @@ export default function Portfolio() {
             <AnimatePresence>
               {filteredAlbums.map((album, idx) => {
                 const cover = album.files?.find((f: any) => f.fileType === 'cover_front')?.filePath;
+                const coverUrl = optimizeCloudinary(getUrl(cover), 800);
+
                 return (
                   <motion.div
                     key={album.id}
@@ -163,7 +176,7 @@ export default function Portfolio() {
                         {/* Artwork */}
                         <div className="absolute inset-0">
                           {cover ? (
-                            <img src={cover} className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110 opacity-60 group-hover:opacity-100" />
+                            <img src={coverUrl} className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110 opacity-60 group-hover:opacity-100" />
                           ) : (
                             <div className="w-full h-full bg-white/[0.02]" />
                           )}
