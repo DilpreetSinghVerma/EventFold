@@ -2,7 +2,7 @@ import { Link } from 'wouter';
 import { Card, CardContent, CardFooter } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Plus, QrCode, Eye, EyeOff, Trash2, LayoutGrid, Calendar, LogOut, Settings as SettingsIcon, Lock, Loader2, Sparkles, User as UserIcon, Crown, Copy, Download, Share2, Check, ShieldAlert, BarChart3, FolderHeart, ChevronDown, Clock, Activity, TrendingUp, ExternalLink } from 'lucide-react';
+import { Plus, QrCode, Eye, Trash2, LayoutGrid, Calendar, LogOut, Settings as SettingsIcon, Lock, Loader2, Sparkles, User as UserIcon, Crown, Copy, Download, Share2, Check, ShieldAlert, BarChart3, FolderHeart, ChevronDown, Clock, Activity, TrendingUp } from 'lucide-react';
 import { QRCodeSVG } from 'qrcode.react';
 import { Badge } from '@/components/ui/badge';
 import { useState, useEffect } from 'react';
@@ -90,20 +90,6 @@ export default function Dashboard() {
     }
   };
 
-  const togglePortfolioVisibility = async (id: string, current: number) => {
-    try {
-      const response = await fetch(`/api/albums/${id}/portfolio-status`, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ showInPortfolio: current === 1 ? 0 : 1 })
-      });
-      if (response.ok) {
-        fetchAlbums();
-      }
-    } catch (e) {
-      alert('Failed to update portfolio status');
-    }
-  };
 
   const AlbumCard = ({ album, index }: { album: any, index: number }) => {
     const frontCover = album.files?.find((f: any) => f.fileType === 'cover_front')?.filePath;
@@ -147,23 +133,12 @@ export default function Dashboard() {
                     <Eye className="w-4 h-4 mr-2" /> Open
                   </Button>
                 </Link>
-                <Link href={`/album/${album.id}/edit`}>
+                 <Link href={`/album/${album.id}/edit`}>
                   <Button variant="secondary" size="icon" className="w-11 h-11 rounded-xl glass border-none hover:bg-white/20 transition-all">
                     <SettingsIcon className="w-4 h-4" />
                   </Button>
                 </Link>
                 
-                {/* Insights Portal */}
-                <Button 
-                  variant="secondary" 
-                  size="icon" 
-                  onClick={() => togglePortfolioVisibility(album.id, album.showInPortfolio)}
-                  className={`w-11 h-11 rounded-xl glass border-none transition-all ${album.showInPortfolio === 1 ? 'text-primary bg-primary/20' : 'text-white/40 hover:text-white'}`}
-                  title={album.showInPortfolio === 1 ? "Listed in Studio Portfolio" : "Hidden from Studio Portfolio"}
-                >
-                  {album.showInPortfolio === 1 ? <Eye className="w-4 h-4" /> : <EyeOff className="w-4 h-4" />}
-                </Button>
-
                 <Dialog>
                   <DialogTrigger asChild>
                     <Button variant="secondary" size="icon" className="w-11 h-11 rounded-xl glass border-none hover:bg-primary/20 hover:text-primary transition-all">
@@ -593,12 +568,6 @@ export default function Dashboard() {
                 <SettingsIcon className="w-4 h-4 mr-2" /> Settings
               </Button>
             </Link>
-            <Link href={`/portfolio/${user?.id}`} target="_blank">
-              <Button variant="ghost" className="rounded-xl text-primary font-bold bg-primary/10 border border-primary/20 hover:bg-primary/20 group">
-                <ExternalLink className="w-4 h-4 mr-2 group-hover:scale-110 transition-transform" /> My Studio Portfolio
-              </Button>
-            </Link>
-
             <ContactModal>
               <Button variant="ghost" className="rounded-xl text-white/40 hover:text-white glass border-none">
                 Support

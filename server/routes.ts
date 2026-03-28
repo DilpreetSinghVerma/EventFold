@@ -615,48 +615,6 @@ export function registerRoutes(
     }
   });
 
-  // Studio Portfolio: Get Studio Details
-  app.get("/api/studios/:userId", async (req, res) => {
-    try {
-      const { userId } = req.params;
-      const studioSettings = await storage.getSettings(userId);
-      const user = await storage.getUser(userId);
-      
-      if (!studioSettings || !user) {
-        return res.status(404).json({ error: "Studio not found" });
-      }
-
-      res.json({
-        name: studioSettings.businessName,
-        logo: studioSettings.businessLogo,
-        whatsapp: studioSettings.contactWhatsApp,
-        owner: user.name,
-      });
-    } catch (e) {
-      res.status(500).json({ error: "Failed to fetch studio details" });
-    }
-  });
-
-  // Studio Portfolio: Get Public Albums
-  app.get("/api/studios/:userId/albums", async (req, res) => {
-    try {
-      const { userId } = req.params;
-      const userAlbums = await storage.getAlbumsByUser(userId);
-      // Only return albums where show_in_portfolio is 1 (Active)
-      const publicPortfolioAlbums = userAlbums.filter((a: any) => a.showInPortfolio === 1);
-      
-      const albumsWithFiles = await Promise.all(
-        publicPortfolioAlbums.map(async (album: any) => {
-          const files = await storage.getFilesByAlbum(album.id);
-          return { ...album, files };
-        })
-      );
-      res.json(albumsWithFiles);
-    } catch (e) {
-      res.status(500).json({ error: "Failed to fetch studio albums" });
-    }
-  });
-
   // Admin: Get all albums across platform
   app.get("/api/admin/albums", async (req, res) => {
     try {

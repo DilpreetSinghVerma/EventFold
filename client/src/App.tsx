@@ -20,7 +20,6 @@ import Admin from "@/pages/Admin";
 import About from "@/pages/About";
 import FAQ from "@/pages/FAQ";
 import AlbumEdit from "@/pages/AlbumEdit";
-import Portfolio from "@/pages/Portfolio";
 import ScrollToTop from "@/components/ScrollToTop";
 
 import { AuthProvider, useAuth } from "@/lib/auth";
@@ -56,7 +55,6 @@ function Router() {
 
 
       <Route path="/album/:id" component={Viewer} />
-      <Route path="/portfolio/:userId" component={Portfolio} />
       <Route path="/album/:id/edit">
         {user ? (user.isVerified === 1 ? <AlbumEdit /> : <Redirect to="/verify" />) : <Redirect to="/login" />}
       </Route>
