@@ -462,25 +462,23 @@ export default function Dashboard() {
             </div>
           </div>
 
-          <CardContent className="pt-6 relative">
-            <div className="flex items-center justify-between mb-2">
-              <h3 className="text-xl font-bold group-hover:text-primary transition-colors truncate flex-1">{album.title}</h3>
-              <div className="flex flex-col items-end gap-1.5">
-                <div className="flex items-center gap-1.5 px-2 py-1 bg-primary/10 border border-primary/20 rounded-lg text-[10px] font-bold text-primary animate-pulse shadow-sm">
-                  <Eye className="w-3 h-3" />
-                  {album.views || 0}
-                </div>
-                {album.expiresAt && (
-                  <div className="flex items-center gap-1 px-2 py-0.5 bg-red-500/10 border border-red-500/20 rounded-md text-[8px] font-black text-red-500 uppercase tracking-tighter">
-                    <Lock className="w-2 h-2" />
-                    Expires in {Math.ceil((new Date(album.expiresAt).getTime() - Date.now()) / (1000 * 60 * 60 * 24))}d
-                  </div>
-                )}
+          <CardContent className="pt-4 lg:pt-6 px-4 lg:px-6 relative">
+            <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-2 lg:gap-4 mb-2">
+              <h3 className="text-xs lg:text-xl font-bold group-hover:text-primary transition-colors truncate lg:flex-1">{album.title}</h3>
+              <div className="flex items-center gap-1.5 px-2 py-0.5 lg:py-1 bg-primary/10 border border-primary/20 rounded-lg text-[9px] lg:text-[10px] font-bold text-primary animate-pulse shadow-sm w-fit">
+                <Eye className="w-3 h-3" />
+                {album.views || 0}
               </div>
             </div>
-            <div className="flex items-center text-xs text-white/40 uppercase tracking-widest font-medium">
-              <Calendar className="w-3 h-3 mr-2" />
-              {new Date(album.date).toLocaleDateString(undefined, { month: 'long', year: 'numeric' })}
+            {album.expiresAt && (
+              <div className="flex items-center gap-1 px-2 py-0.5 bg-red-500/10 border border-red-500/20 rounded-md text-[8px] font-black text-red-500 uppercase tracking-tighter w-fit mb-2">
+                <Lock className="w-2 h-2" />
+                {Math.ceil((new Date(album.expiresAt).getTime() - Date.now()) / (1000 * 60 * 60 * 24))}d Left
+              </div>
+            )}
+            <div className="flex items-center text-[9px] lg:text-xs text-white/40 uppercase tracking-widest font-medium">
+              <Calendar className="w-3 h-3 mr-2 hidden lg:block" />
+              {new Date(album.date).toLocaleDateString(undefined, { month: 'short', year: 'numeric' })}
             </div>
           </CardContent>
 
@@ -519,14 +517,14 @@ export default function Dashboard() {
             </div>
           </Link>
 
-          <div className="flex items-center gap-6">
+          <div className="flex items-center gap-2 md:gap-6 overflow-x-auto no-scrollbar py-2">
             {dbConnected === false && (
-              <div className="hidden md:flex flex-col items-end">
+              <div className="flex flex-col items-end shrink-0">
                 <Dialog>
                   <DialogTrigger asChild>
-                    <button className="flex items-center gap-2 px-4 py-2 bg-destructive/10 border border-destructive/20 rounded-full text-destructive text-[10px] font-bold hover:bg-destructive/20 transition-colors cursor-help">
-                      <div className="w-2 h-2 rounded-full bg-destructive" />
-                      OFFLINE MODE
+                    <button className="flex items-center gap-2 px-3 py-1.5 md:px-4 md:py-2 bg-destructive/10 border border-destructive/20 rounded-full text-destructive text-[8px] md:text-[10px] font-bold hover:bg-destructive/20 transition-colors cursor-help">
+                      <div className="w-1.5 h-1.5 md:w-2 md:h-2 rounded-full bg-destructive" />
+                      OFFLINE
                     </button>
                   </DialogTrigger>
                   <DialogContent className="sm:max-w-md bg-[#0a0a0b] border-white/10 text-white rounded-3xl">
@@ -551,33 +549,34 @@ export default function Dashboard() {
                     </div>
                   </DialogContent>
                 </Dialog>
-                <span className="text-[10px] text-white/20 mt-1 uppercase">Local only · Add DATABASE_URL for Mobile</span>
               </div>
             )}
+
             {dbConnected === true && (
-              <div className="hidden md:flex flex-col items-end">
-                <div className="flex items-center gap-2 px-4 py-2 bg-primary/10 border border-primary/20 rounded-full text-primary text-[10px] font-bold">
-                  <div className="w-2 h-2 rounded-full bg-primary animate-pulse" />
-                  CLOUD SYNC ACTIVE
+              <div className="flex flex-col items-end shrink-0">
+                <div className="flex items-center gap-2 px-3 py-1.5 md:px-4 md:py-2 bg-primary/10 border border-primary/20 rounded-full text-primary text-[8px] md:text-[10px] font-bold">
+                  <div className="w-1.5 h-1.5 md:w-2 md:h-2 rounded-full bg-primary animate-pulse" />
+                  CLOUD
                 </div>
-                <span className="text-[10px] text-white/20 mt-1 uppercase">Ready for Mobile QR Sharing</span>
               </div>
             )}
+
             <Link href="/settings">
-              <Button variant="ghost" className="rounded-xl text-white/40 hover:text-white glass border-none">
-                <SettingsIcon className="w-4 h-4 mr-2" /> Settings
+              <Button variant="ghost" className="rounded-xl text-white/40 hover:text-white glass border-none shrink-0 h-9 px-3 text-[10px] uppercase font-bold">
+                <SettingsIcon className="w-3.5 h-3.5 mr-2" /> Settings
               </Button>
             </Link>
+
             <ContactModal>
-              <Button variant="ghost" className="rounded-xl text-white/40 hover:text-white glass border-none">
+              <Button variant="ghost" className="rounded-xl text-white/40 hover:text-white glass border-none shrink-0 h-9 px-3 text-[10px] uppercase font-bold">
                 Support
               </Button>
             </ContactModal>
             
             {isAdmin && (
               <Link href="/admin">
-                <Button variant="ghost" className="rounded-xl text-primary font-bold bg-primary/10 border border-primary/20 hover:bg-primary/20 group">
-                  <ShieldAlert className="w-4 h-4 mr-2 group-hover:scale-110 transition-transform" /> Command Center
+                <Button variant="ghost" className="rounded-xl text-primary font-bold bg-primary/10 border border-primary/20 hover:bg-primary/20 shrink-0 h-9 px-3 text-[10px] uppercase">
+                  Terminal
                 </Button>
               </Link>
             )}
@@ -585,24 +584,25 @@ export default function Dashboard() {
             {isAdmin && (
               <Button
                 variant="ghost"
-                className="rounded-xl text-primary/60 hover:text-primary glass border-none group"
+                className="rounded-xl text-primary/60 hover:text-primary glass border-none shrink-0 h-9 px-3 text-[10px] uppercase font-bold"
                 onClick={async () => {
-                  if (window.confirm("SYNC DATABASE STRUCTURE?\n\nThis will update your database columns to match the latest features. Use this if you see errors when creating albums.")) {
+                  if (window.confirm("SYNC DATABASE STRUCTURE?\n\nThis will update your database columns to match the latest features.")) {
                     const res = await fetch('/api/admin/db-sync', { method: 'POST' });
-                    if (res.ok) alert("Database synced successfully! You can now upload albums with Demo categories.");
-                    else alert("Sync failed. Check if DATABASE_URL is set in Vercel.");
+                    if (res.ok) alert("Synced!");
                   }
                 }}
               >
-                <Sparkles className="w-4 h-4 mr-2 group-hover:rotate-180 transition-transform" /> Sync DB
+                Sync DB
               </Button>
             )}
-            <Button onClick={() => logout()} variant="ghost" className="rounded-xl text-white/40 hover:text-red-400 glass border-none group">
-              <LogOut className="w-4 h-4 mr-2 group-hover:rotate-180 transition-transform" /> Sign Out
+
+            <Button onClick={() => logout()} variant="ghost" className="rounded-xl text-white/40 hover:text-red-400 glass border-none shrink-0 h-9 px-3 text-[10px] uppercase font-bold">
+              Sign Out
             </Button>
+
             <Link href="/create">
-              <Button className="rounded-xl px-6 bg-primary hover:bg-primary/90 text-white shadow-lg shadow-primary/20">
-                <Plus className="w-4 h-4 mr-2" /> New Album
+              <Button className="rounded-xl px-4 md:px-6 bg-primary hover:bg-primary/90 text-white shadow-lg shadow-primary/20 shrink-0 h-9 text-[10px] uppercase font-bold">
+                <Plus className="w-3.5 h-3.5 mr-2" /> New Album
               </Button>
             </Link>
           </div>
@@ -746,7 +746,7 @@ export default function Dashboard() {
             </Link>
           </div>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+          <div className="grid grid-cols-2 lg:grid-cols-3 gap-4 md:gap-8 pb-32 w-full">
             <AnimatePresence>
               {albums.filter(album => {
                  const matchesCategory = activeCategory === 'All' || album.category === activeCategory;
