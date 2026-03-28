@@ -37,6 +37,7 @@ export const albums = pgTable("albums", {
   demoCategory: text("demo_category"), // 'Wedding', 'Pre-Wedding', 'Birthday', etc.
   category: text("category").notNull().default('Uncategorized'), // User-defined folders
   bgMusicUrl: text("bg_music_url"),
+  showInPortfolio: integer("show_in_portfolio").notNull().default(0), // 0: Hide, 1: Show in Studio Gallery
   totalEngagementTime: integer("total_engagement_time").notNull().default(0), // Total seconds spent by viewers
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });

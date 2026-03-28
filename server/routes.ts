@@ -535,6 +535,7 @@ export function registerRoutes(
       await db.execute(sql`ALTER TABLE albums ADD COLUMN IF NOT EXISTS bg_music_url TEXT`);
       await db.execute(sql`ALTER TABLE albums ADD COLUMN IF NOT EXISTS category TEXT NOT NULL DEFAULT 'Uncategorized'`);
       await db.execute(sql`ALTER TABLE albums ADD COLUMN IF NOT EXISTS total_engagement_time INTEGER NOT NULL DEFAULT 0`);
+      await db.execute(sql`ALTER TABLE albums ADD COLUMN IF NOT EXISTS show_in_portfolio INTEGER NOT NULL DEFAULT 0`);
       
       // Force columns to exist in the users table
       await db.execute(sql`ALTER TABLE users ADD COLUMN IF NOT EXISTS is_verified INTEGER NOT NULL DEFAULT 0`);
@@ -600,6 +601,20 @@ export function registerRoutes(
     }
   });
 
+  // Album: Toggle Portfolio Visibility
+  app.patch("/api/albums/:id/portfolio-status", async (req, res) => {
+    try {
+      if (!req.isAuthenticated()) return res.status(401).json({ error: "Unauthorized" });
+      const { showInPortfolio } = req.body;
+      const album = await storage.updateAlbum(req.params.id, { 
+        showInPortfolio: showInPortfolio ? 1 : 0
+      });
+      res.json(album);
+    } catch (e) {
+      res.status(500).json({ error: "Failed to update portfolio visibility" });
+    }
+  });
+
   // Studio Portfolio: Get Studio Details
   app.get("/api/studios/:userId", async (req, res) => {
     try {
@@ -627,8 +642,11 @@ export function registerRoutes(
     try {
       const { userId } = req.params;
       const userAlbums = await storage.getAlbumsByUser(userId);
+      // Only return albums where show_in_portfolio is 1 (Active)
+      const publicPortfolioAlbums = userAlbums.filter((a: any) => a.showInPortfolio === 1);
+      
       const albumsWithFiles = await Promise.all(
-        userAlbums.map(async (album: any) => {
+        publicPortfolioAlbums.map(async (album: any) => {
           const files = await storage.getFilesByAlbum(album.id);
           return { ...album, files };
         })
