@@ -124,30 +124,34 @@ export default function Dashboard() {
             </div>
 
             {/* Overlay */}
-            <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/40 to-transparent opacity-80 lg:opacity-60 lg:group-hover:opacity-80 transition-opacity" />
+            <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/60 to-transparent opacity-80 lg:opacity-60 lg:group-hover:opacity-80 transition-opacity" />
 
-            <div className="absolute inset-0 flex flex-col justify-end p-6 translate-y-0 lg:translate-y-4 lg:group-hover:translate-y-0 transition-transform duration-500">
-              <div className="flex gap-2 opacity-100 lg:opacity-0 lg:group-hover:opacity-100 transition-opacity duration-300 delay-100">
-                <Link href={`/album/${album.id}`} className="flex-1">
-                  <Button className="w-full h-11 rounded-xl bg-white text-black hover:bg-white/90 font-bold active:scale-95 transition-transform">
-                    <Eye className="w-4 h-4 mr-2" /> Open
+            <div className="absolute inset-0 flex flex-col justify-end p-3 lg:p-6 translate-y-0 lg:translate-y-4 lg:group-hover:translate-y-0 transition-transform duration-500 overflow-hidden">
+              <div className="flex flex-col gap-2 opacity-100 lg:opacity-0 lg:group-hover:opacity-100 transition-opacity duration-300 delay-100">
+                <Link href={`/album/${album.id}`} className="w-full">
+                  <Button className="w-full h-10 lg:h-11 rounded-xl bg-white text-black hover:bg-white/90 font-bold active:scale-95 transition-transform text-[11px] lg:text-sm shadow-xl">
+                    <Eye className="w-4 h-4 mr-2" /> Open Album
                   </Button>
                 </Link>
-                <Link href={`/album/${album.id}/edit`}>
-                  <Button variant="secondary" size="icon" className="w-11 h-11 rounded-xl glass border-none hover:bg-white/20 active:scale-95 transition-all">
-                    <SettingsIcon className="w-4 h-4" />
-                  </Button>
-                </Link>
-                
-                <Dialog>
-                  <DialogTrigger asChild>
-                    <Button variant="secondary" size="icon" className="w-11 h-11 rounded-xl glass border-none hover:bg-primary/20 hover:text-primary transition-all">
-                      <BarChart3 className="w-4 h-4" />
+
+                <div className="flex items-center gap-1.5 lg:gap-2">
+                  <Link href={`/album/${album.id}/edit`} className="flex-1">
+                    <Button variant="secondary" size="icon" title="Edit Album" className="w-full h-10 lg:h-11 rounded-xl glass border-none hover:bg-white/20 active:scale-95 transition-all flex items-center justify-center gap-1">
+                      <SettingsIcon className="w-3.5 h-3.5" />
+                      <span className="text-[8px] font-black uppercase tracking-tighter hidden lg:inline">Edit</span>
                     </Button>
-                  </DialogTrigger>
-                  <DialogContent className="max-w-2xl bg-[#0a0a0b] border-white/10 text-white rounded-[2rem] p-8">
-                    <DialogHeader className="mb-8">
-                      <div className="flex items-center gap-3">
+                  </Link>
+
+                  <Dialog>
+                    <DialogTrigger asChild>
+                      <Button variant="secondary" size="icon" title="View Analytics" className="flex-1 h-10 lg:h-11 rounded-xl glass border-none hover:bg-primary/20 hover:text-primary active:scale-95 transition-all flex items-center justify-center gap-1">
+                        <BarChart3 className="w-3.5 h-3.5" />
+                        <span className="text-[8px] font-black uppercase tracking-tighter hidden lg:inline">Stats</span>
+                      </Button>
+                    </DialogTrigger>
+                    <DialogContent className="max-w-2xl bg-[#0a0a0b] border-white/10 text-white rounded-[2rem] p-6 lg:p-8">
+                      <DialogHeader className="mb-6 lg:mb-8">
+                        <div className="flex items-center gap-3">
                          <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center text-primary">
                             <TrendingUp className="w-5 h-5" />
                          </div>
@@ -461,6 +465,7 @@ export default function Dashboard() {
               </div>
             </div>
           </div>
+        </div>
 
           <CardContent className="pt-4 lg:pt-6 px-4 lg:px-6 relative">
             <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-2 lg:gap-4 mb-2">
