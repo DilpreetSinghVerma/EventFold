@@ -124,17 +124,17 @@ export default function Dashboard() {
             </div>
 
             {/* Overlay */}
-            <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent opacity-60 group-hover:opacity-80 transition-opacity" />
+            <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/40 to-transparent opacity-80 lg:opacity-60 lg:group-hover:opacity-80 transition-opacity" />
 
-            <div className="absolute inset-0 flex flex-col justify-end p-6 translate-y-4 group-hover:translate-y-0 transition-transform duration-500">
-              <div className="flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300 delay-100">
+            <div className="absolute inset-0 flex flex-col justify-end p-6 translate-y-0 lg:translate-y-4 lg:group-hover:translate-y-0 transition-transform duration-500">
+              <div className="flex gap-2 opacity-100 lg:opacity-0 lg:group-hover:opacity-100 transition-opacity duration-300 delay-100">
                 <Link href={`/album/${album.id}`} className="flex-1">
-                  <Button className="w-full h-11 rounded-xl bg-white text-black hover:bg-white/90 font-bold">
+                  <Button className="w-full h-11 rounded-xl bg-white text-black hover:bg-white/90 font-bold active:scale-95 transition-transform">
                     <Eye className="w-4 h-4 mr-2" /> Open
                   </Button>
                 </Link>
-                 <Link href={`/album/${album.id}/edit`}>
-                  <Button variant="secondary" size="icon" className="w-11 h-11 rounded-xl glass border-none hover:bg-white/20 transition-all">
+                <Link href={`/album/${album.id}/edit`}>
+                  <Button variant="secondary" size="icon" className="w-11 h-11 rounded-xl glass border-none hover:bg-white/20 active:scale-95 transition-all">
                     <SettingsIcon className="w-4 h-4" />
                   </Button>
                 </Link>
