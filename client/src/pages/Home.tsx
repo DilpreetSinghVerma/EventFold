@@ -422,8 +422,8 @@ export default function Home() {
             {/* Yearly */}
             <div className="glass p-8 rounded-[2.5rem] border-white/5 relative overflow-hidden group hover:border-primary/20 transition-all duration-500">
               <div className="space-y-6">
-                <span className="text-[10px] font-bold uppercase tracking-[0.3em] text-white/40">Agency Special</span>
-                <h3 className="text-2xl font-bold">Elite Agency</h3>
+                <span className="text-[10px] font-bold uppercase tracking-[0.3em] text-white/40">Labs Special</span>
+                <h3 className="text-2xl font-bold">Elite Labs</h3>
                 <div className="flex flex-col mb-4">
                   <div className="flex items-baseline gap-2">
                     <span className="text-4xl font-display font-bold text-white">₹899</span>

@@ -29,7 +29,7 @@ const faqs = [
   },
   {
     question: "Can I use my own brand logo?",
-    answer: "Absolutely! Our Elite Studio and Agency plans allow you to upload your own professional logo, which will then appear on the viewer for all your albums, ensuring your brand stays front and center.",
+    answer: "Absolutely! Our Elite Studio and Elite Labs plans allow you to upload your own professional logo, which will then appear on the viewer for all your albums, ensuring your brand stays front and center.",
     icon: <Smartphone className="w-5 h-5" />
   },
   {
@@ -39,7 +39,7 @@ const faqs = [
   },
   {
     question: "What are the pricing models?",
-    answer: "We offer a flexible pay-as-you-go model at ₹49 per album, a Monthly Unlimited plan at ₹199 for high-volume studios, and a Yearly Elite plan at ₹899 for the best value. All plans include lifetime hosting.",
+    answer: "We offer a flexible pay-as-you-go model at ₹49 per album, a Monthly Unlimited plan at ₹199 for high-volume studios, and a Yearly Elite Labs plan at ₹899 for the best value. All plans include lifetime hosting.",
     icon: <CreditCard className="w-5 h-5" />
   }
 ];

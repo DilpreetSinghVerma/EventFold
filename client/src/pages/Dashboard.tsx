@@ -664,7 +664,7 @@ export default function Dashboard() {
                     <div>
                       <div className="text-[10px] font-bold tracking-tight uppercase opacity-50 mb-0.5">Active Premium Tier</div>
                       <div className="flex items-center gap-2 font-black leading-none uppercase">
-                        {user?.plan === 'elite' ? 'SUPREME ELITE' : 'STORYTELLER PRO'} UNLIMITED
+                        {user?.plan === 'elite' ? 'ELITE LABS' : 'STORYTELLER PRO'} UNLIMITED
                         <span className="px-1.5 py-0.5 rounded-md bg-primary text-white text-[8px] animate-pulse">ACTIVE</span>
                       </div>
                       {user?.subscriptionExpiresAt && (
