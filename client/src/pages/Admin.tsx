@@ -378,7 +378,7 @@ export default function Admin() {
                             </Button>
                           </TableCell>
                           <TableCell className="text-right flex items-center justify-end gap-2">
-                            <Link href={`/viewer/${a.id}`}>
+                            <Link href={`/album/${a.id}`}>
                               <Button variant="ghost" size="icon" className="hover:text-primary"><Eye className="w-4 h-4" /></Button>
                             </Link>
                             <Button 
