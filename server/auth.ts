@@ -7,7 +7,8 @@ import { storage } from "./storage";
 import { type User } from "../shared/schema";
 import { scrypt, randomBytes, timingSafeEqual } from "crypto";
 import { promisify } from "util";
-import { sendVerificationEmail } from "./lib/email";
+import { sendVerificationEmail, sendPasswordResetEmail } from "./lib/email";
+
 
 
 const scryptAsync = promisify(scrypt);
@@ -270,6 +271,46 @@ export function setupAuth(app: Express) {
         }
         res.json({ success: true, message: "New code sent" });
     });
+
+    // Forgot Password - Send OTP
+    app.post("/api/auth/forgot-password", async (req, res) => {
+        const { email } = req.body;
+        if (!email) return res.status(400).json({ error: "Email is required" });
+
+        const user = await storage.getUserByEmail(email.toLowerCase().trim());
+        if (!user) {
+            // Return success even if user doesn't exist for security (avoid enumeration)
+            return res.json({ success: true, message: "If an account exists, a reset code has been sent." });
+        }
+
+        const otp = Math.floor(100000 + Math.random() * 900000).toString();
+        await storage.updateUser(user.id, { verificationCode: otp });
+        await sendPasswordResetEmail(user.email, otp);
+
+        res.json({ success: true, message: "Reset code sent to your email." });
+    });
+
+    // Reset Password - Verify OTP & Change
+    app.post("/api/auth/reset-password", async (req, res) => {
+        const { email, code, newPassword } = req.body;
+        if (!email || !code || !newPassword) {
+            return res.status(400).json({ error: "All fields are required" });
+        }
+
+        const user = await storage.getUserByEmail(email.toLowerCase().trim());
+        if (!user || user.verificationCode !== code) {
+            return res.status(400).json({ error: "Invalid email or reset code" });
+        }
+
+        const hashedPassword = await hashPassword(newPassword);
+        await storage.updateUser(user.id, { 
+            password: hashedPassword, 
+            verificationCode: null 
+        });
+
+        res.json({ success: true, message: "Password updated successfully. Please login." });
+    });
+
 
     app.get("/api/auth/me", (req, res) => {
 

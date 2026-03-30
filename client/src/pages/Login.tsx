@@ -16,6 +16,10 @@ export default function Login() {
     const [password, setPassword] = useState("");
     const [name, setName] = useState("");
     const [loading, setLoading] = useState(false);
+    const [resetMode, setResetMode] = useState<'none' | 'forgot' | 'reset'>('none');
+    const [resetEmail, setResetEmail] = useState("");
+    const [resetCode, setResetCode] = useState("");
+    const [newPassword, setNewPassword] = useState("");
 
     const handleGoogleLogin = () => {
         window.location.href = "/api/auth/google";
@@ -50,6 +54,53 @@ export default function Login() {
             }
         } catch (err) {
             toast({ variant: "destructive", title: "Error", description: "Something went wrong. Please try again." });
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const handleForgotPassword = async (e: React.FormEvent) => {
+        e.preventDefault();
+        setLoading(true);
+        try {
+            const res = await fetch("/api/auth/forgot-password", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ email: resetEmail }),
+            });
+            const data = await res.json();
+            if (res.ok) {
+                toast({ title: "Code Sent", description: data.message });
+                setResetMode('reset');
+            } else {
+                toast({ variant: "destructive", title: "Error", description: data.error });
+            }
+        } catch (err) {
+            toast({ variant: "destructive", title: "Error", description: "Request failed." });
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const handleResetPassword = async (e: React.FormEvent) => {
+        e.preventDefault();
+        setLoading(true);
+        try {
+            const res = await fetch("/api/auth/reset-password", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ email: resetEmail, code: resetCode, newPassword }),
+            });
+            const data = await res.json();
+            if (res.ok) {
+                toast({ title: "Success", description: "Password updated! You can now login." });
+                setResetMode('none');
+                setShowEmailLogin(true);
+            } else {
+                toast({ variant: "destructive", title: "Error", description: data.error });
+            }
+        } catch (err) {
+            toast({ variant: "destructive", title: "Error", description: "Reset failed." });
         } finally {
             setLoading(false);
         }
@@ -98,15 +149,102 @@ export default function Login() {
                     <CardContent className="p-10 space-y-8">
                         <div className="text-center space-y-2">
                             <h2 className="text-2xl font-bold tracking-tight">
-                                {isRegister ? "Create Account" : "Studio Portal"}
+                                {resetMode !== 'none' ? "Reset Password" : (isRegister ? "Create Account" : "Studio Portal")}
                             </h2>
                             <p className="text-white/40 text-sm">
-                                {isRegister ? "Join the elite standard of album delivery." : "Sign in to manage your premium collections."}
+                                {resetMode === 'forgot' ? "Enter your email to receive a reset code." : 
+                                 resetMode === 'reset' ? "Check your email for the security code." :
+                                 isRegister ? "Join the elite standard of album delivery." : "Sign in to manage your premium collections."}
                             </p>
                         </div>
 
 
-                        {!showEmailLogin ? (
+                        {resetMode === 'forgot' && (
+                            <motion.form
+                                initial={{ opacity: 0, scale: 0.95 }}
+                                animate={{ opacity: 1, scale: 1 }}
+                                onSubmit={handleForgotPassword}
+                                className="space-y-4"
+                            >
+                                <div className="relative group">
+                                    <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-white/20 group-focus-within:text-primary transition-colors" />
+                                    <Input
+                                        type="email"
+                                        placeholder="Email Address"
+                                        value={resetEmail}
+                                        onChange={(e) => setResetEmail(e.target.value)}
+                                        className="h-14 pl-12 bg-white/5 border-white/5 focus:border-primary/50 rounded-xl"
+                                        required
+                                    />
+                                </div>
+                                <Button
+                                    type="submit"
+                                    disabled={loading}
+                                    className="w-full h-14 rounded-xl bg-primary hover:bg-primary/90 text-white font-bold gap-2"
+                                >
+                                    {loading ? "Sending..." : "Send Reset Code"}
+                                </Button>
+                                <button
+                                    type="button"
+                                    onClick={() => setResetMode('none')}
+                                    className="w-full text-center text-white/40 hover:text-white/60 text-xs font-bold uppercase tracking-widest"
+                                >
+                                    Cancel
+                                </button>
+                            </motion.form>
+                        )}
+
+                        {resetMode === 'reset' && (
+                            <motion.form
+                                initial={{ opacity: 0, scale: 0.95 }}
+                                animate={{ opacity: 1, scale: 1 }}
+                                onSubmit={handleResetPassword}
+                                className="space-y-4"
+                            >
+                                <div className="space-y-4">
+                                    <div className="relative group">
+                                        <Zap className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-white/20 group-focus-within:text-primary transition-colors" />
+                                        <Input
+                                            type="text"
+                                            placeholder="6-digit Code"
+                                            value={resetCode}
+                                            onChange={(e) => setResetCode(e.target.value)}
+                                            className="h-14 pl-12 bg-white/5 border-white/5 focus:border-primary/50 rounded-xl"
+                                            required
+                                            maxLength={6}
+                                        />
+                                    </div>
+                                    <div className="relative group">
+                                        <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-white/20 group-focus-within:text-primary transition-colors" />
+                                        <Input
+                                            type="password"
+                                            placeholder="New Password"
+                                            value={newPassword}
+                                            onChange={(e) => setNewPassword(e.target.value)}
+                                            className="h-14 pl-12 bg-white/5 border-white/5 focus:border-primary/50 rounded-xl"
+                                            required
+                                        />
+                                    </div>
+                                </div>
+                                <Button
+                                    type="submit"
+                                    disabled={loading}
+                                    className="w-full h-14 rounded-xl bg-primary hover:bg-primary/90 text-white font-bold gap-2"
+                                >
+                                    {loading ? "Resetting..." : "Update Password"}
+                                </Button>
+                                <button
+                                    type="button"
+                                    onClick={() => setResetMode('forgot')}
+                                    className="w-full text-center text-white/40 hover:text-white/60 text-xs font-bold uppercase tracking-widest"
+                                >
+                                    Resend Code
+                                </button>
+                            </motion.form>
+                        )}
+
+
+                        {resetMode === 'none' && !showEmailLogin ? (
                             <div className="space-y-4">
                                 <Button
                                     onClick={handleGoogleLogin}
@@ -141,7 +279,7 @@ export default function Login() {
                                     Sign in with email
                                 </button>
                             </div>
-                        ) : (
+                        ) : resetMode === 'none' && (
                             <motion.form
                                 initial={{ opacity: 0, scale: 0.95 }}
                                 animate={{ opacity: 1, scale: 1 }}
@@ -186,6 +324,17 @@ export default function Login() {
                                     </div>
                                 </div>
                                 <div className="flex flex-col gap-4 pt-2">
+                                    <div className="flex items-center justify-between px-1">
+                                         {!isRegister && (
+                                            <button
+                                                type="button"
+                                                onClick={() => { setResetMode('forgot'); setResetEmail(email); }}
+                                                className="text-white/30 hover:text-primary transition-colors text-[10px] font-bold uppercase tracking-wider"
+                                            >
+                                                Forgot Password?
+                                            </button>
+                                         )}
+                                    </div>
                                     <Button
                                         type="submit"
                                         disabled={loading}
@@ -215,6 +364,7 @@ export default function Login() {
                             </motion.form>
 
                         )}
+
 
                         <div className="grid grid-cols-3 gap-6 pt-4">
                             <div className="flex flex-col items-center gap-3 group/item cursor-help">

@@ -79,6 +79,34 @@ export async function sendSubscriptionReminder(email: string, daysLeft: number, 
     }
 }
 
+export async function sendPasswordResetEmail(email: string, code: string) {
+    if (GMAIL_PASSWORD) {
+        const transporter = nodemailer.createTransport({
+            service: 'gmail',
+            auth: { user: GMAIL_EMAIL, pass: GMAIL_PASSWORD },
+        });
+
+        const mailOptions = {
+            from: `"EventFold" <${GMAIL_EMAIL}>`,
+            to: email,
+            subject: 'Reset your EventFold password',
+            html: resetTemplate(code),
+        };
+
+        try {
+            await transporter.sendMail(mailOptions);
+            console.log(`[GMAIL] Password reset email sent to ${email}`);
+            return;
+        } catch (error) {
+            console.error('[GMAIL] Failed to send reset email:', error);
+        }
+    }
+
+    // Fallback: Simulation
+    console.log(`[EMAIL SIMULATION] Password reset code for ${email}: ${code}`);
+}
+
+
 function reminderTemplate(daysLeft: number, plan: string) {
     return `
         <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; padding: 40px; border: 1px solid #1e1e2e; border-radius: 24px; background: #030303; color: white;">
@@ -114,6 +142,20 @@ function verificationTemplate(code: string) {
             </div>
             <p>This code will expire in 10 minutes.</p>
             <p style="color: #71717a; font-size: 12px; text-align: center;">If you didn't create an account, you can safely ignore this email.</p>
+        </div>
+    `;
+}
+
+function resetTemplate(code: string) {
+    return `
+        <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; padding: 40px; border: 2px solid #8b5cf6; border-radius: 20px; background: #030303; color: white;">
+            <h1 style="color: #8b5cf6; text-align: center; font-size: 28px;">Password Reset</h1>
+            <p style="text-align: center; color: rgba(255,255,255,0.6);">You requested a password reset for your EventFold account. Please use the following security code:</p>
+            <div style="background: rgba(139, 92, 246, 0.1); padding: 30px; text-align: center; border-radius: 16px; margin: 30px 0; border: 1px solid rgba(139, 92, 246, 0.2);">
+                <span style="font-size: 42px; font-weight: bold; letter-spacing: 15px; color: #8b5cf6;">${code}</span>
+            </div>
+            <p style="text-align: center; color: rgba(255,255,255,0.4); font-size: 12px;">This security code is temporary and will expire in 15 minutes.</p>
+            <p style="text-align: center; color: rgba(255,255,255,0.2); font-size: 10px; margin-top: 40px;">If you did not request this, please change your password immediately.</p>
         </div>
     `;
 }
