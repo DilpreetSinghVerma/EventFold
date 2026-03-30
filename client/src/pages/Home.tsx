@@ -166,7 +166,7 @@ export default function Home() {
               </h1>
               <p className="text-lg md:text-xl text-white/50 mb-8 leading-relaxed max-w-2xl mx-auto italic">
                 Preserve your "Shubh-Vivah" memories in an interactive 3D royal experience.
-                Upload your first "Shaadi" project for <strong>free</strong> and honor your traditions.
+                Upload your first "Shaadi" project for <strong>free trial</strong> and honor your traditions.
               </p>
 
               <div className="flex flex-col sm:flex-row gap-5 justify-center">

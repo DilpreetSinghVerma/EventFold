@@ -19,12 +19,12 @@ const faqs = [
   },
   {
     question: "Is the first album really free?",
-    answer: "Yes! We want you to experience the magic of EventFold first-hand. Your first project is on us—completely free with all premium features included, so you can show your clients the future of digital storytelling.",
+    answer: "Yes! We want you to experience the magic of EventFold first-hand. Your first project is on us—completely free (7-day trial) with all premium features included, so you can show your clients the future of digital storytelling. You can upgrade it to Lifetime at any time.",
     icon: <Heart className="w-5 h-5" />
   },
   {
     question: "How long will my albums stay online?",
-    answer: "We offer Secure Lifetime Hosting for all projects. Once your album is live, it's there forever. No annual renewal fees or storage limits for your memories.",
+    answer: "We offer Secure Lifetime Hosting for all paid projects. Your first trial album stays for 7 days, but any album created with a credit or active subscription stays online forever. If you subscribe to any monthly or yearly plan, all your existing trial albums are automatically upgraded to Lifetime for free.",
     icon: <ShieldCheck className="w-5 h-5" />
   },
   {

@@ -169,11 +169,13 @@ export class DatabaseStorage implements IStorage {
   async cleanupExpiredAlbums(): Promise<void> {
     if (!db) return;
     const now = new Date();
-    // Delete albums where expiresAt is in the past
+    const gracePeriodThreshold = new Date(now.getTime() - (30 * 24 * 60 * 60 * 1000)); // 30 days ago
+    
+    // Delete albums where expiresAt was more than 30 days ago
     await db.delete(albums).where(
       and(
         isNotNull(albums.expiresAt),
-        lte(albums.expiresAt, now)
+        lte(albums.expiresAt, gracePeriodThreshold)
       )
     );
   }
@@ -265,6 +267,7 @@ export class MemStorage implements IStorage {
       category: insertAlbum.category || 'Uncategorized',
       bgMusicUrl: insertAlbum.bgMusicUrl || null,
       totalEngagementTime: 0,
+      showInPortfolio: insertAlbum.showInPortfolio ?? 0,
       createdAt: new Date(),
     };
     this.albums.set(id, album);
@@ -403,9 +406,10 @@ export class MemStorage implements IStorage {
 
   async cleanupExpiredAlbums(): Promise<void> {
     const now = new Date();
+    const gracePeriodThreshold = new Date(now.getTime() - (30 * 24 * 60 * 60 * 1000)); // 30 days ago
     const entries = Array.from(this.albums.entries());
     for (const [id, album] of entries) {
-      if (album.expiresAt && album.expiresAt <= now) {
+      if (album.expiresAt && album.expiresAt <= gracePeriodThreshold) {
         this.albums.delete(id);
         // Also delete associated files
         const filesToDelete = Array.from(this.files.values()).filter(f => f.albumId === id);

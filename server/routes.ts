@@ -381,8 +381,15 @@ export function registerRoutes(
         });
       }
 
-      // All albums now have lifetime hosting (no expiration)
+      // 7-Day Trial Logic for Free first album
+      const userAlbums = await storage.getAlbumsByUser(userId);
+      const isFirstFreeAlbum = user.plan === 'free' && userAlbums.length === 0;
+      
       let expiresAt: Date | null = null;
+      if (isFirstFreeAlbum) {
+        expiresAt = new Date();
+        expiresAt.setDate(expiresAt.getDate() + 7);
+      }
 
       const data = insertAlbumSchema.parse({
         ...req.body,
@@ -405,6 +412,39 @@ export function registerRoutes(
         message: "Album record creation failed",
         error: e instanceof Error ? e.message : String(e)
       });
+    }
+  });
+
+  // Upgrade trial album to lifetime using 1 credit
+  app.post("/api/albums/:id/lifetime", async (req, res) => {
+    try {
+      if (!req.isAuthenticated()) return res.status(401).json({ error: "Unauthorized" });
+      const userId = (req.user as any).id;
+      const album = await storage.getAlbum(req.params.id);
+      
+      if (!album) return res.status(404).json({ error: "Album not found" });
+      if (album.userId !== userId) return res.status(403).json({ error: "Forbidden" });
+      if (!album.expiresAt) return res.status(400).json({ error: "Album already has lifetime hosting" });
+
+      const user = await storage.getUser(userId);
+      if (!user) return res.status(404).json({ error: "User not found" });
+
+      const isSubscribed = user.plan !== 'free' && user.subscriptionExpiresAt && new Date(user.subscriptionExpiresAt) > new Date();
+
+      // Deduct credit ONLY IF not subscribed
+      if (!isSubscribed) {
+        if (user.credits <= 0) {
+          return res.status(403).json({ error: "No credits remaining to upgrade this album" });
+        }
+        await storage.deductCredit(userId);
+      }
+
+      await storage.updateAlbum(album.id, { expiresAt: null });
+
+
+      res.json({ success: true, message: "Album upgraded to Lifetime Hosting" });
+    } catch (e) {
+      res.status(500).json({ error: "Upgrade failed" });
     }
   });
 
@@ -433,8 +473,17 @@ export function registerRoutes(
       const album = await storage.getAlbum(req.params.id);
       if (!album) return res.status(404).json({ error: "Album not found" });
 
-      // Check if user is the owner (if authenticated)
+      // Expiry Check for Trial Albums
+      const isAdminUser = req.isAuthenticated() && ((req.user as any).role === 'admin' || ["admin@eventfold.com", "dilpreetsinghverma@gmail.com"].includes((req.user as any).email));
       const isOwner = req.isAuthenticated() && (req.user as any).id === album.userId;
+      
+      const now = new Date();
+      if (album.expiresAt && new Date(album.expiresAt) < now && !isOwner && !isAdminUser) {
+        return res.status(403).json({ 
+          error: "Trial Expired", 
+          message: "This trial album has expired. Please contact the photographer or studio to renew the link." 
+        });
+      }
 
       // If there's a password and user hasn't unlocked it yet (and isn't the owner)
       const albumSessionKey = `unlocked_${album.id}`;
@@ -661,6 +710,20 @@ export function registerRoutes(
       }
 
       const u = await storage.updateUser(req.params.id, { role, plan, subscriptionStartedAt, subscriptionExpiresAt });
+      
+      // If upgraded to paid plan, make all existing albums permanent
+      if (plan === 'pro' || plan === 'elite') {
+        const userAlbums = await storage.getAlbumsByUser(req.params.id);
+        const { db } = await import("./db");
+        const { albums } = await import("../shared/schema");
+        if (db) {
+          await db.update(albums)
+            .set({ expiresAt: null })
+            .where(eq(albums.userId, req.params.id));
+        }
+        console.log(`Admin upgraded user ${req.params.id} to ${plan}. All albums made permanent.`);
+      }
+
       res.json(u);
     } catch (e) {
       res.status(500).json({ error: "Failed to update user role" });

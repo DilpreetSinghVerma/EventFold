@@ -164,19 +164,6 @@ export default function Dashboard() {
                     
                     <div className="grid grid-cols-3 gap-4 mb-10">
                        <div className="p-5 rounded-2xl bg-white/5 border border-white/5 space-y-2">
-                          <Eye className="w-4 h-4 text-primary" />
-                          <p className="text-2xl font-bold">{album.views || 0}</p>
-                          <p className="text-[10px] text-white/40 uppercase font-bold tracking-widest">Total Views</p>
-                       </div>
-                       <div className="p-5 rounded-2xl bg-white/5 border border-white/5 space-y-2">
-                          <Clock className="w-4 h-4 text-emerald-400" />
-                          <p className="text-2xl font-bold">{Math.round((album.totalEngagementTime || 0) / 60)}m</p>
-                          <p className="text-[10px] text-white/40 uppercase font-bold tracking-widest">Avg Duration</p>
-                       </div>
-                       <div className="p-5 rounded-2xl bg-white/5 border border-white/5 space-y-2">
-                          <Activity className="w-4 h-4 text-purple-400" />
-                          <p className="text-2xl font-bold">{album.files?.length || 0}</p>
-                          <p className="text-[10px] text-white/40 uppercase font-bold tracking-widest">Assets Processed</p>
                        </div>
                     </div>
                     
@@ -476,9 +463,32 @@ export default function Dashboard() {
               </div>
             </div>
             {album.expiresAt && (
-              <div className="flex items-center gap-1 px-2 py-0.5 bg-red-500/10 border border-red-500/20 rounded-md text-[8px] font-black text-red-500 uppercase tracking-tighter w-fit mb-2">
-                <Lock className="w-2 h-2" />
-                {Math.ceil((new Date(album.expiresAt).getTime() - Date.now()) / (1000 * 60 * 60 * 24))}d Left
+              <div className="flex flex-col gap-2 mb-2">
+                <div className={`flex items-center gap-1 px-2 py-0.5 rounded-md text-[8px] font-black uppercase tracking-tighter w-fit ${new Date(album.expiresAt) < new Date() ? 'bg-red-500 text-white' : 'bg-red-500/10 border border-red-500/20 text-red-500'}`}>
+                  <Lock className="w-2 h-2" />
+                  {new Date(album.expiresAt) < new Date() ? "TRIAL EXPIRED" : `${Math.ceil((new Date(album.expiresAt).getTime() - Date.now()) / (1000 * 60 * 60 * 24))}d Left`}
+                </div>
+                {new Date(album.expiresAt) < new Date() && (
+                  <Button 
+                    onClick={async (e) => {
+                      e.stopPropagation();
+                      const isSubscribed = user && user.plan !== 'free' && user.subscriptionExpiresAt && new Date(user.subscriptionExpiresAt) > new Date();
+                      
+                      const confirmMsg = isSubscribed 
+                        ? "You are a subscriber! Upgrade this album to Lifetime Hosting for FREE?" 
+                        : "Use 1 credit to upgrade this album to Lifetime Hosting?";
+
+                      if (window.confirm(confirmMsg)) {
+                        const res = await fetch(`/api/albums/${album.id}/lifetime`, { method: 'POST' });
+                        if (res.ok) fetchAlbums();
+                        else alert((await res.json()).error || "Upgrade failed");
+                      }
+                    }}
+                    className="h-7 text-[8px] font-black uppercase tracking-widest bg-primary hover:bg-primary/90 text-white rounded-lg w-full"
+                  >
+                    <Crown className="w-3 h-3 mr-1" /> {user && user.plan !== 'free' ? "Upgrade for Free" : "Upgrade to Lifetime"}
+                  </Button>
+                )}
               </div>
             )}
             <div className="flex items-center text-[9px] lg:text-xs text-white/40 uppercase tracking-widest font-medium">

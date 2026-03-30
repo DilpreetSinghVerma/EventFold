@@ -139,7 +139,14 @@ export default function Viewer() {
         // Fetch album data
         setLoadStatus('Decrypting project metadata…');
         const response = await fetch(`/api/albums/${id}`);
-        if (!response.ok) throw new Error('Album not found on server');
+        if (!response.ok) {
+          if (response.status === 403) {
+             const data = await response.json();
+             setLoadStatus(`TRIAL EXPIRED: ${data.message || 'Please contact the studio to renew.'}`);
+             throw new Error('Trial Expired');
+          }
+          throw new Error('Album not found on server');
+        }
         const albumData = await response.json();
         setAlbum(albumData);
         setSettings(albumData.branding);
@@ -207,9 +214,11 @@ export default function Viewer() {
           img.src = typeof url === 'string' ? url : (url as any).url;
         })));
 
-      } catch (e) {
+      } catch (e: any) {
         console.error('Failed to load album or settings', e);
-        setLoadStatus('Terminal Error: Project unavailable or deleted.');
+        if (e.message !== 'Trial Expired') {
+          setLoadStatus('Terminal Error: Project unavailable or deleted.');
+        }
       } finally {
         setLoading(false);
       }
