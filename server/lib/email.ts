@@ -5,17 +5,25 @@ const GMAIL_EMAIL = process.env.GMAIL_EMAIL || 'eventfoldstudio@gmail.com';
 const GMAIL_PASSWORD = process.env.GMAIL_APP_PASSWORD;
 const RESEND_API_KEY = process.env.RESEND_API_KEY;
 
-export async function sendVerificationEmail(email: string, code: string) {
-    // 1. Try Nodemailer/Gmail (Reliable for free accounts)
-    if (GMAIL_PASSWORD) {
-        const transporter = nodemailer.createTransport({
-            service: 'gmail',
-            auth: {
-                user: GMAIL_EMAIL,
-                pass: GMAIL_PASSWORD,
-            },
-        });
+// Create shared transporter for Gmail (optimization)
+const gmailTransporter = GMAIL_PASSWORD ? nodemailer.createTransport({
+    service: 'gmail',
+    auth: {
+        user: GMAIL_EMAIL,
+        pass: GMAIL_PASSWORD,
+    },
+    // Add connection pool for better concurrency
+    pool: true,
+    maxConnections: 5,
+    maxMessages: 100,
+}) : null;
 
+
+export async function sendVerificationEmail(email: string, code: string) {
+    let sentVia = '';
+
+    // 1. Try Nodemailer/Gmail (Reliable for free accounts)
+    if (gmailTransporter) {
         const mailOptions = {
             from: `"EventFold" <${GMAIL_EMAIL}>`,
             to: email,
@@ -24,17 +32,17 @@ export async function sendVerificationEmail(email: string, code: string) {
         };
 
         try {
-            await transporter.sendMail(mailOptions);
+            await gmailTransporter.sendMail(mailOptions);
             console.log(`[GMAIL] Verification email sent to ${email}`);
-            return;
+            sentVia = 'GMAIL';
         } catch (error) {
-            console.error('[GMAIL] Failed to send email:', error);
+            console.error('[GMAIL] Deployment Error / Send Failed:', error);
             // Fallback to check other providers
         }
     }
 
-    // 2. Try Resend (If no Gmail password set)
-    if (RESEND_API_KEY) {
+    // 2. Try Resend (If no Gmail password set or Gmail failed)
+    if (!sentVia && RESEND_API_KEY) {
         const { Resend } = await import('resend');
         const resend = new Resend(RESEND_API_KEY);
         try {
@@ -45,23 +53,20 @@ export async function sendVerificationEmail(email: string, code: string) {
                 html: verificationTemplate(code),
             });
             console.log(`[RESEND] Verification email sent to ${email}`);
-            return;
+            sentVia = 'RESEND';
         } catch (error) {
             console.error('[RESEND] Failed to send email:', error);
         }
     }
 
     // 3. Last Resort: Simulation Mode
-    console.log(`[EMAIL SIMULATION] Verification code for ${email}: ${code}`);
+    if (!sentVia) {
+        console.log(`[EMAIL SIMULATION] Verification code for ${email}: ${code}`);
+    }
 }
 
 export async function sendSubscriptionReminder(email: string, daysLeft: number, plan: string) {
-    if (GMAIL_PASSWORD) {
-        const transporter = nodemailer.createTransport({
-            service: 'gmail',
-            auth: { user: GMAIL_EMAIL, pass: GMAIL_PASSWORD },
-        });
-
+    if (gmailTransporter) {
         const mailOptions = {
             from: `"EventFold" <${GMAIL_EMAIL}>`,
             to: email,
@@ -70,7 +75,7 @@ export async function sendSubscriptionReminder(email: string, daysLeft: number, 
         };
 
         try {
-            await transporter.sendMail(mailOptions);
+            await gmailTransporter.sendMail(mailOptions);
             console.log(`[GMAIL] Reminder sent to ${email}`);
             return;
         } catch (error) {
@@ -80,12 +85,9 @@ export async function sendSubscriptionReminder(email: string, daysLeft: number, 
 }
 
 export async function sendPasswordResetEmail(email: string, code: string) {
-    if (GMAIL_PASSWORD) {
-        const transporter = nodemailer.createTransport({
-            service: 'gmail',
-            auth: { user: GMAIL_EMAIL, pass: GMAIL_PASSWORD },
-        });
+    let sentVia = '';
 
+    if (gmailTransporter) {
         const mailOptions = {
             from: `"EventFold" <${GMAIL_EMAIL}>`,
             to: email,
@@ -94,17 +96,20 @@ export async function sendPasswordResetEmail(email: string, code: string) {
         };
 
         try {
-            await transporter.sendMail(mailOptions);
+            await gmailTransporter.sendMail(mailOptions);
             console.log(`[GMAIL] Password reset email sent to ${email}`);
-            return;
+            sentVia = 'GMAIL';
         } catch (error) {
             console.error('[GMAIL] Failed to send reset email:', error);
         }
     }
 
     // Fallback: Simulation
-    console.log(`[EMAIL SIMULATION] Password reset code for ${email}: ${code}`);
+    if (!sentVia) {
+        console.log(`[EMAIL SIMULATION] Password reset code for ${email}: ${code}`);
+    }
 }
+
 
 
 function reminderTemplate(daysLeft: number, plan: string) {
