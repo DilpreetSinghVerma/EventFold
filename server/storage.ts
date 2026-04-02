@@ -267,6 +267,8 @@ export class MemStorage implements IStorage {
       category: insertAlbum.category || 'Uncategorized',
       bgMusicUrl: insertAlbum.bgMusicUrl || null,
       totalEngagementTime: 0,
+      avgRating: 0,
+      totalRatings: 0,
       showInPortfolio: insertAlbum.showInPortfolio ?? 0,
       createdAt: new Date(),
     };

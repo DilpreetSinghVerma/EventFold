@@ -24,7 +24,8 @@ import {
   Loader2,
   Check,
   Lock,
-  ArrowRight
+  ArrowRight,
+  Star
 } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -89,6 +90,10 @@ export default function Viewer() {
   const [isSlideshowActive, setIsSlideshowActive] = useState(false);
   const [pageInfo, setPageInfo] = useState({ current: 0, total: 0 });
   const splitUrlsRef = useRef<string[]>([]);
+  const [showRating, setShowRating] = useState(false);
+  const [ratingHover, setRatingHover] = useState(0);
+  const [ratingValue, setRatingValue] = useState(0);
+  const [ratingSubmitted, setRatingSubmitted] = useState(false);
 
   useEffect(() => {
     const checkOrientation = () => {
@@ -242,6 +247,14 @@ export default function Viewer() {
     
     return () => clearInterval(interval);
   }, [loading, id, isShared]);
+
+  // Feedback Collector: Show rating after 45 seconds on shared views
+  useEffect(() => {
+    if (!isShared || !id || loading) return;
+    if (localStorage.getItem(`rated_${id}`)) return; // Already rated
+    const timer = setTimeout(() => setShowRating(true), 45000);
+    return () => clearTimeout(timer);
+  }, [isShared, id, loading]);
 
   const [shareModalOpen, setShareModalOpen] = useState(false);
 
@@ -890,6 +903,73 @@ export default function Viewer() {
               <div className="flex items-center gap-3 px-6 py-3 bg-white/5 rounded-2xl border border-white/10 text-xs font-bold uppercase tracking-widest opacity-60">
                 <div className="w-2 h-2 rounded-full bg-primary animate-pulse" />
                 Live Orientation Tracking
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+
+        {/* Star Rating Popup (Feedback Collector) */}
+        <AnimatePresence>
+          {showRating && isShared && !ratingSubmitted && (
+            <motion.div
+              initial={{ opacity: 0, y: 50 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: 50 }}
+              className="fixed bottom-6 left-1/2 -translate-x-1/2 z-[250] w-[340px] max-w-[90vw]"
+            >
+              <div className="bg-black/90 backdrop-blur-2xl border border-white/10 rounded-[2rem] p-6 shadow-2xl shadow-primary/10 space-y-4 text-center">
+                <button
+                  onClick={() => setShowRating(false)}
+                  className="absolute top-3 right-4 text-white/20 hover:text-white/60 text-sm font-bold"
+                >
+                  ✕
+                </button>
+                <p className="text-[10px] font-bold uppercase tracking-[0.3em] text-primary/60">How was your experience?</p>
+                <div className="flex justify-center gap-2">
+                  {[1, 2, 3, 4, 5].map((star) => (
+                    <button
+                      key={star}
+                      onMouseEnter={() => setRatingHover(star)}
+                      onMouseLeave={() => setRatingHover(0)}
+                      onClick={async () => {
+                        setRatingValue(star);
+                        try {
+                          await fetch(`/api/albums/${id}/rate`, {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ rating: star }),
+                          });
+                          localStorage.setItem(`rated_${id}`, 'true');
+                          setRatingSubmitted(true);
+                          setTimeout(() => setShowRating(false), 2000);
+                        } catch (e) {}
+                      }}
+                      className="transition-transform hover:scale-125 active:scale-90"
+                    >
+                      <Star
+                        className={`w-9 h-9 transition-colors ${
+                          star <= (ratingHover || ratingValue)
+                            ? 'text-amber-400 fill-amber-400'
+                            : 'text-white/10'
+                        }`}
+                      />
+                    </button>
+                  ))}
+                </div>
+                <p className="text-white/20 text-[9px] uppercase tracking-widest">Tap a star to rate this album</p>
+              </div>
+            </motion.div>
+          )}
+          {showRating && ratingSubmitted && (
+            <motion.div
+              initial={{ opacity: 0, scale: 0.9 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.9 }}
+              className="fixed bottom-6 left-1/2 -translate-x-1/2 z-[250]"
+            >
+              <div className="bg-black/90 backdrop-blur-2xl border border-green-500/20 rounded-2xl px-8 py-4 shadow-2xl flex items-center gap-3">
+                <Check className="w-5 h-5 text-green-400" />
+                <p className="text-green-400 text-sm font-bold">Thank you for your feedback!</p>
               </div>
             </motion.div>
           )}

@@ -39,6 +39,8 @@ export const albums = pgTable("albums", {
   bgMusicUrl: text("bg_music_url"),
   showInPortfolio: integer("show_in_portfolio").notNull().default(0), // 0: Hide, 1: Show in Studio Gallery
   totalEngagementTime: integer("total_engagement_time").notNull().default(0), // Total seconds spent by viewers
+  avgRating: integer("avg_rating").notNull().default(0), // 0-50 scaled (divide by 10 for 0-5 stars)
+  totalRatings: integer("total_ratings").notNull().default(0), // Number of ratings received
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 

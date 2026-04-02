@@ -664,7 +664,7 @@ export function registerRoutes(
     }
   });
 
-  // Admin: Get all albums across platform
+  // Admin: Get all albums across platform (with cover thumbnails)
   app.get("/api/admin/albums", async (req, res) => {
     try {
       if (!req.isAuthenticated()) return res.status(401).json({ error: "Unauthorized" });
@@ -673,7 +673,15 @@ export function registerRoutes(
         return res.status(403).json({ error: "Admin privilege required" });
       }
       const a = await storage.getAllAlbums();
-      res.json(a);
+      // Attach cover thumbnail for each album
+      const albumsWithCovers = await Promise.all(
+        a.map(async (album) => {
+          const files = await storage.getFilesByAlbum(album.id);
+          const coverFile = files.find(f => f.fileType === 'cover_front');
+          return { ...album, coverUrl: coverFile?.filePath || null, fileCount: files.filter(f => f.fileType === 'sheet').length };
+        })
+      );
+      res.json(albumsWithCovers);
     } catch (e) {
       res.status(500).json({ error: "Failed to fetch all albums" });
     }
@@ -1041,6 +1049,169 @@ export function registerRoutes(
     } catch (e: any) {
       console.error("Cloud usage fetch failed:", e);
       res.status(500).json({ error: "Failed to fetch cloud usage", details: e.message });
+    }
+  });
+
+  // Public: Submit album rating (Feedback Collector)
+  app.post("/api/albums/:id/rate", async (req, res) => {
+    try {
+      const { rating } = req.body;
+      if (typeof rating !== 'number' || rating < 1 || rating > 5) {
+        return res.status(400).json({ error: "Rating must be 1-5" });
+      }
+      const album = await storage.getAlbum(req.params.id);
+      if (!album) return res.status(404).json({ error: "Album not found" });
+
+      const currentTotal = album.totalRatings || 0;
+      const currentAvg = album.avgRating || 0;
+      // avgRating is stored as 0-50 (multiply by 10 for precision)
+      const ratingScaled = rating * 10;
+      const newTotal = currentTotal + 1;
+      const newAvg = Math.round((currentAvg * currentTotal + ratingScaled) / newTotal);
+
+      await storage.updateAlbum(req.params.id, { avgRating: newAvg, totalRatings: newTotal });
+      res.json({ success: true, avgRating: newAvg / 10, totalRatings: newTotal });
+    } catch (e) {
+      res.status(500).json({ error: "Failed to submit rating" });
+    }
+  });
+
+  // Admin: Storage Cleanup Scanner (find orphan files in Cloudinary)
+  app.get("/api/admin/storage-cleanup", async (req, res) => {
+    try {
+      if (!req.isAuthenticated()) return res.status(401).json({ error: "Unauthorized" });
+      const user = req.user as any;
+      const adminEmails = ["admin@eventfold.com", "dilpreetsinghverma@gmail.com"];
+      if (user.role !== 'admin' && !adminEmails.includes(user.email)) {
+        return res.status(403).json({ error: "Admin privilege required" });
+      }
+
+      const cloudName = process.env.CLOUDINARY_CLOUD_NAME;
+      const apiKey = process.env.CLOUDINARY_API_KEY;
+      const apiSecret = process.env.CLOUDINARY_API_SECRET;
+
+      if (!cloudName || !apiKey || !apiSecret) {
+        return res.status(500).json({ error: "Cloudinary credentials not configured" });
+      }
+
+      const auth = Buffer.from(`${apiKey}:${apiSecret}`).toString('base64');
+
+      // Fetch all Cloudinary resources (images + videos)
+      let allCloudResources: any[] = [];
+      let nextCursor: string | undefined;
+
+      // Paginate through all resources
+      for (let page = 0; page < 10; page++) {
+        const params = new URLSearchParams({ max_results: '500' });
+        if (nextCursor) params.append('next_cursor', nextCursor);
+
+        const cloudRes = await fetch(
+          `https://api.cloudinary.com/v1_1/${cloudName}/resources/image?${params}`,
+          { headers: { Authorization: `Basic ${auth}` } }
+        );
+
+        if (!cloudRes.ok) break;
+        const data = await cloudRes.json();
+        allCloudResources.push(...(data.resources || []));
+        nextCursor = data.next_cursor;
+        if (!nextCursor) break;
+      }
+
+      // Also fetch video resources
+      nextCursor = undefined;
+      for (let page = 0; page < 5; page++) {
+        const params = new URLSearchParams({ max_results: '500', resource_type: 'video' });
+        if (nextCursor) params.append('next_cursor', nextCursor);
+
+        const cloudRes = await fetch(
+          `https://api.cloudinary.com/v1_1/${cloudName}/resources/video?${params}`,
+          { headers: { Authorization: `Basic ${auth}` } }
+        );
+
+        if (!cloudRes.ok) break;
+        const data = await cloudRes.json();
+        allCloudResources.push(...(data.resources || []));
+        nextCursor = data.next_cursor;
+        if (!nextCursor) break;
+      }
+
+      // Get all file paths from database
+      const allAlbums = await storage.getAllAlbums();
+      const allDbPaths = new Set<string>();
+      for (const album of allAlbums) {
+        const files = await storage.getFilesByAlbum(album.id);
+        for (const f of files) {
+          // Extract the public_id or base URL from stored path
+          allDbPaths.add(f.filePath);
+        }
+      }
+
+      // Find orphans (in Cloudinary but not in any album)
+      const orphans = allCloudResources.filter(r => {
+        const secureUrl = r.secure_url;
+        // Check if any DB path contains this resource's public_id
+        let found = false;
+        allDbPaths.forEach(dbPath => {
+          if (dbPath.includes(r.public_id) || secureUrl === dbPath) {
+            found = true;
+          }
+        });
+        return !found;
+      });
+
+      const orphanSize = orphans.reduce((acc: number, r: any) => acc + (r.bytes || 0), 0);
+
+      res.json({
+        total_cloud_resources: allCloudResources.length,
+        total_db_files: allDbPaths.size,
+        orphan_count: orphans.length,
+        orphan_size_bytes: orphanSize,
+        orphans: orphans.slice(0, 50).map(r => ({
+          public_id: r.public_id,
+          url: r.secure_url,
+          format: r.format,
+          bytes: r.bytes,
+          created_at: r.created_at,
+          resource_type: r.resource_type,
+        })),
+      });
+    } catch (e: any) {
+      console.error("Storage cleanup scan failed:", e);
+      res.status(500).json({ error: "Cleanup scan failed", details: e.message });
+    }
+  });
+
+  // Admin: Delete orphan file from Cloudinary
+  app.delete("/api/admin/storage-cleanup/:publicId", async (req, res) => {
+    try {
+      if (!req.isAuthenticated()) return res.status(401).json({ error: "Unauthorized" });
+      const user = req.user as any;
+      const adminEmails = ["admin@eventfold.com", "dilpreetsinghverma@gmail.com"];
+      if (user.role !== 'admin' && !adminEmails.includes(user.email)) {
+        return res.status(403).json({ error: "Admin privilege required" });
+      }
+
+      const cloudName = process.env.CLOUDINARY_CLOUD_NAME;
+      const apiKey = process.env.CLOUDINARY_API_KEY;
+      const apiSecret = process.env.CLOUDINARY_API_SECRET;
+      const auth = Buffer.from(`${apiKey}:${apiSecret}`).toString('base64');
+      const publicId = decodeURIComponent(req.params.publicId);
+
+      const delRes = await fetch(
+        `https://api.cloudinary.com/v1_1/${cloudName}/resources/image/upload?public_ids=${encodeURIComponent(publicId)}`,
+        {
+          method: 'DELETE',
+          headers: { Authorization: `Basic ${auth}` }
+        }
+      );
+
+      if (!delRes.ok) {
+        return res.status(500).json({ error: "Failed to delete from Cloudinary" });
+      }
+
+      res.json({ success: true, deleted: publicId });
+    } catch (e: any) {
+      res.status(500).json({ error: "Delete failed", details: e.message });
     }
   });
 

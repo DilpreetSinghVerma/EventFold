@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import { Loader2, Plus, Minus, Trash2, Eye, LayoutDashboard, Users, BookCopy, ShieldAlert, TrendingUp, Activity, Database, Globe, Search, ArrowUpCircle, CheckCircle2, XCircle, Sparkles, Cloud, HardDrive, Wifi, Zap, AlertTriangle, RefreshCw, IndianRupee, PieChart, BarChart3, Clock, Crown, CreditCard } from "lucide-react";
+import { Loader2, Plus, Minus, Trash2, Eye, LayoutDashboard, Users, BookCopy, ShieldAlert, TrendingUp, Activity, Database, Globe, Search, ArrowUpCircle, CheckCircle2, XCircle, Sparkles, Cloud, HardDrive, Wifi, Zap, AlertTriangle, RefreshCw, IndianRupee, PieChart, BarChart3, Clock, Crown, CreditCard, Star } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { Link, useLocation } from "wouter";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -23,6 +23,22 @@ export default function Admin() {
   const [cloudUsage, setCloudUsage] = useState<any>(null);
   const [cloudLoading, setCloudLoading] = useState(false);
   const [cloudError, setCloudError] = useState<string | null>(null);
+  const [cleanupData, setCleanupData] = useState<any>(null);
+  const [cleanupLoading, setCleanupLoading] = useState(false);
+
+  const fetchCleanup = async () => {
+    setCleanupLoading(true);
+    try {
+      const res = await fetch('/api/admin/storage-cleanup');
+      if (!res.ok) throw new Error('Scan failed');
+      const data = await res.json();
+      setCleanupData(data);
+    } catch (e: any) {
+      setCleanupData({ error: e.message });
+    } finally {
+      setCleanupLoading(false);
+    }
+  };
 
   const fetchCloudUsage = async () => {
     setCloudLoading(true);
@@ -261,6 +277,12 @@ export default function Admin() {
             <TabsTrigger value="revenue" className="data-[state=active]:bg-primary rounded-lg flex gap-2">
               <IndianRupee className="w-4 h-4" /> Revenue
             </TabsTrigger>
+            <TabsTrigger value="funnel" className="data-[state=active]:bg-primary rounded-lg flex gap-2">
+              <BarChart3 className="w-4 h-4" /> Funnel
+            </TabsTrigger>
+            <TabsTrigger value="cleanup" className="data-[state=active]:bg-primary rounded-lg flex gap-2" onClick={() => { if (!cleanupData) fetchCleanup(); }}>
+              <Trash2 className="w-4 h-4" /> Cleanup
+            </TabsTrigger>
           </TabsList>
 
           <TabsContent value="users">
@@ -393,7 +415,21 @@ export default function Admin() {
                     <TableBody>
                       {filteredAlbums?.map((a) => (
                         <TableRow key={a.id} className="border-white/5 hover:bg-white/[0.02] transition-colors">
-                          <TableCell className="font-bold">{a.title}</TableCell>
+                          <TableCell className="font-bold">
+                            <div className="flex items-center gap-3">
+                              {(a as any).coverUrl ? (
+                                <img src={(a as any).coverUrl} alt="" className="w-10 h-10 rounded-lg object-cover border border-white/10 shrink-0" />
+                              ) : (
+                                <div className="w-10 h-10 rounded-lg bg-white/5 border border-white/10 flex items-center justify-center shrink-0">
+                                  <BookCopy className="w-4 h-4 text-white/20" />
+                                </div>
+                              )}
+                              <div>
+                                <p className="truncate max-w-[180px]">{a.title}</p>
+                                <p className="text-[9px] text-white/30 font-normal">{(a as any).fileCount || 0} sheets</p>
+                              </div>
+                            </div>
+                          </TableCell>
                           <TableCell className="font-mono text-[10px] text-white/40">{a.userId}</TableCell>
                           <TableCell className="text-white/60">{new Date(a.createdAt).toLocaleDateString()}</TableCell>
                           <TableCell>
@@ -923,6 +959,249 @@ export default function Admin() {
                 </div>
               );
             })()}
+          </TabsContent>
+
+          <TabsContent value="funnel">
+            {(() => {
+              const totalUsers = users?.length || 0;
+              const usersWithAlbums = users?.filter(u => albums?.some(a => a.userId === u.id)).length || 0;
+              const paidUsers = users?.filter(u => u.plan !== 'free' || u.credits < 1).length || 0;
+              const activeSubscribers = users?.filter(u => u.plan !== 'free' && u.subscriptionExpiresAt && new Date(u.subscriptionExpiresAt) > new Date()).length || 0;
+
+              const steps = [
+                { label: 'Signed Up', count: totalUsers, color: 'bg-blue-500', icon: <Users className="w-5 h-5" /> },
+                { label: 'Created Album', count: usersWithAlbums, color: 'bg-purple-500', icon: <BookCopy className="w-5 h-5" /> },
+                { label: 'Made Payment', count: paidUsers, color: 'bg-green-500', icon: <CreditCard className="w-5 h-5" /> },
+                { label: 'Active Subscriber', count: activeSubscribers, color: 'bg-amber-500', icon: <Crown className="w-5 h-5" /> },
+              ];
+
+              const maxCount = Math.max(totalUsers, 1);
+
+              // Rated albums
+              const ratedAlbums = albums?.filter(a => (a.totalRatings || 0) > 0).sort((a, b) => (b.avgRating || 0) - (a.avgRating || 0)) || [];
+
+              return (
+                <div className="space-y-8">
+                  <Card className="bg-white/[0.03] border-white/5 rounded-2xl overflow-hidden">
+                    <CardHeader className="border-b border-white/5 bg-white/[0.02]">
+                      <CardTitle className="text-lg flex items-center gap-2">
+                        <BarChart3 className="w-5 h-5 text-primary" /> Conversion Funnel
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent className="p-8">
+                      <div className="space-y-6">
+                        {steps.map((step, i) => {
+                          const pct = totalUsers > 0 ? (step.count / maxCount * 100) : 0;
+                          const dropoff = i > 0 && steps[i-1].count > 0 ? Math.round((1 - step.count / steps[i-1].count) * 100) : 0;
+
+                          return (
+                            <div key={i} className="space-y-2">
+                              <div className="flex items-center justify-between">
+                                <div className="flex items-center gap-3">
+                                  <div className={`w-10 h-10 rounded-xl ${step.color}/20 flex items-center justify-center border ${step.color}/30`}>
+                                    <span className={step.color.replace('bg-', 'text-')}>{step.icon}</span>
+                                  </div>
+                                  <div>
+                                    <p className="font-bold text-sm">{step.label}</p>
+                                    {i > 0 && dropoff > 0 && (
+                                      <p className="text-[9px] text-red-400/60 uppercase tracking-widest">↓ {dropoff}% dropoff</p>
+                                    )}
+                                  </div>
+                                </div>
+                                <span className="text-2xl font-black">{step.count}</span>
+                              </div>
+                              <div className="w-full h-6 bg-white/5 rounded-full overflow-hidden">
+                                <div className={`h-full rounded-full ${step.color} transition-all duration-1000`} style={{ width: `${Math.max(pct, 2)}%` }}>
+                                  <span className="text-[9px] font-black text-white/80 px-3 leading-6 inline-block">{pct.toFixed(0)}%</span>
+                                </div>
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </CardContent>
+                  </Card>
+
+                  {/* Album Ratings from Feedback Collector */}
+                  <Card className="bg-white/[0.03] border-white/5 rounded-2xl overflow-hidden">
+                    <CardHeader className="border-b border-white/5 bg-white/[0.02]">
+                      <CardTitle className="text-lg flex items-center gap-2">
+                        <Star className="w-5 h-5 text-amber-400" /> Client Ratings (Feedback Collector)
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent className="p-0">
+                      {ratedAlbums.length === 0 ? (
+                        <div className="p-8 text-center">
+                          <Star className="w-12 h-12 text-white/10 mx-auto mb-4" />
+                          <p className="text-white/30 text-sm">No ratings yet</p>
+                          <p className="text-white/15 text-xs mt-1">Ratings appear automatically after clients view shared albums for 45+ seconds</p>
+                        </div>
+                      ) : (
+                        <div className="divide-y divide-white/5">
+                          {ratedAlbums.map((a) => (
+                            <div key={a.id} className="flex items-center justify-between px-6 py-4 hover:bg-white/[0.02] transition-colors">
+                              <div className="flex items-center gap-4">
+                                {(a as any).coverUrl ? (
+                                  <img src={(a as any).coverUrl} alt="" className="w-10 h-10 rounded-lg object-cover border border-white/10" />
+                                ) : (
+                                  <div className="w-10 h-10 rounded-lg bg-white/5 flex items-center justify-center"><BookCopy className="w-4 h-4 text-white/20" /></div>
+                                )}
+                                <div>
+                                  <p className="font-bold text-sm">{a.title}</p>
+                                  <p className="text-[9px] text-white/30 uppercase tracking-widest">{a.totalRatings} rating{a.totalRatings !== 1 ? 's' : ''}</p>
+                                </div>
+                              </div>
+                              <div className="flex items-center gap-2">
+                                <div className="flex gap-0.5">
+                                  {[1,2,3,4,5].map(s => (
+                                    <Star key={s} className={`w-4 h-4 ${s <= Math.round((a.avgRating || 0) / 10) ? 'text-amber-400 fill-amber-400' : 'text-white/10'}`} />
+                                  ))}
+                                </div>
+                                <span className="text-lg font-black text-amber-400 ml-2">{((a.avgRating || 0) / 10).toFixed(1)}</span>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </CardContent>
+                  </Card>
+                </div>
+              );
+            })()}
+          </TabsContent>
+
+          <TabsContent value="cleanup">
+            <div className="space-y-8">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-xl bg-red-500/10 flex items-center justify-center border border-red-500/20">
+                    <Trash2 className="w-5 h-5 text-red-400" />
+                  </div>
+                  <div>
+                    <h3 className="font-bold text-lg">Storage Cleanup</h3>
+                    <p className="text-[10px] font-bold uppercase tracking-widest text-white/30">Find orphan files in Cloudinary not linked to any album</p>
+                  </div>
+                </div>
+                <Button
+                  onClick={fetchCleanup}
+                  disabled={cleanupLoading}
+                  variant="outline"
+                  className="rounded-xl border-white/10 hover:bg-white/5 gap-2"
+                >
+                  <RefreshCw className={`w-4 h-4 ${cleanupLoading ? 'animate-spin' : ''}`} />
+                  {cleanupLoading ? 'Scanning...' : 'Scan Now'}
+                </Button>
+              </div>
+
+              {cleanupLoading && !cleanupData && (
+                <div className="flex flex-col items-center justify-center py-20">
+                  <Loader2 className="w-8 h-8 animate-spin text-red-400 mb-4" />
+                  <p className="text-white/40 text-sm">Scanning Cloudinary for orphaned assets...</p>
+                  <p className="text-white/20 text-xs mt-1">This may take a few seconds</p>
+                </div>
+              )}
+
+              {cleanupData?.error && (
+                <div className="p-6 rounded-2xl bg-red-500/10 border border-red-500/20 flex items-center gap-4">
+                  <AlertTriangle className="w-6 h-6 text-red-400 shrink-0" />
+                  <div>
+                    <p className="font-bold text-red-400">Scan Failed</p>
+                    <p className="text-sm text-red-400/60 mt-1">{cleanupData.error}</p>
+                  </div>
+                </div>
+              )}
+
+              {cleanupData && !cleanupData.error && (() => {
+                const formatBytes = (bytes: number) => {
+                  if (bytes === 0) return '0 B';
+                  const k = 1024;
+                  const sizes = ['B', 'KB', 'MB', 'GB'];
+                  const i = Math.floor(Math.log(bytes) / Math.log(k));
+                  return `${parseFloat((bytes / Math.pow(k, i)).toFixed(2))} ${sizes[i]}`;
+                };
+
+                return (
+                  <>
+                    <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+                      <Card className="bg-white/[0.03] border-white/5 rounded-2xl">
+                        <CardContent className="p-6 text-center">
+                          <p className="text-[10px] font-bold uppercase tracking-widest text-white/30 mb-2">Cloud Assets</p>
+                          <p className="text-3xl font-black text-cyan-400">{cleanupData.total_cloud_resources}</p>
+                        </CardContent>
+                      </Card>
+                      <Card className="bg-white/[0.03] border-white/5 rounded-2xl">
+                        <CardContent className="p-6 text-center">
+                          <p className="text-[10px] font-bold uppercase tracking-widest text-white/30 mb-2">DB Linked Files</p>
+                          <p className="text-3xl font-black text-green-400">{cleanupData.total_db_files}</p>
+                        </CardContent>
+                      </Card>
+                      <Card className="bg-white/[0.03] border-white/5 rounded-2xl">
+                        <CardContent className="p-6 text-center">
+                          <p className="text-[10px] font-bold uppercase tracking-widest text-white/30 mb-2">Orphan Files</p>
+                          <p className={`text-3xl font-black ${cleanupData.orphan_count > 0 ? 'text-red-400' : 'text-green-400'}`}>{cleanupData.orphan_count}</p>
+                        </CardContent>
+                      </Card>
+                      <Card className="bg-white/[0.03] border-white/5 rounded-2xl">
+                        <CardContent className="p-6 text-center">
+                          <p className="text-[10px] font-bold uppercase tracking-widest text-white/30 mb-2">Recoverable Space</p>
+                          <p className="text-3xl font-black text-amber-400">{formatBytes(cleanupData.orphan_size_bytes)}</p>
+                        </CardContent>
+                      </Card>
+                    </div>
+
+                    {cleanupData.orphan_count === 0 ? (
+                      <div className="p-6 rounded-2xl bg-green-500/5 border border-green-500/10 flex items-center gap-4">
+                        <CheckCircle2 className="w-6 h-6 text-green-400 shrink-0" />
+                        <div>
+                          <p className="font-bold text-green-400">Storage Clean</p>
+                          <p className="text-sm text-green-400/50">No orphaned files found. All Cloudinary assets are linked to albums.</p>
+                        </div>
+                      </div>
+                    ) : (
+                      <Card className="bg-white/[0.03] border-white/5 rounded-2xl overflow-hidden">
+                        <CardHeader className="border-b border-white/5 bg-white/[0.02]">
+                          <CardTitle className="text-lg flex items-center gap-2">
+                            <AlertTriangle className="w-5 h-5 text-amber-400" /> Orphaned Files ({cleanupData.orphan_count})
+                          </CardTitle>
+                        </CardHeader>
+                        <CardContent className="p-0">
+                          <div className="divide-y divide-white/5 max-h-[400px] overflow-y-auto">
+                            {cleanupData.orphans.map((o: any, i: number) => (
+                              <div key={i} className="flex items-center justify-between px-6 py-3 hover:bg-white/[0.02] transition-colors">
+                                <div className="flex items-center gap-4">
+                                  <img src={o.url} alt="" className="w-12 h-12 rounded-lg object-cover border border-white/10" onError={(e) => { (e.target as any).style.display = 'none'; }} />
+                                  <div>
+                                    <p className="font-mono text-xs text-white/50 truncate max-w-[300px]">{o.public_id}</p>
+                                    <p className="text-[9px] text-white/20 uppercase">{o.format} · {formatBytes(o.bytes)} · {new Date(o.created_at).toLocaleDateString()}</p>
+                                  </div>
+                                </div>
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  className="text-red-400 hover:bg-red-500/20 text-xs"
+                                  onClick={async () => {
+                                    if (!confirm(`Delete "${o.public_id}" from Cloudinary?`)) return;
+                                    try {
+                                      await fetch(`/api/admin/storage-cleanup/${encodeURIComponent(o.public_id)}`, { method: 'DELETE' });
+                                      toast({ title: `Deleted: ${o.public_id}` });
+                                      fetchCleanup();
+                                    } catch (e) {
+                                      toast({ title: 'Delete failed', variant: 'destructive' });
+                                    }
+                                  }}
+                                >
+                                  <Trash2 className="w-3 h-3 mr-1" /> Delete
+                                </Button>
+                              </div>
+                            ))}
+                          </div>
+                        </CardContent>
+                      </Card>
+                    )}
+                  </>
+                );
+              })()}
+            </div>
           </TabsContent>
         </Tabs>
       </div>
