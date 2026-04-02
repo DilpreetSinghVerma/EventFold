@@ -1135,21 +1135,39 @@ export function registerRoutes(
         if (!nextCursor) break;
       }
 
-      // Get all file paths from database
+      // Get ALL file paths from database (albums, settings, avatars)
       const allAlbums = await storage.getAllAlbums();
       const allDbPaths = new Set<string>();
+
+      // 1. Album files (sheets, covers, videos, audio)
       for (const album of allAlbums) {
         const files = await storage.getFilesByAlbum(album.id);
         for (const f of files) {
-          // Extract the public_id or base URL from stored path
           allDbPaths.add(f.filePath);
+        }
+        // Also protect background music URLs
+        if (album.bgMusicUrl) allDbPaths.add(album.bgMusicUrl);
+      }
+
+      // 2. Business logos from settings (DO NOT delete these!)
+      const allUsers = await storage.getUsers();
+      for (const u of allUsers) {
+        try {
+          const s = await storage.getSettings(u.id);
+          if (s?.businessLogo && s.businessLogo.includes('cloudinary')) {
+            allDbPaths.add(s.businessLogo);
+          }
+        } catch (e) {}
+
+        // 3. User avatars (Google profile pics are external, but custom ones could be Cloudinary)
+        if (u.avatar && u.avatar.includes('cloudinary')) {
+          allDbPaths.add(u.avatar);
         }
       }
 
-      // Find orphans (in Cloudinary but not in any album)
+      // Find orphans (in Cloudinary but NOT referenced ANYWHERE in the platform)
       const orphans = allCloudResources.filter(r => {
         const secureUrl = r.secure_url;
-        // Check if any DB path contains this resource's public_id
         let found = false;
         allDbPaths.forEach(dbPath => {
           if (dbPath.includes(r.public_id) || secureUrl === dbPath) {
