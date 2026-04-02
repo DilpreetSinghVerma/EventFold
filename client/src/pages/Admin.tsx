@@ -382,6 +382,7 @@ export default function Admin() {
                         <TableHead className="text-white/50">Album Title</TableHead>
                         <TableHead className="text-white/50">Owner ID</TableHead>
                         <TableHead className="text-white/50">Date Created</TableHead>
+                        <TableHead className="text-white/50">Security</TableHead>
                         <TableHead className="text-white/50">Status</TableHead>
                         <TableHead className="text-white/50 text-right">Actions</TableHead>
                       </TableRow>
@@ -392,6 +393,18 @@ export default function Admin() {
                           <TableCell className="font-bold">{a.title}</TableCell>
                           <TableCell className="font-mono text-[10px] text-white/40">{a.userId}</TableCell>
                           <TableCell className="text-white/60">{new Date(a.createdAt).toLocaleDateString()}</TableCell>
+                          <TableCell>
+                            {(a as any).password ? (
+                              <div className="flex items-center gap-2">
+                                <span className="flex items-center gap-1 px-2 py-0.5 bg-amber-500/10 border border-amber-500/20 rounded-lg text-[9px] font-bold text-amber-400 uppercase tracking-widest">
+                                  <Eye className="w-3 h-3" /> LOCKED
+                                </span>
+                                <span className="text-[10px] font-mono text-white/30" title="Album Password">{(a as any).password}</span>
+                              </div>
+                            ) : (
+                              <span className="text-[10px] text-white/20 uppercase tracking-widest">Open</span>
+                            )}
+                          </TableCell>
                           <TableCell>
                             <Button
                               variant="ghost"

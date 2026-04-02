@@ -487,7 +487,7 @@ export function registerRoutes(
 
       // If there's a password and user hasn't unlocked it yet (and isn't the owner)
       const albumSessionKey = `unlocked_${album.id}`;
-      const isUnlocked = (req.session as any)?.[albumSessionKey] || isOwner;
+      const isUnlocked = (req.session as any)?.[albumSessionKey] || isOwner || isAdminUser;
 
       if (album.password && !isUnlocked) {
         // Return limited metadata if locked
