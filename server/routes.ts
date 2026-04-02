@@ -962,5 +962,87 @@ export function registerRoutes(
     res.sendFile(filePath);
   });
 
+  // Admin: Get Cloudinary Storage Usage
+  app.get("/api/admin/cloud-usage", async (req, res) => {
+    try {
+      if (!req.isAuthenticated()) return res.status(401).json({ error: "Unauthorized" });
+      const user = req.user as any;
+      const adminEmails = ["admin@eventfold.com", "dilpreetsinghverma@gmail.com"];
+      if (user.role !== 'admin' && !adminEmails.includes(user.email)) {
+        return res.status(403).json({ error: "Admin privilege required" });
+      }
+
+      // Call Cloudinary Admin API for usage stats
+      const cloudName = process.env.CLOUDINARY_CLOUD_NAME;
+      const apiKey = process.env.CLOUDINARY_API_KEY;
+      const apiSecret = process.env.CLOUDINARY_API_SECRET;
+
+      if (!cloudName || !apiKey || !apiSecret) {
+        return res.status(500).json({ error: "Cloudinary credentials not configured" });
+      }
+
+      const auth = Buffer.from(`${apiKey}:${apiSecret}`).toString('base64');
+
+      const usageRes = await fetch(
+        `https://api.cloudinary.com/v1_1/${cloudName}/usage`,
+        {
+          headers: { Authorization: `Basic ${auth}` }
+        }
+      );
+
+      if (!usageRes.ok) {
+        const errText = await usageRes.text();
+        console.error("Cloudinary API error:", errText);
+        return res.status(500).json({ error: "Failed to fetch Cloudinary usage", details: errText });
+      }
+
+      const usage = await usageRes.json();
+
+      // Count platform assets (albums + files in DB)
+      const allAlbums = await storage.getAllAlbums();
+      let totalFiles = 0;
+      for (const album of allAlbums) {
+        const files = await storage.getFilesByAlbum(album.id);
+        totalFiles += files.length;
+      }
+
+      res.json({
+        cloudinary: {
+          plan: usage.plan,
+          last_updated: usage.last_updated,
+          storage: {
+            used_bytes: usage.storage?.usage || 0,
+            limit_bytes: usage.storage?.credits_usage !== undefined ? usage.storage.credits_usage : null,
+            used_percent: usage.storage?.used_percent || 0,
+          },
+          bandwidth: {
+            used_bytes: usage.bandwidth?.usage || 0,
+            limit_bytes: usage.bandwidth?.limit || 0,
+            used_percent: usage.bandwidth?.used_percent || 0,
+          },
+          transformations: {
+            used: usage.transformations?.usage || 0,
+            limit: usage.transformations?.limit || 0,
+            used_percent: usage.transformations?.used_percent || 0,
+          },
+          objects: {
+            used: usage.objects?.usage || 0,
+            limit: usage.objects?.limit || 0,
+            used_percent: usage.objects?.used_percent || 0,
+          },
+          resources: usage.resources || 0,
+          derived_resources: usage.derived_resources || 0,
+        },
+        platform: {
+          total_albums: allAlbums.length,
+          total_files: totalFiles,
+        }
+      });
+    } catch (e: any) {
+      console.error("Cloud usage fetch failed:", e);
+      res.status(500).json({ error: "Failed to fetch cloud usage", details: e.message });
+    }
+  });
+
   // (Legacy Stripe Methods removed - now using /api/billing routes)
 }
