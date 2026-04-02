@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import { Loader2, Plus, Minus, Trash2, Eye, LayoutDashboard, Users, BookCopy, ShieldAlert, TrendingUp, Activity, Database, Globe, Search, ArrowUpCircle, CheckCircle2, XCircle, Sparkles, Cloud, HardDrive, Wifi, Zap, AlertTriangle, RefreshCw } from "lucide-react";
+import { Loader2, Plus, Minus, Trash2, Eye, LayoutDashboard, Users, BookCopy, ShieldAlert, TrendingUp, Activity, Database, Globe, Search, ArrowUpCircle, CheckCircle2, XCircle, Sparkles, Cloud, HardDrive, Wifi, Zap, AlertTriangle, RefreshCw, IndianRupee, PieChart, BarChart3, Clock, Crown, CreditCard } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { Link, useLocation } from "wouter";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -257,6 +257,9 @@ export default function Admin() {
             </TabsTrigger>
             <TabsTrigger value="cloud" className="data-[state=active]:bg-primary rounded-lg flex gap-2" onClick={() => { if (!cloudUsage) fetchCloudUsage(); }}>
               <Cloud className="w-4 h-4" /> Cloud Storage
+            </TabsTrigger>
+            <TabsTrigger value="revenue" className="data-[state=active]:bg-primary rounded-lg flex gap-2">
+              <IndianRupee className="w-4 h-4" /> Revenue
             </TabsTrigger>
           </TabsList>
 
@@ -685,6 +688,241 @@ export default function Admin() {
                 );
               })()}
             </div>
+          </TabsContent>
+
+          <TabsContent value="revenue">
+            {(() => {
+              const proUsers = users?.filter(u => u.plan === 'pro' && u.subscriptionExpiresAt && new Date(u.subscriptionExpiresAt) > new Date()) || [];
+              const eliteUsers = users?.filter(u => u.plan === 'elite' && u.subscriptionExpiresAt && new Date(u.subscriptionExpiresAt) > new Date()) || [];
+              const freeUsers = users?.filter(u => u.plan === 'free') || [];
+              const totalUsers = users?.length || 0;
+              
+              const mrr = (proUsers.length * 199) + Math.round((eliteUsers.length * 899) / 12);
+              const arr = mrr * 12;
+              const creditsSpent = users ? users.reduce((acc, u) => acc + Math.max(0, 1 - u.credits), 0) : 0;
+              const estCreditRevenue = creditsSpent * 49;
+              const estSubRevenue = (proUsers.length * 199) + (eliteUsers.length * 899);
+              const totalEstRevenue = estCreditRevenue + estSubRevenue;
+              const conversionRate = totalUsers > 0 ? ((proUsers.length + eliteUsers.length) / totalUsers * 100) : 0;
+              const avgEngagement = albums && albums.length > 0 ? Math.round(albums.reduce((acc, a) => acc + (a.totalEngagementTime || 0), 0) / albums.length) : 0;
+              
+              const topAlbums = [...(albums || [])].sort((a, b) => (b.views || 0) - (a.views || 0)).slice(0, 5);
+              const recentUsers = [...(users || [])].sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()).slice(0, 5);
+
+              const planBarMax = Math.max(freeUsers.length, proUsers.length, eliteUsers.length, 1);
+
+              return (
+                <div className="space-y-8">
+                  {/* Revenue Summary Cards */}
+                  <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+                    <Card className="bg-gradient-to-br from-green-500/10 to-green-500/5 border-green-500/20 rounded-2xl overflow-hidden">
+                      <CardContent className="p-6">
+                        <div className="flex items-center gap-4">
+                          <div className="w-12 h-12 rounded-xl bg-green-500/20 flex items-center justify-center border border-green-500/30">
+                            <IndianRupee className="w-6 h-6 text-green-400" />
+                          </div>
+                          <div>
+                            <p className="text-[10px] font-bold uppercase tracking-widest text-green-400/60">Est. Total Revenue</p>
+                            <p className="text-3xl font-black text-green-400">₹{totalEstRevenue.toLocaleString()}</p>
+                          </div>
+                        </div>
+                      </CardContent>
+                    </Card>
+
+                    <Card className="bg-gradient-to-br from-blue-500/10 to-blue-500/5 border-blue-500/20 rounded-2xl overflow-hidden">
+                      <CardContent className="p-6">
+                        <div className="flex items-center gap-4">
+                          <div className="w-12 h-12 rounded-xl bg-blue-500/20 flex items-center justify-center border border-blue-500/30">
+                            <TrendingUp className="w-6 h-6 text-blue-400" />
+                          </div>
+                          <div>
+                            <p className="text-[10px] font-bold uppercase tracking-widest text-blue-400/60">Monthly MRR</p>
+                            <p className="text-3xl font-black text-blue-400">₹{mrr.toLocaleString()}</p>
+                            <p className="text-[9px] text-white/30 uppercase">ARR: ₹{arr.toLocaleString()}</p>
+                          </div>
+                        </div>
+                      </CardContent>
+                    </Card>
+
+                    <Card className="bg-gradient-to-br from-primary/10 to-primary/5 border-primary/20 rounded-2xl overflow-hidden">
+                      <CardContent className="p-6">
+                        <div className="flex items-center gap-4">
+                          <div className="w-12 h-12 rounded-xl bg-primary/20 flex items-center justify-center border border-primary/30">
+                            <Crown className="w-6 h-6 text-primary" />
+                          </div>
+                          <div>
+                            <p className="text-[10px] font-bold uppercase tracking-widest text-primary/60">Active Subscribers</p>
+                            <p className="text-3xl font-black text-primary">{proUsers.length + eliteUsers.length}</p>
+                            <p className="text-[9px] text-white/30 uppercase">{proUsers.length} Pro · {eliteUsers.length} Elite</p>
+                          </div>
+                        </div>
+                      </CardContent>
+                    </Card>
+
+                    <Card className="bg-gradient-to-br from-amber-500/10 to-amber-500/5 border-amber-500/20 rounded-2xl overflow-hidden">
+                      <CardContent className="p-6">
+                        <div className="flex items-center gap-4">
+                          <div className="w-12 h-12 rounded-xl bg-amber-500/20 flex items-center justify-center border border-amber-500/30">
+                            <BarChart3 className="w-6 h-6 text-amber-400" />
+                          </div>
+                          <div>
+                            <p className="text-[10px] font-bold uppercase tracking-widest text-amber-400/60">Conversion Rate</p>
+                            <p className="text-3xl font-black text-amber-400">{conversionRate.toFixed(1)}%</p>
+                            <p className="text-[9px] text-white/30 uppercase">Free → Paid</p>
+                          </div>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  </div>
+
+                  {/* Plan Distribution + Revenue Breakdown */}
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <Card className="bg-white/[0.03] border-white/5 rounded-2xl overflow-hidden">
+                      <CardHeader className="border-b border-white/5 bg-white/[0.02]">
+                        <CardTitle className="text-lg flex items-center gap-2">
+                          <PieChart className="w-5 h-5 text-primary" /> Plan Distribution
+                        </CardTitle>
+                      </CardHeader>
+                      <CardContent className="p-6 space-y-6">
+                        <div className="space-y-4">
+                          <div className="space-y-2">
+                            <div className="flex items-center justify-between text-sm">
+                              <span className="text-white/60 flex items-center gap-2"><span className="w-3 h-3 rounded-full bg-white/20" /> Free</span>
+                              <span className="font-bold">{freeUsers.length} <span className="text-white/30 font-normal">users</span></span>
+                            </div>
+                            <div className="w-full h-4 bg-white/5 rounded-full overflow-hidden">
+                              <div className="h-full rounded-full bg-white/20 transition-all duration-700" style={{ width: `${(freeUsers.length / planBarMax) * 100}%` }} />
+                            </div>
+                          </div>
+                          <div className="space-y-2">
+                            <div className="flex items-center justify-between text-sm">
+                              <span className="text-white/60 flex items-center gap-2"><span className="w-3 h-3 rounded-full bg-primary" /> Pro (₹199/mo)</span>
+                              <span className="font-bold">{proUsers.length} <span className="text-white/30 font-normal">users</span></span>
+                            </div>
+                            <div className="w-full h-4 bg-white/5 rounded-full overflow-hidden">
+                              <div className="h-full rounded-full bg-primary transition-all duration-700" style={{ width: `${(proUsers.length / planBarMax) * 100}%` }} />
+                            </div>
+                          </div>
+                          <div className="space-y-2">
+                            <div className="flex items-center justify-between text-sm">
+                              <span className="text-white/60 flex items-center gap-2"><span className="w-3 h-3 rounded-full bg-amber-500" /> Elite (₹899/yr)</span>
+                              <span className="font-bold">{eliteUsers.length} <span className="text-white/30 font-normal">users</span></span>
+                            </div>
+                            <div className="w-full h-4 bg-white/5 rounded-full overflow-hidden">
+                              <div className="h-full rounded-full bg-amber-500 transition-all duration-700" style={{ width: `${(eliteUsers.length / planBarMax) * 100}%` }} />
+                            </div>
+                          </div>
+                        </div>
+                      </CardContent>
+                    </Card>
+
+                    <Card className="bg-white/[0.03] border-white/5 rounded-2xl overflow-hidden">
+                      <CardHeader className="border-b border-white/5 bg-white/[0.02]">
+                        <CardTitle className="text-lg flex items-center gap-2">
+                          <CreditCard className="w-5 h-5 text-primary" /> Revenue Breakdown
+                        </CardTitle>
+                      </CardHeader>
+                      <CardContent className="p-6 space-y-6">
+                        <div className="space-y-4">
+                          <div className="p-5 rounded-2xl bg-white/5 border border-white/5 flex items-center justify-between">
+                            <div>
+                              <p className="text-sm font-bold">Subscription Revenue</p>
+                              <p className="text-[10px] text-white/30 uppercase tracking-widest">Pro + Elite plans</p>
+                            </div>
+                            <p className="text-2xl font-black text-green-400">₹{estSubRevenue.toLocaleString()}</p>
+                          </div>
+                          <div className="p-5 rounded-2xl bg-white/5 border border-white/5 flex items-center justify-between">
+                            <div>
+                              <p className="text-sm font-bold">Credit Revenue</p>
+                              <p className="text-[10px] text-white/30 uppercase tracking-widest">One-time ₹49 purchases</p>
+                            </div>
+                            <p className="text-2xl font-black text-blue-400">₹{estCreditRevenue.toLocaleString()}</p>
+                          </div>
+                          <div className="p-5 rounded-2xl bg-white/5 border border-white/5 flex items-center justify-between">
+                            <div>
+                              <p className="text-sm font-bold">Avg. Engagement</p>
+                              <p className="text-[10px] text-white/30 uppercase tracking-widest">Per album viewer time</p>
+                            </div>
+                            <p className="text-2xl font-black text-white/60">{avgEngagement > 60 ? `${Math.round(avgEngagement / 60)}m` : `${avgEngagement}s`}</p>
+                          </div>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  </div>
+
+                  {/* Top Albums + Recent Signups */}
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <Card className="bg-white/[0.03] border-white/5 rounded-2xl overflow-hidden">
+                      <CardHeader className="border-b border-white/5 bg-white/[0.02]">
+                        <CardTitle className="text-lg flex items-center gap-2">
+                          <Eye className="w-5 h-5 text-primary" /> Top Albums by Views
+                        </CardTitle>
+                      </CardHeader>
+                      <CardContent className="p-0">
+                        {topAlbums.length === 0 ? (
+                          <p className="p-6 text-white/30 text-sm">No album data yet</p>
+                        ) : (
+                          <div className="divide-y divide-white/5">
+                            {topAlbums.map((a, i) => (
+                              <div key={a.id} className="flex items-center justify-between px-6 py-4 hover:bg-white/[0.02] transition-colors">
+                                <div className="flex items-center gap-4">
+                                  <span className={`w-8 h-8 rounded-lg flex items-center justify-center text-xs font-black ${i === 0 ? 'bg-amber-500/20 text-amber-400' : i === 1 ? 'bg-white/10 text-white/40' : 'bg-white/5 text-white/20'}`}>
+                                    #{i + 1}
+                                  </span>
+                                  <div>
+                                    <p className="font-bold text-sm truncate max-w-[200px]">{a.title}</p>
+                                    <p className="text-[9px] text-white/30 uppercase tracking-widest">{a.category || 'Uncategorized'}</p>
+                                  </div>
+                                </div>
+                                <div className="text-right">
+                                  <p className="font-black text-primary">{(a.views || 0).toLocaleString()}</p>
+                                  <p className="text-[9px] text-white/30 uppercase">Views</p>
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        )}
+                      </CardContent>
+                    </Card>
+
+                    <Card className="bg-white/[0.03] border-white/5 rounded-2xl overflow-hidden">
+                      <CardHeader className="border-b border-white/5 bg-white/[0.02]">
+                        <CardTitle className="text-lg flex items-center gap-2">
+                          <Clock className="w-5 h-5 text-primary" /> Recent Signups
+                        </CardTitle>
+                      </CardHeader>
+                      <CardContent className="p-0">
+                        {recentUsers.length === 0 ? (
+                          <p className="p-6 text-white/30 text-sm">No users yet</p>
+                        ) : (
+                          <div className="divide-y divide-white/5">
+                            {recentUsers.map((u) => (
+                              <div key={u.id} className="flex items-center justify-between px-6 py-4 hover:bg-white/[0.02] transition-colors">
+                                <div className="flex items-center gap-3">
+                                  <div className="w-9 h-9 rounded-full bg-primary/10 border border-primary/20 flex items-center justify-center text-primary font-bold text-sm">
+                                    {(u.name || u.email || '?')[0].toUpperCase()}
+                                  </div>
+                                  <div>
+                                    <p className="font-bold text-sm">{u.name || 'Anonymous'}</p>
+                                    <p className="text-[9px] text-white/30 uppercase tracking-widest">{u.email || 'Google User'}</p>
+                                  </div>
+                                </div>
+                                <div className="text-right">
+                                  <Badge className={`text-[8px] font-black uppercase ${u.plan === 'pro' ? 'bg-primary/20 text-primary border-primary/30' : u.plan === 'elite' ? 'bg-amber-500/20 text-amber-400 border-amber-500/30' : 'bg-white/5 text-white/30 border-white/10'}`}>
+                                    {u.plan}
+                                  </Badge>
+                                  <p className="text-[9px] text-white/30 mt-1">{new Date(u.createdAt).toLocaleDateString()}</p>
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        )}
+                      </CardContent>
+                    </Card>
+                  </div>
+                </div>
+              );
+            })()}
           </TabsContent>
         </Tabs>
       </div>

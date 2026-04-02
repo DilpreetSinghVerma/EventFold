@@ -1,5 +1,6 @@
 import { Link } from 'wouter';
 import { Share2, Linkedin, Youtube, Heart, MapPin, Mail, Instagram } from "lucide-react";
+import { LanguageToggle } from '@/lib/i18n';
 
 export function Footer({ children }: { children?: React.ReactNode }) {
   return (
@@ -74,6 +75,9 @@ export function Footer({ children }: { children?: React.ReactNode }) {
               <Link href="/about" className="hover:text-white transition-colors w-fit">Our Story</Link>
               <Link href="/faq" className="hover:text-white transition-colors w-fit">FAQ</Link>
               <Link href="/demos" className="hover:text-white transition-colors w-fit">Demos</Link>
+            </div>
+            <div className="pt-2">
+              <LanguageToggle />
             </div>
           </div>
 

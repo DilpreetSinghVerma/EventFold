@@ -23,6 +23,7 @@ import AlbumEdit from "@/pages/AlbumEdit";
 import ScrollToTop from "@/components/ScrollToTop";
 
 import { AuthProvider, useAuth } from "@/lib/auth";
+import { I18nProvider } from "@/lib/i18n";
 import { Loader2 } from "lucide-react";
 
 function Router() {
@@ -73,11 +74,13 @@ function App() {
   return (
     <QueryClientProvider client={queryClient}>
       <TooltipProvider>
-        <AuthProvider>
-          <Toaster />
-          <ScrollToTop />
-          <Router />
-        </AuthProvider>
+        <I18nProvider>
+          <AuthProvider>
+            <Toaster />
+            <ScrollToTop />
+            <Router />
+          </AuthProvider>
+        </I18nProvider>
       </TooltipProvider>
     </QueryClientProvider>
   );

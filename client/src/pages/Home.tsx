@@ -3,6 +3,7 @@ import { Button } from '@/components/ui/button';
 import { motion } from 'framer-motion';
 import { Sparkles, ImagePlus, Eye, Smartphone, Zap, ArrowRight, LayoutGrid, CheckCircle2, ShoppingCart, ShieldCheck, Upload, Share2, BookOpen, Crown, CreditCard, Rocket, Play, Linkedin, Youtube, Palette, MessageCircle, Star, Quote } from "lucide-react";
 import { useAuth } from "@/lib/auth";
+import { useI18n, LanguageToggle } from "@/lib/i18n";
 import weddingCover from '@assets/generated_images/wedding_album_cover_art.png';
 import { ContactForm } from '@/components/ContactForm';
 import { Footer } from '@/components/Footer';
@@ -18,6 +19,7 @@ import demoSheet2R from '@assets/demo_album/sheet2_r.png';
 
 export default function Home() {
   const { user, startRazorpayCheckout, buyAlbumCredit } = useAuth();
+  const { t } = useI18n();
   const [, setLocation] = useLocation();
 
   useEffect(() => {
@@ -134,15 +136,16 @@ export default function Home() {
           </div>
         </Link>
         <div className="flex items-center gap-8">
+          <LanguageToggle className="hidden md:flex" />
           <a href="#pricing" className="text-sm font-medium text-white/50 hover:text-white transition-colors cursor-pointer hidden md:block">
-            Pricing
+            {t('pricing')}
           </a>
           <Link href="/dashboard" className="text-sm font-medium text-white/50 hover:text-white transition-colors">
-            {user ? "Dashboard" : "Studio Log In"}
+            {user ? t('dashboard') : t('studioLogin')}
           </Link>
           <Link href="/create">
             <Button className="rounded-2xl px-6 bg-primary hover:bg-primary/90 text-white border-none shadow-lg shadow-primary/20 font-bold">
-              {user ? "New Project" : "Start Free"}
+              {user ? t('newProject') : t('startFree')}
             </Button>
           </Link>
         </div>
@@ -159,20 +162,19 @@ export default function Home() {
               className="max-w-3xl"
             >
               <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-[#FF9933]/10 border border-[#FF9933]/20 text-[#FF9933] text-[10px] font-bold tracking-[0.2em] uppercase mb-4 shadow-[0_0_20px_rgba(255,153,51,0.1)]">
-                <Sparkles className="w-3 h-3" /> Digital Shagun for the Modern Studio
+                <Sparkles className="w-3 h-3" /> {t('heroTag')}
               </div>
               <h1 className="text-5xl md:text-7xl lg:text-8xl font-display font-bold leading-[1.0] mb-4 tracking-tighter">
-                Cinematic <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#FF9933] via-primary to-indigo-400">Royal Digital</span> Albums.
+                {t('heroTitle1')} <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#FF9933] via-primary to-indigo-400">{t('heroTitle2')}</span> {t('heroTitle3')}
               </h1>
               <p className="text-lg md:text-xl text-white/50 mb-8 leading-relaxed max-w-2xl mx-auto italic">
-                Preserve your "Shubh-Vivah" memories in an interactive 3D royal experience.
-                Upload your first "Shaadi" project for <strong>free trial</strong> and honor your traditions.
+                {t('heroDesc')} <strong>{t('heroDescBold')}</strong> {t('heroDescEnd')}
               </p>
 
               <div className="flex flex-col sm:flex-row gap-5 justify-center">
                 <Link href="/create">
                   <Button size="lg" className="rounded-[1.25rem] h-16 px-10 text-lg bg-primary hover:bg-primary/90 text-white font-bold group">
-                    Upload Your Free 1st Album <ArrowRight className="w-5 h-5 ml-2 group-hover:translate-x-1 transition-transform" />
+                    {t('heroBtn1')} <ArrowRight className="w-5 h-5 ml-2 group-hover:translate-x-1 transition-transform" />
                   </Button>
                 </Link>
                 <Button
@@ -181,7 +183,7 @@ export default function Home() {
                   onClick={() => setLocation('/demos')}
                   className="rounded-[1.25rem] h-16 px-10 text-lg border-white/10 hover:bg-white/5 text-white font-bold group"
                 >
-                  <Eye className="w-5 h-5 mr-3" /> Launch Demo Experience
+                  <Eye className="w-5 h-5 mr-3" /> {t('heroBtn2')}
                 </Button>
               </div>
             </motion.div>
@@ -232,7 +234,7 @@ export default function Home() {
       <div className="max-w-7xl mx-auto px-4 md:px-8 mb-12">
         <div className="py-12 border-y border-white/5 flex flex-col md:flex-row items-center justify-between gap-8 opacity-60">
           <p className="text-[10px] font-black uppercase tracking-[0.4em] text-white/40 text-center md:text-left">
-            Trusted by <span className="text-white">500+ Elite Studios</span> across India & Abroad
+            {t('trustedBy')} <span className="text-white">{t('eliteStudios')}</span> {t('acrossIndia')}
           </p>
           <div className="flex flex-wrap justify-center gap-12 items-center grayscale opacity-50">
             {/* Abstract labels representing the elite standard */}
@@ -248,15 +250,15 @@ export default function Home() {
           <div className="flex flex-col md:flex-row items-center justify-between gap-16">
             <div className="max-w-md space-y-8">
               <h2 className="text-4xl md:text-5xl font-display font-bold leading-tight">
-                From Raw Photos <br />
-                <span className="text-primary italic">to 3D Magic.</span>
+                {t('howItWorksTitle1')} <br />
+                <span className="text-primary italic">{t('howItWorksTitle2')}</span>
               </h2>
               <p className="text-white/40 text-lg">
-                Our cinematic engine does the heavy lifting. You just focus on capturing the beauty.
+                {t('howItWorksDesc')}
               </p>
               <Link href="/create">
                 <Button className="rounded-2xl h-14 px-8 bg-white/5 border border-white/10 hover:bg-white/10 text-white font-bold group">
-                  Try it Yourself <ArrowRight className="w-4 h-4 ml-2 group-hover:translate-x-1 transition-transform" />
+                  {t('tryItYourself')} <ArrowRight className="w-4 h-4 ml-2 group-hover:translate-x-1 transition-transform" />
                 </Button>
               </Link>
             </div>
@@ -265,18 +267,18 @@ export default function Home() {
               {[
                 {
                   icon: <Upload className="w-8 h-8" />,
-                  title: "Upload",
-                  desc: "Drop your high-res photos into our secure dashboard."
+                  title: t('step1Title'),
+                  desc: t('step1Desc')
                 },
                 {
                   icon: <Palette className="w-8 h-8" />,
-                  title: "Theme",
-                  desc: "Select a Royal theme and cinematic background score."
+                  title: t('step2Title'),
+                  desc: t('step2Desc')
                 },
                 {
                   icon: <Share2 className="w-8 h-8" />,
-                  title: "Share",
-                  desc: "Get your custom QR code and wow your clients instantly."
+                  title: t('step3Title'),
+                  desc: t('step3Desc')
                 }
               ].map((step, i) => (
                 <div key={i} className="glass p-8 rounded-[2.5rem] border-white/5 space-y-6 relative group hover:border-primary/20 transition-all duration-500">
@@ -361,9 +363,9 @@ export default function Home() {
       <section id="pricing" className="py-24 md:py-32 relative scroll-mt-24">
         <div className="max-w-7xl mx-auto px-4 md:px-8">
           <div className="text-center mb-20">
-            <h2 className="text-5xl md:text-6xl font-display font-bold mb-6 tracking-tight">Simple <span className="text-primary">Pricing</span></h2>
+            <h2 className="text-5xl md:text-6xl font-display font-bold mb-6 tracking-tight">{t('simplePricing')} <span className="text-primary">{t('pricingWord')}</span></h2>
             <p className="text-white/40 text-lg max-w-2xl mx-auto leading-relaxed">
-              Get full cinematic 3D features at half the price of competitors. Start for free and grow as you need.
+              {t('pricingDesc')}
             </p>
           </div>
 
