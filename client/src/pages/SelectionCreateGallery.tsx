@@ -37,9 +37,11 @@ export default function SelectionCreateGallery() {
   const [, setLocation] = useLocation();
   const { user } = useAuth();
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const folderInputRef = useRef<HTMLInputElement>(null);
   const [dragOver, setDragOver] = useState(false);
   const [loading, setLoading] = useState(false);
   const [status, setStatus] = useState('');
+  const [uploadProgress, setUploadProgress] = useState(0);
 
   const [name, setName] = useState('');
   const [clientName, setClientName] = useState('');
@@ -180,21 +182,57 @@ export default function SelectionCreateGallery() {
         uploadedPhotos.push(...valid);
       }
 
-      setStatus('Finalizing gallery...');
-      createMutation.mutate({
-        name,
-        clientName,
-        clientEmail,
-        photographerName: photographerName || user?.name || 'Studio',
-        photos: uploadedPhotos as any, // Cast to any because the backend handles the ID/defaults
-        deadline,
-        password,
-        watermarkText: watermark,
-        minSelections: minSelections ? parseInt(minSelections) : undefined,
-        maxSelections: maxSelections ? parseInt(maxSelections) : undefined,
-        message,
-        status: 'pending'
+      // 3. Create the gallery first (Metadata only)
+      setStatus('Creating gallery metadata...');
+      const galleryRes = await fetch('/api/selection/galleries', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name,
+          clientName,
+          clientEmail,
+          photographerName: photographerName || user?.name || 'Studio',
+          deadline,
+          password,
+          watermarkText: watermark,
+          minSelections: minSelections ? parseInt(minSelections) : undefined,
+          maxSelections: maxSelections ? parseInt(maxSelections) : undefined,
+          message,
+          status: 'pending'
+        })
       });
+
+      if (!galleryRes.ok) {
+        const errData = await galleryRes.json();
+        throw new Error(errData.error || 'Failed to create gallery metadata');
+      }
+
+      const gallery = await galleryRes.json();
+
+      // 4. Send photo URLs to server in chunks of 50
+      // This prevents the Vercel 10s timeout error
+      const SERVER_CHUNK_SIZE = 50;
+      setStatus(`Saving ${uploadedPhotos.length} photos...`);
+      
+      for (let i = 0; i < uploadedPhotos.length; i += SERVER_CHUNK_SIZE) {
+        const chunk = uploadedPhotos.slice(i, i + SERVER_CHUNK_SIZE);
+        const progress = Math.round((i / uploadedPhotos.length) * 100);
+        setStatus(`Finalizing... (${progress}%)`);
+        
+        const res = await fetch(`/api/selection/galleries/${gallery.id}/photos`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ photos: chunk })
+        });
+        
+        if (!res.ok) {
+          console.error(`Chunk save failed at index ${i}`);
+        }
+      }
+
+      setStatus('Complete!');
+      queryClient.invalidateQueries({ queryKey: ['/api/selection/galleries'] });
+      setLocation(`/selection/gallery/${gallery.id}`);
 
     } catch (error: any) {
       console.error(error);
@@ -454,6 +492,25 @@ export default function SelectionCreateGallery() {
                 onChange={(e) => e.target.files && handleFiles(e.target.files)}
                 className="hidden"
               />
+              <input
+                ref={folderInputRef}
+                type="file"
+                webkitdirectory=""
+                directory=""
+                multiple
+                onChange={(e) => e.target.files && handleFiles(e.target.files)}
+                className="hidden"
+              />
+              <div className="flex justify-center gap-4 mt-6">
+                 <button
+                  type="button"
+                  onClick={(e) => { e.stopPropagation(); folderInputRef.current?.click(); }}
+                  className="px-4 py-2 rounded-xl glass hover:bg-white/10 text-sm flex items-center gap-2 transition-all"
+                >
+                  <ImageIcon className="w-4 h-4" />
+                  Upload Folder
+                </button>
+              </div>
             </div>
 
             {photos.length > 0 && (

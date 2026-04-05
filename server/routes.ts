@@ -1246,42 +1246,55 @@ export function registerRoutes(
     }
   });
 
-    // Create a new selection gallery
+    // Create a new selection gallery (Metadata only)
     app.post("/api/selection/galleries", async (req, res) => {
-      console.log("POST /api/selection/galleries: Start");
-      if (!req.isAuthenticated()) {
-        console.log("POST /api/selection/galleries: 401 Unauthorized");
-        return res.status(401).json({ error: "Unauthorized" });
-      }
+      if (!req.isAuthenticated()) return res.status(401).json({ error: "Unauthorized" });
       
       try {
         const { photos, ...galleryData } = req.body;
-        console.log(`POST /api/selection/galleries: Parsing data for ${photos?.length || 0} photos`);
-        
         const galleryInsert = insertSelectionGallerySchema.parse({
           ...galleryData,
           userId: req.user!.id,
           createdAt: new Date()
         });
         
-        console.log("POST /api/selection/galleries: Creating gallery entry in DB...");
         const gallery = await storage.createSelectionGallery(galleryInsert);
-        console.log(`POST /api/selection/galleries: Gallery created with ID ${gallery.id}`);
         
-        // Batch Insert Photos
+        // Optional: Batch Insert Photos (if sent in initial request)
         if (Array.isArray(photos) && photos.length > 0) {
-          console.log(`POST /api/selection/galleries: Inserting ${photos.length} photos in bulk...`);
           await storage.createSelectionPhotos(gallery.id, photos);
-          console.log("POST /api/selection/galleries: Photo insertion complete.");
         }
         
-        console.log("POST /api/selection/galleries: Success! Sending gallery data to client.");
         res.json(gallery);
       } catch (e: any) {
-        console.error("POST /api/selection/galleries: FATAL ERROR ->", e);
+        console.error("Gallery creation error:", e);
         res.status(400).json({ error: "Invalid gallery data", details: e.message });
       }
     });
+
+    // Bulk Add Photos to an existing gallery (to prevent Vercel 10s timeouts)
+    app.post("/api/selection/galleries/:id/photos", async (req, res) => {
+      if (!req.isAuthenticated()) return res.status(401).json({ error: "Unauthorized" });
+      
+      try {
+        const { photos } = req.body;
+        if (!Array.isArray(photos)) return res.status(400).json({ error: "Photos array required" });
+        
+        // Verify ownership
+        const gallery = await storage.getSelectionGallery(req.params.id);
+        if (!gallery || gallery.userId !== req.user!.id) {
+          return res.status(403).json({ error: "Forbidden" });
+        }
+        
+        await storage.createSelectionPhotos(gallery.id, photos);
+        res.json({ success: true, count: photos.length });
+      } catch (e: any) {
+        console.error("Batch photos add error:", e);
+        res.status(500).json({ error: "Batch photofail", details: e.message });
+      }
+    });
+
+    // Get a single gallery (Public but password protected if set)
 
   // Get a single gallery (Public but password protected if set)
   app.get("/api/selection/galleries/:id", async (req, res) => {
