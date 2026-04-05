@@ -1248,28 +1248,64 @@ export function registerRoutes(
 
     // Create a new selection gallery (Metadata only)
     app.post("/api/selection/galleries", async (req, res) => {
+      console.log(`[Selection] POST /api/selection/galleries - User: ${req.user?.id}`);
       if (!req.isAuthenticated()) return res.status(401).json({ error: "Unauthorized" });
       
       try {
         const { photos, ...galleryData } = req.body;
+        console.log(`[Selection] Parsing gallery payload for ${photos?.length || 0} photos...`);
+        
         const galleryInsert = insertSelectionGallerySchema.parse({
           ...galleryData,
           userId: req.user!.id,
           createdAt: new Date()
         });
         
-        const gallery = await storage.createSelectionGallery(galleryInsert);
+        // Retry logic for DB connection hiccups
+        let gallery;
+        let lastErr;
+        for (let attempt = 1; attempt <= 2; attempt++) {
+          try {
+            console.log(`[Selection] Saving gallery to DB (Attempt ${attempt})...`);
+            gallery = await storage.createSelectionGallery(galleryInsert);
+            break;
+          } catch (err: any) {
+            lastErr = err;
+            console.error(`[Selection] DB Attempt ${attempt} failed:`, err.message);
+            if (attempt === 1) await new Promise(r => setTimeout(r, 500)); // Short wait
+          }
+        }
+
+        if (!gallery) {
+           throw new Error(`Database save failed after 2 attempts: ${lastErr?.message}`);
+        }
+        
+        console.log(`[Selection] Gallery created successfully: ${gallery.id}`);
         
         // Optional: Batch Insert Photos (if sent in initial request)
         if (Array.isArray(photos) && photos.length > 0) {
+          console.log(`[Selection] Batch inserting ${photos.length} initial photos...`);
           await storage.createSelectionPhotos(gallery.id, photos);
         }
         
         res.json(gallery);
       } catch (e: any) {
-        console.error("Gallery creation error:", e);
-        res.status(400).json({ error: "Invalid gallery data", details: e.message });
+        console.error("[Selection] FATAL creation error:", e);
+        res.status(500).json({ 
+          error: "Gallery creation failed", 
+          details: e.message,
+          type: e.constructor.name 
+        });
       }
+    });
+
+    // Global Error Handler to ENSURE JSON
+    app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
+      console.error("[GLOBAL ERROR]:", err);
+      res.status(500).json({
+        error: "Internal Server Error",
+        details: err.message || "Unknown error occurred"
+      });
     });
 
     // Bulk Add Photos to an existing gallery (to prevent Vercel 10s timeouts)
