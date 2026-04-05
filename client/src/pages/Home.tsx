@@ -1,13 +1,14 @@
 import { Link, useLocation } from 'wouter';
 import { Button } from '@/components/ui/button';
 import { motion } from 'framer-motion';
-import { Sparkles, ImagePlus, Eye, Smartphone, Zap, ArrowRight, LayoutGrid, CheckCircle2, ShoppingCart, ShieldCheck, Upload, Share2, BookOpen, Crown, CreditCard, Rocket, Play, Linkedin, Youtube, Palette, MessageCircle, Star, Quote } from "lucide-react";
+import { Sparkles, ImagePlus, Eye, Smartphone, Zap, ArrowRight, LayoutGrid, CheckCircle2, ShoppingCart, ShieldCheck, Upload, Share2, BookOpen, Crown, CreditCard, Rocket, Play, Linkedin, Youtube, Palette, MessageCircle, Star, Quote, Camera } from "lucide-react";
 import { useAuth } from "@/lib/auth";
 import { useI18n, LanguageToggle } from "@/lib/i18n";
 import weddingCover from '@assets/generated_images/wedding_album_cover_art.png';
 import { ContactForm } from '@/components/ContactForm';
 import { Footer } from '@/components/Footer';
-import { useEffect } from 'react';
+import { useState, useEffect } from 'react';
+import SelectionHome from './SelectionHome';
 
 // Local demo assets
 import demoFront from '@assets/demo_album/cover_front.png';
@@ -21,6 +22,7 @@ export default function Home() {
   const { user, startRazorpayCheckout, buyAlbumCredit } = useAuth();
   const { t } = useI18n();
   const [, setLocation] = useLocation();
+  const [viewMode, setViewMode] = useState<'albums' | 'selection'>('albums');
 
   useEffect(() => {
     document.title = "EventFold Studio | Elite 3D Digital Albums for Photographers";
@@ -126,15 +128,36 @@ export default function Home() {
 
       {/* Navigation */}
       <nav className="relative z-50 flex items-center justify-between px-8 py-6 max-w-7xl mx-auto">
-        <Link href="/">
-          <div className="h-20 cursor-pointer group">
-            <img
-              src="/branding material/without bg version.png"
-              alt="EventFold Studio Logo - Elite 3D Digital Albums"
-              className="h-full w-auto object-contain transition-transform duration-500 group-hover:scale-110"
-            />
+        <div className="flex items-center gap-12">
+          <Link href="/">
+            <div className="h-20 cursor-pointer group">
+              <img
+                src="/branding material/without bg version.png"
+                alt="EventFold Studio Logo - Elite 3D Digital Albums"
+                className="h-full w-auto object-contain transition-transform duration-500 group-hover:scale-110"
+              />
+            </div>
+          </Link>
+
+          {/* Product Switcher */}
+          <div className="hidden lg:flex items-center p-1 bg-white/5 rounded-2xl border border-white/10 backdrop-blur-md">
+            <button
+              onClick={() => setViewMode('albums')}
+              className={`px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all duration-300 flex items-center gap-2 ${viewMode === 'albums' ? 'bg-primary text-white shadow-lg shadow-primary/20' : 'text-white/40 hover:text-white'}`}
+            >
+              <BookOpen className="w-3.5 h-3.5" />
+              Album Studio
+            </button>
+            <button
+              onClick={() => setViewMode('selection')}
+              className={`px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all duration-300 flex items-center gap-2 ${viewMode === 'selection' ? 'bg-primary text-white shadow-lg shadow-primary/20' : 'text-white/40 hover:text-white'}`}
+            >
+              <Camera className="w-3.5 h-3.5" />
+              Selection Pro
+            </button>
           </div>
-        </Link>
+        </div>
+
         <div className="flex items-center gap-8">
           <LanguageToggle className="hidden md:flex" />
           <a href="#pricing" className="text-sm font-medium text-white/50 hover:text-white transition-colors cursor-pointer hidden md:block">
@@ -143,314 +166,340 @@ export default function Home() {
           <Link href="/dashboard" className="text-sm font-medium text-white/50 hover:text-white transition-colors">
             {user ? t('dashboard') : t('studioLogin')}
           </Link>
-          <Link href="/create">
+          <Link href={viewMode === 'selection' ? "/selection/create" : "/create"}>
             <Button className="rounded-2xl px-6 bg-primary hover:bg-primary/90 text-white border-none shadow-lg shadow-primary/20 font-bold">
-              {user ? t('newProject') : t('startFree')}
+              {user ? (viewMode === 'selection' ? 'New Gallery' : t('newProject')) : t('startFree')}
             </Button>
           </Link>
         </div>
       </nav>
 
-      {/* Hero Section */}
-      <main className="relative pt-8 md:pt-12 pb-16 overflow-hidden">
-        <div className="max-w-7xl mx-auto px-4 md:px-8">
-          <div className="flex flex-col items-center text-center gap-6">
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.8 }}
-              className="max-w-3xl"
-            >
-              <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-[#FF9933]/10 border border-[#FF9933]/20 text-[#FF9933] text-[10px] font-bold tracking-[0.2em] uppercase mb-4 shadow-[0_0_20px_rgba(255,153,51,0.1)]">
-                <Sparkles className="w-3 h-3" /> {t('heroTag')}
-              </div>
-              <h1 className="text-5xl md:text-7xl lg:text-8xl font-display font-bold leading-[1.0] mb-4 tracking-tighter">
-                {t('heroTitle1')} <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#FF9933] via-primary to-indigo-400">{t('heroTitle2')}</span> {t('heroTitle3')}
-              </h1>
-              <p className="text-lg md:text-xl text-white/50 mb-8 leading-relaxed max-w-2xl mx-auto italic">
-                {t('heroDesc')} <strong>{t('heroDescBold')}</strong> {t('heroDescEnd')}
-              </p>
-
-              <div className="flex flex-col sm:flex-row gap-5 justify-center">
-                <Link href="/create">
-                  <Button size="lg" className="rounded-[1.25rem] h-16 px-10 text-lg bg-primary hover:bg-primary/90 text-white font-bold group">
-                    {t('heroBtn1')} <ArrowRight className="w-5 h-5 ml-2 group-hover:translate-x-1 transition-transform" />
-                  </Button>
-                </Link>
-                <Button
-                  variant="outline"
-                  size="lg"
-                  onClick={() => setLocation('/demos')}
-                  className="rounded-[1.25rem] h-16 px-10 text-lg border-white/10 hover:bg-white/5 text-white font-bold group"
-                >
-                  <Eye className="w-5 h-5 mr-3" /> {t('heroBtn2')}
-                </Button>
-              </div>
-            </motion.div>
-
-            {/* Static Visual Representation of the Experience */}
-            <motion.div
-              initial={{ opacity: 0, scale: 0.95 }}
-              animate={{ opacity: 1, scale: 1 }}
-              transition={{ delay: 0.4, duration: 1.2, ease: "easeOut" }}
-              className="w-full relative py-6 md:py-12"
-            >
-              {/* Cinematic Studio Environment - Simplified for better flow */}
-              <div
-                onClick={() => setLocation('/demos')}
-                className="h-[350px] md:h-[500px] w-full max-w-6xl mx-auto flex items-center justify-center relative rounded-[2rem] md:rounded-[4rem] bg-[#080808] border border-white/5 shadow-[0_0_100px_rgba(0,0,0,1)] overflow-hidden group cursor-pointer"
-              >
-                {/* Dynamic Spotlight */}
-                <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_0%,rgba(139,92,246,0.15),transparent_60%)] pointer-events-none" />
-
-                <div className="relative z-10 flex flex-col items-center gap-8 group-hover:scale-110 transition-transform duration-700">
-                  <div className="relative">
-                    <img
-                      src={demoFront}
-                      alt="Demo Album"
-                      className="w-64 md:w-80 h-auto rounded-lg shadow-2xl transition-all duration-500 group-hover:shadow-primary/20 rotate-[-4deg] group-hover:rotate-0"
-                    />
-                    <div className="absolute inset-0 rounded-lg bg-primary/20 opacity-0 group-hover:opacity-100 transition-opacity" />
-                  </div>
-
-                  <div className="flex flex-col items-center gap-2">
-                    <div className="px-6 py-2 rounded-full bg-primary text-white font-bold flex items-center gap-3 shadow-lg shadow-primary/40">
-                      <Play className="w-4 h-4 fill-current" /> Play 3D Experience
-                    </div>
-                    <p className="text-white/40 text-xs font-bold uppercase tracking-[0.3em]">Click to launch immersive viewer</p>
-                  </div>
-                </div>
-
-                {/* Minimal Mesh Floor */}
-                <div className="absolute bottom-0 w-full h-[30%] opacity-[0.05] pointer-events-none"
-                  style={{ backgroundImage: 'radial-gradient(circle at 2px 2px, white 1px, transparent 0)', backgroundSize: '40px 40px' }} />
-              </div>
-            </motion.div>
-          </div>
-        </div>
-      </main>
-
-      {/* Trust Banner - Social Proof */}
-      <div className="max-w-7xl mx-auto px-4 md:px-8 mb-12">
-        <div className="py-12 border-y border-white/5 flex flex-col md:flex-row items-center justify-between gap-8 opacity-60">
-          <p className="text-[10px] font-black uppercase tracking-[0.4em] text-white/40 text-center md:text-left">
-            {t('trustedBy')} <span className="text-white">{t('eliteStudios')}</span> {t('acrossIndia')}
-          </p>
-          <div className="flex flex-wrap justify-center gap-12 items-center grayscale opacity-50">
-            {/* Abstract labels representing the elite standard */}
-            <span className="text-sm font-display font-medium tracking-widest italic select-none">Wedding Film Awards</span>
-            <span className="text-sm font-display font-medium tracking-widest italic select-none">Modern Studio Tech</span>
-            <span className="text-sm font-display font-medium tracking-widest italic select-none">Royal Cinematic Standard</span>
-          </div>
+      {/* Mobile Product Switcher */}
+      <div className="lg:hidden flex justify-center px-4 mb-4">
+        <div className="flex items-center p-1 bg-white/5 rounded-2xl border border-white/10 backdrop-blur-md w-full max-w-xs">
+          <button
+            onClick={() => setViewMode('albums')}
+            className={`flex-1 py-3 rounded-xl text-[9px] font-black uppercase tracking-widest transition-all duration-300 flex items-center justify-center gap-2 ${viewMode === 'albums' ? 'bg-primary text-white' : 'text-white/40'}`}
+          >
+            Albums
+          </button>
+          <button
+            onClick={() => setViewMode('selection')}
+            className={`flex-1 py-3 rounded-xl text-[9px] font-black uppercase tracking-widest transition-all duration-300 flex items-center justify-center gap-2 ${viewMode === 'selection' ? 'bg-primary text-white' : 'text-white/40'}`}
+          >
+            Selection
+          </button>
         </div>
       </div>
-      {/* How it Works Section */}
-      <section className="py-24 relative overflow-hidden">
-        <div className="max-w-7xl mx-auto px-4 md:px-8">
-          <div className="flex flex-col md:flex-row items-center justify-between gap-16">
-            <div className="max-w-md space-y-8">
-              <h2 className="text-4xl md:text-5xl font-display font-bold leading-tight">
-                {t('howItWorksTitle1')} <br />
-                <span className="text-primary italic">{t('howItWorksTitle2')}</span>
-              </h2>
-              <p className="text-white/40 text-lg">
-                {t('howItWorksDesc')}
+
+      {/* Dynamic Content Based on View Mode */}
+      {viewMode === 'albums' ? (
+        <>
+          {/* Hero Section */}
+          <main className="relative pt-8 md:pt-12 pb-16 overflow-hidden">
+            <div className="max-w-7xl mx-auto px-4 md:px-8">
+              <div className="flex flex-col items-center text-center gap-6">
+                <motion.div
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.8 }}
+                  className="max-w-3xl"
+                >
+                  <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-[#FF9933]/10 border border-[#FF9933]/20 text-[#FF9933] text-[10px] font-bold tracking-[0.2em] uppercase mb-4 shadow-[0_0_20px_rgba(255,153,51,0.1)]">
+                    <Sparkles className="w-3 h-3" /> {t('heroTag')}
+                  </div>
+                  <h1 className="text-5xl md:text-7xl lg:text-8xl font-display font-bold leading-[1.0] mb-4 tracking-tighter">
+                    {t('heroTitle1')} <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#FF9933] via-primary to-indigo-400">{t('heroTitle2')}</span> {t('heroTitle3')}
+                  </h1>
+                  <p className="text-lg md:text-xl text-white/50 mb-8 leading-relaxed max-w-2xl mx-auto italic">
+                    {t('heroDesc')} <strong>{t('heroDescBold')}</strong> {t('heroDescEnd')}
+                  </p>
+
+                  <div className="flex flex-col sm:flex-row gap-5 justify-center">
+                    <Link href="/create">
+                      <Button size="lg" className="rounded-[1.25rem] h-16 px-10 text-lg bg-primary hover:bg-primary/90 text-white font-bold group">
+                        {t('heroBtn1')} <ArrowRight className="w-5 h-5 ml-2 group-hover:translate-x-1 transition-transform" />
+                      </Button>
+                    </Link>
+                    <Button
+                      variant="outline"
+                      size="lg"
+                      onClick={() => setLocation('/demos')}
+                      className="rounded-[1.25rem] h-16 px-10 text-lg border-white/10 hover:bg-white/5 text-white font-bold group"
+                    >
+                      <Eye className="w-5 h-5 mr-3" /> {t('heroBtn2')}
+                    </Button>
+                  </div>
+                </motion.div>
+
+                {/* Static Visual Representation of the Experience */}
+                <motion.div
+                  initial={{ opacity: 0, scale: 0.95 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  transition={{ delay: 0.4, duration: 1.2, ease: "easeOut" }}
+                  className="w-full relative py-6 md:py-12"
+                >
+                  {/* Cinematic Studio Environment - Simplified for better flow */}
+                  <div
+                    onClick={() => setLocation('/demos')}
+                    className="h-[350px] md:h-[500px] w-full max-w-6xl mx-auto flex items-center justify-center relative rounded-[2rem] md:rounded-[4rem] bg-[#080808] border border-white/5 shadow-[0_0_100px_rgba(0,0,0,1)] overflow-hidden group cursor-pointer"
+                  >
+                    {/* Dynamic Spotlight */}
+                    <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_0%,rgba(139,92,246,0.15),transparent_60%)] pointer-events-none" />
+
+                    <div className="relative z-10 flex flex-col items-center gap-8 group-hover:scale-110 transition-transform duration-700">
+                      <div className="relative">
+                        <img
+                          src={demoFront}
+                          alt="Demo Album"
+                          className="w-64 md:w-80 h-auto rounded-lg shadow-2xl transition-all duration-500 group-hover:shadow-primary/20 rotate-[-4deg] group-hover:rotate-0"
+                        />
+                        <div className="absolute inset-0 rounded-lg bg-primary/20 opacity-0 group-hover:opacity-100 transition-opacity" />
+                      </div>
+
+                      <div className="flex flex-col items-center gap-2">
+                        <div className="px-6 py-2 rounded-full bg-primary text-white font-bold flex items-center gap-3 shadow-lg shadow-primary/40">
+                          <Play className="w-4 h-4 fill-current" /> Play 3D Experience
+                        </div>
+                        <p className="text-white/40 text-xs font-bold uppercase tracking-[0.3em]">Click to launch immersive viewer</p>
+                      </div>
+                    </div>
+
+                    {/* Minimal Mesh Floor */}
+                    <div className="absolute bottom-0 w-full h-[30%] opacity-[0.05] pointer-events-none"
+                      style={{ backgroundImage: 'radial-gradient(circle at 2px 2px, white 1px, transparent 0)', backgroundSize: '40px 40px' }} />
+                  </div>
+                </motion.div>
+              </div>
+            </div>
+          </main>
+
+          {/* Trust Banner - Social Proof */}
+          <div className="max-w-7xl mx-auto px-4 md:px-8 mb-12">
+            <div className="py-12 border-y border-white/5 flex flex-col md:flex-row items-center justify-between gap-8 opacity-60">
+              <p className="text-[10px] font-black uppercase tracking-[0.4em] text-white/40 text-center md:text-left">
+                {t('trustedBy')} <span className="text-white">{t('eliteStudios')}</span> {t('acrossIndia')}
               </p>
-              <Link href="/create">
-                <Button className="rounded-2xl h-14 px-8 bg-white/5 border border-white/10 hover:bg-white/10 text-white font-bold group">
-                  {t('tryItYourself')} <ArrowRight className="w-4 h-4 ml-2 group-hover:translate-x-1 transition-transform" />
-                </Button>
-              </Link>
-            </div>
-
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 flex-1">
-              {[
-                {
-                  icon: <Upload className="w-8 h-8" />,
-                  title: t('step1Title'),
-                  desc: t('step1Desc')
-                },
-                {
-                  icon: <Palette className="w-8 h-8" />,
-                  title: t('step2Title'),
-                  desc: t('step2Desc')
-                },
-                {
-                  icon: <Share2 className="w-8 h-8" />,
-                  title: t('step3Title'),
-                  desc: t('step3Desc')
-                }
-              ].map((step, i) => (
-                <div key={i} className="glass p-8 rounded-[2.5rem] border-white/5 space-y-6 relative group hover:border-primary/20 transition-all duration-500">
-                  <div className="absolute top-4 right-4 text-4xl font-black text-white/5 italic select-none">0{i + 1}</div>
-                  <div className="w-16 h-16 rounded-2xl bg-primary/10 border border-primary/20 flex items-center justify-center text-primary group-hover:scale-110 transition-transform duration-500">
-                    {step.icon}
-                  </div>
-                  <div className="space-y-2">
-                    <h3 className="text-xl font-bold">{step.title}</h3>
-                    <p className="text-xs text-white/40 leading-relaxed">{step.desc}</p>
-                  </div>
-                </div>
-              ))}
+              <div className="flex flex-wrap justify-center gap-12 items-center grayscale opacity-50">
+                {/* Abstract labels representing the elite standard */}
+                <span className="text-sm font-display font-medium tracking-widest italic select-none">Wedding Film Awards</span>
+                <span className="text-sm font-display font-medium tracking-widest italic select-none">Modern Studio Tech</span>
+                <span className="text-sm font-display font-medium tracking-widest italic select-none">Royal Cinematic Standard</span>
+              </div>
             </div>
           </div>
-        </div>
-      </section>
 
-      {/* Wall of Love - Testimonials */}
-      <section className="py-24 relative overflow-hidden bg-white/[0.01]">
-        <div className="max-w-7xl mx-auto px-4 md:px-8">
-          <div className="text-center mb-16 space-y-4">
-            <h2 className="text-4xl md:text-5xl font-display font-bold">Wall of <span className="text-primary italic">Love.</span></h2>
-            <p className="text-white/40 text-[10px] uppercase tracking-[0.3em] font-bold">Trusted by India's most creative minds</p>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            {[
-              {
-                name: "Rahul Sharma",
-                role: "Lead Photographer",
-                studio: "RS Films, Mumbai",
-                quote: "This changed how we deliver weddings. Our clients love the 3D flip effect! It feels more personal than a standard gallery."
-              },
-              {
-                name: "Priya Varma",
-                role: "Creative Director",
-                studio: "Lux Wedding Studio, Delhi",
-                quote: "The easiest way to share cinematic links. The WhatsApp booking feature inside the album is a total game changer for us."
-              },
-              {
-                name: "Amit Singh",
-                role: "Founder",
-                studio: "Royal Memories, Punjab",
-                quote: "EventFold is truly international standard for Indian weddings. It has become our default delivery tool for every premium client."
-              }
-            ].map((testimonial, i) => (
-              <motion.div
-                key={i}
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                transition={{ delay: i * 0.1 }}
-                viewport={{ once: true }}
-                className="glass p-10 rounded-[2.5rem] border-white/5 space-y-6 relative group hover:border-primary/20 transition-all duration-500"
-              >
-                <div className="flex gap-1 text-[#FF9933]">
-                  {[...Array(5)].map((_, i) => <Star key={i} className="w-4 h-4 fill-current" />)}
+          {/* How it Works Section */}
+          <section className="py-24 relative overflow-hidden">
+            <div className="max-w-7xl mx-auto px-4 md:px-8">
+              <div className="flex flex-col md:flex-row items-center justify-between gap-16">
+                <div className="max-w-md space-y-8">
+                  <h2 className="text-4xl md:text-5xl font-display font-bold leading-tight">
+                    {t('howItWorksTitle1')} <br />
+                    <span className="text-primary italic">{t('howItWorksTitle2')}</span>
+                  </h2>
+                  <p className="text-white/40 text-lg">
+                    {t('howItWorksDesc')}
+                  </p>
+                  <Link href="/create">
+                    <Button className="rounded-2xl h-14 px-8 bg-white/5 border border-white/10 hover:bg-white/10 text-white font-bold group">
+                      {t('tryItYourself')} <ArrowRight className="w-4 h-4 ml-2 group-hover:translate-x-1 transition-transform" />
+                    </Button>
+                  </Link>
                 </div>
 
-                <Quote className="absolute top-10 right-10 w-12 h-12 text-white/5 -z-10" />
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 flex-1">
+                  {[
+                    {
+                      icon: <Upload className="w-8 h-8" />,
+                      title: t('step1Title'),
+                      desc: t('step1Desc')
+                    },
+                    {
+                      icon: <Palette className="w-8 h-8" />,
+                      title: t('step2Title'),
+                      desc: t('step2Desc')
+                    },
+                    {
+                      icon: <Share2 className="w-8 h-8" />,
+                      title: t('step3Title'),
+                      desc: t('step3Desc')
+                    }
+                  ].map((step, i) => (
+                    <div key={i} className="glass p-8 rounded-[2.5rem] border-white/5 space-y-6 relative group hover:border-primary/20 transition-all duration-500">
+                      <div className="absolute top-4 right-4 text-4xl font-black text-white/5 italic select-none">0{i + 1}</div>
+                      <div className="w-16 h-16 rounded-2xl bg-primary/10 border border-primary/20 flex items-center justify-center text-primary group-hover:scale-110 transition-transform duration-500">
+                        {step.icon}
+                      </div>
+                      <div className="space-y-2">
+                        <h3 className="text-xl font-bold">{step.title}</h3>
+                        <p className="text-xs text-white/40 leading-relaxed">{step.desc}</p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          </section>
 
-                <p className="text-white/70 text-lg leading-relaxed italic font-medium">
-                  "{testimonial.quote}"
+          {/* Wall of Love - Testimonials */}
+          <section className="py-24 relative overflow-hidden bg-white/[0.01]">
+            <div className="max-w-7xl mx-auto px-4 md:px-8">
+              <div className="text-center mb-16 space-y-4">
+                <h2 className="text-4xl md:text-5xl font-display font-bold">Wall of <span className="text-primary italic">Love.</span></h2>
+                <p className="text-white/40 text-[10px] uppercase tracking-[0.3em] font-bold">Trusted by India's most creative minds</p>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+                {[
+                  {
+                    name: "Rahul Sharma",
+                    role: "Lead Photographer",
+                    studio: "RS Films, Mumbai",
+                    quote: "This changed how we deliver weddings. Our clients love the 3D flip effect! It feels more personal than a standard gallery."
+                  },
+                  {
+                    name: "Priya Varma",
+                    role: "Creative Director",
+                    studio: "Lux Wedding Studio, Delhi",
+                    quote: "The easiest way to share cinematic links. The WhatsApp booking feature inside the album is a total game changer for us."
+                  },
+                  {
+                    name: "Amit Singh",
+                    role: "Founder",
+                    studio: "Royal Memories, Punjab",
+                    quote: "EventFold is truly international standard for Indian weddings. It has become our default delivery tool for every premium client."
+                  }
+                ].map((testimonial, i) => (
+                  <motion.div
+                    key={i}
+                    initial={{ opacity: 0, y: 20 }}
+                    whileInView={{ opacity: 1, y: 0 }}
+                    transition={{ delay: i * 0.1 }}
+                    viewport={{ once: true }}
+                    className="glass p-10 rounded-[2.5rem] border-white/5 space-y-6 relative group hover:border-primary/20 transition-all duration-500"
+                  >
+                    <div className="flex gap-1 text-[#FF9933]">
+                      {[...Array(5)].map((_, i) => <Star key={i} className="w-4 h-4 fill-current" />)}
+                    </div>
+
+                    <Quote className="absolute top-10 right-10 w-12 h-12 text-white/5 -z-10" />
+
+                    <p className="text-white/70 text-lg leading-relaxed italic font-medium">
+                      "{testimonial.quote}"
+                    </p>
+
+                    <div className="pt-4 flex items-center gap-4">
+                      <div className="w-12 h-12 rounded-full bg-gradient-to-br from-primary/20 to-[#FF9933]/20 border border-white/10 flex items-center justify-center text-primary font-bold text-xl">
+                        {testimonial.name[0]}
+                      </div>
+                      <div>
+                        <h4 className="font-bold text-white text-sm">{testimonial.name}</h4>
+                        <p className="text-[10px] text-white/40 uppercase tracking-widest font-bold">{testimonial.role} @ {testimonial.studio}</p>
+                      </div>
+                    </div>
+                  </motion.div>
+                ))}
+              </div>
+            </div>
+          </section>
+
+          {/* Pricing / Plan Section */}
+          <section id="pricing" className="py-24 md:py-32 relative scroll-mt-24">
+            <div className="max-w-7xl mx-auto px-4 md:px-8">
+              <div className="text-center mb-20">
+                <h2 className="text-5xl md:text-6xl font-display font-bold mb-6 tracking-tight">{t('simplePricing')} <span className="text-primary">{t('pricingWord')}</span></h2>
+                <p className="text-white/40 text-lg max-w-2xl mx-auto leading-relaxed">
+                  {t('pricingDesc')}
                 </p>
+              </div>
 
-                <div className="pt-4 flex items-center gap-4">
-                  <div className="w-12 h-12 rounded-full bg-gradient-to-br from-primary/20 to-[#FF9933]/20 border border-white/10 flex items-center justify-center text-primary font-bold text-xl">
-                    {testimonial.name[0]}
+              <div className="grid md:grid-cols-3 gap-8 items-start mb-32">
+                {/* Pay Per Album (Mid-Tier) */}
+                <div className="glass p-8 rounded-[2.5rem] border-white/5 relative overflow-hidden group hover:border-primary/20 transition-all duration-500">
+                  <div className="space-y-6">
+                    <span className="text-[10px] font-bold uppercase tracking-[0.3em] text-white/40">Studio Credit</span>
+                    <h3 className="text-2xl font-bold">Single Project</h3>
+                    <div className="flex items-baseline gap-2">
+                      <span className="text-4xl font-display font-bold text-white">₹49</span>
+                      <span className="text-xl text-white/20 line-through">₹99</span>
+                      <span className="text-sm font-medium text-white/20">/ album</span>
+                    </div>
+                    <div className="space-y-3">
+                      <div className="flex items-center gap-2 text-xs text-white/60"><CheckCircle2 className="w-4 h-4 text-primary" /> Full 3D Cinematic Engine</div>
+                      <div className="flex items-center gap-2 text-xs text-white/60"><CheckCircle2 className="w-4 h-4 text-primary" /> Theme-Specific Soundtracks</div>
+                      <div className="flex items-center gap-2 text-xs text-white/60"><CheckCircle2 className="w-4 h-4 text-primary" /> Password Protection</div>
+                      <div className="flex items-center gap-2 text-xs text-white/60"><CheckCircle2 className="w-4 h-4 text-primary" /> Secure Lifetime Hosting</div>
+                    </div>
+                    <Button onClick={() => user ? buyAlbumCredit() : setLocation('/login')} className="w-full h-12 rounded-xl bg-white/5 hover:bg-white/10 text-white border border-white/10 font-bold">
+                      Purchase 1 Credit
+                    </Button>
                   </div>
-                  <div>
-                    <h4 className="font-bold text-white text-sm">{testimonial.name}</h4>
-                    <p className="text-[10px] text-white/40 uppercase tracking-widest font-bold">{testimonial.role} @ {testimonial.studio}</p>
+                </div>
+
+                {/* Pro Monthly */}
+                <div className="p-8 rounded-[2.5rem] bg-gradient-to-b from-primary/20 to-indigo-600/10 border border-primary/40 relative shadow-2xl overflow-hidden scale-105 z-10">
+                  <div className="absolute top-4 left-1/2 -translate-x-1/2 px-4 py-1 bg-primary rounded-full text-[10px] font-bold uppercase tracking-widest shadow-xl">Most Popular</div>
+                  <div className="space-y-6 pt-6">
+                    <span className="text-[10px] font-bold uppercase tracking-[0.3em] text-primary">Elite Studio</span>
+                    <h3 className="text-2xl font-bold">Unlimited Events</h3>
+                    <div className="flex flex-col mb-4">
+                      <div className="flex items-baseline gap-2">
+                        <span className="text-4xl font-display font-bold text-white">₹199</span>
+                        <span className="text-sm font-medium text-white/40 line-through">₹499</span>
+                        <span className="text-sm font-medium text-white/20">/mo</span>
+                      </div>
+                      <div className="flex flex-col gap-0.5 mt-1">
+                        <span className="text-[10px] text-primary font-black uppercase tracking-widest">Only ~₹20 / project</span>
+                        <span className="text-[9px] text-white/40 font-bold uppercase">Save 60% vs. Single Credit</span>
+                      </div>
+                    </div>
+                    <div className="space-y-3">
+                      <div className="flex items-center gap-2 text-xs text-white/80"><CheckCircle2 className="w-4 h-4 text-primary" /> **Unlimited** 3D Projects</div>
+                      <div className="flex items-center gap-2 text-xs text-white/80"><CheckCircle2 className="w-4 h-4 text-primary" /> Custom Business Logo</div>
+                      <div className="flex items-center gap-2 text-xs text-white/80"><CheckCircle2 className="w-4 h-4 text-primary" /> Direct WhatsApp Booking</div>
+                      <div className="flex items-center gap-2 text-xs text-white/80"><CheckCircle2 className="w-4 h-4 text-primary" /> Lifetime Cloud Archiving</div>
+                    </div>
+                    <Button onClick={() => handleSubscribe('monthly')} className="w-full h-14 rounded-xl bg-primary hover:bg-primary/90 text-white font-bold shadow-lg shadow-primary/20">
+                      Select Studio Monthly
+                    </Button>
                   </div>
                 </div>
-              </motion.div>
-            ))}
-          </div>
-        </div>
-      </section>
 
-      {/* Pricing / Plan Section */}
-      <section id="pricing" className="py-24 md:py-32 relative scroll-mt-24">
-        <div className="max-w-7xl mx-auto px-4 md:px-8">
-          <div className="text-center mb-20">
-            <h2 className="text-5xl md:text-6xl font-display font-bold mb-6 tracking-tight">{t('simplePricing')} <span className="text-primary">{t('pricingWord')}</span></h2>
-            <p className="text-white/40 text-lg max-w-2xl mx-auto leading-relaxed">
-              {t('pricingDesc')}
-            </p>
-          </div>
-
-          <div className="grid md:grid-cols-3 gap-8 items-start mb-32">
-            {/* Pay Per Album (Mid-Tier) */}
-            <div className="glass p-8 rounded-[2.5rem] border-white/5 relative overflow-hidden group hover:border-primary/20 transition-all duration-500">
-              <div className="space-y-6">
-                <span className="text-[10px] font-bold uppercase tracking-[0.3em] text-white/40">Studio Credit</span>
-                <h3 className="text-2xl font-bold">Single Project</h3>
-                <div className="flex items-baseline gap-2">
-                  <span className="text-4xl font-display font-bold text-white">₹49</span>
-                  <span className="text-xl text-white/20 line-through">₹99</span>
-                  <span className="text-sm font-medium text-white/20">/ album</span>
+                {/* Yearly */}
+                <div className="glass p-8 rounded-[2.5rem] border-white/5 relative overflow-hidden group hover:border-primary/20 transition-all duration-500">
+                  <div className="space-y-6">
+                    <span className="text-[10px] font-bold uppercase tracking-[0.3em] text-white/40">Labs Special</span>
+                    <h3 className="text-2xl font-bold">Elite Labs</h3>
+                    <div className="flex flex-col mb-4">
+                      <div className="flex items-baseline gap-2">
+                        <span className="text-4xl font-display font-bold text-white">₹899</span>
+                        <span className="text-sm font-medium text-white/40 line-through">₹3,999</span>
+                        <span className="text-sm font-medium text-white/20">/yr</span>
+                      </div>
+                      <div className="flex flex-col gap-0.5 mt-1">
+                        <span className="text-[10px] text-primary font-black uppercase tracking-widest">Only ~₹7 / project</span>
+                        <span className="text-[9px] text-white/40 font-bold uppercase">Save 85% vs. Single Credit</span>
+                      </div>
+                    </div>
+                    <div className="space-y-3">
+                      <div className="flex items-center gap-2 text-xs text-white/60"><CheckCircle2 className="w-4 h-4 text-primary" /> Everything in Monthly</div>
+                      <div className="flex items-center gap-2 text-xs text-white/60"><CheckCircle2 className="w-4 h-4 text-primary" /> Early-Access to New Themes</div>
+                      <div className="flex items-center gap-2 text-xs text-white/60"><CheckCircle2 className="w-4 h-4 text-primary" /> Priority Customer Support</div>
+                      <div className="flex items-center gap-2 text-xs text-white/60"><CheckCircle2 className="w-4 h-4 text-primary" /> White-Labeling Ready</div>
+                    </div>
+                    <Button onClick={() => handleSubscribe('yearly')} className="w-full h-12 rounded-xl bg-white/5 hover:bg-white/10 text-white border border-white/10 font-bold">
+                      Get Elite Yearly
+                    </Button>
+                  </div>
                 </div>
-                <div className="space-y-3">
-                  <div className="flex items-center gap-2 text-xs text-white/60"><CheckCircle2 className="w-4 h-4 text-primary" /> Full 3D Cinematic Engine</div>
-                  <div className="flex items-center gap-2 text-xs text-white/60"><CheckCircle2 className="w-4 h-4 text-primary" /> Theme-Specific Soundtracks</div>
-                  <div className="flex items-center gap-2 text-xs text-white/60"><CheckCircle2 className="w-4 h-4 text-primary" /> Password Protection</div>
-                  <div className="flex items-center gap-2 text-xs text-white/60"><CheckCircle2 className="w-4 h-4 text-primary" /> Secure Lifetime Hosting</div>
-                </div>
-                <Button onClick={() => user ? buyAlbumCredit() : setLocation('/login')} className="w-full h-12 rounded-xl bg-white/5 hover:bg-white/10 text-white border border-white/10 font-bold">
-                  Purchase 1 Credit
-                </Button>
               </div>
             </div>
-
-            {/* Pro Monthly */}
-            <div className="p-8 rounded-[2.5rem] bg-gradient-to-b from-primary/20 to-indigo-600/10 border border-primary/40 relative shadow-2xl overflow-hidden scale-105 z-10">
-              <div className="absolute top-4 left-1/2 -translate-x-1/2 px-4 py-1 bg-primary rounded-full text-[10px] font-bold uppercase tracking-widest shadow-xl">Most Popular</div>
-              <div className="space-y-6 pt-6">
-                <span className="text-[10px] font-bold uppercase tracking-[0.3em] text-primary">Elite Studio</span>
-                <h3 className="text-2xl font-bold">Unlimited Events</h3>
-                <div className="flex flex-col mb-4">
-                  <div className="flex items-baseline gap-2">
-                    <span className="text-4xl font-display font-bold text-white">₹199</span>
-                    <span className="text-sm font-medium text-white/40 line-through">₹499</span>
-                    <span className="text-sm font-medium text-white/20">/mo</span>
-                  </div>
-                  <div className="flex flex-col gap-0.5 mt-1">
-                    <span className="text-[10px] text-primary font-black uppercase tracking-widest">Only ~₹20 / project</span>
-                    <span className="text-[9px] text-white/40 font-bold uppercase">Save 60% vs. Single Credit</span>
-                  </div>
-                </div>
-                <div className="space-y-3">
-                  <div className="flex items-center gap-2 text-xs text-white/80"><CheckCircle2 className="w-4 h-4 text-primary" /> **Unlimited** 3D Projects</div>
-                  <div className="flex items-center gap-2 text-xs text-white/80"><CheckCircle2 className="w-4 h-4 text-primary" /> Custom Business Logo</div>
-                  <div className="flex items-center gap-2 text-xs text-white/80"><CheckCircle2 className="w-4 h-4 text-primary" /> Direct WhatsApp Booking</div>
-                  <div className="flex items-center gap-2 text-xs text-white/80"><CheckCircle2 className="w-4 h-4 text-primary" /> Lifetime Cloud Archiving</div>
-                </div>
-                <Button onClick={() => handleSubscribe('monthly')} className="w-full h-14 rounded-xl bg-primary hover:bg-primary/90 text-white font-bold shadow-lg shadow-primary/20">
-                  Select Studio Monthly
-                </Button>
-              </div>
-            </div>
-
-            {/* Yearly */}
-            <div className="glass p-8 rounded-[2.5rem] border-white/5 relative overflow-hidden group hover:border-primary/20 transition-all duration-500">
-              <div className="space-y-6">
-                <span className="text-[10px] font-bold uppercase tracking-[0.3em] text-white/40">Labs Special</span>
-                <h3 className="text-2xl font-bold">Elite Labs</h3>
-                <div className="flex flex-col mb-4">
-                  <div className="flex items-baseline gap-2">
-                    <span className="text-4xl font-display font-bold text-white">₹899</span>
-                    <span className="text-sm font-medium text-white/40 line-through">₹3,999</span>
-                    <span className="text-sm font-medium text-white/20">/yr</span>
-                  </div>
-                  <div className="flex flex-col gap-0.5 mt-1">
-                    <span className="text-[10px] text-primary font-black uppercase tracking-widest">Only ~₹7 / project</span>
-                    <span className="text-[9px] text-white/40 font-bold uppercase">Save 85% vs. Single Credit</span>
-                  </div>
-                </div>
-                <div className="space-y-3">
-                  <div className="flex items-center gap-2 text-xs text-white/60"><CheckCircle2 className="w-4 h-4 text-primary" /> Everything in Monthly</div>
-                  <div className="flex items-center gap-2 text-xs text-white/60"><CheckCircle2 className="w-4 h-4 text-primary" /> Early-Access to New Themes</div>
-                  <div className="flex items-center gap-2 text-xs text-white/60"><CheckCircle2 className="w-4 h-4 text-primary" /> Priority Customer Support</div>
-                  <div className="flex items-center gap-2 text-xs text-white/60"><CheckCircle2 className="w-4 h-4 text-primary" /> White-Labeling Ready</div>
-                </div>
-                <Button onClick={() => handleSubscribe('yearly')} className="w-full h-12 rounded-xl bg-white/5 hover:bg-white/10 text-white border border-white/10 font-bold">
-                  Get Elite Yearly
-                </Button>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
+          </section>
+        </>
+      ) : (
+        <SelectionHome />
+      )}
 
       <Footer>
         <div className="w-full max-w-xl mx-auto px-4">

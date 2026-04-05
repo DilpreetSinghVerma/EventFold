@@ -2,7 +2,7 @@ import { Link } from 'wouter';
 import { Card, CardContent, CardFooter } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Plus, QrCode, Eye, Trash2, LayoutGrid, Calendar, LogOut, Settings as SettingsIcon, Lock, Loader2, Sparkles, User as UserIcon, Crown, Copy, Download, Share2, Check, ShieldAlert, BarChart3, FolderHeart, ChevronDown, Clock, Activity, TrendingUp } from 'lucide-react';
+import { Plus, QrCode, Eye, Trash2, LayoutGrid, Calendar, LogOut, Settings as SettingsIcon, Lock, Loader2, Sparkles, User as UserIcon, Crown, Copy, Download, Share2, Check, ShieldAlert, BarChart3, FolderHeart, ChevronDown, Clock, Activity, TrendingUp, Camera } from 'lucide-react';
 import { QRCodeSVG } from 'qrcode.react';
 import { Badge } from '@/components/ui/badge';
 import { useState, useEffect } from 'react';
@@ -713,6 +713,72 @@ export default function Dashboard() {
       </header>
 
       <main className="max-w-7xl mx-auto px-4 md:px-8 pt-4">
+        {/* Selection Tool Quick Access */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-12">
+          <motion.div
+            initial={{ opacity: 0, x: -20 }}
+            animate={{ opacity: 1, x: 0 }}
+            className="p-6 rounded-[2.5rem] bg-gradient-to-br from-primary/10 via-background to-background border border-primary/20 shadow-2xl relative overflow-hidden group"
+          >
+            <div className="absolute top-0 right-0 p-8 opacity-10 group-hover:opacity-20 transition-opacity">
+              <Camera className="w-32 h-32 text-primary rotate-12" />
+            </div>
+            <div className="relative z-10">
+              <div className="flex items-center gap-3 mb-4">
+                <div className="w-12 h-12 rounded-2xl bg-primary text-white flex items-center justify-center shadow-lg shadow-primary/30">
+                  <Sparkles className="w-6 h-6" />
+                </div>
+                <div>
+                  <h3 className="text-xl font-bold">SelectionPro</h3>
+                  <p className="text-[10px] text-primary font-black uppercase tracking-widest">Client Proofing Tool</p>
+                </div>
+              </div>
+              <p className="text-sm text-white/60 mb-6 max-w-sm">
+                Share full-res galleries with clients, let them select their favorites, and track choices in real-time.
+              </p>
+              <div className="flex items-center gap-3">
+                <Link href="/selection/dashboard">
+                  <Button className="h-11 rounded-xl bg-white text-black hover:bg-white/90 font-bold px-6 shadow-xl active:scale-95 transition-all text-sm">
+                    Open Dashboard
+                  </Button>
+                </Link>
+                <Link href="/selection/create">
+                  <Button variant="ghost" className="h-11 rounded-xl glass border-none hover:bg-white/5 active:scale-95 transition-all text-sm group">
+                    <Plus className="w-4 h-4 mr-2 group-hover:rotate-90 transition-transform" /> New Proofing Gallery
+                  </Button>
+                </Link>
+              </div>
+            </div>
+          </motion.div>
+
+          <motion.div
+            initial={{ opacity: 0, x: 20 }}
+            animate={{ opacity: 1, x: 0 }}
+            className="p-6 rounded-[2.5rem] bg-gradient-to-br from-indigo-500/10 via-background to-background border border-indigo-500/20 shadow-2xl relative overflow-hidden group hidden md:block"
+          >
+            <div className="absolute top-0 right-0 p-8 opacity-10 group-hover:opacity-20 transition-opacity">
+               <Activity className="w-32 h-32 text-indigo-400 rotate-12" />
+            </div>
+            <div className="relative z-10">
+               <div className="flex items-center gap-3 mb-4">
+                <div className="w-12 h-12 rounded-2xl bg-indigo-500 text-white flex items-center justify-center shadow-lg shadow-indigo-500/30">
+                  <BarChart3 className="w-6 h-6" />
+                </div>
+                <div>
+                  <h3 className="text-xl font-bold">Studio Analytics</h3>
+                  <p className="text-[10px] text-indigo-400 font-black uppercase tracking-widest">Performance Tracking</p>
+                </div>
+              </div>
+              <p className="text-sm text-white/60 mb-6 max-w-sm">
+                Monitor album views, engagement rates, and QR scan metrics across all your collections.
+              </p>
+              <Button variant="ghost" className="h-11 rounded-xl glass border-none hover:bg-white/5 active:scale-95 transition-all text-sm opacity-50 cursor-not-allowed">
+                Coming Soon
+              </Button>
+            </div>
+          </motion.div>
+        </div>
+
         <div className="mb-12">
           <h1 className="text-3xl md:text-4xl font-bold mb-2">My Collections</h1>
           <p className="text-white/40">Manage and share your digital storytelling projects.</p>

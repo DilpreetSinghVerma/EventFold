@@ -62,6 +62,34 @@ export const settings = pgTable("settings", {
   adminPassword: text("admin_password").notNull().default("admin123"),
 });
 
+export const selectionGalleries = pgTable("selection_galleries", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: varchar("user_id").references(() => users.id, { onDelete: 'cascade' }),
+  name: text("name").notNull(),
+  clientName: text("client_name").notNull(),
+  clientEmail: text("client_email"),
+  photographerName: text("photographer_name").notNull(),
+  deadline: text("deadline"),
+  password: text("password"),
+  watermarkText: text("watermark_text"),
+  message: text("message"),
+  status: varchar("status", { length: 20 }).notNull().default('pending'), // 'pending', 'in-progress', 'completed'
+  coverIndex: integer("cover_index").notNull().default(0),
+  minSelections: integer("min_selections"),
+  maxSelections: integer("max_selections"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+export const selectionPhotos = pgTable("selection_photos", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  galleryId: varchar("gallery_id").notNull().references(() => selectionGalleries.id, { onDelete: 'cascade' }),
+  url: text("url").notNull(),
+  filename: text("filename").notNull(),
+  selected: integer("selected"), // null = unreviewed, 0 = rejected, 1 = selected
+  rating: integer("rating").notNull().default(0), // 0-5 stars
+  comment: text("comment"),
+});
+
 export const insertAlbumSchema = createInsertSchema(albums).omit({
   id: true,
   createdAt: true,
@@ -76,9 +104,23 @@ export const insertUserSchema = createInsertSchema(users).omit({
   createdAt: true,
 });
 
+export const insertSelectionGallerySchema = createInsertSchema(selectionGalleries).omit({
+  id: true,
+  createdAt: true,
+});
+
+export const insertSelectionPhotoSchema = createInsertSchema(selectionPhotos).omit({
+  id: true,
+});
+
 export type InsertAlbum = z.infer<typeof insertAlbumSchema>;
 export type Album = typeof albums.$inferSelect;
 export type InsertFile = z.infer<typeof insertFileSchema>;
 export type File = typeof files.$inferSelect;
 export type User = typeof users.$inferSelect;
 export type InsertUser = z.infer<typeof insertUserSchema>;
+
+export type SelectionGallery = typeof selectionGalleries.$inferSelect;
+export type InsertSelectionGallery = z.infer<typeof insertSelectionGallerySchema>;
+export type SelectionPhoto = typeof selectionPhotos.$inferSelect;
+export type InsertSelectionPhoto = z.infer<typeof insertSelectionPhotoSchema>;

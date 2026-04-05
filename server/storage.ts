@@ -1,5 +1,5 @@
 import crypto from "crypto";
-import { type InsertAlbum, type Album, type InsertFile, type File, type User, type InsertUser, albums, files, settings, users } from "../shared/schema";
+import { type InsertAlbum, type Album, type InsertFile, type File, type User, type InsertUser, type SelectionGallery, type InsertSelectionGallery, type SelectionPhoto, type InsertSelectionPhoto, albums, files, settings, users, selectionGalleries, selectionPhotos } from "../shared/schema";
 import { db } from "./db";
 import { eq, asc, lte, and, isNotNull, sql } from "drizzle-orm";
 
@@ -35,6 +35,18 @@ export interface IStorage {
   cleanupExpiredAlbums(): Promise<void>;
   getPublicDemos(): Promise<Album[]>;
   updateAlbum(id: string, data: Partial<Album>): Promise<Album>;
+  
+  // Selection Pro Methods
+  createSelectionGallery(gallery: InsertSelectionGallery): Promise<SelectionGallery>;
+  getSelectionGalleriesByUser(userId: string): Promise<SelectionGallery[]>;
+  getSelectionGallery(id: string): Promise<SelectionGallery | undefined>;
+  deleteSelectionGallery(id: string): Promise<void>;
+  updateSelectionGallery(id: string, data: Partial<SelectionGallery>): Promise<SelectionGallery>;
+  
+  createSelectionPhoto(photo: InsertSelectionPhoto): Promise<SelectionPhoto>;
+  createSelectionPhotos(galleryId: string, photos: { url: string; filename: string }[]): Promise<void>;
+  getSelectionPhotosByGallery(galleryId: string): Promise<SelectionPhoto[]>;
+  updateSelectionPhoto(id: string, data: Partial<SelectionPhoto>): Promise<SelectionPhoto>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -230,6 +242,59 @@ export class DatabaseStorage implements IStorage {
   async deleteUser(userId: string): Promise<void> {
     if (!db) return;
     await db.delete(users).where(eq(users.id, userId));
+  }
+
+  // Selection Pro Database Implementations
+  async createSelectionGallery(insert: InsertSelectionGallery): Promise<SelectionGallery> {
+    const [row] = await db.insert(selectionGalleries).values(insert).returning();
+    return row;
+  }
+
+  async getSelectionGalleriesByUser(userId: string): Promise<SelectionGallery[]> {
+    return await db.select().from(selectionGalleries).where(eq(selectionGalleries.userId, userId)).orderBy(asc(selectionGalleries.createdAt));
+  }
+
+  async getSelectionGallery(id: string): Promise<SelectionGallery | undefined> {
+    const [row] = await db.select().from(selectionGalleries).where(eq(selectionGalleries.id, id));
+    return row;
+  }
+
+  async deleteSelectionGallery(id: string): Promise<void> {
+    await db.delete(selectionGalleries).where(eq(selectionGalleries.id, id));
+  }
+
+  async updateSelectionGallery(id: string, data: Partial<SelectionGallery>): Promise<SelectionGallery> {
+    const [row] = await db.update(selectionGalleries).set(data).where(eq(selectionGalleries.id, id)).returning();
+    if (!row) throw new Error("Gallery not found");
+    return row;
+  }
+
+  async createSelectionPhoto(insert: InsertSelectionPhoto): Promise<SelectionPhoto> {
+    const [row] = await db.insert(selectionPhotos).values(insert).returning();
+    return row;
+  }
+
+  async createSelectionPhotos(galleryId: string, photos: { url: string; filename: string }[]): Promise<void> {
+    if (!photos.length) return;
+    const values = photos.map(p => ({
+      galleryId,
+      url: p.url,
+      filename: p.filename,
+      selected: null,
+      rating: 0,
+      comment: ""
+    }));
+    await db.insert(selectionPhotos).values(values);
+  }
+
+  async getSelectionPhotosByGallery(galleryId: string): Promise<SelectionPhoto[]> {
+    return await db.select().from(selectionPhotos).where(eq(selectionPhotos.galleryId, galleryId));
+  }
+
+  async updateSelectionPhoto(id: string, data: Partial<SelectionPhoto>): Promise<SelectionPhoto> {
+    const [row] = await db.update(selectionPhotos).set(data).where(eq(selectionPhotos.id, id)).returning();
+    if (!row) throw new Error("Photo not found");
+    return row;
   }
 }
 
@@ -466,6 +531,35 @@ export class MemStorage implements IStorage {
 
   async deleteUser(userId: string): Promise<void> {
     this.users.delete(userId);
+  }
+
+  // Selection Pro MemStorage (Dummies)
+  async createSelectionGallery(_: InsertSelectionGallery): Promise<SelectionGallery> {
+    throw new Error("MemStorage not implemented for Selection Pro");
+  }
+  async getSelectionGalleriesByUser(_: string): Promise<SelectionGallery[]> {
+    return [];
+  }
+  async getSelectionGallery(_: string): Promise<SelectionGallery | undefined> {
+    return undefined;
+  }
+  async deleteSelectionGallery(_: string): Promise<void> {
+    return;
+  }
+  async updateSelectionGallery(_id: string, _data: Partial<SelectionGallery>): Promise<SelectionGallery> {
+    throw new Error("MemStorage not implemented for Selection Pro");
+  }
+  async createSelectionPhoto(_: InsertSelectionPhoto): Promise<SelectionPhoto> {
+    throw new Error("MemStorage not implemented for Selection Pro");
+  }
+  async createSelectionPhotos(_galleryId: string, _photos: any[]): Promise<void> {
+    return;
+  }
+  async getSelectionPhotosByGallery(_: string): Promise<SelectionPhoto[]> {
+    return [];
+  }
+  async updateSelectionPhoto(_id: string, _data: Partial<SelectionPhoto>): Promise<SelectionPhoto> {
+    throw new Error("MemStorage not implemented for Selection Pro");
   }
 }
 

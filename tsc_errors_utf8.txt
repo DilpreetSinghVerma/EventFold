@@ -1,0 +1,4 @@
+﻿client/src/lib/selection-demo-data.ts(2,30): error TS7016: Could not find a declaration file for module 'uuid'. 'D:/Dilpreet Singh/My Projects/FlipiAlbumGen-1/node_modules/uuid/dist/esm-browser/index.js' implicitly has an 'any' type.
+  Try `npm i --save-dev @types/uuid` if it exists or add a new declaration (.d.ts) file containing `declare module 'uuid';`
+client/src/lib/selection-storage.ts(2,30): error TS7016: Could not find a declaration file for module 'uuid'. 'D:/Dilpreet Singh/My Projects/FlipiAlbumGen-1/node_modules/uuid/dist/esm-browser/index.js' implicitly has an 'any' type.
+  Try `npm i --save-dev @types/uuid` if it exists or add a new declaration (.d.ts) file containing `declare module 'uuid';`

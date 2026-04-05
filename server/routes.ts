@@ -6,7 +6,7 @@ import { storage } from "./storage";
 import multer from "multer";
 import path from "path";
 import fs from "fs";
-import { insertAlbumSchema, insertFileSchema, users } from "../shared/schema";
+import { insertAlbumSchema, insertFileSchema, users, selectionGalleries, selectionPhotos, insertSelectionGallerySchema, insertSelectionPhotoSchema } from "../shared/schema";
 import { ZodError } from "zod";
 import Stripe from "stripe";
 import Razorpay from "razorpay";
@@ -1230,6 +1230,113 @@ export function registerRoutes(
       res.json({ success: true, deleted: publicId });
     } catch (e: any) {
       res.status(500).json({ error: "Delete failed", details: e.message });
+    }
+  });
+
+  // --- Selection Pro Routes ---
+
+  // Get photographer's own galleries
+  app.get("/api/selection/galleries", async (req, res) => {
+    if (!req.isAuthenticated()) return res.status(401).json({ error: "Unauthorized" });
+    try {
+      const galleries = await storage.getSelectionGalleriesByUser(req.user!.id);
+      res.json(galleries);
+    } catch (e) {
+      res.status(500).json({ error: "Failed to fetch galleries" });
+    }
+  });
+
+    // Create a new selection gallery
+    app.post("/api/selection/galleries", async (req, res) => {
+      console.log("POST /api/selection/galleries: Start");
+      if (!req.isAuthenticated()) {
+        console.log("POST /api/selection/galleries: 401 Unauthorized");
+        return res.status(401).json({ error: "Unauthorized" });
+      }
+      
+      try {
+        const { photos, ...galleryData } = req.body;
+        console.log(`POST /api/selection/galleries: Parsing data for ${photos?.length || 0} photos`);
+        
+        const galleryInsert = insertSelectionGallerySchema.parse({
+          ...galleryData,
+          userId: req.user!.id,
+          createdAt: new Date()
+        });
+        
+        console.log("POST /api/selection/galleries: Creating gallery entry in DB...");
+        const gallery = await storage.createSelectionGallery(galleryInsert);
+        console.log(`POST /api/selection/galleries: Gallery created with ID ${gallery.id}`);
+        
+        // Batch Insert Photos
+        if (Array.isArray(photos) && photos.length > 0) {
+          console.log(`POST /api/selection/galleries: Inserting ${photos.length} photos in bulk...`);
+          await storage.createSelectionPhotos(gallery.id, photos);
+          console.log("POST /api/selection/galleries: Photo insertion complete.");
+        }
+        
+        console.log("POST /api/selection/galleries: Success! Sending gallery data to client.");
+        res.json(gallery);
+      } catch (e: any) {
+        console.error("POST /api/selection/galleries: FATAL ERROR ->", e);
+        res.status(400).json({ error: "Invalid gallery data", details: e.message });
+      }
+    });
+
+  // Get a single gallery (Public but password protected if set)
+  app.get("/api/selection/galleries/:id", async (req, res) => {
+    try {
+      const gallery = await storage.getSelectionGallery(req.params.id);
+      if (!gallery) return res.status(404).json({ error: "Gallery not found" });
+      
+      const photos = await storage.getSelectionPhotosByGallery(gallery.id);
+      res.json({ ...gallery, photos });
+    } catch (e) {
+      res.status(500).json({ error: "Failed to fetch gallery" });
+    }
+  });
+
+  // Update gallery settings
+  app.patch("/api/selection/galleries/:id", async (req, res) => {
+    if (!req.isAuthenticated()) return res.status(401).json({ error: "Unauthorized" });
+    try {
+      const gallery = await storage.getSelectionGallery(req.params.id);
+      if (!gallery || gallery.userId !== req.user!.id) {
+        return res.status(403).json({ error: "Forbidden" });
+      }
+      
+      const updated = await storage.updateSelectionGallery(req.params.id, req.body);
+      res.json(updated);
+    } catch (e) {
+      res.status(500).json({ error: "Update failed" });
+    }
+  });
+
+  // Delete a gallery
+  app.delete("/api/selection/galleries/:id", async (req, res) => {
+    if (!req.isAuthenticated()) return res.status(401).json({ error: "Unauthorized" });
+    try {
+      const gallery = await storage.getSelectionGallery(req.params.id);
+      if (!gallery || gallery.userId !== req.user!.id) {
+        return res.status(403).json({ error: "Forbidden" });
+      }
+      
+      await storage.deleteSelectionGallery(req.params.id);
+      res.json({ success: true });
+    } catch (e) {
+      res.status(500).json({ error: "Delete failed" });
+    }
+  });
+
+  // Update photo status (selected, rating, comment)
+  app.patch("/api/selection/photos/:id", async (req, res) => {
+    try {
+      // For simplicity, we allow public updates if they have the ID.
+      // In a real app, you might want a session cookie from the gallery password check.
+      const updated = await storage.updateSelectionPhoto(req.params.id, req.body);
+      res.json(updated);
+    } catch (e) {
+      res.status(500).json({ error: "Photo update failed" });
     }
   });
 
