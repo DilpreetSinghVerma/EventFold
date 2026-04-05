@@ -22,13 +22,6 @@ import FAQ from "@/pages/FAQ";
 import AlbumEdit from "@/pages/AlbumEdit";
 import ScrollToTop from "@/components/ScrollToTop";
 
-// Selection Tool Pages
-import SelectionHome from "@/pages/SelectionHome";
-import SelectionDashboard from "@/pages/SelectionDashboard";
-import SelectionCreateGallery from "@/pages/SelectionCreateGallery";
-import SelectionClientGallery from "@/pages/SelectionClientGallery";
-import SelectionResults from "@/pages/SelectionResults";
-
 import { AuthProvider, useAuth } from "@/lib/auth";
 import { I18nProvider } from "@/lib/i18n";
 import { Loader2 } from "lucide-react";
@@ -72,19 +65,6 @@ function Router() {
       <Route path="/privacy" component={Privacy} />
       <Route path="/about" component={About} />
       <Route path="/faq" component={FAQ} />
-
-      {/* Selection Tool Routes */}
-      <Route path="/selection" component={SelectionHome} />
-      <Route path="/selection/dashboard">
-        {user ? (user.isVerified === 1 ? <SelectionDashboard /> : <Redirect to="/verify" />) : <Redirect to="/login" />}
-      </Route>
-      <Route path="/selection/create">
-        {user ? (user.isVerified === 1 ? <SelectionCreateGallery /> : <Redirect to="/verify" />) : <Redirect to="/login" />}
-      </Route>
-      <Route path="/selection/gallery/:id" component={SelectionClientGallery} />
-      <Route path="/selection/results/:id">
-        {user ? (user.isVerified === 1 ? <SelectionResults /> : <Redirect to="/verify" />) : <Redirect to="/dashboard" />}
-      </Route>
 
       <Route component={NotFound} />
     </Switch>

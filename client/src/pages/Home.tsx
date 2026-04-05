@@ -8,7 +8,6 @@ import weddingCover from '@assets/generated_images/wedding_album_cover_art.png';
 import { ContactForm } from '@/components/ContactForm';
 import { Footer } from '@/components/Footer';
 import { useState, useEffect } from 'react';
-import SelectionHome from './SelectionHome';
 
 // Local demo assets
 import demoFront from '@assets/demo_album/cover_front.png';
@@ -22,7 +21,6 @@ export default function Home() {
   const { user, startRazorpayCheckout, buyAlbumCredit } = useAuth();
   const { t } = useI18n();
   const [, setLocation] = useLocation();
-  const [viewMode, setViewMode] = useState<'albums' | 'selection'>('albums');
 
   useEffect(() => {
     document.title = "EventFold Studio | Elite 3D Digital Albums for Photographers";
@@ -139,23 +137,6 @@ export default function Home() {
             </div>
           </Link>
 
-          {/* Product Switcher */}
-          <div className="hidden lg:flex items-center p-1 bg-white/5 rounded-2xl border border-white/10 backdrop-blur-md">
-            <button
-              onClick={() => setViewMode('albums')}
-              className={`px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all duration-300 flex items-center gap-2 ${viewMode === 'albums' ? 'bg-primary text-white shadow-lg shadow-primary/20' : 'text-white/40 hover:text-white'}`}
-            >
-              <BookOpen className="w-3.5 h-3.5" />
-              Album Studio
-            </button>
-            <button
-              onClick={() => setViewMode('selection')}
-              className={`px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all duration-300 flex items-center gap-2 ${viewMode === 'selection' ? 'bg-primary text-white shadow-lg shadow-primary/20' : 'text-white/40 hover:text-white'}`}
-            >
-              <Camera className="w-3.5 h-3.5" />
-              Selection Pro
-            </button>
-          </div>
         </div>
 
         <div className="flex items-center gap-8">
@@ -166,36 +147,16 @@ export default function Home() {
           <Link href="/dashboard" className="text-sm font-medium text-white/50 hover:text-white transition-colors">
             {user ? t('dashboard') : t('studioLogin')}
           </Link>
-          <Link href={viewMode === 'selection' ? "/selection/create" : "/create"}>
+          <Link href="/create">
             <Button className="rounded-2xl px-6 bg-primary hover:bg-primary/90 text-white border-none shadow-lg shadow-primary/20 font-bold">
-              {user ? (viewMode === 'selection' ? 'New Gallery' : t('newProject')) : t('startFree')}
+              {user ? t('newProject') : t('startFree')}
             </Button>
           </Link>
         </div>
       </nav>
 
-      {/* Mobile Product Switcher */}
-      <div className="lg:hidden flex justify-center px-4 mb-4">
-        <div className="flex items-center p-1 bg-white/5 rounded-2xl border border-white/10 backdrop-blur-md w-full max-w-xs">
-          <button
-            onClick={() => setViewMode('albums')}
-            className={`flex-1 py-3 rounded-xl text-[9px] font-black uppercase tracking-widest transition-all duration-300 flex items-center justify-center gap-2 ${viewMode === 'albums' ? 'bg-primary text-white' : 'text-white/40'}`}
-          >
-            Albums
-          </button>
-          <button
-            onClick={() => setViewMode('selection')}
-            className={`flex-1 py-3 rounded-xl text-[9px] font-black uppercase tracking-widest transition-all duration-300 flex items-center justify-center gap-2 ${viewMode === 'selection' ? 'bg-primary text-white' : 'text-white/40'}`}
-          >
-            Selection
-          </button>
-        </div>
-      </div>
 
-      {/* Dynamic Content Based on View Mode */}
-      {viewMode === 'albums' ? (
-        <>
-          {/* Hero Section */}
+      {/* Hero Section */}
           <main className="relative pt-8 md:pt-12 pb-16 overflow-hidden">
             <div className="max-w-7xl mx-auto px-4 md:px-8">
               <div className="flex flex-col items-center text-center gap-6">
@@ -496,10 +457,6 @@ export default function Home() {
               </div>
             </div>
           </section>
-        </>
-      ) : (
-        <SelectionHome />
-      )}
 
       <Footer>
         <div className="w-full max-w-xl mx-auto px-4">
