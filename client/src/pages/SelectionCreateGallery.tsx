@@ -184,22 +184,25 @@ export default function SelectionCreateGallery() {
 
       // 3. Create the gallery first (Metadata only)
       setStatus('Creating gallery metadata...');
+      
+      const payload = {
+        name,
+        clientName,
+        clientEmail: clientEmail || null,
+        photographerName: photographerName || user?.name || 'Studio',
+        deadline: deadline || null,
+        password: password || null,
+        watermarkText: watermark || null,
+        minSelections: (minSelections && !isNaN(parseInt(minSelections))) ? parseInt(minSelections) : null,
+        maxSelections: (maxSelections && !isNaN(parseInt(maxSelections))) ? parseInt(maxSelections) : null,
+        message: message || null,
+        status: 'pending'
+      };
+
       const galleryRes = await fetch('/api/selection/galleries', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          name,
-          clientName,
-          clientEmail,
-          photographerName: photographerName || user?.name || 'Studio',
-          deadline,
-          password,
-          watermarkText: watermark,
-          minSelections: minSelections ? parseInt(minSelections) : undefined,
-          maxSelections: maxSelections ? parseInt(maxSelections) : undefined,
-          message,
-          status: 'pending'
-        })
+        body: JSON.stringify(payload)
       });
 
       if (!galleryRes.ok) {
