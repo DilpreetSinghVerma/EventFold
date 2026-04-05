@@ -19,6 +19,7 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { createGallery } from '../lib/selection-api';
 import { useAuth } from '@/lib/auth';
 import { Loader2 } from 'lucide-react';
+import { v4 as uuidv4 } from 'uuid';
 
 const fadeInUp = {
   initial: { opacity: 0, y: 20 },
@@ -185,7 +186,9 @@ export default function SelectionCreateGallery() {
       // 3. Create the gallery first (Metadata only)
       setStatus('Creating gallery metadata...');
       
+      const newGalleryId = uuidv4();
       const payload = {
+        id: newGalleryId,
         name,
         clientName,
         clientEmail: clientEmail || null,
@@ -216,7 +219,8 @@ export default function SelectionCreateGallery() {
         }
       }
 
-      const gallery = await galleryRes.json();
+      // No need to parse JSON if we already have the ID we generated!
+      const gallery = { id: newGalleryId };
 
       // 4. Send photo URLs to server in chunks of 50
       // This prevents the Vercel 10s timeout error
