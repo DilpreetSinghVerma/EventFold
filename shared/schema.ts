@@ -104,12 +104,26 @@ export const insertUserSchema = createInsertSchema(users).omit({
   createdAt: true,
 });
 
-export const insertSelectionGallerySchema = createInsertSchema(selectionGalleries).omit({
+export const insertSelectionGallerySchema = createInsertSchema(selectionGalleries, {
+  coverIndex: z.coerce.number().optional(),
+  status: z.string().optional(),
+  clientEmail: z.string().optional(),
+  deadline: z.string().optional(),
+  password: z.string().optional(),
+  watermarkText: z.string().optional(),
+  message: z.string().optional(),
+  minSelections: z.coerce.number().optional().nullable(),
+  maxSelections: z.coerce.number().optional().nullable(),
+}).omit({
   id: true,
   createdAt: true,
 });
 
-export const insertSelectionPhotoSchema = createInsertSchema(selectionPhotos).omit({
+export const insertSelectionPhotoSchema = createInsertSchema(selectionPhotos, {
+  selected: z.coerce.number().optional().nullable(),
+  rating: z.coerce.number().optional(),
+  comment: z.string().optional().nullable(),
+}).omit({
   id: true,
 });
 
