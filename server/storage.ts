@@ -276,15 +276,34 @@ export class DatabaseStorage implements IStorage {
 
   async createSelectionPhotos(galleryId: string, photos: { url: string; filename: string }[]): Promise<void> {
     if (!photos.length) return;
-    const values = photos.map(p => ({
-      galleryId,
-      url: p.url,
-      filename: p.filename,
-      selected: null,
-      rating: 0,
-      comment: ""
-    }));
-    await db.insert(selectionPhotos).values(values);
+    
+    // Chunk into batches of 50 for speed on Neon HTTP
+    const CHUNK_SIZE = 50;
+    for (let i = 0; i < photos.length; i += CHUNK_SIZE) {
+      const chunk = photos.slice(i, i + CHUNK_SIZE);
+      const values = chunk.map(p => ({
+        galleryId,
+        url: p.url,
+        filename: p.filename,
+        selected: null,
+        rating: 0,
+        comment: ""
+      }));
+      
+      try {
+        await db.insert(selectionPhotos).values(values);
+      } catch (err) {
+        console.error(`DB Insert Chunk Error (index ${i}):`, err);
+        // Fallback: Try one-by-one for this chunk if batch fails
+        for (const val of values) {
+          try {
+            await db.insert(selectionPhotos).values(val);
+          } catch (e) {
+             console.error("Individual insert failed:", e);
+          }
+        }
+      }
+    }
   }
 
   async getSelectionPhotosByGallery(galleryId: string): Promise<SelectionPhoto[]> {
