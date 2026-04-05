@@ -457,31 +457,37 @@ export default function SelectionCreateGallery() {
             </div>
 
             {photos.length > 0 && (
-              <div className="mt-6 grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-3">
-                {photos.map((photo, i) => (
-                  <div
-                    key={i}
-                    className="relative group aspect-square rounded-xl overflow-hidden bg-muted"
-                  >
-                    <img
-                      src={photo.url}
-                      alt={photo.filename}
-                      className="w-full h-full object-cover"
-                    />
-                    <button
-                      type="button"
-                      onClick={() => removePhoto(i)}
-                      className="absolute top-1.5 right-1.5 w-6 h-6 rounded-full bg-red-500 text-white flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-200"
+              <div className="mt-6 flex flex-col gap-2">
+                <p className="text-xs text-muted-foreground mb-1 uppercase tracking-wider font-semibold">
+                  Selected Files ({photos.length})
+                </p>
+                <div className="max-h-[300px] overflow-y-auto pr-2 custom-scrollbar grid grid-cols-1 sm:grid-cols-2 gap-2">
+                  {photos.map((photo, i) => (
+                    <div
+                      key={i}
+                      className="flex items-center justify-between px-3 py-2.5 rounded-xl bg-white/[0.03] border border-white/5 hover:border-white/10 transition-colors"
                     >
-                      <X className="w-3 h-3" />
-                    </button>
-                    <div className="absolute bottom-0 left-0 right-0 bg-black/60 px-2 py-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                      <p className="text-[10px] text-white truncate">
-                        {photo.filename}
-                      </p>
+                      <div className="flex items-center gap-3 overflow-hidden">
+                        <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
+                          <ImageIcon className="w-4 h-4 text-primary" />
+                        </div>
+                        <p className="text-xs text-foreground truncate font-mono">
+                          {photo.filename}
+                        </p>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          removePhoto(i);
+                        }}
+                        className="p-1.5 rounded-lg text-muted-foreground hover:text-red-400 hover:bg-red-400/10 transition-all"
+                      >
+                        <X className="w-3.5 h-3.5" />
+                      </button>
                     </div>
-                  </div>
-                ))}
+                  ))}
+                </div>
               </div>
             )}
           </motion.div>
