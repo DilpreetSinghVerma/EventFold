@@ -206,8 +206,14 @@ export default function SelectionCreateGallery() {
       });
 
       if (!galleryRes.ok) {
-        const errData = await galleryRes.json();
-        throw new Error(errData.error || 'Failed to create gallery metadata');
+        const contentType = galleryRes.headers.get('content-type');
+        if (contentType && contentType.includes('application/json')) {
+          const errData = await galleryRes.json();
+          throw new Error(errData.details || errData.error || 'Failed to create gallery metadata');
+        } else {
+          const text = await galleryRes.text();
+          throw new Error(`Server Error (${galleryRes.status}): ${text.substring(0, 100)}...`);
+        }
       }
 
       const gallery = await galleryRes.json();

@@ -12,7 +12,7 @@ const httpServer = createServer(app);
 // MIDDLEWARE (JSON Body Parser MUST be before setupAuth for passport-local to work)
 app.use(
   express.json({
-    limit: '20mb',
+    limit: '30mb',
     verify: (req: any, _res, buf) => {
       req.rawBody = buf;
     },

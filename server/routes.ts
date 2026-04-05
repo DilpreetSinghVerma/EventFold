@@ -1248,10 +1248,16 @@ export function registerRoutes(
 
     // Create a new selection gallery (Metadata only)
     app.post("/api/selection/galleries", async (req, res) => {
+      // Force JSON early to prevent Vercel HTML override
+      res.setHeader('Content-Type', 'application/json');
       console.log(`[Selection] POST /api/selection/galleries - User: ${req.user?.id}`);
       if (!req.isAuthenticated()) return res.status(401).json({ error: "Unauthorized" });
       
       try {
+        // Pre-flight check: Ping DB to ensure connection is alive
+        console.log("[Selection] Pinging database...");
+        await db.execute(sql`SELECT 1`);
+        
         const { photos, ...galleryData } = req.body;
         console.log(`[Selection] Parsing gallery payload for ${photos?.length || 0} photos...`);
         
