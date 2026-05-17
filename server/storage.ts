@@ -13,6 +13,7 @@ export interface IStorage {
   createFile(file: InsertFile): Promise<File>;
   getFilesByAlbum(albumId: string): Promise<File[]>;
   getFile(id: string): Promise<File | undefined>;
+  deleteFile(id: string): Promise<void>;
   deleteFilesByAlbum(albumId: string): Promise<void>;
   updateFile(id: string, data: Partial<File>): Promise<File>;
   incrementFileViews(id: string): Promise<void>;
@@ -77,6 +78,10 @@ export class DatabaseStorage implements IStorage {
   async getFile(id: string): Promise<File | undefined> {
     const [file] = await db.select().from(files).where(eq(files.id, id));
     return file;
+  }
+
+  async deleteFile(id: string): Promise<void> {
+    await db.delete(files).where(eq(files.id, id));
   }
 
   async deleteFilesByAlbum(albumId: string): Promise<void> {
@@ -313,6 +318,10 @@ export class MemStorage implements IStorage {
 
   async getFile(id: string): Promise<File | undefined> {
     return this.files.get(id);
+  }
+
+  async deleteFile(id: string): Promise<void> {
+    this.files.delete(id);
   }
 
   async deleteFilesByAlbum(albumId: string): Promise<void> {

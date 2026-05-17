@@ -867,6 +867,27 @@ export function registerRoutes(
     }
   });
 
+  // Delete sheet/file
+  app.delete("/api/files/:id", async (req, res) => {
+    try {
+      if (!req.isAuthenticated()) return res.status(401).json({ error: "Unauthorized" });
+      const file = await storage.getFile(req.params.id);
+      if (!file) return res.status(404).json({ error: "File not found" });
+
+      const album = await storage.getAlbum(file.albumId);
+      if (!album) return res.status(404).json({ error: "Album not found" });
+
+      if (album.userId !== (req.user as any).id && (req.user as any).role !== 'admin') {
+        return res.status(403).json({ error: "Forbidden" });
+      }
+
+      await storage.deleteFile(req.params.id);
+      res.json({ success: true });
+    } catch (e) {
+      res.status(500).json({ error: "Failed to delete file" });
+    }
+  });
+
   // Upload files (Supports both Direct Binary Upload & Meta-only Metadata)
   // We move multer INSIDE to allow JSON requests to pass through without being blocked
   app.post("/api/albums/:albumId/files", (req, res, next) => {

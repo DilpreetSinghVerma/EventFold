@@ -18,7 +18,8 @@ import {
   CloudUpload,
   Trash2,
   Volume2,
-  FolderHeart
+  FolderHeart,
+  ImagePlus
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -41,6 +42,145 @@ export default function AlbumEdit() {
 
   const musicInputRef = React.useRef<HTMLInputElement>(null);
   const [uploadingMusic, setUploadingMusic] = useState(false);
+
+  const sheetInputRef = React.useRef<HTMLInputElement>(null);
+  const [uploadingSheets, setUploadingSheets] = useState(false);
+
+  const compressImage = async (file: File): Promise<File> => {
+    return new Promise((resolve) => {
+      const img = new Image();
+      img.onload = () => {
+        const canvas = document.createElement("canvas");
+        const MAX_WIDTH = 2500;
+        const MAX_HEIGHT = 2500;
+        let width = img.width;
+        let height = img.height;
+
+        if (width > height) {
+          if (width > MAX_WIDTH) {
+            height *= MAX_WIDTH / width;
+            width = MAX_WIDTH;
+          }
+        } else {
+          if (height > MAX_HEIGHT) {
+            width *= MAX_HEIGHT / height;
+            height = MAX_HEIGHT;
+          }
+        }
+        canvas.width = width;
+        canvas.height = height;
+
+        const ctx = canvas.getContext("2d");
+        if (!ctx) return resolve(file);
+
+        ctx.drawImage(img, 0, 0, width, height);
+
+        canvas.toBlob(
+          (blob) => {
+            if (!blob) return resolve(file);
+            const compressedFile = new File([blob], file.name.replace(/\.[^/.]+$/, ".jpg"), {
+              type: "image/jpeg",
+              lastModified: Date.now(),
+            });
+            resolve(compressedFile);
+          },
+          "image/jpeg",
+          0.85
+        );
+      };
+      img.onerror = () => resolve(file);
+      img.src = URL.createObjectURL(file);
+    });
+  };
+
+  const handleSheetUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const selectedFiles = Array.from(e.target.files || []);
+    if (selectedFiles.length === 0) return;
+
+    setUploadingSheets(true);
+    try {
+      const sigRes = await fetch('/api/cloudinary-signature');
+      if (!sigRes.ok) {
+        throw new Error("Failed to generate Cloudinary signature on server.");
+      }
+      const { signature, timestamp, cloud_name, api_key, folder } = await sigRes.json();
+
+      const uploadToCloudinary = async (file: File) => {
+        const cloudFormData = new FormData();
+        cloudFormData.append('file', file);
+        cloudFormData.append('signature', signature);
+        cloudFormData.append('timestamp', timestamp);
+        cloudFormData.append('api_key', api_key);
+        cloudFormData.append('folder', folder);
+
+        const res = await fetch(`https://api.cloudinary.com/v1_1/${cloud_name}/image/upload`, {
+          method: 'POST',
+          body: cloudFormData,
+        });
+
+        const data = await res.json();
+        if (!res.ok) {
+          throw new Error(data.error?.message || "Upload failed");
+        }
+        return data.secure_url;
+      };
+
+      const startIdx = files.length;
+      const newFilesUploaded = [];
+
+      for (let i = 0; i < selectedFiles.length; i++) {
+        const file = selectedFiles[i];
+        const compressed = await compressImage(file);
+        const url = await uploadToCloudinary(compressed);
+        newFilesUploaded.push({
+          filePath: url,
+          fileType: 'sheet',
+          orderIndex: startIdx + i
+        });
+      }
+
+      const syncRes = await fetch(`/api/albums/${id}/files`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ files: newFilesUploaded }),
+      });
+
+      if (!syncRes.ok) {
+        throw new Error("Failed to synchronize uploaded sheets with server database.");
+      }
+
+      const syncedFiles = await syncRes.json();
+      
+      setFiles(prev => [...prev, ...syncedFiles].sort((a, b) => a.orderIndex - b.orderIndex));
+
+      toast({ 
+        title: "Sheets Added!", 
+        description: `Successfully uploaded ${selectedFiles.length} new sheet(s).`, 
+        className: "bg-green-500 text-white" 
+      });
+
+    } catch (err: any) {
+      toast({ title: "Upload Failed", description: err.message, variant: "destructive" });
+    } finally {
+      setUploadingSheets(false);
+      if (sheetInputRef.current) sheetInputRef.current.value = '';
+    }
+  };
+
+  const handleDeleteSheet = async (fileId: string) => {
+    if (!window.confirm("Are you sure you want to delete this sheet? This action cannot be undone.")) return;
+    try {
+      const res = await fetch(`/api/files/${fileId}`, { method: 'DELETE' });
+      if (!res.ok) throw new Error("Failed to delete sheet from server");
+      
+      const updatedSheets = files.filter(f => f.id !== fileId);
+      setFiles(updatedSheets);
+      
+      toast({ title: "Sheet Deleted", description: "Sheet has been removed from the album.", className: "bg-green-500 text-white" });
+    } catch (err: any) {
+      toast({ title: "Delete Failed", description: err.message, variant: "destructive" });
+    }
+  };
 
   const handleMusicUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -321,7 +461,7 @@ export default function AlbumEdit() {
           {/* Re-order Area */}
           <div className="lg:col-span-2 space-y-8">
             <section className="glass p-8 rounded-[2.5rem] border-white/5">
-               <div className="flex items-center justify-between mb-8">
+               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
                   <div className="flex items-center gap-3">
                     <div className="w-8 h-8 rounded-lg bg-indigo-500/10 flex items-center justify-center text-indigo-400">
                        <LayoutGrid className="w-4 h-4" />
@@ -331,8 +471,26 @@ export default function AlbumEdit() {
                        <p className="text-[10px] text-white/30 uppercase font-black tracking-widest mt-1">Drag and drop to change spread sequence</p>
                     </div>
                   </div>
-                  <div className="px-3 py-1 rounded-full bg-indigo-500/10 border border-indigo-500/20 text-indigo-400 text-[10px] font-black uppercase tracking-widest">
-                     {files.length} Spreads
+                  <div className="flex items-center gap-3">
+                    <input
+                      type="file"
+                      ref={sheetInputRef}
+                      onChange={handleSheetUpload}
+                      accept="image/*"
+                      multiple
+                      className="hidden"
+                    />
+                    <Button
+                      onClick={() => sheetInputRef.current?.click()}
+                      disabled={uploadingSheets}
+                      className="rounded-xl px-4 bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs gap-2 shadow-lg shadow-indigo-600/20 h-9 shrink-0"
+                    >
+                      {uploadingSheets ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <ImagePlus className="w-3.5 h-3.5" />}
+                      Add Sheets
+                    </Button>
+                    <div className="px-3 py-1 rounded-full bg-indigo-500/10 border border-indigo-500/20 text-indigo-400 text-[10px] font-black uppercase tracking-widest h-9 flex items-center justify-center shrink-0">
+                       {files.length} Spreads
+                    </div>
                   </div>
                </div>
 
@@ -367,9 +525,22 @@ export default function AlbumEdit() {
                            <p className="text-[10px] text-white/20 uppercase tracking-widest font-black mt-1">Status: Optimized</p>
                         </div>
 
-                        <div className="w-8 h-8 rounded-full border border-white/5 flex items-center justify-center bg-white/5 opacity-0 group-hover:opacity-100 transition-opacity">
-                           <ImageIcon className="w-4 h-4 text-white/20" />
-                        </div>
+                        <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                            <div className="w-8 h-8 rounded-full border border-white/5 flex items-center justify-center bg-white/5 shrink-0">
+                               <ImageIcon className="w-4 h-4 text-white/20" />
+                            </div>
+                            <Button 
+                              variant="ghost" 
+                              size="icon" 
+                              onClick={(e) => {
+                                 e.stopPropagation();
+                                 handleDeleteSheet(file.id);
+                              }}
+                              className="w-8 h-8 rounded-full border border-red-500/10 hover:border-red-500/30 flex items-center justify-center bg-red-500/5 hover:bg-red-500/20 text-red-400 hover:text-red-500 transition-colors shrink-0"
+                            >
+                               <Trash2 className="w-4 h-4" />
+                            </Button>
+                         </div>
                      </motion.div>
                    </Reorder.Item>
                  ))}
