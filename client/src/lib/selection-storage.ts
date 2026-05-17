@@ -107,8 +107,8 @@ export function submitSelections(galleryId: string): Gallery | null {
 
 export function getSelectionStats(gallery: Gallery) {
   const total = gallery.photos.length;
-  const selected = gallery.photos.filter(p => p.selected === true).length;
-  const rejected = gallery.photos.filter(p => p.selected === false).length;
+  const selected = gallery.photos.filter(p => p.selected === 1).length;
+  const rejected = gallery.photos.filter(p => p.selected === 0).length;
   const unreviewed = gallery.photos.filter(p => p.selected === null).length;
   return { total, selected, rejected, unreviewed };
 }

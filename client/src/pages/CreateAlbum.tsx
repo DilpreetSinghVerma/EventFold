@@ -155,16 +155,21 @@ export default function CreateAlbum() {
 
     try {
       // 1. Create the Album metadata in our database
-      const albumResponse = await fetch('/api/albums', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          title: formData.title,
-          date: formData.date,
-          theme: formData.theme,
-          password: formData.password || null,
-        }),
-      });
+      let albumResponse;
+      try {
+        albumResponse = await fetch('/api/albums', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            title: formData.title,
+            date: formData.date,
+            theme: formData.theme,
+            password: formData.password || null,
+          }),
+        });
+      } catch (e: any) {
+        throw new Error("Failed to contact the backend server to create the album. Your backend server might be offline or sleeping.");
+      }
 
       if (!albumResponse.ok) {
         const errBody = await albumResponse.json().catch(() => ({}));
@@ -222,7 +227,13 @@ export default function CreateAlbum() {
 
       // 2. Get Secure Signature from our server for Cloudinary
       setStatus('Securing cloud connection...');
-      const sigResponse = await fetch('/api/cloudinary-signature');
+      let sigResponse;
+      try {
+        sigResponse = await fetch('/api/cloudinary-signature');
+      } catch (e: any) {
+        throw new Error("Failed to secure cloud connection. The backend server is unreachable or failed to respond.");
+      }
+
       if (!sigResponse.ok) {
         const errBody = await sigResponse.json().catch(() => ({}));
         throw new Error(errBody.error || 'Cloudinary handshake failed. Ensure CLOUDINARY_CLOUD_NAME, CLOUDINARY_API_KEY, CLOUDINARY_API_SECRET are set on Vercel.');
@@ -237,11 +248,15 @@ export default function CreateAlbum() {
 
         // If we need special video compression, we need a specific signature for it
         if (eager) {
-          const vSigRes = await fetch(`/api/cloudinary-signature?eager=${eager}&resource_type=video`);
-          if (vSigRes.ok) {
-            const vData = await vSigRes.json();
-            currentSig = vData.signature;
-            currentTimestamp = vData.timestamp;
+          try {
+            const vSigRes = await fetch(`/api/cloudinary-signature?eager=${eager}&resource_type=video`);
+            if (vSigRes.ok) {
+              const vData = await vSigRes.json();
+              currentSig = vData.signature;
+              currentTimestamp = vData.timestamp;
+            }
+          } catch (vSigErr: any) {
+            console.warn("Failed to fetch video eager signature, attempting standard signature:", vSigErr);
           }
         }
 
@@ -257,10 +272,16 @@ export default function CreateAlbum() {
         }
 
         const resourceType = isVideo ? 'video' : 'image';
-        const res = await fetch(`https://api.cloudinary.com/v1_1/${cloud_name}/${resourceType}/upload`, {
-          method: 'POST',
-          body: cloudFormData,
-        });
+        let res;
+        try {
+          res = await fetch(`https://api.cloudinary.com/v1_1/${cloud_name}/${resourceType}/upload`, {
+            method: 'POST',
+            body: cloudFormData,
+          });
+        } catch (fetchErr: any) {
+          console.error("Cloudinary fetch rejected:", fetchErr);
+          throw new Error(`Cloudinary network connection failed for "${label}". Please verify your internet connection or check if an ad-blocker/firewall/CORS block is preventing requests to api.cloudinary.com.`);
+        }
 
         const data = await res.json().catch(() => ({}));
         if (!res.ok) {
@@ -327,11 +348,16 @@ export default function CreateAlbum() {
 
       // 4. Send the URLs to our server to link them to the album
       setStatus('Finalizing architecture...');
-      const batchResponse = await fetch(`/api/albums/${album.id}/files`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ files: uploadedFiles }),
-      });
+      let batchResponse;
+      try {
+        batchResponse = await fetch(`/api/albums/${album.id}/files`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ files: uploadedFiles }),
+        });
+      } catch (e: any) {
+        throw new Error("Failed to synchronize uploaded files with the database server.");
+      }
 
       if (!batchResponse.ok) {
         const errBody = await batchResponse.json().catch(() => ({}));

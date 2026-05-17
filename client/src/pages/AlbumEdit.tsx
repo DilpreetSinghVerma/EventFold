@@ -53,7 +53,18 @@ export default function AlbumEdit() {
 
     setUploadingMusic(true);
     try {
-      const sigRes = await fetch('/api/cloudinary-signature?resource_type=video');
+      let sigRes;
+      try {
+        sigRes = await fetch('/api/cloudinary-signature?resource_type=video');
+      } catch (e: any) {
+        throw new Error("Failed to secure cloud connection. The backend server is unreachable or failed to respond.");
+      }
+
+      if (!sigRes.ok) {
+        const errBody = await sigRes.json().catch(() => ({}));
+        throw new Error(errBody.error || "Failed to generate Cloudinary signature on server.");
+      }
+
       const { signature, timestamp, cloud_name, api_key, folder } = await sigRes.json();
 
       const cloudFormData = new FormData();
@@ -63,12 +74,18 @@ export default function AlbumEdit() {
       cloudFormData.append('api_key', api_key);
       cloudFormData.append('folder', folder);
 
-      const res = await fetch(`https://api.cloudinary.com/v1_1/${cloud_name}/video/upload`, {
-        method: 'POST',
-        body: cloudFormData,
-      });
+      let res;
+      try {
+        res = await fetch(`https://api.cloudinary.com/v1_1/${cloud_name}/video/upload`, {
+          method: 'POST',
+          body: cloudFormData,
+        });
+      } catch (fetchErr: any) {
+        console.error("Cloudinary video fetch rejected:", fetchErr);
+        throw new Error("Cloudinary network connection failed. Please verify your internet connection or check if an ad-blocker/firewall/CORS block is preventing requests to api.cloudinary.com.");
+      }
 
-      const data = await res.json();
+      const data = await res.json().catch(() => ({}));
       if (res.ok) {
         setBgMusicUrl(data.secure_url);
         toast({ title: "Music Uploaded!", description: "Save changes to apply this track to the album.", className: "bg-green-500 text-white" });
