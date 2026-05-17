@@ -888,6 +888,27 @@ export function registerRoutes(
     }
   });
 
+  // Update file metadata (e.g. change cover image url)
+  app.patch("/api/files/:id", async (req, res) => {
+    try {
+      if (!req.isAuthenticated()) return res.status(401).json({ error: "Unauthorized" });
+      const file = await storage.getFile(req.params.id);
+      if (!file) return res.status(404).json({ error: "File not found" });
+
+      const album = await storage.getAlbum(file.albumId);
+      if (!album) return res.status(404).json({ error: "Album not found" });
+
+      if (album.userId !== (req.user as any).id && (req.user as any).role !== 'admin') {
+        return res.status(403).json({ error: "Forbidden" });
+      }
+
+      const updated = await storage.updateFile(req.params.id, req.body);
+      res.json(updated);
+    } catch (e) {
+      res.status(500).json({ error: "Failed to update file" });
+    }
+  });
+
   // Upload files (Supports both Direct Binary Upload & Meta-only Metadata)
   // We move multer INSIDE to allow JSON requests to pass through without being blocked
   app.post("/api/albums/:albumId/files", (req, res, next) => {

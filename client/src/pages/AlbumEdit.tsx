@@ -46,6 +46,14 @@ export default function AlbumEdit() {
   const sheetInputRef = React.useRef<HTMLInputElement>(null);
   const [uploadingSheets, setUploadingSheets] = useState(false);
 
+  const [frontCover, setFrontCover] = useState<any>(null);
+  const [backCover, setBackCover] = useState<any>(null);
+  const [uploadingFront, setUploadingFront] = useState(false);
+  const [uploadingBack, setUploadingBack] = useState(false);
+  
+  const frontInputRef = React.useRef<HTMLInputElement>(null);
+  const backInputRef = React.useRef<HTMLInputElement>(null);
+
   const compressImage = async (file: File): Promise<File> => {
     return new Promise((resolve) => {
       const img = new Image();
@@ -182,6 +190,97 @@ export default function AlbumEdit() {
     }
   };
 
+  const handleCoverUpload = async (e: React.ChangeEvent<HTMLInputElement>, type: 'front' | 'back') => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (type === 'front') setUploadingFront(true);
+    else setUploadingBack(true);
+
+    try {
+      const sigRes = await fetch('/api/cloudinary-signature');
+      if (!sigRes.ok) {
+        throw new Error("Failed to generate Cloudinary signature on server.");
+      }
+      const { signature, timestamp, cloud_name, api_key, folder } = await sigRes.json();
+
+      const compressed = await compressImage(file);
+
+      const cloudFormData = new FormData();
+      cloudFormData.append('file', compressed);
+      cloudFormData.append('signature', signature);
+      cloudFormData.append('timestamp', timestamp);
+      cloudFormData.append('api_key', api_key);
+      cloudFormData.append('folder', folder);
+
+      const cloudRes = await fetch(`https://api.cloudinary.com/v1_1/${cloud_name}/image/upload`, {
+        method: 'POST',
+        body: cloudFormData,
+      });
+
+      const cloudData = await cloudRes.json();
+      if (!cloudRes.ok) {
+        throw new Error(cloudData.error?.message || "Upload failed");
+      }
+      const url = cloudData.secure_url;
+
+      const currentCover = type === 'front' ? frontCover : backCover;
+      if (currentCover) {
+        const updateRes = await fetch(`/api/files/${currentCover.id}`, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ filePath: url }),
+        });
+
+        if (!updateRes.ok) {
+          throw new Error("Failed to update cover on server.");
+        }
+
+        const updatedFile = await updateRes.json();
+        if (type === 'front') setFrontCover(updatedFile);
+        else setBackCover(updatedFile);
+      } else {
+        const syncRes = await fetch(`/api/albums/${id}/files`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            files: [{
+              filePath: url,
+              fileType: type === 'front' ? 'cover_front' : 'cover_back',
+              orderIndex: type === 'front' ? 0 : 1
+            }]
+          }),
+        });
+
+        if (!syncRes.ok) {
+          throw new Error("Failed to link new cover on server.");
+        }
+
+        const syncedFiles = await syncRes.json();
+        const newCover = syncedFiles[0];
+        if (type === 'front') setFrontCover(newCover);
+        else setBackCover(newCover);
+      }
+
+      toast({
+        title: `${type === 'front' ? 'Front' : 'Back'} Cover Updated!`,
+        description: "Your album cover has been refreshed successfully.",
+        className: "bg-green-500 text-white"
+      });
+
+    } catch (err: any) {
+      toast({ title: "Upload Failed", description: err.message, variant: "destructive" });
+    } finally {
+      if (type === 'front') {
+        setUploadingFront(false);
+        if (frontInputRef.current) frontInputRef.current.value = '';
+      } else {
+        setUploadingBack(false);
+        if (backInputRef.current) backInputRef.current.value = '';
+      }
+    }
+  };
+
   const handleMusicUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -258,6 +357,11 @@ export default function AlbumEdit() {
         // Use files included in the main album response
         const filesData = data.files || [];
         setFiles(filesData.filter((f: any) => f.fileType === 'sheet').sort((a: any, b: any) => a.orderIndex - b.orderIndex));
+        
+        const front = filesData.find((f: any) => f.fileType === 'cover_front');
+        const back = filesData.find((f: any) => f.fileType === 'cover_back');
+        setFrontCover(front || null);
+        setBackCover(back || null);
       } catch (err) {
         toast({ title: "Error", description: "Failed to load album data", variant: "destructive" });
         setLocation('/dashboard');
@@ -455,6 +559,95 @@ export default function AlbumEdit() {
                     </div>
                   )}
                 </div>
+            </section>
+
+            <section className="glass p-8 rounded-[2rem] border-white/5 space-y-6">
+               <div className="flex items-center gap-3 mb-2">
+                  <div className="w-8 h-8 rounded-lg bg-pink-500/10 flex items-center justify-center text-pink-400">
+                     <ImageIcon className="w-4 h-4" />
+                  </div>
+                  <h2 className="text-lg font-bold">Album Covers</h2>
+               </div>
+
+               <div className="grid grid-cols-2 gap-4">
+                 {/* Front Cover */}
+                 <div className="space-y-3">
+                   <Label className="text-xs text-white/40 uppercase font-bold tracking-widest block">Front Cover</Label>
+                   <input
+                     type="file"
+                     ref={frontInputRef}
+                     onChange={(e) => handleCoverUpload(e, 'front')}
+                     accept="image/*"
+                     className="hidden"
+                   />
+                   <div 
+                     onClick={() => !uploadingFront && frontInputRef.current?.click()}
+                     className="relative aspect-[3/4] rounded-2xl overflow-hidden border border-white/10 bg-black/40 cursor-pointer group flex flex-col items-center justify-center hover:border-pink-500/30 transition-all shadow-inner"
+                   >
+                     {uploadingFront ? (
+                       <div className="text-center space-y-2">
+                         <Loader2 className="w-6 h-6 animate-spin text-pink-400 mx-auto" />
+                         <span className="text-[10px] text-pink-400 font-bold uppercase tracking-widest block">Uploading...</span>
+                       </div>
+                     ) : frontCover ? (
+                       <>
+                         <img 
+                           src={frontCover.filePath} 
+                           alt="Front Cover" 
+                           className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300 opacity-80 group-hover:opacity-100"
+                         />
+                         <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                           <span className="text-[10px] bg-white text-black font-bold uppercase tracking-widest px-3 py-1 rounded-full shadow-lg">Change</span>
+                         </div>
+                       </>
+                     ) : (
+                       <div className="text-center space-y-2 opacity-40 group-hover:opacity-80">
+                         <CloudUpload className="w-6 h-6 mx-auto" />
+                         <span className="text-[10px] font-bold uppercase tracking-widest block">Add Front</span>
+                       </div>
+                     )}
+                   </div>
+                 </div>
+
+                 {/* Back Cover */}
+                 <div className="space-y-3">
+                   <Label className="text-xs text-white/40 uppercase font-bold tracking-widest block">Back Cover</Label>
+                   <input
+                     type="file"
+                     ref={backInputRef}
+                     onChange={(e) => handleCoverUpload(e, 'back')}
+                     accept="image/*"
+                     className="hidden"
+                   />
+                   <div 
+                     onClick={() => !uploadingBack && backInputRef.current?.click()}
+                     className="relative aspect-[3/4] rounded-2xl overflow-hidden border border-white/10 bg-black/40 cursor-pointer group flex flex-col items-center justify-center hover:border-pink-500/30 transition-all shadow-inner"
+                   >
+                     {uploadingBack ? (
+                       <div className="text-center space-y-2">
+                         <Loader2 className="w-6 h-6 animate-spin text-pink-400 mx-auto" />
+                         <span className="text-[10px] text-pink-400 font-bold uppercase tracking-widest block">Uploading...</span>
+                       </div>
+                     ) : backCover ? (
+                       <>
+                         <img 
+                           src={backCover.filePath} 
+                           alt="Back Cover" 
+                           className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300 opacity-80 group-hover:opacity-100"
+                         />
+                         <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                           <span className="text-[10px] bg-white text-black font-bold uppercase tracking-widest px-3 py-1 rounded-full shadow-lg">Change</span>
+                         </div>
+                       </>
+                     ) : (
+                       <div className="text-center space-y-2 opacity-40 group-hover:opacity-80">
+                         <CloudUpload className="w-6 h-6 mx-auto" />
+                         <span className="text-[10px] font-bold uppercase tracking-widest block">Add Back</span>
+                       </div>
+                     )}
+                   </div>
+                 </div>
+               </div>
             </section>
           </div>
 
