@@ -1,77 +1,94 @@
-# 📖 FlipiAlbum - Deployment Guide
+# 📖 EventFold Studio
 
-This guide will help you deploy your Digital Flipbook Album generator to **Vercel** with **Cloudinary** (for free image storage) and **Neon** (for your free database).
+<div align="center">
 
----
+<img src="https://capsule-render.vercel.app/api?type=waving&color=0:0d1117,50:1f6feb,100:58a6ff&height=150&section=header&text=EventFold%20Studio&fontSize=40&animation=fadeIn" width="100%"/>
 
-## 🚀 Step 1: Image Storage (Cloudinary)
-Vercel's disk is temporary, so photos must be stored in the cloud.
-1. Sign up for a free account at [Cloudinary.com](https://cloudinary.com/).
-2. On your Cloudinary Dashboard, copy the following:
-   - **Cloud Name**
-   - **API Key**
-   - **API Secret**
+[![Live Demo](https://img.shields.io/badge/Live_Demo-eventfoldstudio.com-58a6ff?style=for-the-badge&logo=vercel)](https://eventfoldstudio.com)
+[![TypeScript](https://img.shields.io/badge/TypeScript-007ACC?style=for-the-badge&logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
+[![React](https://img.shields.io/badge/React-20232A?style=for-the-badge&logo=react&logoColor=61DAFB)](https://react.dev/)
+[![Neon](https://img.shields.io/badge/Neon_DB-00E699?style=for-the-badge&logo=postgresql&logoColor=black)](https://neon.tech/)
 
----
+**Turning static photo links into interactive 3D digital flipbooks.**  
+*Built for modern wedding & event photographers in India.*
 
-## 🗄️ Step 2: Database (Neon.tech)
-1. Sign up for a free account at [Neon.tech](https://neon.tech/).
-2. Create a new project named `flipbook`.
-3. Copy your **Connection String** (it starts with `postgres://...`).
+</div>
 
 ---
 
-## ⚡ Step 3: Deployment (Vercel)
-1. Push your code to a **GitHub** repository.
-2. Go to [Vercel](https://vercel.com/) and click **"Add New Project"**.
-3. Import your GitHub repository.
-4. **IMPORTANT**: Click on **"Environment Variables"** and add these 4 keys:
+## 🚀 The Problem & The Solution
 
-| Name | Value |
-| :--- | :--- |
-| `DATABASE_URL` | *Your Neon Connection String* |
-| `CLOUDINARY_CLOUD_NAME` | *Your Cloudinary Cloud Name* |
-| `CLOUDINARY_API_KEY` | *Your Cloudinary API Key* |
-| `CLOUDINARY_API_SECRET` | *Your Cloudinary API Secret* |
+Wedding and event photographers in India traditionally share static drive links, zip files, or flat online galleries. Clients swipe through hundreds of images passively, losing the premium, cinematic feel of physical albums.
 
-5. Click **Deploy**.
+**EventFold Studio** bridges this gap by automatically converting photo galleries into highly interactive, beautifully animated **3D digital flipbooks**. 
 
 ---
 
-## 🛠️ Local Development
-If you want to run this on your own computer again with Cloud storage:
-1. Create a `.env` file in the root folder.
-2. Paste the same keys from above into that file.
-3. Run `npm run dev`.
+## ✨ Features
+
+- **📖 3D Album Engine:** Realistic 3D page-flipping physics with shadow cast, sound effects, and smooth rendering.
+- **☁️ Cloudinary Media pipeline:** Auto-compresses and optimizes large RAW photos for instant load times even on slow mobile networks.
+- **🎨 Photographer Custom Branding:** Add your studio name, logo, custom background themes, and contact details to every shared flipbook link.
+- **⚡ Real-time Analytics:** Track client interaction—know when they open the flipbook, which page they spend the most time on, and what photos they favorite.
+- **📱 Mobile Optimized:** Designed first for mobile screens so families can flip through albums comfortably on WhatsApp.
 
 ---
 
-## 👑 Features for Customers
-- **Privacy**: Customers only see the album (no admin buttons).
-- **Music**: Plays automatically on the front cover.
-- **Speed**: Images are optimized via Cloudinary for fast loading on mobile.
+## 🛠️ Architecture & Tech Stack
+
+```mermaid
+graph TD
+    Client[Web Client: React + TypeScript] -->|Upload / View| API[Next.js Serverless API]
+    API -->|Store Images| Cloudinary[Cloudinary CDN]
+    API -->|Metadata / Relations| DB[(Neon PostgreSQL + Drizzle ORM)]
+    API -->|Realtime sync| Analytics[Interaction Engine]
+```
+
+- **Frontend:** React, Tailwind CSS, Framer Motion (for animations), HTML5 Canvas 3D Flipping Engine.
+- **Backend:** Next.js Serverless Functions, TypeScript.
+- **Database & ORM:** Neon Database (Serverless PostgreSQL), Drizzle ORM.
+- **Asset Storage:** Cloudinary SDK for optimized image uploads and transform-on-the-fly assets.
 
 ---
 
-## 🆘 Troubleshooting (Project Missing / Sync Issues)
+## 📦 Local Installation
 
-If you scan a QR code on your mobile and see **"Project Missing"**, it means your local computer failed to sync the album to the cloud.
+To run EventFold Studio locally:
 
-### 1. Fix DNS (Most Common)
-Some internet providers block the database connection. To fix this on Windows:
-1. Open **Settings** > **Network & Internet** > **Status**.
-2. Click **Change adapter options**.
-3. Right-click your Wi-Fi/Ethernet and select **Properties**.
-4. Select **Internet Protocol Version 4 (TCP/IPv4)** and click **Properties**.
-5. Select **Use the following DNS server addresses** and enter:
-   - Preferred: `8.8.8.8`
-   - Alternate: `8.8.4.4`
-6. Click **OK** and restart the FlipiAlbum software.
+1. **Clone the repository:**
+   ```bash
+   git clone https://github.com/DilpreetSinghVerma/EventFold.git
+   cd EventFold
+   ```
 
-### 2. Check Connection Status
-Look for the **"CLOUD SYNC ACTIVE"** indicator in the top navbar of the software. If it says **"OFFLINE"**, your albums will only be saved on your computer and won't work on mobile.
+2. **Install dependencies:**
+   ```bash
+   npm install
+   ```
 
-### 3. Build Error (EXE)
-If `npm run build:studio` fails with a "Cannot create directory" error:
-Run this command in PowerShell to clear the cache:
-`Remove-Item -Recurse -Force "$env:LOCALAPPDATA\electron-builder\Cache\winCodeSign"`
+3. **Set up environment variables:**  
+   Create a `.env.local` file in the root directory:
+   ```env
+   DATABASE_URL=postgresql://...
+   NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME=your_cloud_name
+   CLOUDINARY_API_KEY=your_api_key
+   CLOUDINARY_API_SECRET=your_api_secret
+   ```
+
+4. **Run database migrations:**
+   ```bash
+   npx drizzle-kit push
+   ```
+
+5. **Start the development server:**
+   ```bash
+   npm run dev
+   ```
+
+---
+
+## 🤝 Connect
+
+- Website: [eventfoldstudio.com](https://eventfoldstudio.com)
+- Email: [dilpreetsinghverma@gmail.com](mailto:dilpreetsinghverma@gmail.com)
+- LinkedIn: [Dilpreet Singh](https://linkedin.com/in/dilpreet-singh-709b35310)
