@@ -49,7 +49,7 @@ export default function Home() {
     "offers": {
       "@type": "Offer",
       "priceCurrency": "INR",
-      "price": "49",
+      "price": "99",
       "availability": "https://schema.org/InStock",
       "url": "https://eventfoldstudio.com"
     }
@@ -382,8 +382,8 @@ export default function Home() {
                     <span className="text-[10px] font-bold uppercase tracking-[0.3em] text-white/40">Studio Credit</span>
                     <h3 className="text-2xl font-bold">Single Project</h3>
                     <div className="flex items-baseline gap-2">
-                      <span className="text-4xl font-display font-bold text-white">₹49</span>
-                      <span className="text-xl text-white/20 line-through">₹99</span>
+                      <span className="text-4xl font-display font-bold text-white">₹99</span>
+                      <span className="text-xl text-white/20 line-through">₹199</span>
                       <span className="text-sm font-medium text-white/20">/ album</span>
                     </div>
                     <div className="space-y-3">

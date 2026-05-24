@@ -178,7 +178,7 @@ export function registerRoutes(
       const userId = (req.user as any).id;
 
       const options = {
-        amount: 4900, // ₹49 in paise
+        amount: 9900, // ₹99 in paise
         currency: "INR",
         receipt: `rct_${Date.now()}_${userId}`.slice(0, 40),
         notes: { userId, type: 'credit' }

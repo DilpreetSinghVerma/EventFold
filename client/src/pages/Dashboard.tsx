@@ -694,7 +694,7 @@ export default function Dashboard() {
                       onClick={buyAlbumCredit}
                       className="h-10 rounded-full bg-white/5 backdrop-blur-md text-white hover:bg-white/10 border border-white/10 font-bold px-6 group transition-all"
                     >
-                      <Plus className="w-4 h-4 mr-2 group-hover:rotate-90 transition-transform" /> BUY 1 CREDIT (₹49) <span className="ml-2 text-[10px] line-through opacity-50">₹99</span>
+                      <Plus className="w-4 h-4 mr-2 group-hover:rotate-90 transition-transform" /> BUY 1 CREDIT (₹99) <span className="ml-2 text-[10px] line-through opacity-50">₹199</span>
                     </Button>
                     <Button
                       onClick={() => startRazorpayCheckout('monthly')}

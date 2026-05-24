@@ -316,7 +316,7 @@ export default function Settings() {
                                             </div>
                                             {user?.plan === 'free' && (
                                                 <Button onClick={buyAlbumCredit} variant="outline" className="w-full rounded-xl border-white/10 hover:bg-white/5 mt-2">
-                                                    Add 1 Credit (₹49) <span className="ml-2 text-[10px] line-through opacity-50">₹99</span>
+                                                    Add 1 Credit (₹99) <span className="ml-2 text-[10px] line-through opacity-50">₹199</span>
                                                 </Button>
                                             )}
                                         </Card>

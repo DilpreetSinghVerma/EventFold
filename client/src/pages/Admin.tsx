@@ -736,7 +736,7 @@ export default function Admin() {
               const mrr = (proUsers.length * 199) + Math.round((eliteUsers.length * 899) / 12);
               const arr = mrr * 12;
               const creditsSpent = users ? users.reduce((acc, u) => acc + Math.max(0, 1 - u.credits), 0) : 0;
-              const estCreditRevenue = creditsSpent * 49;
+              const estCreditRevenue = creditsSpent * 99;
               const estSubRevenue = (proUsers.length * 199) + (eliteUsers.length * 899);
               const totalEstRevenue = estCreditRevenue + estSubRevenue;
               const conversionRate = totalUsers > 0 ? ((proUsers.length + eliteUsers.length) / totalUsers * 100) : 0;
@@ -870,7 +870,7 @@ export default function Admin() {
                           <div className="p-5 rounded-2xl bg-white/5 border border-white/5 flex items-center justify-between">
                             <div>
                               <p className="text-sm font-bold">Credit Revenue</p>
-                              <p className="text-[10px] text-white/30 uppercase tracking-widest">One-time ₹49 purchases</p>
+                              <p className="text-[10px] text-white/30 uppercase tracking-widest">One-time ₹99 purchases</p>
                             </div>
                             <p className="text-2xl font-black text-blue-400">₹{estCreditRevenue.toLocaleString()}</p>
                           </div>
