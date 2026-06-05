@@ -1,4 +1,4 @@
-import { S3Client, PutObjectCommand } from "@aws-sdk/client-s3";
+import { S3Client, PutObjectCommand, ListObjectsV2Command } from "@aws-sdk/client-s3";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 import { v4 as uuidv4 } from "uuid";
 import crypto from "crypto";
@@ -63,4 +63,43 @@ export async function uploadBufferToR2(buffer: Buffer, folder: string, contentTy
 
   await s3Client.send(command);
   return `${publicUrl}/${key}`;
+}
+
+/**
+ * List all objects in the R2 bucket and compute storage statistics.
+ */
+export async function listR2BucketStats() {
+  let totalSize = 0;
+  let totalObjects = 0;
+  const folderStats: Record<string, { count: number; size: number }> = {};
+  let continuationToken: string | undefined;
+
+  do {
+    const listCommand = new ListObjectsV2Command({
+      Bucket: bucketName,
+      ContinuationToken: continuationToken,
+      MaxKeys: 1000,
+    });
+
+    const response = await s3Client.send(listCommand);
+    const contents = response.Contents || [];
+
+    for (const obj of contents) {
+      const size = obj.Size || 0;
+      totalSize += size;
+      totalObjects++;
+
+      // Extract folder name (e.g. "albums" from "albums/abc123.jpeg")
+      const folder = obj.Key?.split("/")[0] || "root";
+      if (!folderStats[folder]) {
+        folderStats[folder] = { count: 0, size: 0 };
+      }
+      folderStats[folder].count++;
+      folderStats[folder].size += size;
+    }
+
+    continuationToken = response.IsTruncated ? response.NextContinuationToken : undefined;
+  } while (continuationToken);
+
+  return { totalSize, totalObjects, folderStats };
 }

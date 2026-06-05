@@ -50,7 +50,7 @@ if (!fs.existsSync(uploadDir)) {
 // ☁️ Smart Cloudinary Manager — Auto-rotates between multiple free accounts
 // Silently switches accounts when one hits quota limit (>80% usage)
 import { cloudinaryManager } from "./lib/cloudinary-manager";
-import { generatePresignedUrl, uploadBufferToR2 } from "./lib/s3-client";
+import { generatePresignedUrl, uploadBufferToR2, listR2BucketStats } from "./lib/s3-client";
 
 // Use memory storage for Multer (Vercel has no writable disk)
 const upload = multer({
@@ -1010,7 +1010,7 @@ export function registerRoutes(
     res.sendFile(filePath);
   });
 
-  // Admin: Get Cloudinary Storage Usage
+  // Admin: Get Cloudflare R2 Storage Usage
   app.get("/api/admin/cloud-usage", async (req, res) => {
     try {
       if (!req.isAuthenticated()) return res.status(401).json({ error: "Unauthorized" });
@@ -1020,71 +1020,56 @@ export function registerRoutes(
         return res.status(403).json({ error: "Admin privilege required" });
       }
 
-      // Call Cloudinary Admin API for usage stats
-      const cloudName = process.env.CLOUDINARY_CLOUD_NAME;
-      const apiKey = process.env.CLOUDINARY_API_KEY;
-      const apiSecret = process.env.CLOUDINARY_API_SECRET;
-
-      if (!cloudName || !apiKey || !apiSecret) {
-        return res.status(500).json({ error: "Cloudinary credentials not configured" });
-      }
-
-      const auth = Buffer.from(`${apiKey}:${apiSecret}`).toString('base64');
-
-      const usageRes = await fetch(
-        `https://api.cloudinary.com/v1_1/${cloudName}/usage`,
-        {
-          headers: { Authorization: `Basic ${auth}` }
-        }
-      );
-
-      if (!usageRes.ok) {
-        const errText = await usageRes.text();
-        console.error("Cloudinary API error:", errText);
-        return res.status(500).json({ error: "Failed to fetch Cloudinary usage", details: errText });
-      }
-
-      const usage = await usageRes.json();
+      // Query R2 bucket for real storage stats
+      const r2Stats = await listR2BucketStats();
 
       // Count platform assets (albums + files in DB)
       const allAlbums = await storage.getAllAlbums();
       let totalFiles = 0;
+      let r2Files = 0;
+      let cloudinaryFiles = 0;
       for (const album of allAlbums) {
         const files = await storage.getFilesByAlbum(album.id);
         totalFiles += files.length;
+        for (const f of files) {
+          if (f.filePath?.includes('r2.dev') || f.filePath?.includes('r2.cloudflarestorage')) {
+            r2Files++;
+          } else if (f.filePath?.includes('cloudinary')) {
+            cloudinaryFiles++;
+          }
+        }
       }
 
+      const FREE_TIER_BYTES = 10 * 1024 * 1024 * 1024; // 10 GB
+      const usedPercent = (r2Stats.totalSize / FREE_TIER_BYTES) * 100;
+      const avgAlbumSize = allAlbums.length > 0 ? r2Stats.totalSize / allAlbums.length : 300 * 1024 * 1024;
+      const estimatedAlbumsRemaining = Math.max(0, Math.floor((FREE_TIER_BYTES - r2Stats.totalSize) / avgAlbumSize));
+
       res.json({
-        cloudinary: {
-          plan: usage.plan,
-          last_updated: usage.last_updated,
-          storage: {
-            used_bytes: usage.storage?.usage || 0,
-            limit_bytes: usage.storage?.credits_usage !== undefined ? usage.storage.credits_usage : null,
-            used_percent: usage.storage?.used_percent || 0,
-          },
-          bandwidth: {
-            used_bytes: usage.bandwidth?.usage || 0,
-            limit_bytes: usage.bandwidth?.limit || 0,
-            used_percent: usage.bandwidth?.used_percent || 0,
-          },
-          transformations: {
-            used: usage.transformations?.usage || 0,
-            limit: usage.transformations?.limit || 0,
-            used_percent: usage.transformations?.used_percent || 0,
-          },
-          objects: {
-            used: usage.objects?.usage || 0,
-            limit: usage.objects?.limit || 0,
-            used_percent: usage.objects?.used_percent || 0,
-          },
-          resources: usage.resources || 0,
-          derived_resources: usage.derived_resources || 0,
+        provider: 'cloudflare_r2',
+        bucket: process.env.R2_BUCKET_NAME || 'eventfold-media',
+        storage: {
+          used_bytes: r2Stats.totalSize,
+          free_tier_bytes: FREE_TIER_BYTES,
+          used_percent: Math.min(usedPercent, 100),
+          cost_per_gb: 0.015,
+        },
+        bandwidth: {
+          egress_cost: 0,
+          note: 'Cloudflare R2 has ZERO egress fees',
+        },
+        objects: {
+          total: r2Stats.totalObjects,
+          folders: r2Stats.folderStats,
         },
         platform: {
           total_albums: allAlbums.length,
           total_files: totalFiles,
-        }
+          r2_files: r2Files,
+          cloudinary_legacy_files: cloudinaryFiles,
+          estimated_albums_remaining: estimatedAlbumsRemaining,
+        },
+        timestamp: new Date().toISOString(),
       });
     } catch (e: any) {
       console.error("Cloud usage fetch failed:", e);

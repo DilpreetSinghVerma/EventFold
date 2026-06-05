@@ -480,13 +480,13 @@ export default function Admin() {
               {/* Refresh Bar */}
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-xl bg-cyan-500/10 flex items-center justify-center border border-cyan-500/20">
-                    <Cloud className="w-5 h-5 text-cyan-400" />
+                  <div className="w-10 h-10 rounded-xl bg-orange-500/10 flex items-center justify-center border border-orange-500/20">
+                    <Cloud className="w-5 h-5 text-orange-400" />
                   </div>
                   <div>
-                    <h3 className="font-bold text-lg">Cloudinary Infrastructure</h3>
+                    <h3 className="font-bold text-lg">Cloudflare R2 Storage</h3>
                     <p className="text-[10px] font-bold uppercase tracking-widest text-white/30">
-                      {cloudUsage?.cloudinary?.plan ? `Plan: ${cloudUsage.cloudinary.plan}` : 'Real-time cloud storage monitoring'}
+                      {cloudUsage?.bucket ? `Bucket: ${cloudUsage.bucket}` : 'Real-time object storage monitoring'}
                     </p>
                   </div>
                 </div>
@@ -513,13 +513,12 @@ export default function Admin() {
 
               {cloudLoading && !cloudUsage && (
                 <div className="flex flex-col items-center justify-center py-20">
-                  <Loader2 className="w-8 h-8 animate-spin text-cyan-400 mb-4" />
-                  <p className="text-white/40 text-sm">Scanning Cloudinary infrastructure...</p>
+                  <Loader2 className="w-8 h-8 animate-spin text-orange-400 mb-4" />
+                  <p className="text-white/40 text-sm">Scanning Cloudflare R2 bucket...</p>
                 </div>
               )}
 
               {cloudUsage && (() => {
-                const c = cloudUsage.cloudinary;
                 const formatBytes = (bytes: number) => {
                   if (bytes === 0) return '0 B';
                   const k = 1024;
@@ -531,16 +530,18 @@ export default function Admin() {
                   if (percent >= 90) return 'bg-red-500';
                   if (percent >= 70) return 'bg-amber-500';
                   if (percent >= 50) return 'bg-yellow-500';
-                  return 'bg-cyan-500';
+                  return 'bg-orange-500';
                 };
                 const getStatusColor = (percent: number) => {
                   if (percent >= 90) return 'text-red-400';
                   if (percent >= 70) return 'text-amber-400';
-                  return 'text-cyan-400';
+                  return 'text-orange-400';
                 };
 
-                const storageUsedGB = c.storage.used_bytes / (1024 * 1024 * 1024);
-                const estimatedAlbumsRemaining = Math.max(0, Math.floor((25 - storageUsedGB) / 0.3)); // ~300MB per album average
+                const s = cloudUsage.storage || {};
+                const p = cloudUsage.platform || {};
+                const o = cloudUsage.objects || {};
+                const folders = o.folders || {};
 
                 return (
                   <>
@@ -556,96 +557,101 @@ export default function Admin() {
                               </div>
                               <div>
                                 <p className="text-[10px] font-bold uppercase tracking-widest text-white/30">Storage Used</p>
-                                <p className="text-xl font-black">{formatBytes(c.storage.used_bytes)}</p>
+                                <p className="text-xl font-black">{formatBytes(s.used_bytes || 0)}</p>
                               </div>
                             </div>
-                            <span className={`text-2xl font-black ${getStatusColor(c.storage.used_percent)}`}>
-                              {c.storage.used_percent?.toFixed(1) || '0'}%
+                            <span className={`text-2xl font-black ${getStatusColor(s.used_percent || 0)}`}>
+                              {(s.used_percent || 0).toFixed(1)}%
                             </span>
                           </div>
                           <div className="w-full h-3 bg-white/5 rounded-full overflow-hidden">
-                            <div className={`h-full rounded-full transition-all duration-700 ${getBarColor(c.storage.used_percent || 0)}`} style={{ width: `${Math.min(c.storage.used_percent || 0, 100)}%` }} />
+                            <div className={`h-full rounded-full transition-all duration-700 ${getBarColor(s.used_percent || 0)}`} style={{ width: `${Math.min(s.used_percent || 0, 100)}%` }} />
                           </div>
-                          <p className="text-[10px] text-white/30 uppercase tracking-widest">Free tier: 25 GB total</p>
+                          <p className="text-[10px] text-white/30 uppercase tracking-widest">Free tier: 10 GB · Then $0.015/GB/month</p>
                         </CardContent>
                       </Card>
 
-                      {/* Bandwidth */}
-                      <Card className="bg-white/[0.03] border-white/5 rounded-2xl overflow-hidden">
-                        <CardContent className="p-6 space-y-4">
-                          <div className="flex items-center justify-between">
-                            <div className="flex items-center gap-3">
-                              <div className="w-10 h-10 rounded-xl bg-blue-500/10 flex items-center justify-center border border-blue-500/20">
-                                <Wifi className="w-5 h-5 text-blue-400" />
-                              </div>
-                              <div>
-                                <p className="text-[10px] font-bold uppercase tracking-widest text-white/30">Bandwidth (Monthly)</p>
-                                <p className="text-xl font-black">{formatBytes(c.bandwidth.used_bytes)}</p>
-                              </div>
-                            </div>
-                            <span className={`text-2xl font-black ${getStatusColor(c.bandwidth.used_percent)}`}>
-                              {c.bandwidth.used_percent?.toFixed(1) || '0'}%
-                            </span>
-                          </div>
-                          <div className="w-full h-3 bg-white/5 rounded-full overflow-hidden">
-                            <div className={`h-full rounded-full transition-all duration-700 ${getBarColor(c.bandwidth.used_percent || 0)}`} style={{ width: `${Math.min(c.bandwidth.used_percent || 0, 100)}%` }} />
-                          </div>
-                          <p className="text-[10px] text-white/30 uppercase tracking-widest">Free tier: 25 GB/month · Resets monthly</p>
-                        </CardContent>
-                      </Card>
-
-                      {/* Transformations */}
-                      <Card className="bg-white/[0.03] border-white/5 rounded-2xl overflow-hidden">
-                        <CardContent className="p-6 space-y-4">
-                          <div className="flex items-center justify-between">
-                            <div className="flex items-center gap-3">
-                              <div className="w-10 h-10 rounded-xl bg-amber-500/10 flex items-center justify-center border border-amber-500/20">
-                                <Zap className="w-5 h-5 text-amber-400" />
-                              </div>
-                              <div>
-                                <p className="text-[10px] font-bold uppercase tracking-widest text-white/30">Transformations</p>
-                                <p className="text-xl font-black">{(c.transformations.used || 0).toLocaleString()}</p>
-                              </div>
-                            </div>
-                            <span className={`text-2xl font-black ${getStatusColor(c.transformations.used_percent)}`}>
-                              {c.transformations.used_percent?.toFixed(1) || '0'}%
-                            </span>
-                          </div>
-                          <div className="w-full h-3 bg-white/5 rounded-full overflow-hidden">
-                            <div className={`h-full rounded-full transition-all duration-700 ${getBarColor(c.transformations.used_percent || 0)}`} style={{ width: `${Math.min(c.transformations.used_percent || 0, 100)}%` }} />
-                          </div>
-                          <p className="text-[10px] text-white/30 uppercase tracking-widest">Free tier: 25,000/month · Image splits & optimizations</p>
-                        </CardContent>
-                      </Card>
-
-                      {/* Objects */}
+                      {/* Bandwidth — Always Free */}
                       <Card className="bg-white/[0.03] border-white/5 rounded-2xl overflow-hidden">
                         <CardContent className="p-6 space-y-4">
                           <div className="flex items-center justify-between">
                             <div className="flex items-center gap-3">
                               <div className="w-10 h-10 rounded-xl bg-green-500/10 flex items-center justify-center border border-green-500/20">
-                                <Database className="w-5 h-5 text-green-400" />
+                                <Wifi className="w-5 h-5 text-green-400" />
                               </div>
                               <div>
-                                <p className="text-[10px] font-bold uppercase tracking-widest text-white/30">Stored Objects</p>
-                                <p className="text-xl font-black">{(c.resources || 0).toLocaleString()} <span className="text-sm text-white/30 font-normal">files</span></p>
+                                <p className="text-[10px] font-bold uppercase tracking-widest text-white/30">Bandwidth (Egress)</p>
+                                <p className="text-xl font-black text-green-400">$0 FOREVER</p>
                               </div>
+                            </div>
+                            <span className="text-2xl font-black text-green-400">∞</span>
+                          </div>
+                          <div className="w-full h-3 bg-green-500/10 rounded-full overflow-hidden">
+                            <div className="h-full rounded-full bg-green-500/50 w-full" />
+                          </div>
+                          <p className="text-[10px] text-green-400/50 uppercase tracking-widest">Cloudflare R2 has ZERO egress fees — unlimited downloads</p>
+                        </CardContent>
+                      </Card>
+
+                      {/* Objects Count */}
+                      <Card className="bg-white/[0.03] border-white/5 rounded-2xl overflow-hidden">
+                        <CardContent className="p-6 space-y-4">
+                          <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-3">
+                              <div className="w-10 h-10 rounded-xl bg-blue-500/10 flex items-center justify-center border border-blue-500/20">
+                                <Database className="w-5 h-5 text-blue-400" />
+                              </div>
+                              <div>
+                                <p className="text-[10px] font-bold uppercase tracking-widest text-white/30">R2 Objects</p>
+                                <p className="text-xl font-black">{(o.total || 0).toLocaleString()} <span className="text-sm text-white/30 font-normal">files</span></p>
+                              </div>
+                            </div>
+                          </div>
+                          {Object.keys(folders).length > 0 && (
+                            <div className="flex flex-wrap gap-3 mt-2">
+                              {Object.entries(folders).map(([folder, stats]: [string, any]) => (
+                                <div key={folder} className="px-3 py-2 bg-white/5 rounded-xl border border-white/5">
+                                  <p className="text-[9px] text-white/30 uppercase tracking-widest">{folder}/</p>
+                                  <p className="text-sm font-bold">{stats.count} <span className="text-white/30 font-normal text-[10px]">({formatBytes(stats.size)})</span></p>
+                                </div>
+                              ))}
+                            </div>
+                          )}
+                        </CardContent>
+                      </Card>
+
+                      {/* Migration Status */}
+                      <Card className="bg-white/[0.03] border-white/5 rounded-2xl overflow-hidden">
+                        <CardContent className="p-6 space-y-4">
+                          <div className="flex items-center gap-3">
+                            <div className="w-10 h-10 rounded-xl bg-amber-500/10 flex items-center justify-center border border-amber-500/20">
+                              <Zap className="w-5 h-5 text-amber-400" />
+                            </div>
+                            <div>
+                              <p className="text-[10px] font-bold uppercase tracking-widest text-white/30">File Migration Status</p>
+                              <p className="text-xl font-black">{p.total_files || 0} <span className="text-sm text-white/30 font-normal">total files in DB</span></p>
                             </div>
                           </div>
                           <div className="flex gap-6 mt-2">
                             <div>
-                              <p className="text-[10px] text-white/30 uppercase tracking-widest">Platform Albums</p>
-                              <p className="text-lg font-bold text-primary">{cloudUsage.platform.total_albums}</p>
+                              <p className="text-[10px] text-white/30 uppercase tracking-widest">On R2</p>
+                              <p className="text-lg font-bold text-orange-400">{p.r2_files || 0}</p>
                             </div>
                             <div>
-                              <p className="text-[10px] text-white/30 uppercase tracking-widest">Database Files</p>
-                              <p className="text-lg font-bold text-primary">{cloudUsage.platform.total_files}</p>
+                              <p className="text-[10px] text-white/30 uppercase tracking-widest">Legacy Cloudinary</p>
+                              <p className="text-lg font-bold text-white/40">{p.cloudinary_legacy_files || 0}</p>
                             </div>
                             <div>
-                              <p className="text-[10px] text-white/30 uppercase tracking-widest">Derived Assets</p>
-                              <p className="text-lg font-bold text-white/60">{(c.derived_resources || 0).toLocaleString()}</p>
+                              <p className="text-[10px] text-white/30 uppercase tracking-widest">Albums</p>
+                              <p className="text-lg font-bold text-primary">{p.total_albums || 0}</p>
                             </div>
                           </div>
+                          {(p.r2_files > 0 || p.cloudinary_legacy_files > 0) && p.total_files > 0 && (
+                            <div className="w-full h-3 bg-white/5 rounded-full overflow-hidden flex">
+                              <div className="h-full bg-orange-500 transition-all duration-700" style={{ width: `${(p.r2_files / p.total_files) * 100}%` }} />
+                              <div className="h-full bg-white/20 transition-all duration-700" style={{ width: `${(p.cloudinary_legacy_files / p.total_files) * 100}%` }} />
+                            </div>
+                          )}
                         </CardContent>
                       </Card>
                     </div>
@@ -661,62 +667,48 @@ export default function Admin() {
                         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                           <div className="p-6 rounded-2xl bg-white/5 border border-white/5 text-center">
                             <p className="text-[10px] font-bold uppercase tracking-widest text-white/30 mb-2">Est. Albums Remaining</p>
-                            <p className={`text-4xl font-black ${estimatedAlbumsRemaining < 10 ? 'text-red-400' : estimatedAlbumsRemaining < 30 ? 'text-amber-400' : 'text-cyan-400'}`}>
-                              ~{estimatedAlbumsRemaining}
+                            <p className={`text-4xl font-black ${(p.estimated_albums_remaining || 0) < 10 ? 'text-red-400' : (p.estimated_albums_remaining || 0) < 30 ? 'text-amber-400' : 'text-orange-400'}`}>
+                              ~{p.estimated_albums_remaining || 0}
                             </p>
-                            <p className="text-[9px] text-white/20 mt-2">Based on ~300MB avg per album</p>
+                            <p className="text-[9px] text-white/20 mt-2">Based on your average album size</p>
                           </div>
                           <div className="p-6 rounded-2xl bg-white/5 border border-white/5 text-center">
                             <p className="text-[10px] font-bold uppercase tracking-widest text-white/30 mb-2">Storage Headroom</p>
                             <p className="text-4xl font-black text-white">
-                              {formatBytes(Math.max(0, 25 * 1024 * 1024 * 1024 - c.storage.used_bytes))}
+                              {formatBytes(Math.max(0, (s.free_tier_bytes || 10737418240) - (s.used_bytes || 0)))}
                             </p>
-                            <p className="text-[9px] text-white/20 mt-2">Free space remaining on Cloudinary</p>
+                            <p className="text-[9px] text-white/20 mt-2">Free space remaining on R2 free tier</p>
                           </div>
                           <div className="p-6 rounded-2xl bg-white/5 border border-white/5 text-center">
-                            <p className="text-[10px] font-bold uppercase tracking-widest text-white/30 mb-2">Last Report</p>
+                            <p className="text-[10px] font-bold uppercase tracking-widest text-white/30 mb-2">Last Scan</p>
                             <p className="text-lg font-bold text-white/60">
-                              {c.last_updated ? new Date(c.last_updated).toLocaleString() : 'N/A'}
+                              {cloudUsage.timestamp ? new Date(cloudUsage.timestamp).toLocaleString() : 'N/A'}
                             </p>
-                            <p className="text-[9px] text-white/20 mt-2">Cloudinary API refresh timestamp</p>
+                            <p className="text-[9px] text-white/20 mt-2">R2 bucket scan timestamp</p>
                           </div>
                         </div>
                       </CardContent>
                     </Card>
 
-                    {/* Migration Advisory */}
-                    {(c.storage.used_percent > 70 || c.bandwidth.used_percent > 70) && (
+                    {/* Status Banner */}
+                    {(s.used_percent || 0) > 70 ? (
                       <div className="p-8 rounded-[2rem] bg-gradient-to-r from-amber-500/10 to-red-500/10 border border-amber-500/20">
                         <div className="flex items-start gap-4">
                           <AlertTriangle className="w-8 h-8 text-amber-400 shrink-0 mt-1" />
                           <div className="space-y-3">
-                            <h3 className="text-xl font-bold text-amber-300">⚡ Capacity Advisory</h3>
+                            <h3 className="text-xl font-bold text-amber-300">⚡ Storage Advisory</h3>
                             <p className="text-sm text-amber-200/60 leading-relaxed">
-                              Your Cloudinary usage is above 70%. Consider upgrading your Cloudinary plan ($89/mo for 225GB) or migrating to <strong>Cloudflare R2</strong> for unlimited scalability with zero bandwidth fees ($0.015/GB storage only).
+                              Your R2 free tier usage is above 70%. After 10GB, Cloudflare charges only <strong>$0.015/GB/month</strong> with zero bandwidth fees. No action needed — your app will keep working seamlessly.
                             </p>
-                            <div className="flex gap-3 pt-2">
-                              <a href="https://cloudinary.com/pricing" target="_blank" rel="noopener">
-                                <Button variant="outline" className="rounded-xl border-amber-500/30 text-amber-300 hover:bg-amber-500/10">
-                                  Cloudinary Pricing →
-                                </Button>
-                              </a>
-                              <a href="https://developers.cloudflare.com/r2/pricing/" target="_blank" rel="noopener">
-                                <Button variant="outline" className="rounded-xl border-cyan-500/30 text-cyan-300 hover:bg-cyan-500/10">
-                                  Cloudflare R2 Pricing →
-                                </Button>
-                              </a>
-                            </div>
                           </div>
                         </div>
                       </div>
-                    )}
-
-                    {(c.storage.used_percent <= 70 && c.bandwidth.used_percent <= 70) && (
+                    ) : (
                       <div className="p-6 rounded-2xl bg-green-500/5 border border-green-500/10 flex items-center gap-4">
                         <CheckCircle2 className="w-6 h-6 text-green-400 shrink-0" />
                         <div>
                           <p className="font-bold text-green-400">Cloud Infrastructure Healthy</p>
-                          <p className="text-sm text-green-400/50">Storage and bandwidth within safe limits. No action needed.</p>
+                          <p className="text-sm text-green-400/50">Cloudflare R2 storage within free tier limits. Zero bandwidth costs.</p>
                         </div>
                       </div>
                     )}
@@ -725,6 +717,21 @@ export default function Admin() {
               })()}
             </div>
           </TabsContent>
+                    </p>
+                  </div>
+                </div>
+                <Button 
+                  onClick={fetchCloudUsage}
+                  disabled={cloudLoading}
+                  variant="outline" 
+                  className="rounded-xl border-white/10 hover:bg-white/5 gap-2"
+                >
+                  <RefreshCw className={`w-4 h-4 ${cloudLoading ? 'animate-spin' : ''}`} />
+                  {cloudLoading ? 'Scanning...' : 'Refresh'}
+                </Button>
+              </div>
+
+
 
           <TabsContent value="revenue">
             {(() => {
