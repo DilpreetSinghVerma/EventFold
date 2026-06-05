@@ -66,6 +66,11 @@ export default function Admin() {
     queryKey: ["/api/admin/albums"],
   });
 
+  const { data: activeBroadcastData } = useQuery({
+    queryKey: ["/api/broadcasts/active"],
+  });
+  const activeBroadcast = activeBroadcastData?.broadcast;
+
   const filteredUsers = users?.filter(u => 
     u.name?.toLowerCase().includes(searchTerm.toLowerCase()) || 
     u.email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -130,6 +135,7 @@ export default function Admin() {
       return res.json();
     },
     onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/broadcasts/active"] });
       toast({ title: "Broadcast updated successfully" });
     },
   });
@@ -1271,23 +1277,42 @@ export default function Admin() {
                   <div className="flex gap-4 pt-4">
                     <Button 
                       className="flex-1"
+                      disabled={broadcastMutation.isPending}
                       onClick={() => {
                         const message = (document.getElementById('bMessage') as HTMLInputElement).value;
                         const type = (document.getElementById('bType') as HTMLSelectElement).value;
                         if (!message) return toast({title: "Message required", variant: "destructive"});
                         broadcastMutation.mutate({ message, type, isActive: true });
+                        (document.getElementById('bMessage') as HTMLInputElement).value = '';
                       }}
                     >
                       Publish Broadcast
                     </Button>
-                    <Button 
-                      variant="outline" 
-                      className="flex-1 border-red-500/30 text-red-400 hover:bg-red-500/10"
-                      onClick={() => broadcastMutation.mutate({ message: '', type: 'info', isActive: false })}
-                    >
-                      Turn Off Active Broadcast
-                    </Button>
                   </div>
+                  
+                  {activeBroadcast && (
+                    <div className="mt-6 bg-white/5 border border-white/10 rounded-xl p-4 flex items-center justify-between">
+                      <div>
+                        <p className="text-xs font-semibold text-white/50 uppercase tracking-wider mb-2">Currently Active Broadcast</p>
+                        <div className="flex items-center gap-2">
+                          <Badge variant="outline" className={activeBroadcast.type === 'warning' ? 'text-red-400 border-red-400/30 bg-red-400/10' : activeBroadcast.type === 'success' ? 'text-green-400 border-green-400/30 bg-green-400/10' : 'text-blue-400 border-blue-400/30 bg-blue-400/10'}>
+                            {activeBroadcast.type}
+                          </Badge>
+                          <span className="text-white text-sm font-medium">{activeBroadcast.message}</span>
+                        </div>
+                      </div>
+                      <Button 
+                        variant="ghost" 
+                        size="icon"
+                        title="Deactivate Broadcast"
+                        disabled={broadcastMutation.isPending}
+                        className="text-red-400 hover:text-red-300 hover:bg-red-500/10 h-8 w-8"
+                        onClick={() => broadcastMutation.mutate({ message: '', type: 'info', isActive: false })}
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </Button>
+                    </div>
+                  )}
                 </CardContent>
               </Card>
             </div>
