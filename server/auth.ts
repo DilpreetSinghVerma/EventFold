@@ -341,6 +341,33 @@ export function setupAuth(app: Express) {
         });
     });
 
+    // Admin: Revert Impersonation
+    app.post("/api/admin/impersonate/revert", async (req, res, next) => {
+        if (!req.isAuthenticated()) return res.status(401).json({ error: "Not authenticated" });
+        
+        const originalAdminId = (req.session as any).originalAdminId;
+        if (!originalAdminId) {
+            return res.status(400).json({ error: "Not currently impersonating" });
+        }
+
+        try {
+            const adminUser = await storage.getUser(originalAdminId);
+            if (!adminUser) return res.status(404).json({ error: "Admin user not found" });
+
+            delete (req.session as any).originalAdminId;
+
+            req.logIn(adminUser, (err) => {
+                if (err) return next(err);
+                req.session.save((saveErr) => {
+                    if (saveErr) return next(saveErr);
+                    res.json({ success: true, user: adminUser });
+                });
+            });
+        } catch (e) {
+            next(e);
+        }
+    });
+
     // Admin: Impersonate User
     app.post("/api/admin/impersonate/:userId", async (req, res, next) => {
         if (!req.isAuthenticated()) return res.status(401).json({ error: "Not authenticated" });
@@ -363,33 +390,6 @@ export function setupAuth(app: Express) {
                 req.session.save((saveErr) => {
                     if (saveErr) return next(saveErr);
                     res.json({ success: true, user: targetUser });
-                });
-            });
-        } catch (e) {
-            next(e);
-        }
-    });
-
-    // Admin: Revert Impersonation
-    app.post("/api/admin/impersonate/revert", async (req, res, next) => {
-        if (!req.isAuthenticated()) return res.status(401).json({ error: "Not authenticated" });
-        
-        const originalAdminId = (req.session as any).originalAdminId;
-        if (!originalAdminId) {
-            return res.status(400).json({ error: "Not currently impersonating" });
-        }
-
-        try {
-            const adminUser = await storage.getUser(originalAdminId);
-            if (!adminUser) return res.status(404).json({ error: "Admin user not found" });
-
-            delete (req.session as any).originalAdminId;
-
-            req.logIn(adminUser, (err) => {
-                if (err) return next(err);
-                req.session.save((saveErr) => {
-                    if (saveErr) return next(saveErr);
-                    res.json({ success: true, user: adminUser });
                 });
             });
         } catch (e) {
