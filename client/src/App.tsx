@@ -2,6 +2,7 @@ import { Switch, Route, Redirect } from "wouter";
 import { queryClient } from "./lib/queryClient";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
+import { Button } from "@/components/ui/button";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import NotFound from "@/pages/not-found";
 
@@ -24,7 +25,59 @@ import ScrollToTop from "@/components/ScrollToTop";
 
 import { AuthProvider, useAuth } from "@/lib/auth";
 import { I18nProvider } from "@/lib/i18n";
-import { Loader2 } from "lucide-react";
+import { Loader2, AlertTriangle, Megaphone, X } from "lucide-react";
+import { apiRequest } from "./lib/queryClient";
+import { useQuery } from "@tanstack/react-query";
+import { useState } from "react";
+
+function ImpersonationBanner() {
+  const { user } = useAuth();
+  if (!user || !(user as any).isImpersonating) return null;
+
+  const revert = async () => {
+    await apiRequest("POST", "/api/admin/impersonate/revert");
+    window.location.href = "/admin";
+  };
+
+  return (
+    <div className="fixed top-0 left-0 w-full z-[60] bg-red-600 text-white px-4 py-2 flex items-center justify-between shadow-lg font-medium text-sm">
+      <div className="flex items-center gap-2">
+        <AlertTriangle className="w-4 h-4 animate-pulse" />
+        <span>You are currently impersonating <strong>{user.name || user.email}</strong>. Any actions you take will be on their behalf.</span>
+      </div>
+      <Button variant="outline" size="sm" onClick={revert} className="h-7 bg-white text-red-600 hover:bg-white/90 border-transparent text-xs font-bold px-4">
+        Return to Admin
+      </Button>
+    </div>
+  );
+}
+
+function GlobalBroadcastBanner() {
+  const [dismissed, setDismissed] = useState(false);
+  const { data } = useQuery({
+    queryKey: ["/api/broadcasts/active"],
+    refetchInterval: 60000, // Poll every minute
+  });
+
+  if (dismissed || !data?.broadcast) return null;
+
+  const b = data.broadcast;
+  const colors = {
+    info: "bg-blue-600 text-white",
+    warning: "bg-red-600 text-white",
+    success: "bg-green-600 text-white",
+  };
+
+  return (
+    <div className={`fixed bottom-4 left-1/2 -translate-x-1/2 z-[55] ${colors[b.type as keyof typeof colors] || colors.info} px-6 py-3 rounded-full flex items-center gap-3 shadow-2xl shadow-black/50 font-medium text-sm border border-white/20 max-w-[90vw] animate-in slide-in-from-bottom-5`}>
+      <Megaphone className="w-4 h-4" />
+      <span>{b.message}</span>
+      <button onClick={() => setDismissed(true)} className="ml-2 hover:bg-black/20 p-1 rounded-full transition-colors">
+        <X className="w-3 h-3" />
+      </button>
+    </div>
+  );
+}
 
 function Router() {
   const { user, isLoading } = useAuth();
@@ -79,6 +132,8 @@ function App() {
           <AuthProvider>
             <Toaster />
             <ScrollToTop />
+            <ImpersonationBanner />
+            <GlobalBroadcastBanner />
             <Router />
           </AuthProvider>
         </I18nProvider>

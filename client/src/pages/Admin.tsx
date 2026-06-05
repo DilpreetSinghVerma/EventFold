@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import { Loader2, Plus, Minus, Trash2, Eye, LayoutDashboard, Users, BookCopy, ShieldAlert, TrendingUp, Activity, Database, Globe, Search, ArrowUpCircle, CheckCircle2, XCircle, Sparkles, Cloud, HardDrive, Wifi, Zap, AlertTriangle, RefreshCw, IndianRupee, PieChart, BarChart3, Clock, Crown, CreditCard, Star } from "lucide-react";
+import { Loader2, Plus, Minus, Trash2, Eye, LayoutDashboard, Users, BookCopy, ShieldAlert, TrendingUp, Activity, Database, Globe, Search, ArrowUpCircle, CheckCircle2, XCircle, Sparkles, Cloud, HardDrive, Wifi, Zap, AlertTriangle, RefreshCw, IndianRupee, PieChart, BarChart3, Clock, Crown, CreditCard, Star, Download, Megaphone } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { Link, useLocation } from "wouter";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -99,6 +99,20 @@ export default function Admin() {
     },
   });
 
+  const impersonateMutation = useMutation({
+    mutationFn: async (userId: string) => {
+      const res = await apiRequest("POST", `/api/admin/impersonate/${userId}`);
+      return res.json();
+    },
+    onSuccess: () => {
+      toast({ title: "Impersonation active. Redirecting..." });
+      window.location.href = "/dashboard";
+    },
+    onError: (err: any) => {
+      toast({ title: "Impersonation failed", description: err.message, variant: "destructive" });
+    }
+  });
+
   const planMutation = useMutation({
     mutationFn: async ({ userId, plan }: { userId: string; plan: string }) => {
       const res = await apiRequest("PATCH", `/api/admin/users/${userId}/role`, { plan }); // Reusing role route for simplicity on server
@@ -107,6 +121,16 @@ export default function Admin() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/admin/users"] });
       toast({ title: "User plan updated" });
+    },
+  });
+
+  const broadcastMutation = useMutation({
+    mutationFn: async ({ message, type, isActive }: { message: string, type: string, isActive: boolean }) => {
+      const res = await apiRequest("POST", `/api/admin/broadcasts`, { message, type, isActive });
+      return res.json();
+    },
+    onSuccess: () => {
+      toast({ title: "Broadcast updated successfully" });
     },
   });
 
@@ -283,13 +307,19 @@ export default function Admin() {
             <TabsTrigger value="cleanup" className="data-[state=active]:bg-primary rounded-lg flex gap-2" onClick={() => { if (!cleanupData) fetchCleanup(); }}>
               <Trash2 className="w-4 h-4" /> Cleanup
             </TabsTrigger>
+            <TabsTrigger value="broadcast" className="data-[state=active]:bg-primary rounded-lg flex gap-2">
+              <Megaphone className="w-4 h-4" /> Broadcasts
+            </TabsTrigger>
           </TabsList>
 
           <TabsContent value="users">
             <Card className="bg-white/5 border-white/10 overflow-hidden">
                <CardHeader className="border-b border-white/5 bg-white/[0.02]">
-                <CardTitle className="text-lg flex items-center gap-2">
-                   <Users className="w-5 h-5 text-primary" /> Active Platform Users
+                <CardTitle className="text-lg flex items-center justify-between gap-2">
+                   <div className="flex items-center gap-2"><Users className="w-5 h-5 text-primary" /> Active Platform Users</div>
+                   <Button variant="outline" className="h-8 gap-2 border-white/10 text-xs" onClick={() => window.location.href = '/api/admin/export-users'}>
+                     <Download className="w-3 h-3"/> Export CSV
+                   </Button>
                 </CardTitle>
               </CardHeader>
               <CardContent className="p-0">
@@ -303,6 +333,7 @@ export default function Admin() {
                         <TableHead className="text-white/50">Email</TableHead>
                         <TableHead className="text-white/50">Credits</TableHead>
                         <TableHead className="text-white/50">Plan</TableHead>
+                        <TableHead className="text-white/50">Last Active</TableHead>
                         <TableHead className="text-white/50">Role</TableHead>
                         <TableHead className="text-white/50 text-right">Actions</TableHead>
                       </TableRow>
@@ -362,6 +393,9 @@ export default function Admin() {
                               </div>
                             )}
                           </TableCell>
+                          <TableCell className="text-[10px] text-white/50">
+                            {u.lastActiveAt ? new Date(u.lastActiveAt).toLocaleString() : 'Never'}
+                          </TableCell>
                           <TableCell>
                             <Button 
                               variant="ghost" 
@@ -372,14 +406,26 @@ export default function Admin() {
                             </Button>
                           </TableCell>
                           <TableCell className="text-right">
-                            <Button 
-                              variant="ghost" 
-                              size="icon" 
-                              className="text-white/20 hover:text-red-500 transition-colors"
-                              onClick={() => confirm("Delete user? All their albums will be lost.") && deleteUserMutation.mutate(u.id)}
-                            >
-                              <Trash2 className="w-4 h-4" />
-                            </Button>
+                            <div className="flex justify-end gap-1">
+                              <Button 
+                                variant="ghost" 
+                                size="icon" 
+                                className="text-primary hover:text-white hover:bg-primary/20 transition-colors"
+                                title="Login As User"
+                                onClick={() => confirm(`Login as ${u.name || u.email}?`) && impersonateMutation.mutate(u.id)}
+                              >
+                                <Users className="w-4 h-4" />
+                              </Button>
+                              <Button 
+                                variant="ghost" 
+                                size="icon" 
+                                className="text-white/20 hover:text-red-500 hover:bg-red-500/10 transition-colors"
+                                title="Delete User"
+                                onClick={() => confirm("Delete user? All their albums will be lost.") && deleteUserMutation.mutate(u.id)}
+                              >
+                                <Trash2 className="w-4 h-4" />
+                              </Button>
+                            </div>
                           </TableCell>
                         </TableRow>
                       ))}
@@ -1196,6 +1242,54 @@ export default function Admin() {
                   </>
                 );
               })()}
+            </div>
+          </TabsContent>
+
+          <TabsContent value="broadcast">
+            <div className="max-w-2xl mx-auto space-y-6">
+              <Card className="bg-white/[0.02] border-white/5 rounded-2xl overflow-hidden glass mt-6">
+                <CardHeader>
+                  <CardTitle className="text-xl flex items-center gap-2">
+                    <Megaphone className="text-primary w-5 h-5" /> 
+                    Global Broadcast System
+                  </CardTitle>
+                  <p className="text-white/40 text-sm">Send a live banner notification to all active users on the platform.</p>
+                </CardHeader>
+                <CardContent className="space-y-6">
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium text-white/70">Broadcast Message</label>
+                    <Input id="bMessage" placeholder="e.g. ⚠️ Scheduled maintenance in 15 minutes..." className="bg-white/5 border-white/10" />
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium text-white/70">Type</label>
+                    <select id="bType" className="w-full h-10 rounded-md bg-white/5 border border-white/10 text-white px-3 focus:outline-none focus:ring-2 focus:ring-primary/50">
+                      <option value="info" className="bg-[#1a1a1a]">Info (Blue)</option>
+                      <option value="success" className="bg-[#1a1a1a]">Success (Green)</option>
+                      <option value="warning" className="bg-[#1a1a1a]">Warning (Red)</option>
+                    </select>
+                  </div>
+                  <div className="flex gap-4 pt-4">
+                    <Button 
+                      className="flex-1"
+                      onClick={() => {
+                        const message = (document.getElementById('bMessage') as HTMLInputElement).value;
+                        const type = (document.getElementById('bType') as HTMLSelectElement).value;
+                        if (!message) return toast({title: "Message required", variant: "destructive"});
+                        broadcastMutation.mutate({ message, type, isActive: true });
+                      }}
+                    >
+                      Publish Broadcast
+                    </Button>
+                    <Button 
+                      variant="outline" 
+                      className="flex-1 border-red-500/30 text-red-400 hover:bg-red-500/10"
+                      onClick={() => broadcastMutation.mutate({ message: '', type: 'info', isActive: false })}
+                    >
+                      Turn Off Active Broadcast
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
             </div>
           </TabsContent>
         </Tabs>

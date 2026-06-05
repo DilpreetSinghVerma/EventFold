@@ -21,6 +21,7 @@ export const users = pgTable("users", {
   role: varchar("role", { length: 20 }).notNull().default('user'), // 'user', 'admin'
   subscriptionStartedAt: timestamp("subscription_started_at"),
   subscriptionExpiresAt: timestamp("subscription_expires_at"),
+  lastActiveAt: timestamp("last_active_at"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 
@@ -63,6 +64,13 @@ export const settings = pgTable("settings", {
 });
 
 
+export const broadcasts = pgTable("broadcasts", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  message: text("message").notNull(),
+  type: varchar("type", { length: 20 }).notNull().default('info'), // info, warning, success
+  isActive: integer("is_active").notNull().default(1), // 1 active, 0 inactive
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
 
 export const insertAlbumSchema = createInsertSchema(albums).omit({
   id: true,
@@ -84,3 +92,4 @@ export type InsertFile = z.infer<typeof insertFileSchema>;
 export type File = typeof files.$inferSelect;
 export type User = typeof users.$inferSelect;
 export type InsertUser = z.infer<typeof insertUserSchema>;
+export type Broadcast = typeof broadcasts.$inferSelect;

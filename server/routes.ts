@@ -6,7 +6,7 @@ import { storage } from "./storage";
 import multer from "multer";
 import path from "path";
 import fs from "fs";
-import { insertAlbumSchema, insertFileSchema, users } from "../shared/schema";
+import { insertAlbumSchema, insertFileSchema, users, albums, files, broadcasts } from "../shared/schema";
 import { ZodError } from "zod";
 import Stripe from "stripe";
 import Razorpay from "razorpay";
@@ -1258,6 +1258,81 @@ export function registerRoutes(
     }
  
   });
-
   // (Legacy Stripe Methods removed - now using /api/billing routes)
+
+  // Admin: Export Users to CSV
+  app.get("/api/admin/export-users", async (req, res) => {
+    try {
+      if (!req.isAuthenticated()) return res.status(401).json({ error: "Unauthorized" });
+      const user = req.user as any;
+      const adminEmails = ["admin@eventfold.com", "dilpreetsinghverma@gmail.com"];
+      if (user.role !== 'admin' && !adminEmails.includes(user.email)) {
+        return res.status(403).json({ error: "Admin privilege required" });
+      }
+
+      const allUsers = await storage.getAllUsers();
+      
+      const csvHeader = "ID,Name,Email,Plan,Credits,Role,Verified,Joined Date\n";
+      const csvRows = allUsers.map(u => {
+        const name = `"${(u.name || "").replace(/"/g, '""')}"`;
+        const email = `"${(u.email || "").replace(/"/g, '""')}"`;
+        const plan = u.plan || 'free';
+        const joined = u.createdAt ? new Date(u.createdAt).toISOString() : '';
+        return `${u.id},${name},${email},${plan},${u.credits},${u.role},${u.isVerified ? 'Yes' : 'No'},${joined}`;
+      }).join('\n');
+
+      const csvData = csvHeader + csvRows;
+
+      res.setHeader('Content-Type', 'text/csv');
+      res.setHeader('Content-Disposition', 'attachment; filename="eventfold_users.csv"');
+      res.send(csvData);
+    } catch (e: any) {
+      console.error("CSV Export failed:", e);
+      res.status(500).json({ error: "Export failed", details: e.message });
+    }
+  });
+
+  // Client: Get Active Broadcast
+  app.get("/api/broadcasts/active", async (req, res) => {
+    try {
+      const activeBroadcasts = await db.select().from(broadcasts).where(eq(broadcasts.isActive, 1)).orderBy(desc(broadcasts.createdAt)).limit(1);
+      if (activeBroadcasts.length > 0) {
+        res.json({ success: true, broadcast: activeBroadcasts[0] });
+      } else {
+        res.json({ success: true, broadcast: null });
+      }
+    } catch (e) {
+      console.error("Failed to fetch broadcast:", e);
+      res.status(500).json({ error: "Fetch failed" });
+    }
+  });
+
+  // Admin: Manage Broadcasts
+  app.post("/api/admin/broadcasts", async (req, res) => {
+    try {
+      if (!req.isAuthenticated()) return res.status(401).json({ error: "Unauthorized" });
+      const user = req.user as any;
+      const adminEmails = ["admin@eventfold.com", "dilpreetsinghverma@gmail.com"];
+      if (user.role !== 'admin' && !adminEmails.includes(user.email)) {
+        return res.status(403).json({ error: "Admin privilege required" });
+      }
+
+      const { message, type, isActive } = req.body;
+
+      if (isActive) {
+        // Deactivate all other broadcasts first
+        await db.update(broadcasts).set({ isActive: 0 });
+      }
+
+      if (message) {
+        // Create new broadcast
+        await db.insert(broadcasts).values({ message, type: type || 'info', isActive: isActive ? 1 : 0 });
+      }
+
+      res.json({ success: true });
+    } catch (e: any) {
+      console.error("Broadcast update failed:", e);
+      res.status(500).json({ error: "Update failed", details: e.message });
+    }
+  });
 }

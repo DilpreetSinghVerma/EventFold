@@ -312,15 +312,26 @@ export function setupAuth(app: Express) {
     });
 
 
-    app.get("/api/auth/me", (req, res) => {
-
-
+    app.get("/api/auth/me", async (req, res) => {
         if (!req.isAuthenticated()) return res.status(401).json({ error: "Not authenticated" });
 
         const user = req.user as User;
 
+        // Active Session Tracking: Throttled update of lastActiveAt
+        // Only update if lastActiveAt is null or more than 5 minutes old to avoid DB spam
+        const fiveMinutesAgo = new Date(Date.now() - 5 * 60 * 1000);
+        if (!user.lastActiveAt || new Date(user.lastActiveAt) < fiveMinutesAgo) {
+            try {
+                await storage.updateUser(user.id, { lastActiveAt: new Date() });
+                user.lastActiveAt = new Date();
+            } catch (e) {
+                console.error("Failed to update lastActiveAt:", e);
+            }
+        }
 
-        res.json(user);
+        const isImpersonating = !!(req.session as any).originalAdminId;
+
+        res.json({ ...user, isImpersonating });
     });
 
     app.post("/api/auth/logout", (req, res, next) => {
@@ -328,5 +339,55 @@ export function setupAuth(app: Express) {
             if (err) return next(err);
             res.json({ success: true });
         });
+    });
+
+    // Admin: Impersonate User
+    app.post("/api/admin/impersonate/:userId", async (req, res, next) => {
+        if (!req.isAuthenticated()) return res.status(401).json({ error: "Not authenticated" });
+        const adminUser = req.user as User;
+        
+        const adminEmails = ["admin@eventfold.com", "dilpreetsinghverma@gmail.com"];
+        if (adminUser.role !== 'admin' && !adminEmails.includes(adminUser.email)) {
+            return res.status(403).json({ error: "Admin privilege required" });
+        }
+
+        try {
+            const targetUser = await storage.getUser(req.params.userId);
+            if (!targetUser) return res.status(404).json({ error: "User not found" });
+
+            // Store the admin ID in session before impersonating
+            (req.session as any).originalAdminId = adminUser.id;
+
+            req.logIn(targetUser, (err) => {
+                if (err) return next(err);
+                res.json({ success: true, user: targetUser });
+            });
+        } catch (e) {
+            next(e);
+        }
+    });
+
+    // Admin: Revert Impersonation
+    app.post("/api/admin/impersonate/revert", async (req, res, next) => {
+        if (!req.isAuthenticated()) return res.status(401).json({ error: "Not authenticated" });
+        
+        const originalAdminId = (req.session as any).originalAdminId;
+        if (!originalAdminId) {
+            return res.status(400).json({ error: "Not currently impersonating" });
+        }
+
+        try {
+            const adminUser = await storage.getUser(originalAdminId);
+            if (!adminUser) return res.status(404).json({ error: "Admin user not found" });
+
+            delete (req.session as any).originalAdminId;
+
+            req.logIn(adminUser, (err) => {
+                if (err) return next(err);
+                res.json({ success: true, user: adminUser });
+            });
+        } catch (e) {
+            next(e);
+        }
     });
 }
