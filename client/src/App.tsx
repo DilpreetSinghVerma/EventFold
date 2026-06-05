@@ -32,11 +32,19 @@ import { useState } from "react";
 
 function ImpersonationBanner() {
   const { user } = useAuth();
+  const [isLoading, setIsLoading] = useState(false);
   if (!user || !(user as any).isImpersonating) return null;
 
   const revert = async () => {
-    await apiRequest("POST", "/api/admin/impersonate/revert");
-    window.location.href = "/admin";
+    try {
+      setIsLoading(true);
+      await apiRequest("POST", "/api/admin/impersonate/revert");
+      await queryClient.invalidateQueries({ queryKey: ["/api/auth/me"] });
+      window.location.href = "/admin";
+    } catch (e: any) {
+      alert("Failed to return to admin: " + e.message);
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -45,8 +53,8 @@ function ImpersonationBanner() {
         <AlertTriangle className="w-4 h-4 animate-pulse" />
         <span>You are currently impersonating <strong>{user.name || user.email}</strong>. Any actions you take will be on their behalf.</span>
       </div>
-      <Button variant="outline" size="sm" onClick={revert} className="h-7 bg-white text-red-600 hover:bg-white/90 border-transparent text-xs font-bold px-4">
-        Return to Admin
+      <Button variant="outline" size="sm" onClick={revert} disabled={isLoading} className="h-7 bg-white text-red-600 hover:bg-white/90 border-transparent text-xs font-bold px-4 disabled:opacity-50">
+        {isLoading ? "Returning..." : "Return to Admin"}
       </Button>
     </div>
   );
