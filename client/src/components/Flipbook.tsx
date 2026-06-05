@@ -638,20 +638,28 @@ export const Flipbook = forwardRef(({
                               zIndex: 1
                             }}
                           />
-                          {page.video && isCurrentSpread && (
+                          {page.video && (
                             <video 
-                              src={page.video} 
-                              autoPlay 
+                              src={isCurrentSpread ? page.video : undefined}
+                              autoPlay={isCurrentSpread}
                               loop 
                               muted 
                               playsInline
-                              preload="auto"
+                              preload="metadata"
+                              ref={(el) => {
+                                if (!el) return;
+                                if (isCurrentSpread) {
+                                  if (el.paused && el.src) el.play().catch(() => {});
+                                } else {
+                                  if (!el.paused) el.pause();
+                                }
+                              }}
                               style={{ 
                                 width: '100%', 
                                 height: '100%', 
                                 objectFit: 'cover', 
                                 objectPosition: isLeftHalf ? 'left' : 'right', 
-                                display: 'block', 
+                                display: isCurrentSpread ? 'block' : 'none', 
                                 backgroundColor: 'transparent',
                                 position: 'absolute',
                                 top: 0,
