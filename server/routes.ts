@@ -1319,14 +1319,12 @@ export function registerRoutes(
 
       const { message, type, isActive } = req.body;
 
-      if (isActive) {
-        // Deactivate all other broadcasts first
-        await db.update(broadcasts).set({ isActive: 0 });
-      }
+      // Always deactivate all other broadcasts first
+      await db.update(broadcasts).set({ isActive: 0 });
 
-      if (message) {
+      if (isActive && message) {
         // Create new broadcast
-        await db.insert(broadcasts).values({ message, type: type || 'info', isActive: isActive ? 1 : 0 });
+        await db.insert(broadcasts).values({ message, type: type || 'info', isActive: 1 });
       }
 
       res.json({ success: true });
