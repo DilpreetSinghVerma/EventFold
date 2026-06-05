@@ -225,70 +225,50 @@ export default function CreateAlbum() {
         });
       };
 
-      // 2. Get Secure Signature from our server for Cloudinary
+      // 2. Securing cloud connection
       setStatus('Securing cloud connection...');
-      let sigResponse;
-      try {
-        sigResponse = await fetch('/api/cloudinary-signature');
-      } catch (e: any) {
-        throw new Error("Failed to secure cloud connection. The backend server is unreachable or failed to respond.");
-      }
 
-      if (!sigResponse.ok) {
-        const errBody = await sigResponse.json().catch(() => ({}));
-        throw new Error(errBody.error || 'Cloudinary handshake failed. Ensure CLOUDINARY_CLOUD_NAME, CLOUDINARY_API_KEY, CLOUDINARY_API_SECRET are set on Vercel.');
-      }
-      const { signature, timestamp, cloud_name, api_key, folder } = await sigResponse.json();
-
-      // Helper to upload a single file to Cloudinary with optional compression
-      const uploadToCloudinary = async (file: File, label: string, isVideo = false) => {
-        let currentSig = signature;
-        let currentTimestamp = timestamp;
-        const eager = (isVideo && formData.autoCompressVideos) ? 'q_auto,vc_auto' : '';
-
-        // If we need special video compression, we need a specific signature for it
-        if (eager) {
-          try {
-            const vSigRes = await fetch(`/api/cloudinary-signature?eager=${eager}&resource_type=video`);
-            if (vSigRes.ok) {
-              const vData = await vSigRes.json();
-              currentSig = vData.signature;
-              currentTimestamp = vData.timestamp;
-            }
-          } catch (vSigErr: any) {
-            console.warn("Failed to fetch video eager signature, attempting standard signature:", vSigErr);
-          }
+      // Helper to upload a single file to Cloudflare R2
+      const uploadToR2 = async (file: File, label: string, isVideo = false) => {
+        let sigResponse;
+        try {
+          sigResponse = await fetch('/api/s3-presigned-url', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              folder: 'albums',
+              contentType: file.type || (isVideo ? 'video/mp4' : 'image/jpeg')
+            })
+          });
+        } catch (e: any) {
+          throw new Error("Failed to secure cloud connection. The backend server is unreachable.");
         }
 
-        const cloudFormData = new FormData();
-        cloudFormData.append('file', file);
-        cloudFormData.append('signature', currentSig);
-        cloudFormData.append('timestamp', currentTimestamp);
-        cloudFormData.append('api_key', api_key);
-        cloudFormData.append('folder', folder);
-        
-        if (eager) {
-          cloudFormData.append('eager', eager);
+        if (!sigResponse.ok) {
+          const errBody = await sigResponse.json().catch(() => ({}));
+          throw new Error(errBody.error || 'Failed to get upload URL from server.');
         }
 
-        const resourceType = isVideo ? 'video' : 'image';
+        const { uploadUrl, finalUrl } = await sigResponse.json();
+
         let res;
         try {
-          res = await fetch(`https://api.cloudinary.com/v1_1/${cloud_name}/${resourceType}/upload`, {
-            method: 'POST',
-            body: cloudFormData,
+          res = await fetch(uploadUrl, {
+            method: 'PUT',
+            body: file,
+            headers: {
+              'Content-Type': file.type || (isVideo ? 'video/mp4' : 'image/jpeg')
+            }
           });
         } catch (fetchErr: any) {
-          console.error("Cloudinary fetch rejected:", fetchErr);
-          throw new Error(`Cloudinary network connection failed for "${label}". Please verify your internet connection or check if an ad-blocker/firewall/CORS block is preventing requests to api.cloudinary.com.`);
+          console.error("R2 fetch rejected:", fetchErr);
+          throw new Error(`Upload failed for "${label}". Please verify your internet connection.`);
         }
 
-        const data = await res.json().catch(() => ({}));
         if (!res.ok) {
-          const msg = data.error?.message || data.error || res.statusText;
-          throw new Error(`${label}: ${msg} (Cloudinary free tier: limit may apply)`);
+          throw new Error(`${label}: Upload failed with status ${res.status}`);
         }
-        return data.secure_url;
+        return finalUrl;
       };
 
       // 3. Compress and Upload all files directly from Browser to Cloudinary with Concurrency Control
@@ -299,13 +279,13 @@ export default function CreateAlbum() {
       // Add covers
       uploadTasks.push(async () => {
         const compressed = await compressImage(formData.frontCover!);
-        const url = await uploadToCloudinary(compressed, 'Front cover');
+        const url = await uploadToR2(compressed, 'Front cover');
         return { filePath: url, fileType: 'cover_front', orderIndex: 0 };
       });
 
       uploadTasks.push(async () => {
         const compressed = await compressImage(formData.backCover!);
-        const url = await uploadToCloudinary(compressed, 'Back cover');
+        const url = await uploadToR2(compressed, 'Back cover');
         return { filePath: url, fileType: 'cover_back', orderIndex: 1 };
       });
 
@@ -313,14 +293,14 @@ export default function CreateAlbum() {
       formData.sheets.forEach((sheet, idx) => {
         uploadTasks.push(async () => {
           const compressed = await compressImage(sheet);
-          const url = await uploadToCloudinary(compressed, `Sheet ${idx + 1}`);
+          const url = await uploadToR2(compressed, `Sheet ${idx + 1}`);
           return { filePath: url, fileType: 'sheet', orderIndex: idx };
         });
 
         const vidObj = formData.sheetVideos[idx];
         if (vidObj && vidObj.file) {
           uploadTasks.push(async () => {
-            const url = await uploadToCloudinary(vidObj.file!, `Motion Portrait ${idx + 1}`, true);
+            const url = await uploadToR2(vidObj.file!, `Motion Portrait ${idx + 1}`, true);
             const pageNum = (idx * 2) + (vidObj.side === 'right' ? 1 : 0);
             return { filePath: url, fileType: 'video', orderIndex: pageNum };
           });
@@ -329,7 +309,7 @@ export default function CreateAlbum() {
 
       if (formData.bgMusic) {
         uploadTasks.push(async () => {
-          const url = await uploadToCloudinary(formData.bgMusic!, 'Background Music', true);
+          const url = await uploadToR2(formData.bgMusic!, 'Background Music', true);
           return { filePath: url, fileType: 'audio', orderIndex: 0 };
         });
       }

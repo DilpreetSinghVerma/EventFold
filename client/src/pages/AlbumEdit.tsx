@@ -107,30 +107,28 @@ export default function AlbumEdit() {
 
     setUploadingSheets(true);
     try {
-      const sigRes = await fetch('/api/cloudinary-signature');
-      if (!sigRes.ok) {
-        throw new Error("Failed to generate Cloudinary signature on server.");
-      }
-      const { signature, timestamp, cloud_name, api_key, folder } = await sigRes.json();
-
-      const uploadToCloudinary = async (file: File) => {
-        const cloudFormData = new FormData();
-        cloudFormData.append('file', file);
-        cloudFormData.append('signature', signature);
-        cloudFormData.append('timestamp', timestamp);
-        cloudFormData.append('api_key', api_key);
-        cloudFormData.append('folder', folder);
-
-        const res = await fetch(`https://api.cloudinary.com/v1_1/${cloud_name}/image/upload`, {
+      const uploadToR2 = async (file: File) => {
+        const sigRes = await fetch('/api/s3-presigned-url', {
           method: 'POST',
-          body: cloudFormData,
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ folder: 'albums', contentType: file.type || 'image/jpeg' })
+        });
+        if (!sigRes.ok) {
+          const errBody = await sigRes.json().catch(() => ({}));
+          throw new Error(errBody.error || "Failed to get upload URL from server.");
+        }
+        const { uploadUrl, finalUrl } = await sigRes.json();
+
+        const res = await fetch(uploadUrl, {
+          method: 'PUT',
+          body: file,
+          headers: { 'Content-Type': file.type || 'image/jpeg' },
         });
 
-        const data = await res.json();
         if (!res.ok) {
-          throw new Error(data.error?.message || "Upload failed");
+          throw new Error("Upload failed with status " + res.status);
         }
-        return data.secure_url;
+        return finalUrl;
       };
 
       const startIdx = files.length;
@@ -139,7 +137,7 @@ export default function AlbumEdit() {
       for (let i = 0; i < selectedFiles.length; i++) {
         const file = selectedFiles[i];
         const compressed = await compressImage(file);
-        const url = await uploadToCloudinary(compressed);
+        const url = await uploadToR2(compressed);
         newFilesUploaded.push({
           filePath: url,
           fileType: 'sheet',
@@ -198,31 +196,26 @@ export default function AlbumEdit() {
     else setUploadingBack(true);
 
     try {
-      const sigRes = await fetch('/api/cloudinary-signature');
-      if (!sigRes.ok) {
-        throw new Error("Failed to generate Cloudinary signature on server.");
-      }
-      const { signature, timestamp, cloud_name, api_key, folder } = await sigRes.json();
-
       const compressed = await compressImage(file);
 
-      const cloudFormData = new FormData();
-      cloudFormData.append('file', compressed);
-      cloudFormData.append('signature', signature);
-      cloudFormData.append('timestamp', timestamp);
-      cloudFormData.append('api_key', api_key);
-      cloudFormData.append('folder', folder);
-
-      const cloudRes = await fetch(`https://api.cloudinary.com/v1_1/${cloud_name}/image/upload`, {
+      const sigRes = await fetch('/api/s3-presigned-url', {
         method: 'POST',
-        body: cloudFormData,
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ folder: 'albums', contentType: compressed.type || 'image/jpeg' })
+      });
+      if (!sigRes.ok) throw new Error("Failed to generate upload URL on server.");
+      const { uploadUrl, finalUrl } = await sigRes.json();
+
+      const cloudRes = await fetch(uploadUrl, {
+        method: 'PUT',
+        body: compressed,
+        headers: { 'Content-Type': compressed.type || 'image/jpeg' },
       });
 
-      const cloudData = await cloudRes.json();
       if (!cloudRes.ok) {
-        throw new Error(cloudData.error?.message || "Upload failed");
+        throw new Error("Upload failed");
       }
-      const url = cloudData.secure_url;
+      const url = finalUrl;
 
       const currentCover = type === 'front' ? frontCover : backCover;
       if (currentCover) {
@@ -294,39 +287,36 @@ export default function AlbumEdit() {
     try {
       let sigRes;
       try {
-        sigRes = await fetch('/api/cloudinary-signature?resource_type=video');
+        sigRes = await fetch('/api/s3-presigned-url', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ folder: 'albums', contentType: file.type || 'audio/mpeg' })
+        });
       } catch (e: any) {
-        throw new Error("Failed to secure cloud connection. The backend server is unreachable or failed to respond.");
+        throw new Error("Failed to secure cloud connection. The backend server is unreachable.");
       }
 
       if (!sigRes.ok) {
         const errBody = await sigRes.json().catch(() => ({}));
-        throw new Error(errBody.error || "Failed to generate Cloudinary signature on server.");
+        throw new Error(errBody.error || "Failed to generate upload URL on server.");
       }
 
-      const { signature, timestamp, cloud_name, api_key, folder } = await sigRes.json();
-
-      const cloudFormData = new FormData();
-      cloudFormData.append('file', file);
-      cloudFormData.append('signature', signature);
-      cloudFormData.append('timestamp', timestamp);
-      cloudFormData.append('api_key', api_key);
-      cloudFormData.append('folder', folder);
+      const { uploadUrl, finalUrl } = await sigRes.json();
 
       let res;
       try {
-        res = await fetch(`https://api.cloudinary.com/v1_1/${cloud_name}/video/upload`, {
-          method: 'POST',
-          body: cloudFormData,
+        res = await fetch(uploadUrl, {
+          method: 'PUT',
+          body: file,
+          headers: { 'Content-Type': file.type || 'audio/mpeg' },
         });
       } catch (fetchErr: any) {
-        console.error("Cloudinary video fetch rejected:", fetchErr);
-        throw new Error("Cloudinary network connection failed. Please verify your internet connection or check if an ad-blocker/firewall/CORS block is preventing requests to api.cloudinary.com.");
+        console.error("R2 fetch rejected:", fetchErr);
+        throw new Error("Upload failed. Please verify your internet connection.");
       }
 
-      const data = await res.json().catch(() => ({}));
       if (res.ok) {
-        setBgMusicUrl(data.secure_url);
+        setBgMusicUrl(finalUrl);
         toast({ title: "Music Uploaded!", description: "Save changes to apply this track to the album.", className: "bg-green-500 text-white" });
       } else {
         throw new Error(data.error?.message || "Upload failed");

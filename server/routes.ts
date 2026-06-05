@@ -45,15 +45,12 @@ if (!fs.existsSync(uploadDir)) {
   }
 }
 
-import { v2 as cloudinary } from "cloudinary";
-
-// Configure Cloudinary from environment variables
-// (You will need to add these to Vercel/Replit Environment Variables)
-cloudinary.config({
-  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
-  api_key: process.env.CLOUDINARY_API_KEY,
-  api_secret: process.env.CLOUDINARY_API_SECRET,
-});
+// ☁️ Smart Cloudinary Manager — Auto-rotates between multiple free accounts
+// Silently switches accounts when one hits quota limit (>80% usage)
+// ☁️ Smart Cloudinary Manager — Auto-rotates between multiple free accounts
+// Silently switches accounts when one hits quota limit (>80% usage)
+import { cloudinaryManager } from "./lib/cloudinary-manager";
+import { generatePresignedUrl, uploadBufferToR2 } from "./lib/s3-client";
 
 // Use memory storage for Multer (Vercel has no writable disk)
 const upload = multer({
@@ -61,17 +58,12 @@ const upload = multer({
   limits: { fileSize: 50 * 1024 * 1024 }, // Increase to 50MB for raw panoramic sheets
 });
 
-// Helper to upload buffer to Cloudinary
-const streamUpload = (buffer: Buffer) => {
-  return new Promise<any>((resolve, reject) => {
-    const stream = cloudinary.uploader.upload_stream(
-      { folder: "flipbook_albums" },
-      (error, result) => {
-        if (result) resolve(result);
-        else reject(error);
-      }
-    );
-    stream.end(buffer);
+// Helper to upload buffer — uses CloudinaryManager for auto account rotation
+const streamUpload = (buffer: Buffer, options: any = {}) => {
+  return cloudinaryManager.uploadBuffer(buffer, {
+    folder: "flipbook_albums",
+    resource_type: "auto",
+    ...options,
   });
 };
 
@@ -79,37 +71,58 @@ export function registerRoutes(
   httpServer: Server,
   app: Express
 ) {
-  // Get Cloudinary signature for client-side upload
+  // Get Cloudinary signature for client-side upload (Legacy/Fallback)
+  // CloudinaryManager automatically picks the best available account
   app.get("/api/cloudinary-signature", async (req, res) => {
     try {
       if (!req.isAuthenticated()) return res.status(401).json({ error: "Unauthorized" });
       const timestamp = Math.round(new Date().getTime() / 1000);
-      
+
       const params: any = {
-        timestamp: timestamp,
+        timestamp,
         folder: "flipbook_albums",
       };
 
-      // Support eager transformations for video compression if requested
-      // Note: resource_type is NOT part of the signature, it's part of the URL.
       if (req.query.eager) {
         params.eager = req.query.eager;
       }
 
-      const signature = cloudinary.utils.api_sign_request(
-        params,
-        process.env.CLOUDINARY_API_SECRET!
-      );
-      
-      res.json({
-        signature,
-        timestamp,
-        cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
-        api_key: process.env.CLOUDINARY_API_KEY,
-        folder: "flipbook_albums"
-      });
+      // Auto-selects best available account
+      const signatureData = await cloudinaryManager.getSignature(params);
+      res.json(signatureData);
     } catch (e) {
       res.status(500).json({ error: "Failed to generate Cloudinary signature" });
+    }
+  });
+
+  // Get S3 Presigned URL for direct browser-to-R2 uploads
+  app.post("/api/s3-presigned-url", express.json(), async (req, res) => {
+    try {
+      if (!req.isAuthenticated()) return res.status(401).json({ error: "Unauthorized" });
+      
+      const { folder = "albums", contentType } = req.body;
+      if (!contentType) return res.status(400).json({ error: "Content type is required" });
+
+      const presignedData = await generatePresignedUrl(folder, contentType);
+      res.json(presignedData);
+    } catch (e: any) {
+      console.error("Failed to generate presigned URL:", e);
+      res.status(500).json({ error: "Failed to generate presigned URL" });
+    }
+  });
+
+  // Admin: View all Cloudinary account usage at a glance
+  app.get("/api/admin/cloudinary-status", async (req, res) => {
+    try {
+      if (!req.isAuthenticated()) return res.status(401).json({ error: "Unauthorized" });
+      const user = req.user as any;
+      if (user.role !== 'admin' && user.email !== 'dilpreetsinghverma@gmail.com') {
+        return res.status(403).json({ error: "Admin privilege required" });
+      }
+      const report = await cloudinaryManager.getStatusReport();
+      res.json(report);
+    } catch (e: any) {
+      res.status(500).json({ error: "Failed to fetch Cloudinary status", details: e.message });
     }
   });
 
@@ -135,32 +148,17 @@ export function registerRoutes(
     }
   });
 
-  // Upload Business Logo
+  // Upload Business Logo — uses Cloudflare R2
   app.post("/api/settings/logo", upload.single("logo"), async (req, res) => {
     try {
       if (!req.isAuthenticated()) return res.status(401).json({ error: "Unauthorized" });
       if (!req.file) return res.status(400).json({ error: "No logo file uploaded" });
 
-      const streamUpload = (buffer: Buffer) => {
-        return new Promise((resolve, reject) => {
-          const stream = cloudinary.uploader.upload_stream(
-            {
-              folder: "eventfold_brand",
-              resource_type: "image",
-              quality: "auto",
-              fetch_format: "auto"
-            },
-            (error, result) => {
-              if (result) resolve(result);
-              else reject(error);
-            }
-          );
-          stream.end(buffer);
-        });
-      };
-
-      const result: any = await streamUpload(req.file.buffer);
-      const logoUrl = result.secure_url;
+      const logoUrl = await uploadBufferToR2(
+        req.file.buffer,
+        "eventfold_brand",
+        req.file.mimetype
+      );
       const userId = (req.user as any).id;
 
       await storage.updateSettings(userId, { businessLogo: logoUrl });

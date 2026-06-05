@@ -192,12 +192,10 @@ export default function Viewer() {
               { url: cloudHalves[1], id: sheet.id }
             );
           } else {
-            // Fallback for local blobs/manual uploads (Slow)
-            setLoadStatus(`Rendering spread ${i + 1}/${sheetFiles.length}…`);
-            const [left, right] = await splitPanoramicSheet(url);
+            // Use CSS splitting fallback (No CORS required)
             halves.push(
-                { url: left, id: sheet.id }, 
-                { url: right, id: sheet.id }
+                { url: url, id: sheet.id }, 
+                { url: url, id: sheet.id }
             );
           }
         }
@@ -978,34 +976,4 @@ export default function Viewer() {
     </div>
   );
 }
-// Keep fallback for local dev
-function splitPanoramicSheet(url: string): Promise<[string, string]> {
-  return new Promise((resolve, reject) => {
-    const img = new Image();
-    if (!url.startsWith('blob:') && !url.startsWith('data:')) {
-      img.crossOrigin = 'anonymous';
-    }
-    img.onload = () => {
-      const W = img.naturalWidth;
-      const H = img.naturalHeight;
-      const halfW = Math.floor(W / 2);
-      const leftCanvas = document.createElement('canvas');
-      leftCanvas.width = halfW;
-      leftCanvas.height = H;
-      leftCanvas.getContext('2d')!.drawImage(img, 0, 0, halfW, H, 0, 0, halfW, H);
-      const rightCanvas = document.createElement('canvas');
-      rightCanvas.width = W - halfW;
-      rightCanvas.height = H;
-      rightCanvas.getContext('2d')!.drawImage(img, halfW, 0, W - halfW, H, 0, 0, W - halfW, H);
-      leftCanvas.toBlob((lb) => {
-        if (!lb) { reject(new Error('left blob failed')); return; }
-        rightCanvas.toBlob((rb) => {
-          if (!rb) { reject(new Error('right blob failed')); return; }
-          resolve([URL.createObjectURL(lb), URL.createObjectURL(rb)]);
-        }, 'image/jpeg', 0.9);
-      }, 'image/jpeg', 0.9);
-    };
-    img.onerror = () => reject(new Error('Image load failed: ' + url));
-    img.src = url;
-  });
-}
+// splitPanoramicSheet removed (replaced with CSS splitting)
