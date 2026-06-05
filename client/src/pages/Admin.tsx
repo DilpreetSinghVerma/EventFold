@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { User, Album } from "@shared/schema";
+import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, ResponsiveContainer } from "recharts";
 import { useAuth } from "@/lib/auth";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { Button } from "@/components/ui/button";
@@ -60,6 +61,10 @@ export default function Admin() {
 
   const { data: users, isLoading: usersLoading } = useQuery<User[]>({
     queryKey: ["/api/admin/users"],
+  });
+
+  const { data: analytics } = useQuery({
+    queryKey: ["/api/admin/analytics"],
   });
 
   const { data: albums, isLoading: albumsLoading } = useQuery<Album[]>({
@@ -298,6 +303,9 @@ export default function Admin() {
             <TabsTrigger value="users" className="data-[state=active]:bg-primary rounded-lg flex gap-2">
               <Users className="w-4 h-4" /> Users Management
             </TabsTrigger>
+            <TabsTrigger value="analytics" className="data-[state=active]:bg-primary rounded-lg flex gap-2">
+              <TrendingUp className="w-4 h-4" /> Analytics
+            </TabsTrigger>
             <TabsTrigger value="albums" className="data-[state=active]:bg-primary rounded-lg flex gap-2">
               <BookCopy className="w-4 h-4" /> Global Albums
             </TabsTrigger>
@@ -317,6 +325,86 @@ export default function Admin() {
               <Megaphone className="w-4 h-4" /> Broadcasts
             </TabsTrigger>
           </TabsList>
+
+          <TabsContent value="analytics">
+            <div className="space-y-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <Card className="bg-white/[0.02] border-white/5">
+                  <CardHeader>
+                    <CardTitle className="text-xl flex items-center gap-2">
+                      <Users className="text-primary w-5 h-5" />
+                      30-Day User Growth
+                    </CardTitle>
+                    <p className="text-sm text-white/40">Daily new signups over the past 30 days.</p>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="h-[300px] w-full">
+                      {analytics?.chartData ? (
+                        <ResponsiveContainer width="100%" height="100%">
+                          <AreaChart data={analytics.chartData} margin={{ top: 10, right: 30, left: 0, bottom: 0 }}>
+                            <defs>
+                              <linearGradient id="colorSignups" x1="0" y1="0" x2="0" y2="1">
+                                <stop offset="5%" stopColor="#8b5cf6" stopOpacity={0.8}/>
+                                <stop offset="95%" stopColor="#8b5cf6" stopOpacity={0}/>
+                              </linearGradient>
+                            </defs>
+                            <XAxis dataKey="date" stroke="#ffffff40" fontSize={12} tickLine={false} axisLine={false} />
+                            <YAxis stroke="#ffffff40" fontSize={12} tickLine={false} axisLine={false} />
+                            <RechartsTooltip 
+                              contentStyle={{ backgroundColor: '#1a1a1a', borderColor: '#333', borderRadius: '8px' }}
+                              itemStyle={{ color: '#fff' }}
+                            />
+                            <Area type="monotone" dataKey="signups" stroke="#8b5cf6" fillOpacity={1} fill="url(#colorSignups)" />
+                          </AreaChart>
+                        </ResponsiveContainer>
+                      ) : (
+                        <div className="w-full h-full flex items-center justify-center">
+                          <Loader2 className="w-6 h-6 animate-spin text-white/20" />
+                        </div>
+                      )}
+                    </div>
+                  </CardContent>
+                </Card>
+
+                <Card className="bg-white/[0.02] border-white/5">
+                  <CardHeader>
+                    <CardTitle className="text-xl flex items-center gap-2">
+                      <BookCopy className="text-blue-500 w-5 h-5" />
+                      30-Day Album Creations
+                    </CardTitle>
+                    <p className="text-sm text-white/40">Daily newly created albums over the past 30 days.</p>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="h-[300px] w-full">
+                      {analytics?.chartData ? (
+                        <ResponsiveContainer width="100%" height="100%">
+                          <AreaChart data={analytics.chartData} margin={{ top: 10, right: 30, left: 0, bottom: 0 }}>
+                            <defs>
+                              <linearGradient id="colorAlbums" x1="0" y1="0" x2="0" y2="1">
+                                <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.8}/>
+                                <stop offset="95%" stopColor="#3b82f6" stopOpacity={0}/>
+                              </linearGradient>
+                            </defs>
+                            <XAxis dataKey="date" stroke="#ffffff40" fontSize={12} tickLine={false} axisLine={false} />
+                            <YAxis stroke="#ffffff40" fontSize={12} tickLine={false} axisLine={false} />
+                            <RechartsTooltip 
+                              contentStyle={{ backgroundColor: '#1a1a1a', borderColor: '#333', borderRadius: '8px' }}
+                              itemStyle={{ color: '#fff' }}
+                            />
+                            <Area type="monotone" dataKey="albums" stroke="#3b82f6" fillOpacity={1} fill="url(#colorAlbums)" />
+                          </AreaChart>
+                        </ResponsiveContainer>
+                      ) : (
+                        <div className="w-full h-full flex items-center justify-center">
+                          <Loader2 className="w-6 h-6 animate-spin text-white/20" />
+                        </div>
+                      )}
+                    </div>
+                  </CardContent>
+                </Card>
+              </div>
+            </div>
+          </TabsContent>
 
           <TabsContent value="users">
             <Card className="bg-white/5 border-white/10 overflow-hidden">

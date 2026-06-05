@@ -1333,4 +1333,70 @@ export function registerRoutes(
       res.status(500).json({ error: "Update failed", details: e.message });
     }
   });
+
+  // Admin: Analytics Dashboard Data
+  app.get("/api/admin/analytics", async (req, res) => {
+    try {
+      if (!req.isAuthenticated()) return res.status(401).json({ error: "Unauthorized" });
+      const user = req.user as any;
+      const adminEmails = ["admin@eventfold.com", "dilpreetsinghverma@gmail.com"];
+      if (user.role !== 'admin' && !adminEmails.includes(user.email)) {
+        return res.status(403).json({ error: "Admin privilege required" });
+      }
+
+      // Calculate the date 30 days ago
+      const thirtyDaysAgo = new Date();
+      thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+
+      // Fetch users and albums from the last 30 days
+      const recentUsers = await db.select({ createdAt: users.createdAt }).from(users);
+      const recentAlbums = await db.select({ createdAt: albums.createdAt }).from(albums);
+
+      // Initialize map for the last 30 days
+      const chartDataMap = new Map<string, { date: string; signups: number; albums: number }>();
+      for (let i = 29; i >= 0; i--) {
+        const d = new Date();
+        d.setDate(d.getDate() - i);
+        const dateStr = d.toISOString().split('T')[0];
+        chartDataMap.set(dateStr, { date: dateStr, signups: 0, albums: 0 });
+      }
+
+      // Group users
+      recentUsers.forEach(u => {
+        if (!u.createdAt) return;
+        const dateStr = new Date(u.createdAt).toISOString().split('T')[0];
+        if (chartDataMap.has(dateStr)) {
+          chartDataMap.get(dateStr)!.signups += 1;
+        }
+      });
+
+      // Group albums
+      recentAlbums.forEach(a => {
+        if (!a.createdAt) return;
+        const dateStr = new Date(a.createdAt).toISOString().split('T')[0];
+        if (chartDataMap.has(dateStr)) {
+          chartDataMap.get(dateStr)!.albums += 1;
+        }
+      });
+
+      const chartData = Array.from(chartDataMap.values());
+
+      // Get some top line stats
+      const totalUsers = recentUsers.length;
+      const totalAlbums = recentAlbums.length;
+
+      res.json({
+        success: true,
+        chartData,
+        stats: {
+          totalUsers,
+          totalAlbums,
+        }
+      });
+
+    } catch (e: any) {
+      console.error("Analytics fetch failed:", e);
+      res.status(500).json({ error: "Analytics fetch failed", details: e.message });
+    }
+  });
 }
