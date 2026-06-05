@@ -595,6 +595,7 @@ export const Flipbook = forwardRef(({
             >
               {pages.map((page, index) => {
                 const isNear = Math.abs(index - currentPage) <= 8;
+                const isCurrentSpread = Math.abs(index - currentPage) <= 2;
 
                 if (page.type === 'cover') {
                   return (
@@ -637,7 +638,7 @@ export const Flipbook = forwardRef(({
                               zIndex: 1
                             }}
                           />
-                          {page.video && (
+                          {page.video && isCurrentSpread && (
                             <video 
                               src={page.video} 
                               autoPlay 
