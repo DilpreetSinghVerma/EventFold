@@ -717,19 +717,7 @@ export default function Admin() {
               })()}
             </div>
           </TabsContent>
-                    </p>
-                  </div>
-                </div>
-                <Button 
-                  onClick={fetchCloudUsage}
-                  disabled={cloudLoading}
-                  variant="outline" 
-                  className="rounded-xl border-white/10 hover:bg-white/5 gap-2"
-                >
-                  <RefreshCw className={`w-4 h-4 ${cloudLoading ? 'animate-spin' : ''}`} />
-                  {cloudLoading ? 'Scanning...' : 'Refresh'}
-                </Button>
-              </div>
+
 
 
 
