@@ -319,7 +319,7 @@ export default function AlbumEdit() {
         setBgMusicUrl(finalUrl);
         toast({ title: "Music Uploaded!", description: "Save changes to apply this track to the album.", className: "bg-green-500 text-white" });
       } else {
-        throw new Error(data.error?.message || "Upload failed");
+        throw new Error("Upload failed with status: " + res.status);
       }
     } catch (err: any) {
       toast({ title: "Upload Failed", description: err.message, variant: "destructive" });
