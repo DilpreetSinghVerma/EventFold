@@ -1270,7 +1270,7 @@ export function registerRoutes(
         return res.status(403).json({ error: "Admin privilege required" });
       }
 
-      const allUsers = await storage.getAllUsers();
+      const allUsers = await storage.getUsers();
       
       const csvHeader = "ID,Name,Email,Plan,Credits,Role,Verified,Joined Date\n";
       const csvRows = allUsers.map(u => {
@@ -1301,9 +1301,9 @@ export function registerRoutes(
       } else {
         res.json({ success: true, broadcast: null });
       }
-    } catch (e) {
+    } catch (e: any) {
       console.error("Failed to fetch broadcast:", e);
-      res.status(500).json({ error: "Fetch failed" });
+      res.status(500).json({ error: "Fetch failed", details: e.message });
     }
   });
 
