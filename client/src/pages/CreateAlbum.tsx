@@ -143,9 +143,9 @@ export default function CreateAlbum() {
     }
 
     // --- NEW: Video Size Validation ---
-    const oversizedVideos = formData.sheetVideos.filter(v => v.file && v.file.size > 100 * 1024 * 1024);
-    if (oversizedVideos.length > 0) {
-      alert(`⚠️ MOTION PORTRAIT TOO LARGE\n\nCloudinary has a limit of 100MB per video. One or more of your motion portraits is too big. \n\nTip: Please use short 2-3 second clips for motion portraits if you experience upload issues.`);
+    const oversizedVideos = formData.sheetVideos.filter(v => v.file && v.file.size > 15 * 1024 * 1024);
+    if (oversizedVideos.length > 0 || (formData.bgMusic && formData.bgMusic.size > 15 * 1024 * 1024)) {
+      alert(`⚠️ FILE TOO LARGE\n\nThere is a strict limit of 15MB per video or audio file.\n\nTip: Please use a tool like Handbrake or compress-video-online.com to compress your files before uploading.`);
       setLoading(false);
       setStatus('');
       return;
@@ -464,7 +464,7 @@ export default function CreateAlbum() {
                   </div>
 
                   <div className="space-y-3">
-                    <Label htmlFor="bgMusic" className="text-sm font-bold uppercase tracking-[0.15em] text-white/40 ml-1">Custom Background Music (Optional)</Label>
+                    <Label htmlFor="bgMusic" className="text-sm font-bold uppercase tracking-[0.15em] text-white/40 ml-1">Custom Background Music (Max 15MB)</Label>
                     <Input
                       id="bgMusic"
                       type="file"
@@ -677,7 +677,7 @@ export default function CreateAlbum() {
                                     };
                                     input.click();
                                   }}
-                                  title={formData.sheetVideos[idx]?.file ? "Video Attached" : "Add Motion Portrait"}
+                                  title={formData.sheetVideos[idx]?.file ? "Video Attached" : "Add Motion Portrait (Max 15MB)"}
                                 >
                                   <Video className="w-4 h-4" />
                                 </Button>
