@@ -360,7 +360,10 @@ export function setupAuth(app: Express) {
 
             req.logIn(targetUser, (err) => {
                 if (err) return next(err);
-                res.json({ success: true, user: targetUser });
+                req.session.save((saveErr) => {
+                    if (saveErr) return next(saveErr);
+                    res.json({ success: true, user: targetUser });
+                });
             });
         } catch (e) {
             next(e);
@@ -384,7 +387,10 @@ export function setupAuth(app: Express) {
 
             req.logIn(adminUser, (err) => {
                 if (err) return next(err);
-                res.json({ success: true, user: adminUser });
+                req.session.save((saveErr) => {
+                    if (saveErr) return next(saveErr);
+                    res.json({ success: true, user: adminUser });
+                });
             });
         } catch (e) {
             next(e);
