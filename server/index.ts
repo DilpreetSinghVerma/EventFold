@@ -9,6 +9,28 @@ import { createServer } from "http";
 const app = express();
 const httpServer = createServer(app);
 
+import { db } from "./db";
+import { sql } from "drizzle-orm";
+
+(async () => {
+  try {
+    console.log("Running auto-migrations...");
+    await db.execute(sql`ALTER TABLE "users" ADD COLUMN IF NOT EXISTS "last_active_at" timestamp;`);
+    await db.execute(sql`
+      CREATE TABLE IF NOT EXISTS "broadcasts" (
+          "id" serial PRIMARY KEY NOT NULL,
+          "message" text NOT NULL,
+          "type" text DEFAULT 'info' NOT NULL,
+          "is_active" integer DEFAULT 1 NOT NULL,
+          "created_at" timestamp DEFAULT now()
+      );
+    `);
+    console.log("Auto-migrations complete.");
+  } catch (err: any) {
+    console.error("Auto-migration failed (this is usually fine if columns exist):", err.message);
+  }
+})();
+
 // MIDDLEWARE (JSON Body Parser MUST be before setupAuth for passport-local to work)
 app.use(
   express.json({
