@@ -365,6 +365,7 @@ export const Flipbook = forwardRef(({
               {pages.map((page, index) => {
                 const isMobileLayout = window.innerWidth < 1024;
                 const isCurrentSpread = Math.abs(index - currentPage) <= 2;
+                const isPreloading = Math.abs(index - currentPage) <= 4;
                 // react-pageflip's layout engine crashes if we hot-swap "hard" pages using windowing.
                 // Mobile GPU jitter is already fixed by removing the CSS transitions.
 
@@ -458,7 +459,7 @@ export const Flipbook = forwardRef(({
                           />
                           {page.video && (
                             <video
-                              src={isCurrentSpread ? page.video : undefined}
+                              src={isPreloading ? page.video : undefined}
                               autoPlay={isCurrentSpread}
                               loop
                               muted
@@ -477,7 +478,7 @@ export const Flipbook = forwardRef(({
                                 height: '100%',
                                 objectFit: 'cover',
                                 objectPosition: isLeftHalf ? 'left' : 'right',
-                                display: isCurrentSpread ? 'block' : 'none',
+                                display: 'block',
                                 backgroundColor: 'transparent',
                                 position: 'absolute',
                                 top: 0,
@@ -603,6 +604,7 @@ export const Flipbook = forwardRef(({
               {pages.map((page, index) => {
                 const isNear = Math.abs(index - currentPage) <= 8;
                 const isCurrentSpread = Math.abs(index - currentPage) <= 2;
+                const isPreloading = Math.abs(index - currentPage) <= 4;
 
                 if (page.type === 'cover') {
                   return (
@@ -647,7 +649,7 @@ export const Flipbook = forwardRef(({
                           />
                           {page.video && (
                             <video 
-                              src={isCurrentSpread ? page.video : undefined}
+                              src={isPreloading ? page.video : undefined}
                               autoPlay={isCurrentSpread}
                               loop 
                               muted 
@@ -666,7 +668,7 @@ export const Flipbook = forwardRef(({
                                 height: '100%', 
                                 objectFit: 'cover', 
                                 objectPosition: isLeftHalf ? 'left' : 'right', 
-                                display: isCurrentSpread ? 'block' : 'none', 
+                                display: 'block', 
                                 backgroundColor: 'transparent',
                                 position: 'absolute',
                                 top: 0,
