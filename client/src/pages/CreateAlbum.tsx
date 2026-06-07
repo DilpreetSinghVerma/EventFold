@@ -26,7 +26,7 @@ export default function CreateAlbum() {
   });
 
   const isAdmin = ["admin@eventfold.com", "dilpreetsinghverma@gmail.com"].includes(user?.email || "");
-  const isLabPlan = ['lab_monthly', 'lab_half_yearly', 'lab_yearly'].includes(user?.plan || '');
+  const isLabPlan = ['lab_monthly', 'lab_half_yearly', 'lab_yearly', 'lab_unlimited'].includes(user?.plan || '') || isAdmin;
   const isLimitReached = !isAdmin && (
     (user?.plan === 'free' && (albums?.length || 0) >= 1 && (user?.credits || 0) <= 0) ||
     (isLabPlan && (user?.credits || 0) <= 0)

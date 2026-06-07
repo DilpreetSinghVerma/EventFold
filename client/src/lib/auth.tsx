@@ -46,6 +46,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
                         plan === 'lab_monthly' ? 'Lab Monthly Subscription (50 credits)' :
                         plan === 'lab_half_yearly' ? 'Lab Half-Yearly Subscription (300 credits)' :
                         plan === 'lab_yearly' ? 'Lab Yearly Subscription (600 credits)' :
+                        plan === 'lab_unlimited' ? 'Lab Unlimited Subscription' :
                         'Monthly Elite Subscription',
                     order_id: data.orderId,
                     handler: function () {

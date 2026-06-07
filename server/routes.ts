@@ -184,8 +184,8 @@ export function registerRoutes(
       }
 
       const user = await storage.getUser(userId);
-      const isLabPlan = ['lab_monthly', 'lab_half_yearly', 'lab_yearly'].includes(user?.plan || '');
       const isAdmin = (req.user as any).role === 'admin' || ["admin@eventfold.com", "dilpreetsinghverma@gmail.com"].includes(user?.email || "");
+      const isLabPlan = ['lab_monthly', 'lab_half_yearly', 'lab_yearly', 'lab_unlimited'].includes(user?.plan || '') || isAdmin;
       if (!isLabPlan && !isAdmin) {
         return res.status(403).json({ error: "Lab Owner plan required to set custom album branding" });
       }
@@ -456,7 +456,7 @@ export function registerRoutes(
         }
       }
 
-      const isLabPlan = ['lab_monthly', 'lab_half_yearly', 'lab_yearly'].includes(user.plan || '');
+      const isLabPlan = ['lab_monthly', 'lab_half_yearly', 'lab_yearly', 'lab_unlimited'].includes(user.plan || '') || isAdmin;
 
       // Check daily album creation limit (Max 3 per day, bypass for admins and Lab Owners)
       if (!isAdmin && !isLabPlan) {
@@ -821,19 +821,21 @@ export function registerRoutes(
       let subscriptionExpiresAt = undefined;
       let subscriptionStartedAt = undefined;
       
-      if (plan === 'pro' || plan === 'elite') {
+      if (['pro', 'elite', 'lab_monthly', 'lab_half_yearly', 'lab_yearly', 'lab_unlimited'].includes(plan)) {
         const d = new Date();
         subscriptionStartedAt = d;
         
-        if (plan === 'pro') {
-          const exp = new Date();
+        const exp = new Date();
+        if (plan === 'pro' || plan === 'lab_monthly') {
           exp.setDate(exp.getDate() + 30);
-          subscriptionExpiresAt = exp;
-        } else {
-          const exp = new Date();
+        } else if (plan === 'lab_half_yearly') {
+          exp.setDate(exp.getDate() + 180);
+        } else if (plan === 'lab_unlimited') {
+          exp.setFullYear(exp.getFullYear() + 10);
+        } else { // elite, lab_yearly
           exp.setFullYear(exp.getFullYear() + 1);
-          subscriptionExpiresAt = exp;
         }
+        subscriptionExpiresAt = exp;
       } else if (plan === 'free') {
         subscriptionExpiresAt = null;
         subscriptionStartedAt = null;
@@ -842,7 +844,7 @@ export function registerRoutes(
       const u = await storage.updateUser(req.params.id, { role, plan, subscriptionStartedAt, subscriptionExpiresAt });
       
       // If upgraded to paid plan, make all existing albums permanent
-      if (plan === 'pro' || plan === 'elite') {
+      if (['pro', 'elite', 'lab_monthly', 'lab_half_yearly', 'lab_yearly', 'lab_unlimited'].includes(plan)) {
         const userAlbums = await storage.getAlbumsByUser(req.params.id);
         const { db } = await import("./db");
         const { albums } = await import("../shared/schema");

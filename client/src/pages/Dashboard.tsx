@@ -157,7 +157,7 @@ export default function Dashboard() {
   const [settings, setSettings] = useState<any>(null);
   const [copiedId, setCopiedId] = useState<string | null>(null);
   const isAdmin = user?.role === 'admin' || ["admin@eventfold.com", "dilpreetsinghverma@gmail.com"].includes(user?.email || "");
-  const isLabPlan = ['lab_monthly', 'lab_half_yearly', 'lab_yearly'].includes(user?.plan || '');
+  const isLabPlan = ['lab_monthly', 'lab_half_yearly', 'lab_yearly', 'lab_unlimited'].includes(user?.plan || '') || isAdmin;
   const [activeCategory, setActiveCategory] = useState<string>('All');
   const [searchQuery, setSearchQuery] = useState('');
   const [studioNameInput, setStudioNameInput] = useState('');
@@ -916,13 +916,23 @@ export default function Dashboard() {
               <div className="w-px h-6 bg-white/10 mx-2" />
               <div className="flex flex-wrap items-center gap-4 pt-4">
                 {isAdmin ? (
-                  <div className="flex items-center gap-3 px-6 py-3 bg-cyan-500/10 border border-cyan-500/20 rounded-2xl text-sm font-bold text-cyan-300 shadow-2xl shadow-cyan-500/10 transition-all hover:scale-[1.02]">
-                    <div className="w-8 h-8 rounded-lg bg-cyan-500/20 flex items-center justify-center mr-1">
-                      <Sparkles className="w-5 h-5 text-cyan-400" />
+                  dashboardMode === 'lab' ? (
+                    <div className="flex items-center gap-3 px-6 py-3 bg-emerald-500/10 border border-emerald-500/20 rounded-2xl text-sm font-bold text-emerald-400 shadow-2xl shadow-emerald-500/10 transition-all hover:scale-[1.02]">
+                      <div className="w-8 h-8 rounded-lg bg-emerald-500/20 flex items-center justify-center mr-1">
+                        <Sparkles className="w-5 h-5 text-emerald-400" />
+                      </div>
+                      LAB UNLIMITED · FOUNDER ACCESS
+                      <span className="ml-2 px-2 py-0.5 bg-emerald-500 text-white text-[8px] font-black rounded-md tracking-tighter uppercase">Unlimited</span>
                     </div>
-                    ADMIN MASTER · UNLIMITED CREDITS
-                    <span className="ml-2 px-2 py-0.5 bg-cyan-500 text-white text-[8px] font-black rounded-md tracking-tighter uppercase">Founder Access</span>
-                  </div>
+                  ) : (
+                    <div className="flex items-center gap-3 px-6 py-3 bg-cyan-500/10 border border-cyan-500/20 rounded-2xl text-sm font-bold text-cyan-300 shadow-2xl shadow-cyan-500/10 transition-all hover:scale-[1.02]">
+                      <div className="w-8 h-8 rounded-lg bg-cyan-500/20 flex items-center justify-center mr-1">
+                        <Sparkles className="w-5 h-5 text-cyan-400" />
+                      </div>
+                      ADMIN MASTER · UNLIMITED CREDITS
+                      <span className="ml-2 px-2 py-0.5 bg-cyan-500 text-white text-[8px] font-black rounded-md tracking-tighter uppercase">Founder Access</span>
+                    </div>
+                  )
                 ) : (user?.plan === 'pro' || user?.plan === 'elite') ? (
                   <div className="flex items-center gap-3 px-6 py-3 bg-primary/10 border border-primary/20 rounded-2xl text-sm font-bold text-primary shadow-2xl shadow-primary/10 transition-all hover:scale-[1.01]">
                     <div className="w-8 h-8 rounded-lg bg-primary/20 flex items-center justify-center mr-1">

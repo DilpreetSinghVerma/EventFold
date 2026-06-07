@@ -472,6 +472,10 @@ export default function Admin() {
                                 <SelectItem value="free">FREE</SelectItem>
                                 <SelectItem value="pro">PRO</SelectItem>
                                 <SelectItem value="elite">ELITE</SelectItem>
+                                <SelectItem value="lab_monthly">LAB MONTHLY</SelectItem>
+                                <SelectItem value="lab_half_yearly">LAB 6-MONTH</SelectItem>
+                                <SelectItem value="lab_yearly">LAB YEARLY</SelectItem>
+                                <SelectItem value="lab_unlimited">LAB UNLIMITED</SelectItem>
                               </SelectContent>
                             </Select>
                             {u.subscriptionExpiresAt && (
@@ -1079,7 +1083,12 @@ export default function Admin() {
                                   </div>
                                 </div>
                                 <div className="text-right">
-                                  <Badge className={`text-[8px] font-black uppercase ${u.plan === 'pro' ? 'bg-primary/20 text-primary border-primary/30' : u.plan === 'elite' ? 'bg-amber-500/20 text-amber-400 border-amber-500/30' : 'bg-white/5 text-white/30 border-white/10'}`}>
+                                  <Badge className={`text-[8px] font-black uppercase ${
+                                    u.plan === 'pro' ? 'bg-primary/20 text-primary border-primary/30' :
+                                    u.plan === 'elite' ? 'bg-amber-500/20 text-amber-400 border-amber-500/30' :
+                                    ['lab_monthly', 'lab_half_yearly', 'lab_yearly', 'lab_unlimited'].includes(u.plan) ? 'bg-emerald-500/20 text-emerald-400 border-emerald-500/30' :
+                                    'bg-white/5 text-white/30 border-white/10'
+                                  }`}>
                                     {u.plan}
                                   </Badge>
                                   <p className="text-[9px] text-white/30 mt-1">{new Date(u.createdAt).toLocaleDateString()}</p>

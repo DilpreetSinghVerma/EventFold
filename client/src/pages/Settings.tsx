@@ -405,10 +405,10 @@ export default function Settings() {
                                             <div>
                                                 <p className="text-xs font-bold text-white/40 uppercase tracking-widest mb-1">Available Credits</p>
                                                 <h3 className="text-2xl font-bold">
-                                                    {['pro', 'elite'].includes(user?.plan || '') ? 'Unlimited' : `${user?.credits || 0} Credits`}
+                                                    {['pro', 'elite', 'lab_unlimited'].includes(user?.plan || '') || user?.role === 'admin' ? 'Unlimited' : `${user?.credits || 0} Credits`}
                                                 </h3>
                                             </div>
-                                            {(user?.plan === 'free' || user?.plan?.startsWith('lab_')) && (
+                                            {(user?.plan === 'free' || (user?.plan?.startsWith('lab_') && user?.plan !== 'lab_unlimited')) && (
                                                 <Button onClick={buyAlbumCredit} variant="outline" className="w-full rounded-xl border-white/10 hover:bg-white/5 mt-2">
                                                     Add 1 Credit (₹99) <span className="ml-2 text-[10px] line-through opacity-50">₹199</span>
                                                 </Button>
