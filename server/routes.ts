@@ -392,6 +392,25 @@ export function registerRoutes(
         }
       }
 
+      // Check daily album creation limit (Max 3 per day, bypass for admins)
+      if (!isAdmin) {
+        const userAlbums = await storage.getAlbumsByUser(userId);
+        const startOfToday = new Date();
+        startOfToday.setHours(0, 0, 0, 0);
+
+        const albumsCreatedToday = userAlbums.filter(album => {
+          const createdDate = new Date(album.createdAt);
+          return createdDate >= startOfToday;
+        });
+
+        if (albumsCreatedToday.length >= 3) {
+          return res.status(429).json({
+            error: "Daily limit reached",
+            message: "To prevent abuse, you can only create up to 3 albums per day. Please try again tomorrow."
+          });
+        }
+      }
+
       // Check if user has enough credits (Bypass for admins and active subscribers)
       if (!isAdmin && !isSubscribed && (user.credits || 0) <= 0) {
         return res.status(403).json({

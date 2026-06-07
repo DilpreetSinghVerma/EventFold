@@ -28,6 +28,14 @@ export default function CreateAlbum() {
   const isAdmin = ["admin@eventfold.com", "dilpreetsinghverma@gmail.com"].includes(user?.email || "");
   const isLimitReached = !isAdmin && user?.plan === 'free' && (albums?.length || 0) >= 1 && (user?.credits || 0) <= 0;
 
+  const albumsCreatedToday = albums?.filter((a: any) => {
+    const createdDate = new Date(a.createdAt);
+    const startOfToday = new Date();
+    startOfToday.setHours(0, 0, 0, 0);
+    return createdDate >= startOfToday;
+  }) || [];
+  const isDailyLimitReached = !isAdmin && albumsCreatedToday.length >= 3;
+
   const [formData, setFormData] = useState<{
     title: string;
     date: string;
@@ -780,6 +788,50 @@ export default function CreateAlbum() {
                 </Button>
                 <Link href="/dashboard">
                   <Button variant="ghost" className="h-14 rounded-2xl text-white/40 hover:text-white font-bold glass-hover border-none">
+                    Return to Dashboard
+                  </Button>
+                </Link>
+              </div>
+
+              <div className="text-[10px] uppercase font-bold tracking-[0.4em] text-white/10 pt-4">
+                Cinematic Engine · Studio Edition
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Daily Limit Overlay */}
+      <AnimatePresence>
+        {!isLimitReached && isDailyLimitReached && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[100] bg-[#030303]/90 backdrop-blur-2xl flex items-center justify-center p-6"
+          >
+            <motion.div
+              initial={{ scale: 0.9, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              className="w-full max-w-lg glass p-12 rounded-[3.5rem] border-white/5 text-center space-y-8 relative overflow-hidden"
+            >
+              <div className="absolute inset-0 bg-primary/5 blur-[100px] -z-10" />
+              <div className="w-24 h-24 bg-primary/20 rounded-[2.5rem] flex items-center justify-center mx-auto text-primary shadow-2xl shadow-primary/20">
+                <Calendar className="w-12 h-12" />
+              </div>
+              <div className="space-y-4">
+                <h2 className="text-4xl font-display font-bold tracking-tight">Daily Limit Reached</h2>
+                <p className="text-white/40 leading-relaxed text-lg px-4">
+                  To prevent abuse, all accounts are limited to creating <span className="text-white font-bold">3 albums per day</span>.
+                </p>
+                <p className="text-white/40 leading-relaxed text-sm px-4">
+                  You have already created 3 albums today. Please try again tomorrow!
+                </p>
+              </div>
+
+              <div className="flex flex-col gap-4 pt-4">
+                <Link href="/dashboard">
+                  <Button className="h-16 w-full rounded-2xl bg-primary hover:bg-primary/90 text-white font-bold text-xl shadow-2xl shadow-primary/30 border-none">
                     Return to Dashboard
                   </Button>
                 </Link>
