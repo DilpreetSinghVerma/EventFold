@@ -470,8 +470,8 @@ export default function Admin() {
                               </SelectTrigger>
                               <SelectContent className="bg-[#0a0a0b] border-white/10 text-white">
                                 <SelectItem value="free">FREE</SelectItem>
-                                <SelectItem value="pro">PRO</SelectItem>
-                                <SelectItem value="elite">ELITE</SelectItem>
+                                <SelectItem value="pro">STUDIO MONTHLY</SelectItem>
+                                <SelectItem value="elite">STUDIO YEARLY</SelectItem>
                                 <SelectItem value="lab_monthly">LAB MONTHLY</SelectItem>
                                 <SelectItem value="lab_half_yearly">LAB 6-MONTH</SelectItem>
                                 <SelectItem value="lab_yearly">LAB YEARLY</SelectItem>
@@ -928,7 +928,7 @@ export default function Admin() {
                           <div>
                             <p className="text-[10px] font-bold uppercase tracking-widest text-primary/60">Active Subscribers</p>
                             <p className="text-3xl font-black text-primary">{proUsers.length + eliteUsers.length}</p>
-                            <p className="text-[9px] text-white/30 uppercase">{proUsers.length} Pro · {eliteUsers.length} Elite</p>
+                            <p className="text-[9px] text-white/30 uppercase">{proUsers.length} Studio Monthly · {eliteUsers.length} Studio Yearly</p>
                           </div>
                         </div>
                       </CardContent>
@@ -971,7 +971,7 @@ export default function Admin() {
                           </div>
                           <div className="space-y-2">
                             <div className="flex items-center justify-between text-sm">
-                              <span className="text-white/60 flex items-center gap-2"><span className="w-3 h-3 rounded-full bg-primary" /> Pro (₹199/mo)</span>
+                              <span className="text-white/60 flex items-center gap-2"><span className="w-3 h-3 rounded-full bg-primary" /> Studio Monthly (₹199/mo)</span>
                               <span className="font-bold">{proUsers.length} <span className="text-white/30 font-normal">users</span></span>
                             </div>
                             <div className="w-full h-4 bg-white/5 rounded-full overflow-hidden">
@@ -980,7 +980,7 @@ export default function Admin() {
                           </div>
                           <div className="space-y-2">
                             <div className="flex items-center justify-between text-sm">
-                              <span className="text-white/60 flex items-center gap-2"><span className="w-3 h-3 rounded-full bg-amber-500" /> Elite (₹899/yr)</span>
+                              <span className="text-white/60 flex items-center gap-2"><span className="w-3 h-3 rounded-full bg-amber-500" /> Studio Yearly (₹899/yr)</span>
                               <span className="font-bold">{eliteUsers.length} <span className="text-white/30 font-normal">users</span></span>
                             </div>
                             <div className="w-full h-4 bg-white/5 rounded-full overflow-hidden">
@@ -1002,7 +1002,7 @@ export default function Admin() {
                           <div className="p-5 rounded-2xl bg-white/5 border border-white/5 flex items-center justify-between">
                             <div>
                               <p className="text-sm font-bold">Subscription Revenue</p>
-                              <p className="text-[10px] text-white/30 uppercase tracking-widest">Pro + Elite plans</p>
+                              <p className="text-[10px] text-white/30 uppercase tracking-widest">Studio Monthly + Studio Yearly plans</p>
                             </div>
                             <p className="text-2xl font-black text-green-400">₹{estSubRevenue.toLocaleString()}</p>
                           </div>
@@ -1089,7 +1089,14 @@ export default function Admin() {
                                     ['lab_monthly', 'lab_half_yearly', 'lab_yearly', 'lab_unlimited'].includes(u.plan) ? 'bg-emerald-500/20 text-emerald-400 border-emerald-500/30' :
                                     'bg-white/5 text-white/30 border-white/10'
                                   }`}>
-                                    {u.plan}
+                                    {u.plan === 'pro' ? 'Studio Monthly' : 
+                                     u.plan === 'elite' ? 'Studio Yearly' : 
+                                     u.plan === 'free' ? 'Free' : 
+                                     u.plan === 'lab_monthly' ? 'Lab Monthly' : 
+                                     u.plan === 'lab_half_yearly' ? 'Lab 6-Month' : 
+                                     u.plan === 'lab_yearly' ? 'Lab Yearly' : 
+                                     u.plan === 'lab_unlimited' ? 'Lab Unlimited' : 
+                                     u.plan}
                                   </Badge>
                                   <p className="text-[9px] text-white/30 mt-1">{new Date(u.createdAt).toLocaleDateString()}</p>
                                 </div>
