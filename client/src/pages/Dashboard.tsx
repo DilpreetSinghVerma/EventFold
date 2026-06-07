@@ -170,6 +170,9 @@ export default function Dashboard() {
   const [copiedId, setCopiedId] = useState<string | null>(null);
   const isAdmin = user?.role === 'admin' || ["admin@eventfold.com", "dilpreetsinghverma@gmail.com"].includes(user?.email || "");
   const isLabPlan = ['lab_monthly', 'lab_half_yearly', 'lab_yearly', 'lab_unlimited'].includes(user?.plan || '') || isAdmin;
+  const modeFilteredAlbums = albums.filter(album => 
+    dashboardMode === 'lab' ? album.isLabAlbum === 1 : album.isLabAlbum !== 1
+  );
   const [activeCategory, setActiveCategory] = useState<string>('All');
   const [searchQuery, setSearchQuery] = useState('');
   const [studioNameInput, setStudioNameInput] = useState('');
@@ -809,7 +812,7 @@ export default function Dashboard() {
               Sign Out
             </Button>
 
-            <Link href={settings && settings.businessName && settings.businessName.trim() !== 'EventFold Studio' ? '/create' : '/settings'}>
+            <Link href={settings && settings.businessName && settings.businessName.trim() !== 'EventFold Studio' ? `/create?mode=${dashboardMode}` : '/settings'}>
               <Button
                 className={`rounded-xl px-4 md:px-6 shrink-0 h-9 text-[10px] uppercase font-bold ${
                   settings && settings.businessName && settings.businessName.trim() !== 'EventFold Studio'
@@ -993,15 +996,21 @@ export default function Dashboard() {
 
       <main className="max-w-7xl mx-auto px-4 md:px-8 pt-4">
         <div className="mb-12">
-          <h1 className="text-3xl md:text-4xl font-bold mb-2">My Collections</h1>
-          <p className="text-white/40">Manage and share your digital storytelling projects.</p>
+          <h1 className="text-3xl md:text-4xl font-bold mb-2">
+            {dashboardMode === 'lab' ? 'Lab Owner Suite' : 'My Collections'}
+          </h1>
+          <p className="text-white/40">
+            {dashboardMode === 'lab' 
+              ? 'Manage B2B digital client albums with custom branding.' 
+              : 'Manage and share your digital storytelling projects.'}
+          </p>
         </div>
 
         {/* Gallery Controls: Categories & Search */}
         <div className="flex flex-col md:flex-row gap-6 items-center justify-between mb-12 bg-white/[0.02] border border-white/5 p-4 rounded-3xl backdrop-blur-md">
            <div className="flex items-center gap-2 overflow-x-auto pb-2 md:pb-0 w-full md:w-auto no-scrollbar">
               <FolderHeart className="w-4 h-4 text-primary mr-2 shrink-0 hidden md:block" />
-              {['All', ...Array.from(new Set(albums.map(a => a.category).filter(Boolean)))].map(cat => (
+              {['All', ...Array.from(new Set(modeFilteredAlbums.map(a => a.category).filter(Boolean)))].map(cat => (
                  <Button
                     key={cat}
                     variant={activeCategory === cat ? 'default' : 'ghost'}
@@ -1028,27 +1037,35 @@ export default function Dashboard() {
            </div>
         </div>
 
-        {albums.length === 0 ? (
+        {modeFilteredAlbums.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-32 glass rounded-[3rem] border-dashed border-white/10">
             <div className="w-20 h-20 rounded-full bg-white/5 flex items-center justify-center mb-6">
               <LayoutGrid className="w-10 h-10 text-white/20" />
             </div>
-            <h3 className="text-2xl font-bold mb-2">Workspace Empty</h3>
-            <p className="text-white/40 mb-8 max-w-sm text-center">Your digital shelf is waiting for its first masterpiece. Start your journey now.</p>
-            <Link href="/create">
-              <Button size="lg" className="rounded-2xl px-10">Create First Album</Button>
+            <h3 className="text-2xl font-bold mb-2">
+              {dashboardMode === 'lab' ? 'Lab Suite Empty' : 'Workspace Empty'}
+            </h3>
+            <p className="text-white/40 mb-8 max-w-sm text-center">
+              {dashboardMode === 'lab' 
+                ? 'Your Lab Owner suite has no albums. Create a new album under the Lab tab to begin.' 
+                : 'Your digital shelf is waiting for its first masterpiece. Start your journey now.'}
+            </p>
+            <Link href={settings && settings.businessName && settings.businessName.trim() !== 'EventFold Studio' ? `/create?mode=${dashboardMode}` : '/settings'}>
+              <Button size="lg" className="rounded-2xl px-10">
+                {settings && settings.businessName && settings.businessName.trim() !== 'EventFold Studio' ? 'Create Album' : 'Configure Studio First'}
+              </Button>
             </Link>
           </div>
         ) : (
           <div className="grid grid-cols-2 lg:grid-cols-3 gap-4 md:gap-8 pb-32 w-full">
             <AnimatePresence>
-              {albums.filter(album => {
+              {modeFilteredAlbums.filter(album => {
                  const matchesCategory = activeCategory === 'All' || album.category === activeCategory;
                  const matchesSearch = album.title.toLowerCase().includes(searchQuery.toLowerCase()) || 
                                        (album.category?.toLowerCase() || '').includes(searchQuery.toLowerCase());
                  return matchesCategory && matchesSearch;
               }).map((album, i) => (
-                <AlbumCard key={album.id} album={album} index={i} />
+                 <AlbumCard key={album.id} album={album} index={i} />
               ))}
             </AnimatePresence>
           </div>

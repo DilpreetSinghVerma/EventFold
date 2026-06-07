@@ -466,9 +466,14 @@ export function registerRoutes(
       }
 
       const isLabPlan = ['lab_monthly', 'lab_half_yearly', 'lab_yearly', 'lab_unlimited'].includes(user.plan || '') || isAdmin;
+      const isCreatingLabAlbum = req.body.isLabAlbum === 1;
 
-      // Check daily album creation limit (Max 3 per day, bypass for admins and Lab Owners)
-      if (!isAdmin && !isLabPlan) {
+      if (isCreatingLabAlbum && !isLabPlan && !isAdmin) {
+        return res.status(403).json({ error: "Lab subscription required to create Lab albums" });
+      }
+
+      // Check daily album creation limit (Max 3 per day, bypass for admins and Lab albums)
+      if (!isAdmin && !isCreatingLabAlbum) {
         const userAlbums = await storage.getAlbumsByUser(userId);
         const startOfToday = new Date();
         startOfToday.setHours(0, 0, 0, 0);
@@ -488,13 +493,13 @@ export function registerRoutes(
 
       // Check if user has enough credits:
       // - Free/unsubscribed users: must have credits
-      // - Lab plan users: must have credits (Lab plans are credit-capped)
-      // - Admin/Pro/Elite: unlimited (bypass credit check)
-      const needsCredits = !isAdmin && (user.plan === 'free' || isLabPlan);
+      // - Lab album creation: must have credits (Lab plans are credit-capped)
+      // - Admin/Pro/Elite/Personal creations: unlimited (bypass credit check)
+      const needsCredits = !isAdmin && (user.plan === 'free' || isCreatingLabAlbum);
       if (needsCredits && (user.credits || 0) <= 0) {
         return res.status(403).json({
           error: "No credits remaining",
-          message: isLabPlan
+          message: isCreatingLabAlbum
             ? "Your Lab subscription has run out of credits. Please renew or purchase extra credits to continue."
             : "Please purchase an album credit or subscribe to a plan to continue."
         });
@@ -514,7 +519,7 @@ export function registerRoutes(
         ...req.body,
         userId: userId,
         expiresAt: expiresAt,
-        isLabAlbum: isLabPlan ? 1 : 0
+        isLabAlbum: isCreatingLabAlbum ? 1 : 0
       });
 
       // Deduct credit if required (for Free/unsubscribed users or Lab Owners)

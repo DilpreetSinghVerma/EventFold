@@ -27,9 +27,13 @@ export default function CreateAlbum() {
 
   const isAdmin = ["admin@eventfold.com", "dilpreetsinghverma@gmail.com"].includes(user?.email || "");
   const isLabPlan = ['lab_monthly', 'lab_half_yearly', 'lab_yearly', 'lab_unlimited'].includes(user?.plan || '') || isAdmin;
+  
+  const searchParams = new URLSearchParams(window.location.search);
+  const isLabMode = searchParams.get('mode') === 'lab';
+
   const isLimitReached = !isAdmin && (
     (user?.plan === 'free' && (albums?.length || 0) >= 1 && (user?.credits || 0) <= 0) ||
-    (isLabPlan && (user?.credits || 0) <= 0)
+    (isLabMode && (user?.credits || 0) <= 0)
   );
 
   const albumsCreatedToday = albums?.filter((a: any) => {
@@ -38,7 +42,7 @@ export default function CreateAlbum() {
     startOfToday.setHours(0, 0, 0, 0);
     return createdDate >= startOfToday;
   }) || [];
-  const isDailyLimitReached = !isAdmin && !isLabPlan && albumsCreatedToday.length >= 3;
+  const isDailyLimitReached = !isAdmin && !isLabMode && albumsCreatedToday.length >= 3;
 
   const [formData, setFormData] = useState<{
     title: string;
@@ -177,6 +181,7 @@ export default function CreateAlbum() {
             date: formData.date,
             theme: formData.theme,
             password: formData.password || null,
+            isLabAlbum: isLabMode ? 1 : 0
           }),
         });
       } catch (e: any) {
@@ -778,10 +783,10 @@ export default function CreateAlbum() {
               </div>
               <div className="space-y-4">
                 <h2 className="text-4xl font-display font-bold tracking-tight">
-                  {isLabPlan ? "Out of Credits" : "Project Limit Reached"}
+                  {isLabMode ? "Out of Credits" : "Project Limit Reached"}
                 </h2>
                 <p className="text-white/40 leading-relaxed text-lg px-4">
-                  {isLabPlan ? (
+                  {isLabMode ? (
                     <>Your Lab Owner plan has run out of credits. Purchase additional credits to continue creating albums.</>
                   ) : (
                     <>Free users are limited to <span className="text-white font-bold">1 trial project</span>. Upgrade to a paid plan to unlock unlimited albums and custom branding.</>
@@ -790,7 +795,7 @@ export default function CreateAlbum() {
               </div>
 
               <div className="flex flex-col gap-4 pt-4">
-                {isLabPlan ? (
+                {isLabMode ? (
                   <Button
                     onClick={() => buyAlbumCredit()}
                     className="h-16 rounded-2xl bg-primary hover:bg-primary/90 text-white font-bold text-xl shadow-2xl shadow-primary/30 gap-3 border-none animate-pulse"
