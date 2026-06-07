@@ -465,12 +465,24 @@ export const Flipbook = forwardRef(({
                               muted
                               playsInline
                               preload="metadata"
+                              onLoadedData={(e) => {
+                                (e.currentTarget as HTMLVideoElement).style.opacity = '1';
+                              }}
+                              onCanPlay={(e) => {
+                                (e.currentTarget as HTMLVideoElement).style.opacity = '1';
+                              }}
                               ref={(el) => {
                                 if (!el) return;
                                 if (isCurrentSpread) {
-                                  if (el.paused && el.src) el.play().catch(() => {});
+                                  if (el.paused && el.src) {
+                                    el.play().catch(() => {});
+                                    el.style.opacity = '1';
+                                  }
                                 } else {
                                   if (!el.paused) el.pause();
+                                }
+                                if (!el.src || el.src === '') {
+                                  el.style.opacity = '0';
                                 }
                               }}
                               style={{
@@ -483,7 +495,9 @@ export const Flipbook = forwardRef(({
                                 position: 'absolute',
                                 top: 0,
                                 left: 0,
-                                zIndex: 2
+                                zIndex: 2,
+                                opacity: 0,
+                                transition: 'opacity 0.4s ease-in-out'
                               }}
                             />
                           )}
@@ -655,12 +669,24 @@ export const Flipbook = forwardRef(({
                               muted 
                               playsInline
                               preload="metadata"
+                              onLoadedData={(e) => {
+                                (e.currentTarget as HTMLVideoElement).style.opacity = '1';
+                              }}
+                              onCanPlay={(e) => {
+                                (e.currentTarget as HTMLVideoElement).style.opacity = '1';
+                              }}
                               ref={(el) => {
                                 if (!el) return;
                                 if (isCurrentSpread) {
-                                  if (el.paused && el.src) el.play().catch(() => {});
+                                  if (el.paused && el.src) {
+                                    el.play().catch(() => {});
+                                    el.style.opacity = '1';
+                                  }
                                 } else {
                                   if (!el.paused) el.pause();
+                                }
+                                if (!el.src || el.src === '') {
+                                  el.style.opacity = '0';
                                 }
                               }}
                               style={{ 
@@ -673,7 +699,9 @@ export const Flipbook = forwardRef(({
                                 position: 'absolute',
                                 top: 0,
                                 left: 0,
-                                zIndex: 2
+                                zIndex: 2,
+                                opacity: 0,
+                                transition: 'opacity 0.4s ease-in-out'
                               }} 
                             />
                           )}
