@@ -463,7 +463,7 @@ export default function Home() {
                         </div>
                       </div>
                       <div className="space-y-3">
-                        <div className="flex items-center gap-2 text-xs text-white/60"><CheckCircle2 className="w-4 h-4 text-primary" /> Everything in Monthly</div>
+                        <div className="flex items-center gap-2 text-xs text-white/60"><CheckCircle2 className="w-4 h-4 text-primary" /> Everything in Monthly (Max 3/day)</div>
                         <div className="flex items-center gap-2 text-xs text-white/60"><CheckCircle2 className="w-4 h-4 text-primary" /> Early-Access to New Themes</div>
                         <div className="flex items-center gap-2 text-xs text-white/60"><CheckCircle2 className="w-4 h-4 text-primary" /> Priority Customer Support</div>
                         <div className="flex items-center gap-2 text-xs text-white/60"><CheckCircle2 className="w-4 h-4 text-primary" /> White-Labeling Ready</div>
