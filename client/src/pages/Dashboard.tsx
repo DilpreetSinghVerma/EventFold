@@ -21,6 +21,8 @@ import { useAuth } from '@/lib/auth';
 import { ContactModal } from '@/components/ContactModal';
 
 function ClientBrandingModalContent({ album, onSaved }: { album: any, onSaved: () => void }) {
+  const { user } = useAuth();
+  const isAdmin = user?.role === 'admin' || ["admin@eventfold.com", "dilpreetsinghverma@gmail.com"].includes(user?.email || "");
   const [name, setName] = useState(album.customBusinessName || '');
   const [whatsApp, setWhatsApp] = useState(album.customContactWhatsApp || '');
   const [logo, setLogo] = useState(album.customBusinessLogo || '');
@@ -89,6 +91,16 @@ function ClientBrandingModalContent({ album, onSaved }: { album: any, onSaved: (
           Configure branding for this album (Overrides your studio settings)
         </DialogDescription>
       </DialogHeader>
+
+      {album.isLabAlbum !== 1 && !isAdmin && (
+        <div className="p-4 rounded-2xl bg-amber-500/10 border border-amber-500/20 text-amber-400 text-xs flex items-start gap-3">
+          <AlertTriangle className="w-5 h-5 shrink-0 mt-0.5 animate-pulse" />
+          <div>
+            <p className="font-bold mb-1">Personal Album Upgrade</p>
+            <p className="text-white/60 leading-relaxed">This album was created as a personal album. Saving branding changes will consume **1 Lab credit** to upgrade it to a Lab album.</p>
+          </div>
+        </div>
+      )}
 
       <div className="space-y-4">
         <div className="space-y-2">

@@ -190,13 +190,22 @@ export function registerRoutes(
         return res.status(403).json({ error: "Lab Owner plan required to set custom album branding" });
       }
 
+      // Closure of loophole: Deduct credit and upgrade the album if it is a personal album and user is a Lab owner
+      if (album.isLabAlbum !== 1 && !isAdmin) {
+        if ((user?.credits || 0) <= 0) {
+          return res.status(403).json({ error: "No credits remaining to upgrade this album to a Lab album" });
+        }
+        await storage.deductCredit(userId);
+        await storage.updateAlbum(album.id, { isLabAlbum: 1 });
+      }
+
       const logoUrl = await uploadBufferToR2(
         req.file.buffer,
         "eventfold_brand",
         req.file.mimetype
       );
 
-      const updatedAlbum = await storage.updateAlbum(album.id, { customBusinessLogo: logoUrl });
+      const updatedAlbum = await storage.updateAlbum(album.id, { customBusinessLogo: logoUrl, isLabAlbum: 1 });
       res.json({ logoUrl, album: updatedAlbum });
     } catch (e: any) {
       console.error("Client logo upload failed:", e);
@@ -504,7 +513,8 @@ export function registerRoutes(
       const data = insertAlbumSchema.parse({
         ...req.body,
         userId: userId,
-        expiresAt: expiresAt
+        expiresAt: expiresAt,
+        isLabAlbum: isLabPlan ? 1 : 0
       });
 
       // Deduct credit if required (for Free/unsubscribed users or Lab Owners)
@@ -907,6 +917,35 @@ export function registerRoutes(
       if (!album) return res.status(404).json({ error: "Album not found" });
       if (album.userId !== (req.user as any).id && (req.user as any).role !== 'admin') {
         return res.status(403).json({ error: "Forbidden" });
+      }
+
+      const isAdmin = (req.user as any).role === 'admin' || ["admin@eventfold.com", "dilpreetsinghverma@gmail.com"].includes((req.user as any).email);
+
+      // Loophole closure: If upgrading a personal album to a Lab Album, deduct 1 credit.
+      const isSettingBranding = 
+        req.body.customBusinessName !== undefined || 
+        req.body.customBusinessLogo !== undefined || 
+        req.body.customContactWhatsApp !== undefined;
+
+      if (isSettingBranding && album.isLabAlbum !== 1 && !isAdmin) {
+        const user = await storage.getUser((req.user as any).id);
+        const isLabPlan = ['lab_monthly', 'lab_half_yearly', 'lab_yearly', 'lab_unlimited'].includes(user?.plan || '');
+        if (!isLabPlan) {
+          return res.status(403).json({ 
+            error: "Lab subscription required", 
+            message: "To apply custom branding, you need a Lab subscription." 
+          });
+        }
+        
+        if ((user?.credits || 0) <= 0) {
+          return res.status(403).json({ 
+            error: "No credits remaining", 
+            message: "You need 1 credit to upgrade this personal album to a Lab album." 
+          });
+        }
+        
+        await storage.deductCredit(user.id);
+        req.body.isLabAlbum = 1;
       }
 
       const updatedAlbum = await storage.updateAlbum(req.params.id, req.body);
