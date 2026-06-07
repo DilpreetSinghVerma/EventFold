@@ -48,7 +48,7 @@ function ImpersonationBanner() {
   };
 
   return (
-    <div className="fixed top-0 left-0 w-full z-[60] bg-red-600 text-white px-4 py-2 flex items-center justify-between shadow-lg font-medium text-sm">
+    <div className="sticky top-0 left-0 w-full z-[999] bg-red-600 text-white px-4 py-2 flex items-center justify-between shadow-lg font-medium text-sm">
       <div className="flex items-center gap-2">
         <AlertTriangle className="w-4 h-4 animate-pulse" />
         <span>You are currently impersonating <strong>{user.name || user.email}</strong>. Any actions you take will be on their behalf.</span>
