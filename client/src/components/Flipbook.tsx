@@ -364,6 +364,7 @@ export const Flipbook = forwardRef(({
             >
               {pages.map((page, index) => {
                 const isMobileLayout = window.innerWidth < 1024;
+                const isCurrentSpread = Math.abs(index - currentPage) <= 2;
                 // react-pageflip's layout engine crashes if we hot-swap "hard" pages using windowing.
                 // Mobile GPU jitter is already fixed by removing the CSS transitions.
 
@@ -456,21 +457,27 @@ export const Flipbook = forwardRef(({
                             }}
                           />
                           {page.video && (
-                            <motion.video
-                              src={page.video}
-                              autoPlay
+                            <video
+                              src={isCurrentSpread ? page.video : undefined}
+                              autoPlay={isCurrentSpread}
                               loop
                               muted
                               playsInline
-                              animate={driftAnimate}
-                              transition={{ duration: 10, repeat: Infinity, repeatType: "reverse", ease: "easeInOut" }}
-                              preload="auto"
+                              preload="metadata"
+                              ref={(el) => {
+                                if (!el) return;
+                                if (isCurrentSpread) {
+                                  if (el.paused && el.src) el.play().catch(() => {});
+                                } else {
+                                  if (!el.paused) el.pause();
+                                }
+                              }}
                               style={{
                                 width: '100%',
                                 height: '100%',
                                 objectFit: 'cover',
                                 objectPosition: isLeftHalf ? 'left' : 'right',
-                                display: 'block',
+                                display: isCurrentSpread ? 'block' : 'none',
                                 backgroundColor: 'transparent',
                                 position: 'absolute',
                                 top: 0,
