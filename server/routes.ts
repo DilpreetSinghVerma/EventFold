@@ -371,6 +371,23 @@ export function registerRoutes(
 
       const isSubscribed = user.plan !== 'free' && user.subscriptionExpiresAt && new Date(user.subscriptionExpiresAt) > new Date();
 
+      // Studio name is required before any album can be created.
+      // This ensures the ownership watermark in the shared viewer always shows
+      // a real studio identity — making subscription reselling immediately obvious.
+      if (!isAdmin) {
+        const studioSettings = await storage.getSettings(userId);
+        const hasStudioName = studioSettings?.businessName &&
+          studioSettings.businessName.trim() !== '' &&
+          studioSettings.businessName.trim() !== 'EventFold Studio';
+        if (!hasStudioName) {
+          return res.status(403).json({
+            error: "Studio name required",
+            message: "Please set your studio name in Settings before creating an album.",
+            code: "STUDIO_NAME_REQUIRED"
+          });
+        }
+      }
+
       // Check if user has enough credits (Bypass for admins and active subscribers)
       if (!isAdmin && !isSubscribed && (user.credits || 0) <= 0) {
         return res.status(403).json({

@@ -429,8 +429,10 @@ export default function Viewer() {
     <motion.div
       initial={false}
       animate={{
-        y: uiVisible ? 0 : -120,
-        opacity: uiVisible ? 1 : 0
+        // On shared views: never fully hide — slide up only slightly and keep min opacity
+        // This ensures the studio identity stays visible even when UI is toggled off
+        y: uiVisible ? 0 : (isShared ? -60 : -120),
+        opacity: uiVisible ? 1 : (isShared ? 0.6 : 0)
       }}
       className={`absolute top-0 left-0 right-0 p-3 md:p-6 z-[60] flex items-center justify-between pointer-events-none transition-all duration-500`}
     >
@@ -609,6 +611,23 @@ export default function Viewer() {
 
       {/* Floating Brand Header (Only in shared view) */}
       {isShared && <BrandingHeader />}
+
+      {/* ── Ownership Watermark ────────────────────────────────────────────────
+           Always visible on shared views. Cannot be toggled off from Settings.
+           Purpose: Makes it immediately obvious to clients if their album was
+           uploaded from a different studio's account, deterring link reselling.
+      ─────────────────────────────────────────────────────────────────────── */}
+      {isShared && (
+        <div className="fixed bottom-3 left-1/2 -translate-x-1/2 z-[200] pointer-events-none select-none">
+          <div className="flex items-center gap-1.5 bg-black/60 backdrop-blur-md px-3.5 py-1.5 rounded-full border border-white/10 shadow-xl">
+            <div className="w-1 h-1 rounded-full bg-primary/70 animate-pulse" />
+            <span className="text-[9px] text-white/40 font-mono tracking-widest uppercase">Album by</span>
+            <span className="text-[9px] text-white/80 font-bold tracking-widest uppercase">
+              {settings?.businessName || 'EventFold Studio'}
+            </span>
+          </div>
+        </div>
+      )}
 
       {/* Header - Glassmorphism */}
       {!isShared && (

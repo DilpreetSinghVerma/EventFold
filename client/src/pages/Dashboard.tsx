@@ -2,7 +2,8 @@ import { Link } from 'wouter';
 import { Card, CardContent, CardFooter } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Plus, QrCode, Eye, Trash2, LayoutGrid, Calendar, LogOut, Settings as SettingsIcon, Lock, Loader2, Sparkles, User as UserIcon, Crown, Copy, Download, Share2, Check, ShieldAlert, BarChart3, FolderHeart, ChevronDown, Clock, TrendingUp } from 'lucide-react';
+import { Plus, QrCode, Eye, Trash2, LayoutGrid, Calendar, LogOut, Settings as SettingsIcon, Lock, Loader2, Sparkles, User as UserIcon, Crown, Copy, Download, Share2, Check, ShieldAlert, BarChart3, FolderHeart, ChevronDown, Clock, TrendingUp, Building2, AlertTriangle } from 'lucide-react';
+
 import { QRCodeSVG } from 'qrcode.react';
 import { Badge } from '@/components/ui/badge';
 import { useState, useEffect } from 'react';
@@ -29,6 +30,9 @@ export default function Dashboard() {
   const isAdmin = user?.role === 'admin' || ["admin@eventfold.com", "dilpreetsinghverma@gmail.com"].includes(user?.email || "");
   const [activeCategory, setActiveCategory] = useState<string>('All');
   const [searchQuery, setSearchQuery] = useState('');
+  const [studioNameInput, setStudioNameInput] = useState('');
+  const [savingStudioName, setSavingStudioName] = useState(false);
+  const [studioNameSaved, setStudioNameSaved] = useState(false);
 
   // Parse URL for success/cancel params
   const { search } = typeof window !== 'undefined' ? window.location : { search: '' };
@@ -65,7 +69,26 @@ export default function Dashboard() {
       const res = await fetch('/api/settings');
       const data = await res.json();
       setSettings(data);
+      setStudioNameInput(data?.businessName || '');
     } catch (e) { }
+  };
+
+  const saveStudioName = async () => {
+    if (!studioNameInput.trim()) return;
+    setSavingStudioName(true);
+    try {
+      const res = await fetch('/api/settings', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ businessName: studioNameInput.trim() }),
+      });
+      if (res.ok) {
+        setSettings((prev: any) => ({ ...prev, businessName: studioNameInput.trim() }));
+        setStudioNameSaved(true);
+        setTimeout(() => setStudioNameSaved(false), 2500);
+      }
+    } catch (e) {}
+    finally { setSavingStudioName(false); }
   };
 
   useEffect(() => {
@@ -615,9 +638,19 @@ export default function Dashboard() {
               Sign Out
             </Button>
 
-            <Link href="/create">
-              <Button className="rounded-xl px-4 md:px-6 bg-primary hover:bg-primary/90 text-white shadow-lg shadow-primary/20 shrink-0 h-9 text-[10px] uppercase font-bold">
-                <Plus className="w-3.5 h-3.5 mr-2" /> New Album
+            <Link href={settings && settings.businessName && settings.businessName.trim() !== 'EventFold Studio' ? '/create' : '/settings'}>
+              <Button
+                className={`rounded-xl px-4 md:px-6 shrink-0 h-9 text-[10px] uppercase font-bold ${
+                  settings && settings.businessName && settings.businessName.trim() !== 'EventFold Studio'
+                    ? 'bg-primary hover:bg-primary/90 text-white shadow-lg shadow-primary/20'
+                    : 'bg-amber-500/20 hover:bg-amber-500/30 text-amber-400 border border-amber-500/30'
+                }`}
+              >
+                {settings && settings.businessName && settings.businessName.trim() !== 'EventFold Studio' ? (
+                  <><Plus className="w-3.5 h-3.5 mr-2" /> New Album</>
+                ) : (
+                  <><Building2 className="w-3.5 h-3.5 mr-2" /> Set Studio Name First</>
+                )}
               </Button>
             </Link>
           </div>
@@ -632,6 +665,47 @@ export default function Dashboard() {
           </div>
         </div>
       )}
+
+      {/* ── Studio Name Quick-Set Banner ─────────────────────────────────────────
+           Inline editor — no need to navigate to Settings.
+      ──────────────────────────────────────────────────────────────────────── */}
+      {!isAdmin && settings !== null && (!settings?.businessName || settings.businessName.trim() === 'EventFold Studio') && (
+        <div className="max-w-7xl mx-auto px-4 md:px-8 pt-4">
+          <motion.div
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="relative overflow-hidden rounded-2xl border border-amber-500/30 bg-amber-500/10 backdrop-blur-md p-4 md:p-6"
+          >
+            <div className="absolute inset-0 bg-amber-500/5 blur-2xl pointer-events-none" />
+            <div className="relative flex flex-col gap-3">
+              <div className="flex items-center gap-2">
+                <Building2 className="w-4 h-4 text-amber-400 shrink-0" />
+                <p className="font-bold text-amber-300 text-sm">Enter your studio name to start creating albums</p>
+              </div>
+              <div className="flex gap-2">
+                <input
+                  id="dashboard-studio-name"
+                  type="text"
+                  autoFocus
+                  value={studioNameInput}
+                  onChange={e => setStudioNameInput(e.target.value)}
+                  onKeyDown={e => e.key === 'Enter' && saveStudioName()}
+                  placeholder="e.g. Royale Photography Studio"
+                  className="flex-1 h-11 rounded-xl bg-black/40 border border-amber-500/40 text-white placeholder:text-white/20 px-4 text-sm font-medium focus:outline-none focus:border-amber-400/70 transition-colors"
+                />
+                <Button
+                  onClick={saveStudioName}
+                  disabled={savingStudioName || !studioNameInput.trim()}
+                  className="shrink-0 h-11 px-5 rounded-xl bg-amber-500 hover:bg-amber-400 text-black font-bold text-xs shadow-lg shadow-amber-500/20 disabled:opacity-40"
+                >
+                  {savingStudioName ? <Loader2 className="w-4 h-4 animate-spin" /> : studioNameSaved ? <Check className="w-4 h-4" /> : 'Save'}
+                </Button>
+              </div>
+            </div>
+          </motion.div>
+        </div>
+      )}
+
 
       <header className="max-w-7xl mx-auto px-4 md:px-8 pt-6 pb-2">
         <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-8">
