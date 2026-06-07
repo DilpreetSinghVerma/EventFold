@@ -33,6 +33,7 @@ export default function Dashboard() {
   const [studioNameInput, setStudioNameInput] = useState('');
   const [savingStudioName, setSavingStudioName] = useState(false);
   const [studioNameSaved, setStudioNameSaved] = useState(false);
+  const [studioNameError, setStudioNameError] = useState('');
 
   // Parse URL for success/cancel params
   const { search } = typeof window !== 'undefined' ? window.location : { search: '' };
@@ -73,17 +74,31 @@ export default function Dashboard() {
     } catch (e) { }
   };
 
+  // Validates studio name — same rule enforced server-side too.
+  // Must be 4+ chars and contain at least 2 real letters.
+  // Blocks: ".", "..", "xyz", "123", "ab", etc.
+  const isValidStudioName = (name: string) => {
+    const t = name.trim();
+    const letters = (t.match(/[a-zA-Z]/g) || []).length;
+    return t.length >= 4 && letters >= 2 && t !== 'EventFold Studio';
+  };
+
   const saveStudioName = async () => {
-    if (!studioNameInput.trim()) return;
+    const name = studioNameInput.trim();
+    if (!isValidStudioName(name)) {
+      setStudioNameError('Enter a real studio name — at least 4 characters with letters.');
+      return;
+    }
+    setStudioNameError('');
     setSavingStudioName(true);
     try {
       const res = await fetch('/api/settings', {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ businessName: studioNameInput.trim() }),
+        body: JSON.stringify({ businessName: name }),
       });
       if (res.ok) {
-        setSettings((prev: any) => ({ ...prev, businessName: studioNameInput.trim() }));
+        setSettings((prev: any) => ({ ...prev, businessName: name }));
         setStudioNameSaved(true);
         setTimeout(() => setStudioNameSaved(false), 2500);
       }
@@ -688,10 +703,10 @@ export default function Dashboard() {
                   type="text"
                   autoFocus
                   value={studioNameInput}
-                  onChange={e => setStudioNameInput(e.target.value)}
+                  onChange={e => { setStudioNameInput(e.target.value); setStudioNameError(''); }}
                   onKeyDown={e => e.key === 'Enter' && saveStudioName()}
                   placeholder="e.g. Royale Photography Studio"
-                  className="flex-1 h-11 rounded-xl bg-black/40 border border-amber-500/40 text-white placeholder:text-white/20 px-4 text-sm font-medium focus:outline-none focus:border-amber-400/70 transition-colors"
+                  className={`flex-1 h-11 rounded-xl bg-black/40 text-white placeholder:text-white/20 px-4 text-sm font-medium focus:outline-none transition-colors ${studioNameError ? 'border border-red-500/60 focus:border-red-400' : 'border border-amber-500/40 focus:border-amber-400/70'}`}
                 />
                 <Button
                   onClick={saveStudioName}
@@ -701,6 +716,12 @@ export default function Dashboard() {
                   {savingStudioName ? <Loader2 className="w-4 h-4 animate-spin" /> : studioNameSaved ? <Check className="w-4 h-4" /> : 'Save'}
                 </Button>
               </div>
+              {studioNameError && (
+                <p className="text-xs text-red-400 flex items-center gap-1.5 mt-1">
+                  <AlertTriangle className="w-3 h-3 shrink-0" />
+                  {studioNameError}
+                </p>
+              )}
             </div>
           </motion.div>
         </div>

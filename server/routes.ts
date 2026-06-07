@@ -372,17 +372,21 @@ export function registerRoutes(
       const isSubscribed = user.plan !== 'free' && user.subscriptionExpiresAt && new Date(user.subscriptionExpiresAt) > new Date();
 
       // Studio name is required before any album can be created.
-      // This ensures the ownership watermark in the shared viewer always shows
-      // a real studio identity — making subscription reselling immediately obvious.
+      // Validated: must be 4+ chars and contain at least 2 real letters.
+      // Prevents bypassing with ".", "xyz", "123", or other junk inputs.
       if (!isAdmin) {
         const studioSettings = await storage.getSettings(userId);
-        const hasStudioName = studioSettings?.businessName &&
-          studioSettings.businessName.trim() !== '' &&
-          studioSettings.businessName.trim() !== 'EventFold Studio';
+        const rawName = studioSettings?.businessName?.trim() ?? '';
+        const letterCount = (rawName.match(/[a-zA-Z]/g) || []).length;
+        const hasStudioName =
+          rawName !== '' &&
+          rawName !== 'EventFold Studio' &&
+          rawName.length >= 4 &&
+          letterCount >= 2;
         if (!hasStudioName) {
           return res.status(403).json({
             error: "Studio name required",
-            message: "Please set your studio name in Settings before creating an album.",
+            message: "Please set a valid studio name (at least 4 characters with real letters) before creating an album.",
             code: "STUDIO_NAME_REQUIRED"
           });
         }
