@@ -21,6 +21,7 @@ export default function Home() {
   const { user, startRazorpayCheckout, buyAlbumCredit } = useAuth();
   const { t } = useI18n();
   const [, setLocation] = useLocation();
+  const [pricingTab, setPricingTab] = useState<'studio' | 'lab'>('studio');
 
   useEffect(() => {
     document.title = "EventFold Studio | Elite 3D Digital Albums for Photographers";
@@ -375,86 +376,171 @@ export default function Home() {
                 </p>
               </div>
 
-              <div className="grid md:grid-cols-3 gap-8 items-start mb-32">
-                {/* Pay Per Album (Mid-Tier) */}
-                <div className="glass p-8 rounded-[2.5rem] border-white/5 relative overflow-hidden group hover:border-primary/20 transition-all duration-500">
-                  <div className="space-y-6">
-                    <span className="text-[10px] font-bold uppercase tracking-[0.3em] text-white/40">Studio Credit</span>
-                    <h3 className="text-2xl font-bold">Single Project</h3>
-                    <div className="flex items-baseline gap-2">
-                      <span className="text-4xl font-display font-bold text-white">₹99</span>
-                      <span className="text-xl text-white/20 line-through">₹199</span>
-                      <span className="text-sm font-medium text-white/20">/ album</span>
-                    </div>
-                    <div className="space-y-3">
-                      <div className="flex items-center gap-2 text-xs text-white/60"><CheckCircle2 className="w-4 h-4 text-primary" /> Full 3D Cinematic Engine</div>
-                      <div className="flex items-center gap-2 text-xs text-white/60"><CheckCircle2 className="w-4 h-4 text-primary" /> Theme-Specific Soundtracks</div>
-                      <div className="flex items-center gap-2 text-xs text-white/60"><CheckCircle2 className="w-4 h-4 text-primary" /> Password Protection</div>
-                      <div className="flex items-center gap-2 text-xs text-white/60"><CheckCircle2 className="w-4 h-4 text-primary" /> Secure Lifetime Hosting</div>
-                    </div>
-                    <Button onClick={() => user ? buyAlbumCredit() : setLocation('/login')} className="w-full h-12 rounded-xl bg-white/5 hover:bg-white/10 text-white border border-white/10 font-bold">
-                      Purchase 1 Credit
-                    </Button>
-                  </div>
-                </div>
-
-                {/* Pro Monthly */}
-                <div className="p-8 rounded-[2.5rem] bg-gradient-to-b from-primary/20 to-indigo-600/10 border border-primary/40 relative shadow-2xl overflow-hidden scale-105 z-10">
-                  <div className="absolute top-4 left-1/2 -translate-x-1/2 px-4 py-1 bg-primary rounded-full text-[10px] font-bold uppercase tracking-widest shadow-xl">Most Popular</div>
-                  <div className="space-y-6 pt-6">
-                    <span className="text-[10px] font-bold uppercase tracking-[0.3em] text-primary">Elite Studio</span>
-                    <h3 className="text-2xl font-bold">Unlimited Events</h3>
-                    <div className="flex flex-col mb-4">
-                      <div className="flex items-baseline gap-2">
-                        <span className="text-4xl font-display font-bold text-white">₹199</span>
-                        <span className="text-sm font-medium text-white/40 line-through">₹499</span>
-                        <span className="text-sm font-medium text-white/20">/mo</span>
-                      </div>
-                      <div className="flex flex-col gap-0.5 mt-1">
-                        <span className="text-[10px] text-primary font-black uppercase tracking-widest">Only ~₹20 / project</span>
-                        <span className="text-[9px] text-white/40 font-bold uppercase">Save 60% vs. Single Credit</span>
-                      </div>
-                    </div>
-                    <div className="space-y-3">
-                      <div className="flex items-center gap-2 text-xs text-white/80"><CheckCircle2 className="w-4 h-4 text-primary" /> **Unlimited** 3D Projects</div>
-                      <div className="flex items-center gap-2 text-xs text-white/80"><CheckCircle2 className="w-4 h-4 text-primary" /> Custom Business Logo</div>
-                      <div className="flex items-center gap-2 text-xs text-white/80"><CheckCircle2 className="w-4 h-4 text-primary" /> Direct WhatsApp Booking</div>
-                      <div className="flex items-center gap-2 text-xs text-white/80"><CheckCircle2 className="w-4 h-4 text-primary" /> Lifetime Cloud Archiving</div>
-                    </div>
-                    <Button onClick={() => handleSubscribe('monthly')} className="w-full h-14 rounded-xl bg-primary hover:bg-primary/90 text-white font-bold shadow-lg shadow-primary/20">
-                      Select Studio Monthly
-                    </Button>
-                  </div>
-                </div>
-
-                {/* Yearly */}
-                <div className="glass p-8 rounded-[2.5rem] border-white/5 relative overflow-hidden group hover:border-primary/20 transition-all duration-500">
-                  <div className="space-y-6">
-                    <span className="text-[10px] font-bold uppercase tracking-[0.3em] text-white/40">Labs Special</span>
-                    <h3 className="text-2xl font-bold">Elite Labs</h3>
-                    <div className="flex flex-col mb-4">
-                      <div className="flex items-baseline gap-2">
-                        <span className="text-4xl font-display font-bold text-white">₹899</span>
-                        <span className="text-sm font-medium text-white/40 line-through">₹3,999</span>
-                        <span className="text-sm font-medium text-white/20">/yr</span>
-                      </div>
-                      <div className="flex flex-col gap-0.5 mt-1">
-                        <span className="text-[10px] text-primary font-black uppercase tracking-widest">Only ~₹7 / project</span>
-                        <span className="text-[9px] text-white/40 font-bold uppercase">Save 85% vs. Single Credit</span>
-                      </div>
-                    </div>
-                    <div className="space-y-3">
-                      <div className="flex items-center gap-2 text-xs text-white/60"><CheckCircle2 className="w-4 h-4 text-primary" /> Everything in Monthly</div>
-                      <div className="flex items-center gap-2 text-xs text-white/60"><CheckCircle2 className="w-4 h-4 text-primary" /> Early-Access to New Themes</div>
-                      <div className="flex items-center gap-2 text-xs text-white/60"><CheckCircle2 className="w-4 h-4 text-primary" /> Priority Customer Support</div>
-                      <div className="flex items-center gap-2 text-xs text-white/60"><CheckCircle2 className="w-4 h-4 text-primary" /> White-Labeling Ready</div>
-                    </div>
-                    <Button onClick={() => handleSubscribe('yearly')} className="w-full h-12 rounded-xl bg-white/5 hover:bg-white/10 text-white border border-white/10 font-bold">
-                      Get Elite Yearly
-                    </Button>
-                  </div>
+              <div className="flex justify-center mb-16">
+                <div className="flex bg-white/5 rounded-2xl p-1 border border-white/5 shadow-inner">
+                  <button
+                    onClick={() => setPricingTab('studio')}
+                    className={`rounded-xl px-6 py-2.5 text-xs font-black uppercase tracking-widest transition-all ${pricingTab === 'studio' ? 'bg-primary text-white shadow-lg shadow-primary/20' : 'text-white/40 hover:text-white'}`}
+                  >
+                    Studio Version
+                  </button>
+                  <button
+                    onClick={() => setPricingTab('lab')}
+                    className={`rounded-xl px-6 py-2.5 text-xs font-black uppercase tracking-widest transition-all ${pricingTab === 'lab' ? 'bg-gradient-to-r from-emerald-500 to-teal-600 text-white shadow-lg shadow-emerald-500/20' : 'text-white/40 hover:text-white'}`}
+                  >
+                    Lab Version
+                  </button>
                 </div>
               </div>
+
+              {pricingTab === 'studio' ? (
+                <div className="grid md:grid-cols-3 gap-8 items-start mb-32">
+                  {/* Pay Per Album (Mid-Tier) */}
+                  <div className="glass p-8 rounded-[2.5rem] border-white/5 relative overflow-hidden group hover:border-primary/20 transition-all duration-500">
+                    <div className="space-y-6">
+                      <span className="text-[10px] font-bold uppercase tracking-[0.3em] text-white/40">Studio Credit</span>
+                      <h3 className="text-2xl font-bold">Single Project</h3>
+                      <div className="flex items-baseline gap-2">
+                        <span className="text-4xl font-display font-bold text-white">₹99</span>
+                        <span className="text-xl text-white/20 line-through">₹199</span>
+                        <span className="text-sm font-medium text-white/20">/ album</span>
+                      </div>
+                      <div className="space-y-3">
+                        <div className="flex items-center gap-2 text-xs text-white/60"><CheckCircle2 className="w-4 h-4 text-primary" /> Full 3D Cinematic Engine</div>
+                        <div className="flex items-center gap-2 text-xs text-white/60"><CheckCircle2 className="w-4 h-4 text-primary" /> Theme-Specific Soundtracks</div>
+                        <div className="flex items-center gap-2 text-xs text-white/60"><CheckCircle2 className="w-4 h-4 text-primary" /> Password Protection</div>
+                        <div className="flex items-center gap-2 text-xs text-white/60"><CheckCircle2 className="w-4 h-4 text-primary" /> Secure Lifetime Hosting</div>
+                      </div>
+                      <Button onClick={() => user ? buyAlbumCredit() : setLocation('/login')} className="w-full h-12 rounded-xl bg-white/5 hover:bg-white/10 text-white border border-white/10 font-bold">
+                        Purchase 1 Credit
+                      </Button>
+                    </div>
+                  </div>
+
+                  {/* Pro Monthly */}
+                  <div className="p-8 rounded-[2.5rem] bg-gradient-to-b from-primary/20 to-indigo-600/10 border border-primary/40 relative shadow-2xl overflow-hidden scale-105 z-10">
+                    <div className="absolute top-4 left-1/2 -translate-x-1/2 px-4 py-1 bg-primary rounded-full text-[10px] font-bold uppercase tracking-widest shadow-xl">Most Popular</div>
+                    <div className="space-y-6 pt-6">
+                      <span className="text-[10px] font-bold uppercase tracking-[0.3em] text-primary">Elite Studio</span>
+                      <h3 className="text-2xl font-bold">Unlimited Events</h3>
+                      <div className="flex flex-col mb-4">
+                        <div className="flex items-baseline gap-2">
+                          <span className="text-4xl font-display font-bold text-white">₹199</span>
+                          <span className="text-sm font-medium text-white/40 line-through">₹499</span>
+                          <span className="text-sm font-medium text-white/20">/mo</span>
+                        </div>
+                        <div className="flex flex-col gap-0.5 mt-1">
+                          <span className="text-[10px] text-primary font-black uppercase tracking-widest">Only ~₹20 / project</span>
+                          <span className="text-[9px] text-white/40 font-bold uppercase">Save 60% vs. Single Credit</span>
+                        </div>
+                      </div>
+                      <div className="space-y-3">
+                        <div className="flex items-center gap-2 text-xs text-white/80"><CheckCircle2 className="w-4 h-4 text-primary" /> **Unlimited** 3D Projects</div>
+                        <div className="flex items-center gap-2 text-xs text-white/80"><CheckCircle2 className="w-4 h-4 text-primary" /> Custom Business Logo</div>
+                        <div className="flex items-center gap-2 text-xs text-white/80"><CheckCircle2 className="w-4 h-4 text-primary" /> Direct WhatsApp Booking</div>
+                        <div className="flex items-center gap-2 text-xs text-white/80"><CheckCircle2 className="w-4 h-4 text-primary" /> Lifetime Cloud Archiving</div>
+                      </div>
+                      <Button onClick={() => handleSubscribe('monthly')} className="w-full h-14 rounded-xl bg-primary hover:bg-primary/90 text-white font-bold shadow-lg shadow-primary/20">
+                        Select Studio Monthly
+                      </Button>
+                    </div>
+                  </div>
+
+                  {/* Yearly */}
+                  <div className="glass p-8 rounded-[2.5rem] border-white/5 relative overflow-hidden group hover:border-primary/20 transition-all duration-500">
+                    <div className="space-y-6">
+                      <span className="text-[10px] font-bold uppercase tracking-[0.3em] text-white/40">Labs Special</span>
+                      <h3 className="text-2xl font-bold">Elite Labs</h3>
+                      <div className="flex flex-col mb-4">
+                        <div className="flex items-baseline gap-2">
+                          <span className="text-4xl font-display font-bold text-white">₹899</span>
+                          <span className="text-sm font-medium text-white/40 line-through">₹3,999</span>
+                          <span className="text-sm font-medium text-white/20">/yr</span>
+                        </div>
+                        <div className="flex flex-col gap-0.5 mt-1">
+                          <span className="text-[10px] text-primary font-black uppercase tracking-widest">Only ~₹7 / project</span>
+                          <span className="text-[9px] text-white/40 font-bold uppercase">Save 85% vs. Single Credit</span>
+                        </div>
+                      </div>
+                      <div className="space-y-3">
+                        <div className="flex items-center gap-2 text-xs text-white/60"><CheckCircle2 className="w-4 h-4 text-primary" /> Everything in Monthly</div>
+                        <div className="flex items-center gap-2 text-xs text-white/60"><CheckCircle2 className="w-4 h-4 text-primary" /> Early-Access to New Themes</div>
+                        <div className="flex items-center gap-2 text-xs text-white/60"><CheckCircle2 className="w-4 h-4 text-primary" /> Priority Customer Support</div>
+                        <div className="flex items-center gap-2 text-xs text-white/60"><CheckCircle2 className="w-4 h-4 text-primary" /> White-Labeling Ready</div>
+                      </div>
+                      <Button onClick={() => handleSubscribe('yearly')} className="w-full h-12 rounded-xl bg-white/5 hover:bg-white/10 text-white border border-white/10 font-bold">
+                        Get Elite Yearly
+                      </Button>
+                    </div>
+                  </div>
+                </div>
+              ) : (
+                <div className="grid md:grid-cols-3 gap-8 items-start mb-32">
+                  {/* Lab Monthly */}
+                  <div className="glass p-8 rounded-[2.5rem] border-white/5 relative overflow-hidden group hover:border-emerald-500/20 transition-all duration-500">
+                    <div className="space-y-6">
+                      <span className="text-[10px] font-bold uppercase tracking-[0.3em] text-emerald-400">Lab Suite</span>
+                      <h3 className="text-2xl font-bold">Lab Monthly</h3>
+                      <div className="flex items-baseline gap-2">
+                        <span className="text-4xl font-display font-bold text-white">₹1,200</span>
+                        <span className="text-sm font-medium text-white/20">/mo</span>
+                      </div>
+                      <div className="space-y-3">
+                        <div className="flex items-center gap-2 text-xs text-white/60"><CheckCircle2 className="w-4 h-4 text-emerald-500" /> **50 credits** added/month</div>
+                        <div className="flex items-center gap-2 text-xs text-white/60"><CheckCircle2 className="w-4 h-4 text-emerald-500" /> **No daily upload limits**</div>
+                        <div className="flex items-center gap-2 text-xs text-white/60"><CheckCircle2 className="w-4 h-4 text-emerald-500" /> Custom branding per client album</div>
+                        <div className="flex items-center gap-2 text-xs text-white/60"><CheckCircle2 className="w-4 h-4 text-emerald-500" /> Secure Lifetime Hosting</div>
+                      </div>
+                      <Button onClick={() => handleSubscribe('lab_monthly')} className="w-full h-12 rounded-xl bg-white/5 hover:bg-white/10 text-white border border-white/10 font-bold">
+                        Select Lab Monthly
+                      </Button>
+                    </div>
+                  </div>
+
+                  {/* Lab Half-Yearly */}
+                  <div className="p-8 rounded-[2.5rem] bg-gradient-to-b from-emerald-500/20 to-teal-600/10 border border-emerald-500/40 relative shadow-2xl overflow-hidden scale-105 z-10">
+                    <div className="absolute top-4 left-1/2 -translate-x-1/2 px-4 py-1 bg-emerald-500 rounded-full text-[10px] font-bold uppercase tracking-widest shadow-xl text-black font-black">Best Value</div>
+                    <div className="space-y-6 pt-6">
+                      <span className="text-[10px] font-bold uppercase tracking-[0.3em] text-emerald-400">Lab Suite</span>
+                      <h3 className="text-2xl font-bold">Lab Half-Yearly</h3>
+                      <div className="flex items-baseline gap-2">
+                        <span className="text-4xl font-display font-bold text-white">₹6,000</span>
+                        <span className="text-sm font-medium text-white/20">/6mo</span>
+                      </div>
+                      <div className="space-y-3">
+                        <div className="flex items-center gap-2 text-xs text-white/80"><CheckCircle2 className="w-4 h-4 text-emerald-500" /> **300 credits** added instantly</div>
+                        <div className="flex items-center gap-2 text-xs text-white/80"><CheckCircle2 className="w-4 h-4 text-emerald-500" /> **No daily upload limits**</div>
+                        <div className="flex items-center gap-2 text-xs text-white/80"><CheckCircle2 className="w-4 h-4 text-emerald-500" /> Custom branding per client album</div>
+                        <div className="flex items-center gap-2 text-xs text-white/80"><CheckCircle2 className="w-4 h-4 text-emerald-500" /> Secure Lifetime Hosting</div>
+                      </div>
+                      <Button onClick={() => handleSubscribe('lab_half_yearly')} className="w-full h-14 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-black font-bold shadow-lg shadow-emerald-500/20 border-none">
+                        Select Lab Half-Yearly
+                      </Button>
+                    </div>
+                  </div>
+
+                  {/* Lab Yearly */}
+                  <div className="glass p-8 rounded-[2.5rem] border-white/5 relative overflow-hidden group hover:border-emerald-500/20 transition-all duration-500">
+                    <div className="space-y-6">
+                      <span className="text-[10px] font-bold uppercase tracking-[0.3em] text-white/40">Lab Suite</span>
+                      <h3 className="text-2xl font-bold">Lab Yearly</h3>
+                      <div className="flex items-baseline gap-2">
+                        <span className="text-4xl font-display font-bold text-white">₹12,000</span>
+                        <span className="text-sm font-medium text-white/20">/yr</span>
+                      </div>
+                      <div className="space-y-3">
+                        <div className="flex items-center gap-2 text-xs text-white/60"><CheckCircle2 className="w-4 h-4 text-emerald-500" /> **600 credits** added instantly</div>
+                        <div className="flex items-center gap-2 text-xs text-white/60"><CheckCircle2 className="w-4 h-4 text-emerald-500" /> **No daily upload limits**</div>
+                        <div className="flex items-center gap-2 text-xs text-white/60"><CheckCircle2 className="w-4 h-4 text-emerald-500" /> Custom branding per client album</div>
+                        <div className="flex items-center gap-2 text-xs text-white/60"><CheckCircle2 className="w-4 h-4 text-emerald-500" /> Secure Lifetime Hosting</div>
+                      </div>
+                      <Button onClick={() => handleSubscribe('lab_yearly')} className="w-full h-12 rounded-xl bg-white/5 hover:bg-white/10 text-white border border-white/10 font-bold">
+                        Select Lab Yearly
+                      </Button>
+                    </div>
+                  </div>
+                </div>
+              )}
             </div>
           </section>
 

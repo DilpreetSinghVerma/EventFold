@@ -275,6 +275,9 @@ export class MemStorage implements IStorage {
       avgRating: 0,
       totalRatings: 0,
       showInPortfolio: insertAlbum.showInPortfolio ?? 0,
+      customBusinessName: insertAlbum.customBusinessName || null,
+      customBusinessLogo: insertAlbum.customBusinessLogo || null,
+      customContactWhatsApp: insertAlbum.customContactWhatsApp || null,
       createdAt: new Date(),
     };
     this.albums.set(id, album);

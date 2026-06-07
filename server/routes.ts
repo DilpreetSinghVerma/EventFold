@@ -169,6 +169,41 @@ export function registerRoutes(
     }
   });
 
+  // Upload custom client logo for a specific album (Lab Owners)
+  app.post("/api/albums/:id/client-logo", upload.single("logo"), async (req, res) => {
+    try {
+      if (!req.isAuthenticated()) return res.status(401).json({ error: "Unauthorized" });
+      if (!req.file) return res.status(400).json({ error: "No logo file uploaded" });
+
+      const album = await storage.getAlbum(req.params.id);
+      if (!album) return res.status(404).json({ error: "Album not found" });
+      
+      const userId = (req.user as any).id;
+      if (album.userId !== userId && (req.user as any).role !== 'admin') {
+        return res.status(403).json({ error: "Forbidden" });
+      }
+
+      const user = await storage.getUser(userId);
+      const isLabPlan = ['lab_monthly', 'lab_half_yearly', 'lab_yearly'].includes(user?.plan || '');
+      const isAdmin = (req.user as any).role === 'admin' || ["admin@eventfold.com", "dilpreetsinghverma@gmail.com"].includes(user?.email || "");
+      if (!isLabPlan && !isAdmin) {
+        return res.status(403).json({ error: "Lab Owner plan required to set custom album branding" });
+      }
+
+      const logoUrl = await uploadBufferToR2(
+        req.file.buffer,
+        "eventfold_brand",
+        req.file.mimetype
+      );
+
+      const updatedAlbum = await storage.updateAlbum(album.id, { customBusinessLogo: logoUrl });
+      res.json({ logoUrl, album: updatedAlbum });
+    } catch (e: any) {
+      console.error("Client logo upload failed:", e);
+      res.status(500).json({ error: "Failed to upload logo", details: e.message });
+    }
+  });
+
   // Razorpay Billing: Buy 1 Album Credit (One-time)
   app.post("/api/billing/buy-credit", async (req, res) => {
     try {
@@ -197,10 +232,18 @@ export function registerRoutes(
     try {
       if (!req.isAuthenticated()) return res.status(401).json({ error: "Unauthorized" });
       const user = req.user as any;
-      const { plan } = req.params; // 'monthly' or 'yearly'
+      const { plan } = req.params;
 
-      const isYearly = plan === 'yearly';
-      const amount = isYearly ? 89900 : 19900; // ₹899 or ₹199 in paise
+      let amount = 19900; // default Pro Monthly (₹199)
+      if (plan === 'yearly') {
+        amount = 89900; // Elite Yearly (₹899)
+      } else if (plan === 'lab_monthly') {
+        amount = 120000; // Lab Monthly (₹1200)
+      } else if (plan === 'lab_half_yearly') {
+        amount = 600000; // Lab Half-Yearly (₹6000)
+      } else if (plan === 'lab_yearly') {
+        amount = 1200000; // Lab Yearly (₹12000)
+      }
 
       const options = {
         amount,
@@ -262,23 +305,44 @@ export function registerRoutes(
           await storage.addCredit(userId, 1);
           console.log(`Credits added for user ${userId} via Razorpay`);
         } else if (type === 'subscription') {
+          let planType = plan; // e.g. 'pro', 'elite', 'lab_monthly', 'lab_half_yearly', 'lab_yearly'
           const isYearly = plan === 'yearly' || plan === 'elite';
-          const planType = isYearly ? 'elite' : 'pro';
+          if (isYearly) {
+            planType = 'elite';
+          } else if (plan === 'monthly') {
+            planType = 'pro';
+          }
           
           const startedAt = new Date();
           const expiresAt = new Date();
-          if (isYearly) {
+          let creditsToAdd = 0;
+
+          if (planType === 'elite' || planType === 'lab_yearly') {
             expiresAt.setFullYear(expiresAt.getFullYear() + 1);
-          } else {
+            if (planType === 'lab_yearly') creditsToAdd = 600;
+          } else if (planType === 'lab_half_yearly') {
+            expiresAt.setDate(expiresAt.getDate() + 180);
+            creditsToAdd = 300;
+          } else if (planType === 'lab_monthly') {
+            expiresAt.setDate(expiresAt.getDate() + 30);
+            creditsToAdd = 50;
+          } else { // pro
             expiresAt.setDate(expiresAt.getDate() + 30);
           }
 
-          await storage.updateUser(userId, {
+          const userToUpdate: any = {
             plan: planType,
             razorpayCustomerId: payment.customer_id,
             subscriptionStartedAt: startedAt,
             subscriptionExpiresAt: expiresAt
-          });
+          };
+
+          if (creditsToAdd > 0) {
+            const currentUser = await storage.getUser(userId);
+            userToUpdate.credits = (currentUser?.credits || 0) + creditsToAdd;
+          }
+
+          await storage.updateUser(userId, userToUpdate);
 
           // Make all user's albums permanent upon subscription
           const userAlbums = await storage.getAlbumsByUser(userId);
@@ -392,8 +456,10 @@ export function registerRoutes(
         }
       }
 
-      // Check daily album creation limit (Max 3 per day, bypass for admins)
-      if (!isAdmin) {
+      const isLabPlan = ['lab_monthly', 'lab_half_yearly', 'lab_yearly'].includes(user.plan || '');
+
+      // Check daily album creation limit (Max 3 per day, bypass for admins and Lab Owners)
+      if (!isAdmin && !isLabPlan) {
         const userAlbums = await storage.getAlbumsByUser(userId);
         const startOfToday = new Date();
         startOfToday.setHours(0, 0, 0, 0);
@@ -411,11 +477,17 @@ export function registerRoutes(
         }
       }
 
-      // Check if user has enough credits (Bypass for admins and active subscribers)
-      if (!isAdmin && !isSubscribed && (user.credits || 0) <= 0) {
+      // Check if user has enough credits:
+      // - Free/unsubscribed users: must have credits
+      // - Lab plan users: must have credits (Lab plans are credit-capped)
+      // - Admin/Pro/Elite: unlimited (bypass credit check)
+      const needsCredits = !isAdmin && (user.plan === 'free' || isLabPlan);
+      if (needsCredits && (user.credits || 0) <= 0) {
         return res.status(403).json({
           error: "No credits remaining",
-          message: "Please purchase an album credit or subscribe to a plan to continue."
+          message: isLabPlan
+            ? "Your Lab subscription has run out of credits. Please renew or purchase extra credits to continue."
+            : "Please purchase an album credit or subscribe to a plan to continue."
         });
       }
 
@@ -435,8 +507,8 @@ export function registerRoutes(
         expiresAt: expiresAt
       });
 
-      // Deduct credit only if NOT Admin and NOT Subscribed
-      if (!isAdmin && !isSubscribed) {
+      // Deduct credit if required (for Free/unsubscribed users or Lab Owners)
+      if (needsCredits) {
         await storage.deductCredit(userId);
       }
       const album = await storage.createAlbum(data);
@@ -558,9 +630,21 @@ export function registerRoutes(
       
       const branding = await storage.getSettings(album.userId!);
       
+      // Override branding with album-specific custom values if configured (by Lab Owners)
+      const brandingCopy = { ...branding };
+      if (album.customBusinessName) {
+        brandingCopy.businessName = album.customBusinessName;
+      }
+      if (album.customBusinessLogo) {
+        brandingCopy.businessLogo = album.customBusinessLogo;
+      }
+      if (album.customContactWhatsApp) {
+        brandingCopy.contactWhatsApp = album.customContactWhatsApp;
+      }
+      
       // Strip password from the response for security
       const { password, ...albumSafe } = album as any;
-      res.json({ ...albumSafe, files, branding, isProtected: !!album.password, isUnlocked: true });
+      res.json({ ...albumSafe, files, branding: brandingCopy, isProtected: !!album.password, isUnlocked: true });
     } catch (e) {
       res.status(500).json({ error: "Failed to fetch album" });
     }

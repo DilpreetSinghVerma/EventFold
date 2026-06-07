@@ -42,6 +42,9 @@ export const albums = pgTable("albums", {
   totalEngagementTime: integer("total_engagement_time").notNull().default(0), // Total seconds spent by viewers
   avgRating: integer("avg_rating").notNull().default(0), // 0-50 scaled (divide by 10 for 0-5 stars)
   totalRatings: integer("total_ratings").notNull().default(0), // Number of ratings received
+  customBusinessName: text("custom_business_name"),
+  customBusinessLogo: text("custom_business_logo"),
+  customContactWhatsApp: text("custom_contact_whatsapp"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 

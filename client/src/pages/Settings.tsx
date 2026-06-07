@@ -384,7 +384,12 @@ export default function Settings() {
                                             </div>
                                             <div>
                                                 <p className="text-xs font-bold text-white/40 uppercase tracking-widest mb-1">Current Plan</p>
-                                                <h3 className="text-2xl font-bold capitalize">{user?.plan === 'pro' ? 'Elite Unlimited' : 'Basic Plan'}</h3>
+                                                <h3 className="text-2xl font-bold capitalize">
+                                                    {user?.plan === 'pro' ? 'Studio Monthly' : 
+                                                     user?.plan === 'elite' ? 'Elite Yearly' : 
+                                                     user?.plan?.startsWith('lab_') ? `${user.plan.replace('_', ' ')}` : 
+                                                     'Basic Plan'}
+                                                </h3>
                                             </div>
                                             {user?.plan === 'free' && (
                                                 <Button onClick={() => startRazorpayCheckout('monthly')} className="w-full rounded-xl bg-primary shadow-lg shadow-primary/20 mt-2">
@@ -399,9 +404,11 @@ export default function Settings() {
                                             </div>
                                             <div>
                                                 <p className="text-xs font-bold text-white/40 uppercase tracking-widest mb-1">Available Credits</p>
-                                                <h3 className="text-2xl font-bold">{user?.plan === 'pro' ? 'Unlimited' : `${user?.credits || 0} Album Credits`}</h3>
+                                                <h3 className="text-2xl font-bold">
+                                                    {['pro', 'elite'].includes(user?.plan || '') ? 'Unlimited' : `${user?.credits || 0} Credits`}
+                                                </h3>
                                             </div>
-                                            {user?.plan === 'free' && (
+                                            {(user?.plan === 'free' || user?.plan?.startsWith('lab_')) && (
                                                 <Button onClick={buyAlbumCredit} variant="outline" className="w-full rounded-xl border-white/10 hover:bg-white/5 mt-2">
                                                     Add 1 Credit (₹99) <span className="ml-2 text-[10px] line-through opacity-50">₹199</span>
                                                 </Button>

@@ -6,7 +6,8 @@ import { Plus, QrCode, Eye, Trash2, LayoutGrid, Calendar, LogOut, Settings as Se
 
 import { QRCodeSVG } from 'qrcode.react';
 import { Badge } from '@/components/ui/badge';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
+import { useDropzone } from 'react-dropzone';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   Dialog,
@@ -19,15 +20,144 @@ import {
 import { useAuth } from '@/lib/auth';
 import { ContactModal } from '@/components/ContactModal';
 
+function ClientBrandingModalContent({ album, onSaved }: { album: any, onSaved: () => void }) {
+  const [name, setName] = useState(album.customBusinessName || '');
+  const [whatsApp, setWhatsApp] = useState(album.customContactWhatsApp || '');
+  const [logo, setLogo] = useState(album.customBusinessLogo || '');
+  const [uploading, setUploading] = useState(false);
+  const [saving, setSaving] = useState(false);
+
+  const onDropLogo = useCallback(async (acceptedFiles: File[]) => {
+    if (acceptedFiles.length === 0) return;
+    const file = acceptedFiles[0];
+    const formData = new FormData();
+    formData.append('logo', file);
+    setUploading(true);
+    try {
+      const res = await fetch(`/api/albums/${album.id}/client-logo`, { method: 'POST', body: formData });
+      if (res.ok) {
+        const data = await res.json();
+        setLogo(data.logoUrl);
+      } else {
+        const err = await res.json().catch(() => ({ error: 'Upload failed' }));
+        alert(`Logo upload failed: ${err.error || 'Server Error'}`);
+      }
+    } catch (e: any) {
+      alert(`Network error: ${e.message}`);
+    } finally {
+      setUploading(false);
+    }
+  }, [album.id]);
+
+  const { getRootProps, getInputProps, isDragActive } = useDropzone({
+    onDrop: onDropLogo,
+    accept: { 'image/*': [] },
+    multiple: false
+  });
+
+  const handleSave = async () => {
+    setSaving(true);
+    try {
+      const res = await fetch(`/api/albums/${album.id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          customBusinessName: name.trim() || null,
+          customBusinessLogo: logo || null,
+          customContactWhatsApp: whatsApp.trim() || null,
+        }),
+      });
+      if (res.ok) {
+        onSaved();
+      } else {
+        alert('Failed to save branding settings.');
+      }
+    } catch (e) {
+      alert('Failed to connect to backend.');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  return (
+    <div className="space-y-6">
+      <DialogHeader>
+        <DialogTitle className="text-2xl font-bold flex items-center gap-2 text-emerald-400">
+          <Building2 className="w-5 h-5" /> Client Studio Branding
+        </DialogTitle>
+        <DialogDescription className="text-white/40 text-[10px] font-black uppercase tracking-widest">
+          Configure branding for this album (Overrides your studio settings)
+        </DialogDescription>
+      </DialogHeader>
+
+      <div className="space-y-4">
+        <div className="space-y-2">
+          <label className="text-[10px] font-black uppercase tracking-widest text-white/40">Client Studio Name</label>
+          <Input
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            placeholder="e.g. Royale Wedding Studio"
+            className="h-11 bg-black/40 border-white/5 rounded-xl text-sm text-white"
+          />
+        </div>
+
+        <div className="space-y-2">
+          <label className="text-[10px] font-black uppercase tracking-widest text-white/40">Client WhatsApp Number</label>
+          <Input
+            value={whatsApp}
+            onChange={(e) => setWhatsApp(e.target.value)}
+            placeholder="e.g. 919876543210"
+            className="h-11 bg-black/40 border-white/5 rounded-xl text-sm text-white"
+          />
+        </div>
+
+        <div className="space-y-2">
+          <label className="text-[10px] font-black uppercase tracking-widest text-white/40">Client Logo</label>
+          <div
+            {...getRootProps()}
+            className={`border border-dashed rounded-2xl p-6 text-center cursor-pointer transition-all duration-300 ${
+              isDragActive ? 'border-emerald-500 bg-emerald-500/10' : 'border-white/10 hover:border-white/20 hover:bg-white/[0.02]'
+            }`}
+          >
+            <input {...getInputProps()} />
+            {logo ? (
+              <div className="flex items-center justify-center gap-4">
+                <img src={logo} alt="Client Logo" className="h-10 w-auto object-contain rounded-md" />
+                <span className="text-xs text-white/40 font-bold">Drag to change logo</span>
+              </div>
+            ) : (
+              <div className="text-xs text-white/40 font-bold">
+                {uploading ? 'Uploading...' : 'Drag & drop client logo here, or click to upload'}
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+
+      <div className="pt-4 flex justify-end gap-3">
+        <Button
+          onClick={handleSave}
+          disabled={saving}
+          className="h-11 px-6 bg-emerald-500 hover:bg-emerald-400 text-black font-bold rounded-xl text-xs"
+        >
+          {saving ? 'Saving...' : 'Save Client Branding'}
+        </Button>
+      </div>
+    </div>
+  );
+}
+
 export default function Dashboard() {
   const { user, logout, buyAlbumCredit, startRazorpayCheckout } = useAuth();
   const [albums, setAlbums] = useState<any[]>([]);
+  const [dashboardMode, setDashboardMode] = useState<'personal' | 'lab'>('personal');
   const [loading, setLoading] = useState(true);
   const [dbConnected, setDbConnected] = useState<boolean | null>(null);
   const [healthData, setHealthData] = useState<any>(null);
   const [settings, setSettings] = useState<any>(null);
   const [copiedId, setCopiedId] = useState<string | null>(null);
   const isAdmin = user?.role === 'admin' || ["admin@eventfold.com", "dilpreetsinghverma@gmail.com"].includes(user?.email || "");
+  const isLabPlan = ['lab_monthly', 'lab_half_yearly', 'lab_yearly'].includes(user?.plan || '');
   const [activeCategory, setActiveCategory] = useState<string>('All');
   const [searchQuery, setSearchQuery] = useState('');
   const [studioNameInput, setStudioNameInput] = useState('');
@@ -140,7 +270,7 @@ export default function Dashboard() {
         transition={{ delay: index * 0.1 }}
         className="group relative"
       >
-        <Card className="overflow-hidden border-white/5 bg-white/5 backdrop-blur-md hover:bg-white/10 transition-all duration-500 shadow-2xl rounded-3xl group">
+        <Card className={`overflow-hidden border-white/5 bg-white/5 backdrop-blur-md hover:bg-white/10 transition-all duration-500 shadow-2xl rounded-3xl group ${dashboardMode === 'lab' ? 'border-emerald-500/15 bg-emerald-950/5 hover:bg-emerald-950/10 hover:border-emerald-500/30' : ''}`}>
           <div className="relative aspect-[4/5] overflow-hidden">
             {coverUrl ? (
               <img
@@ -171,6 +301,19 @@ export default function Dashboard() {
                     <Eye className="w-4 h-4 mr-2" /> Open Album
                   </Button>
                 </Link>
+
+                {dashboardMode === 'lab' && (
+                  <Dialog>
+                    <DialogTrigger asChild>
+                      <Button className="w-full h-10 lg:h-11 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-400 hover:to-teal-500 text-white font-bold active:scale-95 transition-all text-[11px] lg:text-xs shadow-lg shadow-emerald-500/20 border-none">
+                        <Building2 className="w-4 h-4 mr-2" /> Client Branding
+                      </Button>
+                    </DialogTrigger>
+                    <DialogContent className="max-w-md bg-[#0a0f0c] border-emerald-500/20 text-white rounded-[3rem] p-6 lg:p-8">
+                      <ClientBrandingModalContent album={album} onSaved={fetchAlbums} />
+                    </DialogContent>
+                  </Dialog>
+                )}
 
                 <div className="flex items-center gap-1.5 lg:gap-2">
                   <Link href={`/album/${album.id}/edit`} className="flex-1">
@@ -553,9 +696,10 @@ export default function Dashboard() {
   if (loading) return <div className="min-h-screen bg-background flex items-center justify-center"><Loader2 className="w-10 h-10 animate-spin text-primary opacity-20" /></div>;
 
   return (
-    <div className="min-h-screen bg-background text-foreground pb-20">
+    <div className={`min-h-screen ${dashboardMode === 'lab' ? 'bg-[#030906]' : 'bg-background'} text-foreground pb-20 transition-colors duration-700`}>
       {/* Decorative Orbs */}
-      <div className="fixed top-0 right-0 w-[500px] h-[500px] bg-primary/5 rounded-full blur-[120px] pointer-events-none" />
+      <div className={`fixed top-0 right-0 w-[500px] h-[500px] ${dashboardMode === 'lab' ? 'bg-emerald-500/10' : 'bg-primary/5'} rounded-full blur-[120px] pointer-events-none transition-all duration-700`} />
+      <div className={`fixed bottom-0 left-0 w-[500px] h-[500px] ${dashboardMode === 'lab' ? 'bg-teal-500/5' : 'bg-indigo-500/5'} rounded-full blur-[120px] pointer-events-none transition-all duration-700`} />
 
       {/* Navbar Overlay */}
       <nav className="sticky top-0 z-50 w-full border-b border-white/5 bg-background/80 backdrop-blur-3xl">
@@ -737,7 +881,25 @@ export default function Dashboard() {
               </div>
               <span className="text-xs font-bold font-mono text-primary uppercase tracking-[0.2em]">Dashboard Terminal</span>
             </div>
-            <h2 className="text-3xl md:text-5xl font-display font-bold tracking-tight">Welcome back, <span className="text-primary">{user?.name?.split(' ')[0]}</span></h2>
+            <div className="flex flex-col md:flex-row md:items-start md:items-center gap-4">
+              <h2 className="text-3xl md:text-5xl font-display font-bold tracking-tight">Welcome back, <span className="text-primary">{user?.name?.split(' ')[0]}</span></h2>
+              {isLabPlan && (
+                <div className="flex bg-white/5 rounded-2xl p-1 border border-white/5 shadow-inner shrink-0 mt-2 md:mt-0">
+                  <button
+                    onClick={() => setDashboardMode('personal')}
+                    className={`rounded-xl px-4 py-1.5 text-[9px] font-black uppercase tracking-widest transition-all ${dashboardMode === 'personal' ? 'bg-primary text-white shadow-lg' : 'text-white/40 hover:text-white'}`}
+                  >
+                    Personal
+                  </button>
+                  <button
+                    onClick={() => setDashboardMode('lab')}
+                    className={`rounded-xl px-4 py-1.5 text-[9px] font-black uppercase tracking-widest transition-all ${dashboardMode === 'lab' ? 'bg-gradient-to-r from-emerald-500 to-teal-600 text-white shadow-lg shadow-emerald-500/20' : 'text-white/40 hover:text-white'}`}
+                  >
+                    Lab Owner Suite
+                  </button>
+                </div>
+              )}
+            </div>
             <div className="flex items-center gap-6">
               {dbConnected === false && (
                 <div className="hidden lg:flex items-center gap-2 px-3 py-1 bg-red-500/10 border border-red-500/20 rounded-full">

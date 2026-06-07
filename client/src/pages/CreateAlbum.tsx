@@ -26,7 +26,11 @@ export default function CreateAlbum() {
   });
 
   const isAdmin = ["admin@eventfold.com", "dilpreetsinghverma@gmail.com"].includes(user?.email || "");
-  const isLimitReached = !isAdmin && user?.plan === 'free' && (albums?.length || 0) >= 1 && (user?.credits || 0) <= 0;
+  const isLabPlan = ['lab_monthly', 'lab_half_yearly', 'lab_yearly'].includes(user?.plan || '');
+  const isLimitReached = !isAdmin && (
+    (user?.plan === 'free' && (albums?.length || 0) >= 1 && (user?.credits || 0) <= 0) ||
+    (isLabPlan && (user?.credits || 0) <= 0)
+  );
 
   const albumsCreatedToday = albums?.filter((a: any) => {
     const createdDate = new Date(a.createdAt);
@@ -34,7 +38,7 @@ export default function CreateAlbum() {
     startOfToday.setHours(0, 0, 0, 0);
     return createdDate >= startOfToday;
   }) || [];
-  const isDailyLimitReached = !isAdmin && albumsCreatedToday.length >= 3;
+  const isDailyLimitReached = !isAdmin && !isLabPlan && albumsCreatedToday.length >= 3;
 
   const [formData, setFormData] = useState<{
     title: string;
@@ -773,19 +777,34 @@ export default function CreateAlbum() {
                 <Lock className="w-12 h-12" />
               </div>
               <div className="space-y-4">
-                <h2 className="text-4xl font-display font-bold tracking-tight">Project Limit Reached</h2>
+                <h2 className="text-4xl font-display font-bold tracking-tight">
+                  {isLabPlan ? "Out of Credits" : "Project Limit Reached"}
+                </h2>
                 <p className="text-white/40 leading-relaxed text-lg px-4">
-                  Free users are limited to <span className="text-white font-bold">1 cinematic project</span>. Upgrade to <span className="text-primary font-bold">Pro</span> to unlock unlimited albums and studio branding.
+                  {isLabPlan ? (
+                    <>Your Lab Owner plan has run out of credits. Purchase additional credits to continue creating albums.</>
+                  ) : (
+                    <>Free users are limited to <span className="text-white font-bold">1 trial project</span>. Upgrade to a paid plan to unlock unlimited albums and custom branding.</>
+                  )}
                 </p>
               </div>
 
               <div className="flex flex-col gap-4 pt-4">
-                <Button
-                  onClick={() => startRazorpayCheckout('monthly')}
-                  className="h-16 rounded-2xl bg-primary hover:bg-primary/90 text-white font-bold text-xl shadow-2xl shadow-primary/30 gap-3 border-none"
-                >
-                  <Sparkles className="w-6 h-6" /> Unlock Lifetime Access
-                </Button>
+                {isLabPlan ? (
+                  <Button
+                    onClick={() => buyAlbumCredit()}
+                    className="h-16 rounded-2xl bg-primary hover:bg-primary/90 text-white font-bold text-xl shadow-2xl shadow-primary/30 gap-3 border-none animate-pulse"
+                  >
+                    <Sparkles className="w-6 h-6" /> Purchase 1 Credit (₹99)
+                  </Button>
+                ) : (
+                  <Button
+                    onClick={() => startRazorpayCheckout('monthly')}
+                    className="h-16 rounded-2xl bg-primary hover:bg-primary/90 text-white font-bold text-xl shadow-2xl shadow-primary/30 gap-3 border-none"
+                  >
+                    <Sparkles className="w-6 h-6" /> Unlock Lifetime Access
+                  </Button>
+                )}
                 <Link href="/dashboard">
                   <Button variant="ghost" className="h-14 rounded-2xl text-white/40 hover:text-white font-bold glass-hover border-none">
                     Return to Dashboard
