@@ -421,8 +421,8 @@ export default function Home() {
                   <div className="p-8 rounded-[2.5rem] bg-gradient-to-b from-primary/20 to-indigo-600/10 border border-primary/40 relative shadow-2xl overflow-hidden scale-105 z-10">
                     <div className="absolute top-4 left-1/2 -translate-x-1/2 px-4 py-1 bg-primary rounded-full text-[10px] font-bold uppercase tracking-widest shadow-xl">Most Popular</div>
                     <div className="space-y-6 pt-6">
-                      <span className="text-[10px] font-bold uppercase tracking-[0.3em] text-primary">Elite Studio</span>
-                      <h3 className="text-2xl font-bold">Unlimited Events</h3>
+                      <span className="text-[10px] font-bold uppercase tracking-[0.3em] text-primary">Studio Monthly</span>
+                      <h3 className="text-2xl font-bold">Elite Studio</h3>
                       <div className="flex flex-col mb-4">
                         <div className="flex items-baseline gap-2">
                           <span className="text-4xl font-display font-bold text-white">₹199</span>
@@ -449,8 +449,8 @@ export default function Home() {
                   {/* Yearly */}
                   <div className="glass p-8 rounded-[2.5rem] border-white/5 relative overflow-hidden group hover:border-primary/20 transition-all duration-500">
                     <div className="space-y-6">
-                      <span className="text-[10px] font-bold uppercase tracking-[0.3em] text-white/40">Labs Special</span>
-                      <h3 className="text-2xl font-bold">Elite Labs</h3>
+                      <span className="text-[10px] font-bold uppercase tracking-[0.3em] text-white/40">Studio Yearly</span>
+                      <h3 className="text-2xl font-bold">Elite Studio</h3>
                       <div className="flex flex-col mb-4">
                         <div className="flex items-baseline gap-2">
                           <span className="text-4xl font-display font-bold text-white">₹899</span>
@@ -469,7 +469,7 @@ export default function Home() {
                         <div className="flex items-center gap-2 text-xs text-white/60"><CheckCircle2 className="w-4 h-4 text-primary" /> White-Labeling Ready</div>
                       </div>
                       <Button onClick={() => handleSubscribe('yearly')} className="w-full h-12 rounded-xl bg-white/5 hover:bg-white/10 text-white border border-white/10 font-bold">
-                        Get Elite Yearly
+                        Select Studio Yearly
                       </Button>
                     </div>
                   </div>
