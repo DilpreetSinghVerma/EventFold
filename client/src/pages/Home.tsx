@@ -435,7 +435,7 @@ export default function Home() {
                         </div>
                       </div>
                       <div className="space-y-3">
-                        <div className="flex items-center gap-2 text-xs text-white/80"><CheckCircle2 className="w-4 h-4 text-primary" /> **Unlimited** 3D Projects</div>
+                        <div className="flex items-center gap-2 text-xs text-white/80"><CheckCircle2 className="w-4 h-4 text-primary" /> <strong>Unlimited</strong> 3D Projects (Max 3/day)</div>
                         <div className="flex items-center gap-2 text-xs text-white/80"><CheckCircle2 className="w-4 h-4 text-primary" /> Custom Business Logo</div>
                         <div className="flex items-center gap-2 text-xs text-white/80"><CheckCircle2 className="w-4 h-4 text-primary" /> Direct WhatsApp Booking</div>
                         <div className="flex items-center gap-2 text-xs text-white/80"><CheckCircle2 className="w-4 h-4 text-primary" /> Lifetime Cloud Archiving</div>
@@ -493,8 +493,8 @@ export default function Home() {
                         </div>
                       </div>
                       <div className="space-y-3">
-                        <div className="flex items-center gap-2 text-xs text-white/60"><CheckCircle2 className="w-4 h-4 text-emerald-500" /> **50 credits** added/month</div>
-                        <div className="flex items-center gap-2 text-xs text-white/60"><CheckCircle2 className="w-4 h-4 text-emerald-500" /> **No daily upload limits**</div>
+                        <div className="flex items-center gap-2 text-xs text-white/60"><CheckCircle2 className="w-4 h-4 text-emerald-500" /> <strong>50 credits</strong> added/month</div>
+                        <div className="flex items-center gap-2 text-xs text-white/60"><CheckCircle2 className="w-4 h-4 text-emerald-500" /> <strong>No daily upload limits</strong></div>
                         <div className="flex items-center gap-2 text-xs text-white/60"><CheckCircle2 className="w-4 h-4 text-emerald-500" /> Custom branding per client album</div>
                         <div className="flex items-center gap-2 text-xs text-white/60"><CheckCircle2 className="w-4 h-4 text-emerald-500" /> Secure Lifetime Hosting</div>
                       </div>
@@ -522,8 +522,8 @@ export default function Home() {
                         </div>
                       </div>
                       <div className="space-y-3">
-                        <div className="flex items-center gap-2 text-xs text-white/80"><CheckCircle2 className="w-4 h-4 text-emerald-500" /> **300 credits** added instantly</div>
-                        <div className="flex items-center gap-2 text-xs text-white/80"><CheckCircle2 className="w-4 h-4 text-emerald-500" /> **No daily upload limits**</div>
+                        <div className="flex items-center gap-2 text-xs text-white/80"><CheckCircle2 className="w-4 h-4 text-emerald-500" /> <strong>300 credits</strong> added instantly</div>
+                        <div className="flex items-center gap-2 text-xs text-white/80"><CheckCircle2 className="w-4 h-4 text-emerald-500" /> <strong>No daily upload limits</strong></div>
                         <div className="flex items-center gap-2 text-xs text-white/80"><CheckCircle2 className="w-4 h-4 text-emerald-500" /> Custom branding per client album</div>
                         <div className="flex items-center gap-2 text-xs text-white/80"><CheckCircle2 className="w-4 h-4 text-emerald-500" /> Secure Lifetime Hosting</div>
                       </div>
@@ -550,8 +550,8 @@ export default function Home() {
                         </div>
                       </div>
                       <div className="space-y-3">
-                        <div className="flex items-center gap-2 text-xs text-white/60"><CheckCircle2 className="w-4 h-4 text-emerald-500" /> **600 credits** added instantly</div>
-                        <div className="flex items-center gap-2 text-xs text-white/60"><CheckCircle2 className="w-4 h-4 text-emerald-500" /> **No daily upload limits**</div>
+                        <div className="flex items-center gap-2 text-xs text-white/60"><CheckCircle2 className="w-4 h-4 text-emerald-500" /> <strong>600 credits</strong> added instantly</div>
+                        <div className="flex items-center gap-2 text-xs text-white/60"><CheckCircle2 className="w-4 h-4 text-emerald-500" /> <strong>No daily upload limits</strong></div>
                         <div className="flex items-center gap-2 text-xs text-white/60"><CheckCircle2 className="w-4 h-4 text-emerald-500" /> Custom branding per client album</div>
                         <div className="flex items-center gap-2 text-xs text-white/60"><CheckCircle2 className="w-4 h-4 text-emerald-500" /> Secure Lifetime Hosting</div>
                       </div>
