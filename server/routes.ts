@@ -926,19 +926,21 @@ export function registerRoutes(
 
       const isAdmin = (req.user as any).role === 'admin' || ["admin@eventfold.com", "dilpreetsinghverma@gmail.com"].includes((req.user as any).email);
 
-      // Loophole closure: If upgrading a personal album to a Lab Album, deduct 1 credit.
+      // Loophole closure & upgrade handler: If upgrading a personal album to a Lab Album (by setting branding or setting isLabAlbum: 1), deduct 1 credit.
       const isSettingBranding = 
         req.body.customBusinessName !== undefined || 
         req.body.customBusinessLogo !== undefined || 
         req.body.customContactWhatsApp !== undefined;
+      
+      const isUpgradingToLab = req.body.isLabAlbum === 1 && album.isLabAlbum !== 1;
 
-      if (isSettingBranding && album.isLabAlbum !== 1 && !isAdmin) {
+      if ((isSettingBranding || isUpgradingToLab) && album.isLabAlbum !== 1 && !isAdmin) {
         const user = await storage.getUser((req.user as any).id);
         const isLabPlan = ['lab_monthly', 'lab_half_yearly', 'lab_yearly', 'lab_unlimited'].includes(user?.plan || '');
         if (!isLabPlan) {
           return res.status(403).json({ 
             error: "Lab subscription required", 
-            message: "To apply custom branding, you need a Lab subscription." 
+            message: "To upgrade to a Lab album or apply custom branding, you need a Lab subscription." 
           });
         }
         

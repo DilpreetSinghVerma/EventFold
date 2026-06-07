@@ -19,6 +19,7 @@ import {
 } from "@/components/ui/dialog";
 import { useAuth } from '@/lib/auth';
 import { ContactModal } from '@/components/ContactModal';
+import { useQueryClient } from '@tanstack/react-query';
 
 function ClientBrandingModalContent({ album, onSaved }: { album: any, onSaved: () => void }) {
   const { user } = useAuth();
@@ -153,6 +154,92 @@ function ClientBrandingModalContent({ album, onSaved }: { album: any, onSaved: (
           className="h-11 px-6 bg-emerald-500 hover:bg-emerald-400 text-black font-bold rounded-xl text-xs"
         >
           {saving ? 'Saving...' : 'Save Client Branding'}
+        </Button>
+      </div>
+    </div>
+  );
+}
+
+function TransferToLabModalContent({ album, onSaved }: { album: any, onSaved: () => void }) {
+  const { user } = useAuth();
+  const queryClient = useQueryClient();
+  const [upgrading, setUpgrading] = useState(false);
+  const isAdmin = user?.role === 'admin' || ["admin@eventfold.com", "dilpreetsinghverma@gmail.com"].includes(user?.email || "");
+
+  const handleUpgrade = async () => {
+    setUpgrading(true);
+    try {
+      const res = await fetch(`/api/albums/${album.id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ isLabAlbum: 1 }),
+      });
+      if (res.ok) {
+        queryClient.invalidateQueries({ queryKey: ["/api/auth/me"] });
+        onSaved();
+      } else {
+        const err = await res.json().catch(() => ({ error: 'Upgrade failed' }));
+        alert(`Upgrade failed: ${err.message || err.error || 'Server Error'}`);
+      }
+    } catch (e: any) {
+      alert(`Network error: ${e.message}`);
+    } finally {
+      setUpgrading(false);
+    }
+  };
+
+  return (
+    <div className="space-y-6">
+      <DialogHeader>
+        <DialogTitle className="text-2xl font-bold flex items-center gap-2 text-cyan-400">
+          <Building2 className="w-5 h-5 animate-pulse" /> Transfer to Lab Dashboard
+        </DialogTitle>
+        <DialogDescription className="text-white/40 text-[10px] font-black uppercase tracking-widest">
+          Move Personal Album to Lab Owner Suite
+        </DialogDescription>
+      </DialogHeader>
+
+      <div className="space-y-4 text-sm">
+        <div className="p-4 rounded-2xl bg-cyan-500/10 border border-cyan-500/20 text-cyan-300 text-xs flex items-start gap-3">
+          <Sparkles className="w-5 h-5 shrink-0 mt-0.5 text-cyan-400" />
+          <div>
+            <p className="font-bold mb-1">Move to Lab Suite</p>
+            <p className="text-white/60 leading-relaxed font-sans">
+              This action will move the album **"{album.title}"** to your **Lab Owner Suite** dashboard.
+            </p>
+          </div>
+        </div>
+
+        <div className="p-4 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-xs flex items-start gap-3">
+          <Check className="w-5 h-5 shrink-0 mt-0.5 text-emerald-400" />
+          <div>
+            <p className="font-bold mb-1">No Broken Links or QR Codes</p>
+            <p className="text-white/60 leading-relaxed font-sans">
+              The album ID, URL, and QR code remain **exactly identical**. Your client won't face any interruption.
+            </p>
+          </div>
+        </div>
+
+        {!isAdmin && (
+          <div className="p-4 rounded-2xl bg-amber-500/10 border border-amber-500/20 text-amber-400 text-xs flex items-start gap-3">
+            <AlertTriangle className="w-5 h-5 shrink-0 mt-0.5 animate-pulse text-amber-400" />
+            <div>
+              <p className="font-bold mb-1 text-amber-400">Credit Cost: 1 Credit</p>
+              <p className="text-white/60 leading-relaxed font-sans">
+                Upgrading this album will consume **1 Lab credit**. You currently have **{user?.credits || 0} credits** available.
+              </p>
+            </div>
+          </div>
+        )}
+      </div>
+
+      <div className="pt-4 flex justify-end gap-3">
+        <Button
+          onClick={handleUpgrade}
+          disabled={upgrading || (!isAdmin && (user?.credits || 0) <= 0)}
+          className="h-11 px-6 bg-cyan-500 hover:bg-cyan-400 text-black font-bold rounded-xl text-xs active:scale-95 transition-transform"
+        >
+          {upgrading ? 'Upgrading...' : (!isAdmin && (user?.credits || 0) <= 0 ? 'Insufficient Credits' : 'Confirm & Transfer (1 Credit)')}
         </Button>
       </div>
     </div>
@@ -326,6 +413,19 @@ export default function Dashboard() {
                     </DialogTrigger>
                     <DialogContent className="max-w-md bg-[#0a0f0c] border-emerald-500/20 text-white rounded-[3rem] p-6 lg:p-8">
                       <ClientBrandingModalContent album={album} onSaved={fetchAlbums} />
+                    </DialogContent>
+                  </Dialog>
+                )}
+
+                {dashboardMode === 'personal' && isLabPlan && (
+                  <Dialog>
+                    <DialogTrigger asChild>
+                      <Button className="w-full h-10 lg:h-11 rounded-xl bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-white font-bold active:scale-95 transition-all text-[11px] lg:text-xs shadow-lg shadow-blue-500/20 border-none">
+                        <Building2 className="w-4 h-4 mr-2" /> Transfer to Lab
+                      </Button>
+                    </DialogTrigger>
+                    <DialogContent className="max-w-md bg-[#0a0d14] border-blue-500/20 text-white rounded-[3rem] p-6 lg:p-8">
+                      <TransferToLabModalContent album={album} onSaved={fetchAlbums} />
                     </DialogContent>
                   </Dialog>
                 )}
