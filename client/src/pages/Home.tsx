@@ -481,9 +481,16 @@ export default function Home() {
                     <div className="space-y-6">
                       <span className="text-[10px] font-bold uppercase tracking-[0.3em] text-emerald-400">Lab Suite</span>
                       <h3 className="text-2xl font-bold">Lab Monthly</h3>
-                      <div className="flex items-baseline gap-2">
-                        <span className="text-4xl font-display font-bold text-white">₹1,200</span>
-                        <span className="text-sm font-medium text-white/20">/mo</span>
+                      <div className="flex flex-col mb-4">
+                        <div className="flex items-baseline gap-2">
+                          <span className="text-4xl font-display font-bold text-white">₹960</span>
+                          <span className="text-sm font-medium text-white/40 line-through">₹1,200</span>
+                          <span className="text-sm font-medium text-white/20">/mo</span>
+                        </div>
+                        <div className="flex flex-col gap-0.5 mt-1">
+                          <span className="text-[10px] text-emerald-400 font-black uppercase tracking-widest">Special 20% Discount</span>
+                          <span className="text-[9px] text-white/40 font-bold uppercase">Only ~₹19 / credit</span>
+                        </div>
                       </div>
                       <div className="space-y-3">
                         <div className="flex items-center gap-2 text-xs text-white/60"><CheckCircle2 className="w-4 h-4 text-emerald-500" /> **50 credits** added/month</div>
@@ -503,9 +510,16 @@ export default function Home() {
                     <div className="space-y-6 pt-6">
                       <span className="text-[10px] font-bold uppercase tracking-[0.3em] text-emerald-400">Lab Suite</span>
                       <h3 className="text-2xl font-bold">Lab Half-Yearly</h3>
-                      <div className="flex items-baseline gap-2">
-                        <span className="text-4xl font-display font-bold text-white">₹6,000</span>
-                        <span className="text-sm font-medium text-white/20">/6mo</span>
+                      <div className="flex flex-col mb-4">
+                        <div className="flex items-baseline gap-2">
+                          <span className="text-4xl font-display font-bold text-white">₹4,800</span>
+                          <span className="text-sm font-medium text-white/40 line-through">₹6,000</span>
+                          <span className="text-sm font-medium text-white/20">/6mo</span>
+                        </div>
+                        <div className="flex flex-col gap-0.5 mt-1">
+                          <span className="text-[10px] text-emerald-400 font-black uppercase tracking-widest">Special 20% Discount</span>
+                          <span className="text-[9px] text-white/60 font-bold uppercase">Only ~₹16 / credit</span>
+                        </div>
                       </div>
                       <div className="space-y-3">
                         <div className="flex items-center gap-2 text-xs text-white/80"><CheckCircle2 className="w-4 h-4 text-emerald-500" /> **300 credits** added instantly</div>
@@ -524,9 +538,16 @@ export default function Home() {
                     <div className="space-y-6">
                       <span className="text-[10px] font-bold uppercase tracking-[0.3em] text-white/40">Lab Suite</span>
                       <h3 className="text-2xl font-bold">Lab Yearly</h3>
-                      <div className="flex items-baseline gap-2">
-                        <span className="text-4xl font-display font-bold text-white">₹12,000</span>
-                        <span className="text-sm font-medium text-white/20">/yr</span>
+                      <div className="flex flex-col mb-4">
+                        <div className="flex items-baseline gap-2">
+                          <span className="text-4xl font-display font-bold text-white">₹9,600</span>
+                          <span className="text-sm font-medium text-white/40 line-through">₹12,000</span>
+                          <span className="text-sm font-medium text-white/20">/yr</span>
+                        </div>
+                        <div className="flex flex-col gap-0.5 mt-1">
+                          <span className="text-[10px] text-emerald-400 font-black uppercase tracking-widest">Special 20% Discount</span>
+                          <span className="text-[9px] text-white/40 font-bold uppercase">Only ~₹16 / credit</span>
+                        </div>
                       </div>
                       <div className="space-y-3">
                         <div className="flex items-center gap-2 text-xs text-white/60"><CheckCircle2 className="w-4 h-4 text-emerald-500" /> **600 credits** added instantly</div>

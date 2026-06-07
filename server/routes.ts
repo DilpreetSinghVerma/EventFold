@@ -238,11 +238,11 @@ export function registerRoutes(
       if (plan === 'yearly') {
         amount = 89900; // Elite Yearly (₹899)
       } else if (plan === 'lab_monthly') {
-        amount = 120000; // Lab Monthly (₹1200)
+        amount = 96000; // Lab Monthly (₹960 - 20% discount from ₹1200)
       } else if (plan === 'lab_half_yearly') {
-        amount = 600000; // Lab Half-Yearly (₹6000)
+        amount = 480000; // Lab Half-Yearly (₹4800 - 20% discount from ₹6000)
       } else if (plan === 'lab_yearly') {
-        amount = 1200000; // Lab Yearly (₹12000)
+        amount = 960000; // Lab Yearly (₹9600 - 20% discount from ₹12000)
       }
 
       const options = {
