@@ -39,8 +39,23 @@ const faqs = [
   },
   {
     question: "What are the pricing models?",
-    answer: "We offer a flexible pay-as-you-go model at ₹99 per album, a Monthly Unlimited plan at ₹199 for high-volume studios, and a Yearly Elite Labs plan at ₹899 for the best value. All plans include lifetime hosting.",
+    answer: "We offer a flexible pay-as-you-go model at ₹99 per album credit, a Photographer Monthly plan at ₹199, and a Photographer Yearly plan at ₹899. For print labs and B2B creators, we offer premium Lab subscription plans: Lab Monthly (₹960/mo with 50 credits), Lab Half-Yearly (₹4,800/6-mo with 300 credits), and Lab Yearly (₹9,600/yr with 600 credits). All paid albums include lifetime hosting.",
     icon: <CreditCard className="w-5 h-5" />
+  },
+  {
+    question: "What is the difference between Photographer (Studio) plans and Lab Owner plans?",
+    answer: "Photographer plans (Elite Studio at ₹199/mo and Elite Labs at ₹899/yr) are designed for individual creators who publish up to 3 albums per day under their own studio branding. Lab Owner plans (starting at ₹960/mo) are built for print labs and high-volume creators who need to generate bulk digital albums with client-specific branding (custom studio names, logos, and WhatsApp contact lines per client album) and require no daily creation limits.",
+    icon: <Sparkles className="w-5 h-5" />
+  },
+  {
+    question: "What are album credits, and how do they work for Lab Owners?",
+    answer: "In Lab plans, creating a Lab album or setting client-specific branding consumes 1 credit. Credits are granted based on your subscription tier (50 for Lab Monthly, 300 for Lab Half-Yearly, and 600 for Lab Yearly) and roll over. Once an album is upgraded to a Lab album or created in the Lab Owner Suite dashboard, subsequent branding changes or updates to that album are completely free and will never charge any additional credits.",
+    icon: <Zap className="w-5 h-5" />
+  },
+  {
+    question: "Can I transfer a personal album to my Lab dashboard?",
+    answer: "Yes! If you have a Lab subscription plan, you can explicitly transfer any personal album from 'My Collections' to your 'Lab Owner Suite' dashboard. This consumes exactly 1 Lab credit. The album ID remains completely identical, meaning your existing QR codes and sharing links will never break and will continue to work seamlessly for your clients.",
+    icon: <Share2 className="w-5 h-5" />
   }
 ];
 

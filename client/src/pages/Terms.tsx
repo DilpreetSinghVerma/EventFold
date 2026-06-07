@@ -56,12 +56,14 @@ export default function Terms() {
                             </h3>
                             <p className="text-white/50 leading-relaxed text-sm">
                                 All payments are processed through Razorpay. Fees are non-refundable unless stated otherwise. 
-                                High-resolution cloud storage is provided based on your active plan (Trial, Credit, or Elite).
+                                High-resolution cloud storage and hosting are provided based on your active plan (Trial, Credit, Pro, Elite, or Lab Suite).
                             </p>
                             <ul className="text-white/50 space-y-2 text-sm list-disc pl-5">
-                                <li>Trial albums are stored for 7 days.</li>
-                                <li>Credit-based albums are stored for 1 year.</li>
-                                <li>Elite/Pro plans include lifetime storage during active subscription.</li>
+                                <li>Trial albums are hosted free for 7 days.</li>
+                                <li>Credit-based single-purchase albums include secure lifetime hosting.</li>
+                                <li>Photographer plans (Pro Monthly, Elite Yearly) include unlimited creation and lifetime hosting, subject to a daily upload limit of 3 albums.</li>
+                                <li>Lab Owner plans (Lab Monthly, Lab Half-Yearly, Lab Yearly) include a quota of monthly/cycles credits, bypass the daily upload limit, and allow per-album custom client branding.</li>
+                                <li>Personal albums can be upgraded/transferred to the Lab dashboard at the cost of **1 Lab credit**. This transfer preserves the existing album URL and QR code. Subsequent modifications to the branding of a Lab album cost **0 credits**.</li>
                             </ul>
                         </div>
 
