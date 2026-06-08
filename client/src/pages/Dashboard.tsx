@@ -255,6 +255,7 @@ export default function Dashboard() {
   const [healthData, setHealthData] = useState<any>(null);
   const [settings, setSettings] = useState<any>(null);
   const [copiedId, setCopiedId] = useState<string | null>(null);
+  const [upgradingLifetimeId, setUpgradingLifetimeId] = useState<string | null>(null);
   const isAdmin = user?.role === 'admin' || ["admin@eventfold.com", "dilpreetsinghverma@gmail.com"].includes(user?.email || "");
   const isLabPlan = ['lab_monthly', 'lab_half_yearly', 'lab_yearly', 'lab_unlimited'].includes(user?.plan || '') || isAdmin;
   const modeFilteredAlbums = albums.filter(album => 
@@ -766,6 +767,7 @@ export default function Dashboard() {
                 </div>
                 {new Date(album.expiresAt) < new Date() && (
                   <Button 
+                    disabled={upgradingLifetimeId !== null}
                     onClick={async (e) => {
                       e.stopPropagation();
                       const isSubscribed = user && user.plan !== 'free' && user.subscriptionExpiresAt && new Date(user.subscriptionExpiresAt) > new Date();
@@ -775,14 +777,25 @@ export default function Dashboard() {
                         : "Use 1 credit to upgrade this album to Lifetime Hosting?";
 
                       if (window.confirm(confirmMsg)) {
-                        const res = await fetch(`/api/albums/${album.id}/lifetime`, { method: 'POST' });
-                        if (res.ok) fetchAlbums();
-                        else alert((await res.json()).error || "Upgrade failed");
+                        setUpgradingLifetimeId(album.id);
+                        try {
+                          const res = await fetch(`/api/albums/${album.id}/lifetime`, { method: 'POST' });
+                          if (res.ok) {
+                            fetchAlbums();
+                          } else {
+                            const err = await res.json().catch(() => ({ error: "Upgrade failed" }));
+                            alert(err.error || "Upgrade failed");
+                          }
+                        } catch (err: any) {
+                          alert(`Network error: ${err.message}`);
+                        } finally {
+                          setUpgradingLifetimeId(null);
+                        }
                       }
                     }}
                     className="h-7 text-[8px] font-black uppercase tracking-widest bg-primary hover:bg-primary/90 text-white rounded-lg w-full"
                   >
-                    <Crown className="w-3 h-3 mr-1" /> {user && user.plan !== 'free' ? "Upgrade for Free" : "Upgrade to Lifetime"}
+                    <Crown className="w-3 h-3 mr-1" /> {upgradingLifetimeId === album.id ? "Upgrading..." : (user && user.plan !== 'free' ? "Upgrade for Free" : "Upgrade to Lifetime")}
                   </Button>
                 )}
               </div>

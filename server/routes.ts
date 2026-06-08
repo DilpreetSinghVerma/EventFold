@@ -175,37 +175,77 @@ export function registerRoutes(
       if (!req.isAuthenticated()) return res.status(401).json({ error: "Unauthorized" });
       if (!req.file) return res.status(400).json({ error: "No logo file uploaded" });
 
-      const album = await storage.getAlbum(req.params.id);
-      if (!album) return res.status(404).json({ error: "Album not found" });
-      
+      const albumId = req.params.id;
       const userId = (req.user as any).id;
-      if (album.userId !== userId && (req.user as any).role !== 'admin') {
-        return res.status(403).json({ error: "Forbidden" });
-      }
+      const isAdmin = (req.user as any).role === 'admin' || ["admin@eventfold.com", "dilpreetsinghverma@gmail.com"].includes((req.user as any).email || "");
+
+      const album = await storage.getAlbum(albumId);
+      if (!album) return res.status(404).json({ error: "Album not found" });
+      if (album.userId !== userId && !isAdmin) return res.status(403).json({ error: "Forbidden" });
 
       const user = await storage.getUser(userId);
-      const isAdmin = (req.user as any).role === 'admin' || ["admin@eventfold.com", "dilpreetsinghverma@gmail.com"].includes(user?.email || "");
-      const isLabPlan = ['lab_monthly', 'lab_half_yearly', 'lab_yearly', 'lab_unlimited'].includes(user?.plan || '') || isAdmin;
-      if (!isLabPlan && !isAdmin) {
+      if (!user) return res.status(404).json({ error: "User not found" });
+
+      const isLabPlan = ['lab_monthly', 'lab_half_yearly', 'lab_yearly', 'lab_unlimited'].includes(user.plan) || isAdmin;
+      if (!isLabPlan) {
         return res.status(403).json({ error: "Lab Owner plan required to set custom album branding" });
       }
 
-      // Closure of loophole: Deduct credit and upgrade the album if it is a personal album and user is a Lab owner
-      if (album.isLabAlbum !== 1 && !isAdmin) {
-        if ((user?.credits || 0) <= 0) {
-          return res.status(403).json({ error: "No credits remaining to upgrade this album to a Lab album" });
-        }
-        await storage.deductCredit(userId);
-        await storage.updateAlbum(album.id, { isLabAlbum: 1 });
-      }
-
+      // 1. Upload logo buffer to R2 first (non-transactional)
       const logoUrl = await uploadBufferToR2(
         req.file.buffer,
         "eventfold_brand",
         req.file.mimetype
       );
 
-      const updatedAlbum = await storage.updateAlbum(album.id, { customBusinessLogo: logoUrl, isLabAlbum: 1 });
+      let creditDeducted = false;
+
+      // Closure of loophole: Deduct credit and upgrade the album if it is a personal album and user is a Lab owner
+      if (album.isLabAlbum !== 1 && !isAdmin) {
+        // Try to deduct credit atomically
+        const [updatedUser] = await db.update(users)
+          .set({ credits: sql`${users.credits} - 1` })
+          .where(and(eq(users.id, userId), gt(users.credits, 0)))
+          .returning();
+
+        if (!updatedUser) {
+          return res.status(403).json({ error: "No credits remaining to upgrade this album to a Lab album" });
+        }
+        creditDeducted = true;
+      }
+
+      // Try to upgrade album atomically
+      let updatedAlbum;
+      if (creditDeducted) {
+        const [row] = await db.update(albums)
+          .set({ customBusinessLogo: logoUrl, isLabAlbum: 1 })
+          .where(and(eq(albums.id, albumId), eq(albums.isLabAlbum, 0)))
+          .returning();
+        
+        updatedAlbum = row;
+
+        if (!updatedAlbum) {
+          // Revert/refund credit because concurrent request already upgraded it
+          await db.update(users)
+            .set({ credits: sql`${users.credits} + 1` })
+            .where(eq(users.id, userId));
+          
+          // Since it's already upgraded, we can update it now without charging credit
+          const [row2] = await db.update(albums)
+            .set({ customBusinessLogo: logoUrl })
+            .where(eq(albums.id, albumId))
+            .returning();
+          updatedAlbum = row2;
+        }
+      } else {
+        // Regular update (already upgraded or admin)
+        const [row] = await db.update(albums)
+          .set({ customBusinessLogo: logoUrl, isLabAlbum: 1 })
+          .where(eq(albums.id, albumId))
+          .returning();
+        updatedAlbum = row;
+      }
+
       res.json({ logoUrl, album: updatedAlbum });
     } catch (e: any) {
       console.error("Client logo upload failed:", e);
@@ -306,70 +346,78 @@ export function registerRoutes(
       }
 
       const event = req.body;
-      if (event.event === "payment.captured") {
-        const payment = event.payload.payment.entity;
-        const { userId, type, plan } = payment.notes;
 
-        if (type === 'credit') {
-          await storage.addCredit(userId, 1);
-          console.log(`Credits added for user ${userId} via Razorpay`);
-        } else if (type === 'subscription') {
-          let planType = plan; // e.g. 'pro', 'elite', 'lab_monthly', 'lab_half_yearly', 'lab_yearly'
-          const isYearly = plan === 'yearly' || plan === 'elite';
-          if (isYearly) {
-            planType = 'elite';
-          } else if (plan === 'monthly') {
-            planType = 'pro';
-          }
-          
-          const startedAt = new Date();
-          const expiresAt = new Date();
-          let creditsToAdd = 0;
-
-          if (planType === 'elite' || planType === 'lab_yearly') {
-            expiresAt.setFullYear(expiresAt.getFullYear() + 1);
-            if (planType === 'lab_yearly') creditsToAdd = 600;
-          } else if (planType === 'lab_half_yearly') {
-            expiresAt.setDate(expiresAt.getDate() + 180);
-            creditsToAdd = 300;
-          } else if (planType === 'lab_monthly') {
-            expiresAt.setDate(expiresAt.getDate() + 30);
-            creditsToAdd = 50;
-          } else { // pro
-            expiresAt.setDate(expiresAt.getDate() + 30);
-          }
-
-          const userToUpdate: any = {
-            plan: planType,
-            razorpayCustomerId: payment.customer_id,
-            subscriptionStartedAt: startedAt,
-            subscriptionExpiresAt: expiresAt
-          };
-
-          if (creditsToAdd > 0) {
-            const currentUser = await storage.getUser(userId);
-            userToUpdate.credits = (currentUser?.credits || 0) + creditsToAdd;
-          }
-
-          await storage.updateUser(userId, userToUpdate);
-
-          // Make all user's albums permanent upon subscription
-          const userAlbums = await storage.getAlbumsByUser(userId);
-          const { db } = await import("./db");
-          const { albums } = await import("../shared/schema");
-          if (db) {
-            await db.update(albums)
-              .set({ expiresAt: null })
-              .where(eq(albums.userId, userId));
-          }
-
-          console.log(`User ${userId} upgraded to ${plan} via Razorpay. Albums made permanent.`);
-        }
-      }
-
+      // Instantly return 200 OK to Razorpay to prevent timeouts and duplicate webhook retries
       res.json({ status: "ok" });
+
+      // Run database updates and subscription provisioning asynchronously in the background
+      (async () => {
+        if (event.event === "payment.captured") {
+          const payment = event.payload.payment.entity;
+          const { userId, type, plan } = payment.notes;
+
+          if (type === 'credit') {
+            await storage.addCredit(userId, 1);
+            console.log(`[WEBHOOK] Credits added for user ${userId} via Razorpay`);
+          } else if (type === 'subscription') {
+            let planType = plan; // e.g. 'pro', 'elite', 'lab_monthly', 'lab_half_yearly', 'lab_yearly'
+            const isYearly = plan === 'yearly' || plan === 'elite';
+            if (isYearly) {
+              planType = 'elite';
+            } else if (plan === 'monthly') {
+              planType = 'pro';
+            }
+            
+            const startedAt = new Date();
+            const expiresAt = new Date();
+            let creditsToAdd = 0;
+
+            if (planType === 'elite' || planType === 'lab_yearly') {
+              expiresAt.setFullYear(expiresAt.getFullYear() + 1);
+              if (planType === 'lab_yearly') creditsToAdd = 600;
+            } else if (planType === 'lab_half_yearly') {
+              expiresAt.setDate(expiresAt.setDate() + 180);
+              creditsToAdd = 300;
+            } else if (planType === 'lab_monthly') {
+              expiresAt.setDate(expiresAt.setDate() + 30);
+              creditsToAdd = 50;
+            } else { // pro
+              expiresAt.setDate(expiresAt.setDate() + 30);
+            }
+
+            const userToUpdate: any = {
+              plan: planType,
+              razorpayCustomerId: payment.customer_id,
+              subscriptionStartedAt: startedAt,
+              subscriptionExpiresAt: expiresAt
+            };
+
+            if (creditsToAdd > 0) {
+              const currentUser = await storage.getUser(userId);
+              userToUpdate.credits = (currentUser?.credits || 0) + creditsToAdd;
+            }
+
+            await storage.updateUser(userId, userToUpdate);
+
+            // Make all user's albums permanent upon subscription
+            const userAlbums = await storage.getAlbumsByUser(userId);
+            const { db } = await import("./db");
+            const { albums } = await import("../shared/schema");
+            if (db) {
+              await db.update(albums)
+                .set({ expiresAt: null })
+                .where(eq(albums.userId, userId));
+            }
+
+            console.log(`[WEBHOOK] User ${userId} upgraded to ${plan} via Razorpay. Albums made permanent.`);
+          }
+        }
+      })().catch(err => {
+        console.error("[WEBHOOK] Background execution failed:", err);
+      });
+
     } catch (err: any) {
-      console.error("Webhook Error:", err);
+      console.error("Webhook Signature Verification Error:", err);
       res.status(500).json({ error: "Webhook failed" });
     }
   });
@@ -555,8 +603,9 @@ export function registerRoutes(
     try {
       if (!req.isAuthenticated()) return res.status(401).json({ error: "Unauthorized" });
       const userId = (req.user as any).id;
-      const album = await storage.getAlbum(req.params.id);
-      
+      const albumId = req.params.id;
+
+      const album = await storage.getAlbum(albumId);
       if (!album) return res.status(404).json({ error: "Album not found" });
       if (album.userId !== userId) return res.status(403).json({ error: "Forbidden" });
       if (!album.expiresAt) return res.status(400).json({ error: "Album already has lifetime hosting" });
@@ -566,19 +615,41 @@ export function registerRoutes(
 
       const isSubscribed = user.plan !== 'free' && user.subscriptionExpiresAt && new Date(user.subscriptionExpiresAt) > new Date();
 
+      let creditDeducted = false;
+
       // Deduct credit ONLY IF not subscribed
       if (!isSubscribed) {
-        if (user.credits <= 0) {
+        // Try to deduct credit atomically
+        const [updatedUser] = await db.update(users)
+          .set({ credits: sql`${users.credits} - 1` })
+          .where(and(eq(users.id, userId), gt(users.credits, 0)))
+          .returning();
+
+        if (!updatedUser) {
           return res.status(403).json({ error: "No credits remaining to upgrade this album" });
         }
-        await storage.deductCredit(userId);
+        creditDeducted = true;
       }
 
-      await storage.updateAlbum(album.id, { expiresAt: null });
+      // Try to atomically upgrade the album (only if it has not already been upgraded by a concurrent request)
+      const [updatedAlbum] = await db.update(albums)
+        .set({ expiresAt: null })
+        .where(and(eq(albums.id, albumId), eq(albums.userId, userId), isNotNull(albums.expiresAt)))
+        .returning();
 
+      if (!updatedAlbum) {
+        if (creditDeducted) {
+          // Refund the credit
+          await db.update(users)
+            .set({ credits: sql`${users.credits} + 1` })
+            .where(eq(users.id, userId));
+        }
+        return res.status(400).json({ error: "Album already has lifetime hosting" });
+      }
 
       res.json({ success: true, message: "Album upgraded to Lifetime Hosting" });
     } catch (e) {
+      console.error("Upgrade to lifetime failed:", e);
       res.status(500).json({ error: "Upgrade failed" });
     }
   });
@@ -998,13 +1069,15 @@ export function registerRoutes(
   app.patch("/api/albums/:id", async (req, res) => {
     try {
       if (!req.isAuthenticated()) return res.status(401).json({ error: "Unauthorized" });
-      const album = await storage.getAlbum(req.params.id);
+      const albumId = req.params.id;
+      const userId = (req.user as any).id;
+      const isAdmin = (req.user as any).role === 'admin' || ["admin@eventfold.com", "dilpreetsinghverma@gmail.com"].includes((req.user as any).email);
+
+      const album = await storage.getAlbum(albumId);
       if (!album) return res.status(404).json({ error: "Album not found" });
-      if (album.userId !== (req.user as any).id && (req.user as any).role !== 'admin') {
+      if (album.userId !== userId && !isAdmin) {
         return res.status(403).json({ error: "Forbidden" });
       }
-
-      const isAdmin = (req.user as any).role === 'admin' || ["admin@eventfold.com", "dilpreetsinghverma@gmail.com"].includes((req.user as any).email);
 
       // Loophole closure & upgrade handler: If upgrading a personal album to a Lab Album (by setting branding or setting isLabAlbum: 1), deduct 1 credit.
       const isSettingBranding = 
@@ -1014,30 +1087,70 @@ export function registerRoutes(
       
       const isUpgradingToLab = req.body.isLabAlbum === 1 && album.isLabAlbum !== 1;
 
+      let creditDeducted = false;
+
       if ((isSettingBranding || isUpgradingToLab) && album.isLabAlbum !== 1 && !isAdmin) {
-        const user = await storage.getUser((req.user as any).id);
-        const isLabPlan = ['lab_monthly', 'lab_half_yearly', 'lab_yearly', 'lab_unlimited'].includes(user?.plan || '');
+        const user = await storage.getUser(userId);
+        if (!user) return res.status(404).json({ error: "User not found" });
+
+        const isLabPlan = ['lab_monthly', 'lab_half_yearly', 'lab_yearly', 'lab_unlimited'].includes(user.plan);
         if (!isLabPlan) {
           return res.status(403).json({ 
             error: "Lab subscription required", 
             message: "To upgrade to a Lab album or apply custom branding, you need a Lab subscription." 
           });
         }
-        
-        if ((user?.credits || 0) <= 0) {
+
+        // Try to deduct credit atomically
+        const [updatedUser] = await db.update(users)
+          .set({ credits: sql`${users.credits} - 1` })
+          .where(and(eq(users.id, userId), gt(users.credits, 0)))
+          .returning();
+
+        if (!updatedUser) {
           return res.status(403).json({ 
             error: "No credits remaining", 
             message: "You need 1 credit to upgrade this personal album to a Lab album." 
           });
         }
-        
-        await storage.deductCredit(user.id);
-        req.body.isLabAlbum = 1;
+        creditDeducted = true;
       }
 
-      const updatedAlbum = await storage.updateAlbum(req.params.id, req.body);
+      let updatedAlbum;
+      if (creditDeducted) {
+        // Try to upgrade atomically (only if it was not already upgraded)
+        const [row] = await db.update(albums)
+          .set({ ...req.body, isLabAlbum: 1 })
+          .where(and(eq(albums.id, albumId), eq(albums.isLabAlbum, 0)))
+          .returning();
+        
+        updatedAlbum = row;
+
+        if (!updatedAlbum) {
+          // Refund credit because concurrent request already upgraded it
+          await db.update(users)
+            .set({ credits: sql`${users.credits} + 1` })
+            .where(eq(users.id, userId));
+
+          // Run the regular update since isLabAlbum is already 1
+          const [row2] = await db.update(albums)
+            .set(req.body)
+            .where(eq(albums.id, albumId))
+            .returning();
+          updatedAlbum = row2;
+        }
+      } else {
+        // Regular update (already upgraded, or not setting branding, or admin)
+        const [row] = await db.update(albums)
+          .set(req.body)
+          .where(eq(albums.id, albumId))
+          .returning();
+        updatedAlbum = row;
+      }
+
       res.json(updatedAlbum);
     } catch (e) {
+      console.error("Failed to update album:", e);
       res.status(500).json({ error: "Failed to update album" });
     }
   });

@@ -1,5 +1,5 @@
 import { sql } from "drizzle-orm";
-import { pgTable, text, varchar, integer, timestamp } from "drizzle-orm/pg-core";
+import { pgTable, text, varchar, integer, timestamp, index } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 
@@ -49,6 +49,11 @@ export const albums = pgTable("albums", {
   nearExpiryNotificationSent: integer("near_expiry_notification_sent").notNull().default(0), // 0: No, 1: Yes
   expiryNotificationSent: integer("expiry_notification_sent").notNull().default(0), // 0: No, 1: Yes
   createdAt: timestamp("created_at").defaultNow().notNull(),
+}, (table) => {
+  return {
+    nearExpiryIdx: index("near_expiry_idx").on(table.nearExpiryNotificationSent, table.expiresAt),
+    expiryIdx: index("expiry_idx").on(table.expiryNotificationSent, table.expiresAt),
+  };
 });
 
 export const files = pgTable("files", {
