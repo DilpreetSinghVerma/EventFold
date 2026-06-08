@@ -1637,8 +1637,23 @@ export function registerRoutes(
 
       const allUsers = await storage.getUsers();
       
+      const { filter } = req.query;
+      let targetUsers = allUsers;
+      let filename = "eventfold_users.csv";
+
+      if (filter === 'studio') {
+        targetUsers = allUsers.filter(u => ['pro', 'elite'].includes(u.plan || ''));
+        filename = "eventfold_studio_users.csv";
+      } else if (filter === 'labs') {
+        targetUsers = allUsers.filter(u => ['lab_monthly', 'lab_half_yearly', 'lab_yearly', 'lab_unlimited'].includes(u.plan || ''));
+        filename = "eventfold_labs_users.csv";
+      } else if (filter === 'free') {
+        targetUsers = allUsers.filter(u => (u.plan || 'free') === 'free');
+        filename = "eventfold_free_users.csv";
+      }
+
       const csvHeader = "ID,Name,Email,Plan,Credits,Role,Verified,Joined Date\n";
-      const csvRows = allUsers.map(u => {
+      const csvRows = targetUsers.map(u => {
         const name = `"${(u.name || "").replace(/"/g, '""')}"`;
         const email = `"${(u.email || "").replace(/"/g, '""')}"`;
         const plan = u.plan || 'free';
@@ -1649,7 +1664,7 @@ export function registerRoutes(
       const csvData = csvHeader + csvRows;
 
       res.setHeader('Content-Type', 'text/csv');
-      res.setHeader('Content-Disposition', 'attachment; filename="eventfold_users.csv"');
+      res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
       res.send(csvData);
     } catch (e: any) {
       console.error("CSV Export failed:", e);

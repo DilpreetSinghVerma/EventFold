@@ -421,9 +421,20 @@ export default function Admin() {
                <CardHeader className="border-b border-white/5 bg-white/[0.02]">
                 <CardTitle className="text-lg flex items-center justify-between gap-2">
                    <div className="flex items-center gap-2"><Users className="w-5 h-5 text-primary" /> Active Platform Users</div>
-                   <Button variant="outline" className="h-8 gap-2 border-white/10 text-xs" onClick={() => window.location.href = '/api/admin/export-users'}>
-                     <Download className="w-3 h-3"/> Export CSV
-                   </Button>
+                   <div className="flex flex-wrap gap-2">
+                      <Button variant="outline" className="h-8 gap-2 border-white/10 text-xs" onClick={() => window.location.href = '/api/admin/export-users?filter=studio'}>
+                        <Download className="w-3 h-3"/> Studio Emails
+                      </Button>
+                      <Button variant="outline" className="h-8 gap-2 border-white/10 text-xs" onClick={() => window.location.href = '/api/admin/export-users?filter=labs'}>
+                        <Download className="w-3 h-3"/> Labs Emails
+                      </Button>
+                      <Button variant="outline" className="h-8 gap-2 border-white/10 text-xs" onClick={() => window.location.href = '/api/admin/export-users?filter=free'}>
+                        <Download className="w-3 h-3"/> Free Emails
+                      </Button>
+                      <Button variant="outline" className="h-8 gap-2 border-white/10 text-xs" onClick={() => window.location.href = '/api/admin/export-users'}>
+                        <Download className="w-3 h-3"/> Export All
+                      </Button>
+                    </div>
                 </CardTitle>
               </CardHeader>
               <CardContent className="p-0">
