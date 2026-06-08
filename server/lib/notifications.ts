@@ -53,7 +53,12 @@ export async function checkAndSendAlbumExpiryNotifications() {
       const phone = setting?.contactWhatsApp || album.customContactWhatsApp;
       if (phone) {
         const message = `Hello! Action Required: Your free trial album "${album.title}" is expiring in ${hoursLeft} hours. Upgrade to permanent hosting now to keep it active for your clients! https://www.eventfoldstudio.com/dashboard`;
-        await sendWhatsAppNotification(phone, message, album.title);
+        const template = process.env.WHATSAPP_TEMPLATE_NEAR_EXPIRY;
+        const params = [
+          { type: 'text', text: album.title },
+          { type: 'text', text: String(hoursLeft) }
+        ];
+        await sendWhatsAppNotification(phone, message, album.title, template, params);
       } else {
         console.log(`[NOTIFICATIONS] No WhatsApp contact configured for user ${user.email}`);
       }
@@ -93,7 +98,11 @@ export async function checkAndSendAlbumExpiryNotifications() {
       const phone = setting?.contactWhatsApp || album.customContactWhatsApp;
       if (phone) {
         const message = `Notice: Your free trial album "${album.title}" has expired and client access is paused. Upgrade to permanent hosting now to restore it instantly! https://www.eventfoldstudio.com/dashboard`;
-        await sendWhatsAppNotification(phone, message, album.title);
+        const template = process.env.WHATSAPP_TEMPLATE_EXPIRED;
+        const params = [
+          { type: 'text', text: album.title }
+        ];
+        await sendWhatsAppNotification(phone, message, album.title, template, params);
       } else {
         console.log(`[NOTIFICATIONS] No WhatsApp contact configured for user ${user.email}`);
       }

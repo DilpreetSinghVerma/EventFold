@@ -13,7 +13,13 @@ export function formatWhatsAppNumber(phone: string): string {
   return cleaned;
 }
 
-export async function sendWhatsAppNotification(toPhone: string, message: string, albumTitle?: string) {
+export async function sendWhatsAppNotification(
+  toPhone: string, 
+  message: string, 
+  albumTitle?: string,
+  templateName?: string,
+  templateParameters?: Array<{ type: string; text: string }>
+) {
   if (!toPhone) {
     console.log('[WHATSAPP] No phone number provided for notification');
     return;
@@ -28,23 +34,23 @@ export async function sendWhatsAppNotification(toPhone: string, message: string,
   if (metaAccessToken && metaPhoneNumberId) {
     try {
       const url = `https://graph.facebook.com/v18.0/${metaPhoneNumberId}/messages`;
-      const templateName = process.env.WHATSAPP_TEMPLATE_NAME;
+      const activeTemplate = templateName || process.env.WHATSAPP_TEMPLATE_NAME;
 
       let body: any;
 
-      if (templateName) {
+      if (activeTemplate) {
         // Meta API requires templates for business-initiated conversations
         body = {
           messaging_product: 'whatsapp',
           to: formattedPhone,
           type: 'template',
           template: {
-            name: templateName,
+            name: activeTemplate,
             language: { code: 'en' },
             components: [
               {
                 type: 'body',
-                parameters: [
+                parameters: templateParameters || [
                   { type: 'text', text: albumTitle || 'Your album' },
                   { type: 'text', text: message }
                 ]
