@@ -527,6 +527,16 @@ export function registerRoutes(
         await storage.deductCredit(userId);
       }
       const album = await storage.createAlbum(data);
+      
+      // Send Album Published confirmation email in the background
+      import("./lib/email").then(({ sendAlbumPublishedEmail }) => {
+        sendAlbumPublishedEmail(user.email, album.title, album.id).catch(err => {
+          console.error("Failed to send album published email in background:", err);
+        });
+      }).catch(err => {
+        console.error("Failed to dynamically import email library for creation alert:", err);
+      });
+
       res.json(album);
     } catch (e) {
       if (e instanceof ZodError) {

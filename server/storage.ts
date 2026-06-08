@@ -166,9 +166,29 @@ export class DatabaseStorage implements IStorage {
     if (!db) return;
     const album = await this.getAlbum(id);
     if (!album) return;
+    
+    const newViews = (album.views || 0) + 1;
     await db.update(albums)
-      .set({ views: (album.views || 0) + 1 })
+      .set({ views: newViews })
       .where(eq(albums.id, id));
+
+    // Check view milestones to trigger congratulations email
+    const milestones = [10, 50, 100, 250, 500, 1000, 2500, 5000, 10000];
+    if (milestones.includes(newViews) && album.userId) {
+      this.getUser(album.userId).then((user) => {
+        if (user?.email) {
+          import("./lib/email").then(({ sendAlbumMilestoneEmail }) => {
+            sendAlbumMilestoneEmail(user.email, album.title, newViews).catch(err => {
+              console.error("Failed to send album milestone email in background:", err);
+            });
+          }).catch(err => {
+            console.error("Failed to dynamically import email library for milestone check:", err);
+          });
+        }
+      }).catch(err => {
+        console.error("Failed to fetch user for milestone email:", err);
+      });
+    }
   }
 
   async cleanupExpiredAlbums(): Promise<void> {

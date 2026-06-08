@@ -261,3 +261,110 @@ function expiredAlbumTemplate(albumTitle: string, dashboardUrl: string) {
         </div>
     `;
 }
+
+export async function sendAlbumPublishedEmail(email: string, albumTitle: string, albumId: string) {
+    if (gmailTransporter) {
+        const albumUrl = `https://www.eventfoldstudio.com/viewer/${albumId}`;
+        const mailOptions = {
+            from: `"EventFold" <${GMAIL_EMAIL}>`,
+            to: email,
+            subject: `Published: Your Cinematic Album "${albumTitle}" is Live!`,
+            html: albumPublishedTemplate(albumTitle, albumUrl),
+        };
+
+        try {
+            await gmailTransporter.sendMail(mailOptions);
+            console.log(`[GMAIL] Album Published email sent to ${email} for "${albumTitle}"`);
+            return true;
+        } catch (error) {
+            console.error('[GMAIL] Failed to send album published email:', error);
+        }
+    } else {
+        console.log(`[EMAIL SIMULATION] Album Published notification for ${email} - Album "${albumTitle}" is live. Link: https://www.eventfoldstudio.com/viewer/${albumId}`);
+    }
+    return false;
+}
+
+export async function sendAlbumMilestoneEmail(email: string, albumTitle: string, viewCount: number) {
+    if (gmailTransporter) {
+        const dashboardUrl = `https://www.eventfoldstudio.com/dashboard`;
+        const mailOptions = {
+            from: `"EventFold" <${GMAIL_EMAIL}>`,
+            to: email,
+            subject: `Congratulations! "${albumTitle}" reached ${viewCount} Views!`,
+            html: albumMilestoneTemplate(albumTitle, viewCount, dashboardUrl),
+        };
+
+        try {
+            await gmailTransporter.sendMail(mailOptions);
+            console.log(`[GMAIL] Album Milestone email sent to ${email} for "${albumTitle}" (${viewCount} views)`);
+            return true;
+        } catch (error) {
+            console.error('[GMAIL] Failed to send album milestone email:', error);
+        }
+    } else {
+        console.log(`[EMAIL SIMULATION] Album Milestone alert for ${email} - Album "${albumTitle}" reached ${viewCount} views.`);
+    }
+    return false;
+}
+
+function albumPublishedTemplate(albumTitle: string, albumUrl: string) {
+    return `
+        <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; padding: 40px; border: 1px solid #1e1e2e; border-radius: 24px; background: #030303; color: white;">
+            <div style="text-align: center; margin-bottom: 30px;">
+                <img src="https://eventfoldstudio.com/branding%20material/without%20bg%20version.png" alt="EventFold Logo" style="height: 60px; margin-bottom: 10px; display: inline-block;" />
+                <p style="text-transform: uppercase; letter-spacing: 5px; font-size: 10px; color: rgba(255,255,255,0.4);">Album Successfully Published</p>
+            </div>
+            
+            <div style="background: rgba(139, 92, 246, 0.1); border: 1px solid rgba(139, 92, 246, 0.2); padding: 30px; border-radius: 16px; text-align: center; margin-bottom: 30px;">
+                <p style="font-size: 14px; margin: 0; color: rgba(255,255,255,0.6);">YOUR ALBUM IS NOW LIVE</p>
+                <h2 style="font-size: 24px; margin: 10px 0; color: white;">"${albumTitle}"</h2>
+                <p style="font-size: 13px; margin: 0; color: #8b5cf6; font-weight: bold;">SHARE WITH YOUR CLIENTS</p>
+            </div>
+
+            <p style="line-height: 1.6; color: rgba(255,255,255,0.7); text-align: center;">Congratulations! Your premium 3D flipbook album has been compiled and is ready for client delivery. Below is your direct viewer link and a scan-ready QR code that you can copy and print on wedding materials or cards.</p>
+            
+            <div style="text-align: center; margin: 30px 0;">
+                <div style="margin-bottom: 20px;">
+                    <a href="${albumUrl}" style="background: #8b5cf6; color: white; padding: 16px 36px; border-radius: 12px; text-decoration: none; font-weight: bold; font-size: 14px; display: inline-block; box-shadow: 0 10px 20px rgba(139, 92, 246, 0.3);">OPEN 3D VIEW ALBUM</a>
+                </div>
+                <div style="margin-top: 10px; color: rgba(255,255,255,0.4); font-size: 12px; font-family: monospace; word-break: break-all;">
+                    ${albumUrl}
+                </div>
+            </div>
+
+            <div style="text-align: center; background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.05); padding: 30px; border-radius: 20px; margin-top: 30px;">
+                <p style="font-size: 12px; font-weight: bold; color: rgba(255,255,255,0.6); margin-top: 0; text-transform: uppercase; letter-spacing: 2px;">Your Shareable QR Code</p>
+                <img src="https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=${encodeURIComponent(albumUrl)}" alt="Album QR Code" style="width: 200px; height: 200px; display: inline-block; margin-top: 10px; border: 4px solid #8b5cf6; border-radius: 16px; background: white; padding: 5px;" />
+                <p style="font-size: 10px; color: rgba(255,255,255,0.3); margin-bottom: 0; margin-top: 15px;">Clients scan this QR to open the album instantly on mobile screens.</p>
+            </div>
+
+            <p style="color: rgba(255,255,255,0.2); font-size: 10px; text-align: center; margin-top: 50px; text-transform: uppercase; letter-spacing: 2px;">Automated Workspace Notification · Do not reply</p>
+        </div>
+    `;
+}
+
+function albumMilestoneTemplate(albumTitle: string, viewCount: number, dashboardUrl: string) {
+    return `
+        <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; padding: 40px; border: 1px solid #1e1e2e; border-radius: 24px; background: #030303; color: white;">
+            <div style="text-align: center; margin-bottom: 30px;">
+                <img src="https://eventfoldstudio.com/branding%20material/without%20bg%20version.png" alt="EventFold Logo" style="height: 60px; margin-bottom: 10px; display: inline-block;" />
+                <p style="text-transform: uppercase; letter-spacing: 5px; font-size: 10px; color: rgba(255,255,255,0.4);">Viewer Engagement Milestone</p>
+            </div>
+            
+            <div style="background: rgba(16, 185, 129, 0.1); border: 1px solid rgba(16, 185, 129, 0.2); padding: 30px; border-radius: 16px; text-align: center; margin-bottom: 30px;">
+                <p style="font-size: 14px; margin: 0; color: rgba(255,255,255,0.6); text-transform: uppercase; letter-spacing: 1px;">CONGRATULATIONS!</p>
+                <h2 style="font-size: 36px; margin: 10px 0; color: #10b981; font-weight: 900;">${viewCount} VIEWS</h2>
+                <p style="font-size: 16px; margin: 0; font-weight: bold; color: white;">"${albumTitle}"</p>
+            </div>
+
+            <p style="line-height: 1.6; color: rgba(255,255,255,0.7); text-align: center;">Amazing! Your album has reached a new viewer milestone. Clients and families are actively flipping, reviewing, and sharing your cinematic project.</p>
+            
+            <div style="text-align: center; margin-top: 40px;">
+                <a href="${dashboardUrl}" style="background: #10b981; color: white; padding: 18px 40px; border-radius: 12px; text-decoration: none; font-weight: bold; font-size: 16px; display: inline-block; box-shadow: 0 10px 20px rgba(16, 185, 129, 0.3);">VIEW REAL-TIME ANALYTICS</a>
+            </div>
+
+            <p style="color: rgba(255,255,255,0.2); font-size: 10px; text-align: center; margin-top: 50px; text-transform: uppercase; letter-spacing: 2px;">Automated Analytics Notification · Do not reply</p>
+        </div>
+    `;
+}
