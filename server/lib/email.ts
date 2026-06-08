@@ -116,7 +116,7 @@ function reminderTemplate(daysLeft: number, plan: string) {
     return `
         <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; padding: 40px; border: 1px solid #1e1e2e; border-radius: 24px; background: #030303; color: white;">
             <div style="text-align: center; margin-bottom: 30px;">
-                <h1 style="color: #8b5cf6; font-size: 32px; margin-bottom: 5px;">EventFold Cinematic</h1>
+                <img src="https://eventfoldstudio.com/branding%20material/without%20bg%20version.png" alt="EventFold Logo" style="height: 60px; margin-bottom: 10px; display: inline-block;" />
                 <p style="text-transform: uppercase; letter-spacing: 5px; font-size: 10px; color: rgba(255,255,255,0.4);">Elite Platform Access</p>
             </div>
             
@@ -216,7 +216,7 @@ function nearExpiryAlbumTemplate(albumTitle: string, hoursRemaining: number, das
     return `
         <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; padding: 40px; border: 1px solid #1e1e2e; border-radius: 24px; background: #030303; color: white;">
             <div style="text-align: center; margin-bottom: 30px;">
-                <h1 style="color: #8b5cf6; font-size: 32px; margin-bottom: 5px;">EventFold Cinematic</h1>
+                <img src="https://eventfoldstudio.com/branding%20material/without%20bg%20version.png" alt="EventFold Logo" style="height: 60px; margin-bottom: 10px; display: inline-block;" />
                 <p style="text-transform: uppercase; letter-spacing: 5px; font-size: 10px; color: rgba(255,255,255,0.4);">Trial Album Expiration</p>
             </div>
             
@@ -241,7 +241,7 @@ function expiredAlbumTemplate(albumTitle: string, dashboardUrl: string) {
     return `
         <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; padding: 40px; border: 1px solid #1e1e2e; border-radius: 24px; background: #030303; color: white;">
             <div style="text-align: center; margin-bottom: 30px;">
-                <h1 style="color: #8b5cf6; font-size: 32px; margin-bottom: 5px;">EventFold Cinematic</h1>
+                <img src="https://eventfoldstudio.com/branding%20material/without%20bg%20version.png" alt="EventFold Logo" style="height: 60px; margin-bottom: 10px; display: inline-block;" />
                 <p style="text-transform: uppercase; letter-spacing: 5px; font-size: 10px; color: rgba(255,255,255,0.4);">Trial Album Expired</p>
             </div>
             
