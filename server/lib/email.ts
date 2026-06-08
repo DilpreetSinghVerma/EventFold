@@ -164,3 +164,100 @@ function resetTemplate(code: string) {
         </div>
     `;
 }
+
+export async function sendAlbumNearExpiryEmail(email: string, albumTitle: string, hoursRemaining: number) {
+    if (gmailTransporter) {
+        const dashboardUrl = `https://www.eventfoldstudio.com/dashboard`;
+        const mailOptions = {
+            from: `"EventFold" <${GMAIL_EMAIL}>`,
+            to: email,
+            subject: `Action Required: Your Free Trial Album "${albumTitle}" Expires in ${hoursRemaining} Hours`,
+            html: nearExpiryAlbumTemplate(albumTitle, hoursRemaining, dashboardUrl),
+        };
+
+        try {
+            await gmailTransporter.sendMail(mailOptions);
+            console.log(`[GMAIL] Album Near Expiry email sent to ${email} for "${albumTitle}"`);
+            return true;
+        } catch (error) {
+            console.error('[GMAIL] Failed to send album near-expiry email:', error);
+        }
+    } else {
+        console.log(`[EMAIL SIMULATION] Album Near Expiry reminder for ${email} - Album "${albumTitle}" expires in ${hoursRemaining} hours.`);
+    }
+    return false;
+}
+
+export async function sendAlbumExpiredEmail(email: string, albumTitle: string) {
+    if (gmailTransporter) {
+        const dashboardUrl = `https://www.eventfoldstudio.com/dashboard`;
+        const mailOptions = {
+            from: `"EventFold" <${GMAIL_EMAIL}>`,
+            to: email,
+            subject: `Expired: Your Free Trial Album "${albumTitle}" has Expired`,
+            html: expiredAlbumTemplate(albumTitle, dashboardUrl),
+        };
+
+        try {
+            await gmailTransporter.sendMail(mailOptions);
+            console.log(`[GMAIL] Album Expired email sent to ${email} for "${albumTitle}"`);
+            return true;
+        } catch (error) {
+            console.error('[GMAIL] Failed to send album expired email:', error);
+        }
+    } else {
+        console.log(`[EMAIL SIMULATION] Album Expired notification for ${email} - Album "${albumTitle}" has expired.`);
+    }
+    return false;
+}
+
+function nearExpiryAlbumTemplate(albumTitle: string, hoursRemaining: number, dashboardUrl: string) {
+    const timeText = hoursRemaining <= 1 ? "1 hour" : `${hoursRemaining} hours`;
+    return `
+        <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; padding: 40px; border: 1px solid #1e1e2e; border-radius: 24px; background: #030303; color: white;">
+            <div style="text-align: center; margin-bottom: 30px;">
+                <h1 style="color: #8b5cf6; font-size: 32px; margin-bottom: 5px;">EventFold Cinematic</h1>
+                <p style="text-transform: uppercase; letter-spacing: 5px; font-size: 10px; color: rgba(255,255,255,0.4);">Trial Album Expiration</p>
+            </div>
+            
+            <div style="background: rgba(239, 68, 68, 0.1); border: 1px solid rgba(239, 68, 68, 0.2); padding: 30px; border-radius: 16px; text-align: center; margin-bottom: 30px;">
+                <p style="font-size: 14px; margin: 0; color: rgba(255,255,255,0.6); text-transform: uppercase;">FREE TRIAL ALBUM EXPIRING SOON</p>
+                <h2 style="font-size: 28px; margin: 10px 0; color: #ef4444;">${timeText.toUpperCase()} REMAINING</h2>
+                <p style="font-size: 16px; margin: 0; font-weight: bold; color: white;">"${albumTitle}"</p>
+            </div>
+
+            <p style="line-height: 1.6; color: rgba(255,255,255,0.7); text-align: center;">Your free 7-day trial album is about to expire. Once expired, client access will be paused and viewers won't be able to flip through the album. Upgrade this album to permanent hosting now to keep it active forever.</p>
+            
+            <div style="text-align: center; margin-top: 40px;">
+                <a href="${dashboardUrl}" style="background: #8b5cf6; color: white; padding: 18px 40px; border-radius: 12px; text-decoration: none; font-weight: bold; font-size: 16px; display: inline-block; box-shadow: 0 10px 20px rgba(139, 92, 246, 0.3);">UPGRADE ALBUM NOW</a>
+            </div>
+
+            <p style="color: rgba(255,255,255,0.2); font-size: 10px; text-align: center; margin-top: 50px; text-transform: uppercase; letter-spacing: 2px;">Automated Security Notification · Do not reply</p>
+        </div>
+    `;
+}
+
+function expiredAlbumTemplate(albumTitle: string, dashboardUrl: string) {
+    return `
+        <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; padding: 40px; border: 1px solid #1e1e2e; border-radius: 24px; background: #030303; color: white;">
+            <div style="text-align: center; margin-bottom: 30px;">
+                <h1 style="color: #8b5cf6; font-size: 32px; margin-bottom: 5px;">EventFold Cinematic</h1>
+                <p style="text-transform: uppercase; letter-spacing: 5px; font-size: 10px; color: rgba(255,255,255,0.4);">Trial Album Expired</p>
+            </div>
+            
+            <div style="background: rgba(239, 68, 68, 0.1); border: 1px solid rgba(239, 68, 68, 0.2); padding: 30px; border-radius: 16px; text-align: center; margin-bottom: 30px;">
+                <p style="font-size: 14px; margin: 0; color: rgba(255,255,255,0.6); text-transform: uppercase;">FREE TRIAL ALBUM HAS EXPIRED</p>
+                <h2 style="font-size: 28px; margin: 10px 0; color: #ef4444;">EXPIRED</h2>
+                <p style="font-size: 16px; margin: 0; font-weight: bold; color: white;">"${albumTitle}"</p>
+            </div>
+
+            <p style="line-height: 1.6; color: rgba(255,255,255,0.7); text-align: center;">The free trial period for your album has ended. The album has been paused, and viewers can no longer open it. Your files are safe in our grace archive for 30 days. You can restore lifetime hosting and re-enable it immediately by upgrading the album from your dashboard.</p>
+            
+            <div style="text-align: center; margin-top: 40px;">
+                <a href="${dashboardUrl}" style="background: #8b5cf6; color: white; padding: 18px 40px; border-radius: 12px; text-decoration: none; font-weight: bold; font-size: 16px; display: inline-block; box-shadow: 0 10px 20px rgba(139, 92, 246, 0.3);">RESTORE & UPGRADE NOW</a>
+            </div>
+
+            <p style="color: rgba(255,255,255,0.2); font-size: 10px; text-align: center; margin-top: 50px; text-transform: uppercase; letter-spacing: 2px;">Automated Security Notification · Do not reply</p>
+        </div>
+    `;
+}

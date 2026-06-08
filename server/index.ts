@@ -16,6 +16,8 @@ import { sql } from "drizzle-orm";
   try {
     console.log("Running auto-migrations...");
     await db.execute(sql`ALTER TABLE "users" ADD COLUMN IF NOT EXISTS "last_active_at" timestamp;`);
+    await db.execute(sql`ALTER TABLE "albums" ADD COLUMN IF NOT EXISTS "near_expiry_notification_sent" integer DEFAULT 0 NOT NULL;`);
+    await db.execute(sql`ALTER TABLE "albums" ADD COLUMN IF NOT EXISTS "expiry_notification_sent" integer DEFAULT 0 NOT NULL;`);
     await db.execute(sql`
       CREATE TABLE IF NOT EXISTS "broadcasts" (
           "id" serial PRIMARY KEY NOT NULL,
@@ -129,11 +131,16 @@ if (process.env.VERCEL) {
     });
 }
 
-// Background cleanup task (Every hour)
+// Background cleanup & notification task (Every hour)
 import { storage } from "./storage";
+import { checkAndSendAlbumExpiryNotifications } from "./lib/notifications";
+
 setInterval(() => {
   log("Running background cleanup for expired albums...");
   storage.cleanupExpiredAlbums().catch(e => log(`Cleanup Failed: ${e.message}`, "error"));
+  
+  log("Running background checks for free trial album expirations...");
+  checkAndSendAlbumExpiryNotifications().catch(e => log(`Expiry Notifications Check Failed: ${e.message}`, "error"));
 }, 60 * 60 * 1000);
 
 export default app;

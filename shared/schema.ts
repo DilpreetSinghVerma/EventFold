@@ -46,6 +46,8 @@ export const albums = pgTable("albums", {
   customBusinessLogo: text("custom_business_logo"),
   customContactWhatsApp: text("custom_contact_whatsapp"),
   isLabAlbum: integer("is_lab_album").notNull().default(0), // 0: No, 1: Yes
+  nearExpiryNotificationSent: integer("near_expiry_notification_sent").notNull().default(0), // 0: No, 1: Yes
+  expiryNotificationSent: integer("expiry_notification_sent").notNull().default(0), // 0: No, 1: Yes
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 
