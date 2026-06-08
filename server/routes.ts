@@ -1764,4 +1764,29 @@ export function registerRoutes(
       res.status(500).json({ error: "Analytics fetch failed", details: e.message });
     }
   });
+
+  // Cron: Trigger album expiry notifications and cleanup
+  app.get("/api/cron/check-notifications", async (req, res) => {
+    const cronSecret = process.env.CRON_SECRET;
+    const authHeader = req.headers.authorization;
+    
+    // Allow execution if CRON_SECRET is not configured (for easy testing/local dev)
+    // or if it matches the Vercel Cron header / secret query param
+    const token = authHeader ? authHeader.replace("Bearer ", "") : req.query.secret;
+    
+    if (cronSecret && token !== cronSecret) {
+      return res.status(401).json({ error: "Unauthorized cron trigger" });
+    }
+
+    console.log("[CRON] Expiry notification and cleanup cron trigger initiated.");
+    try {
+      const { checkAndSendAlbumExpiryNotifications } = await import("./lib/notifications");
+      await checkAndSendAlbumExpiryNotifications();
+      await storage.cleanupExpiredAlbums();
+      res.json({ success: true, message: "Notifications and cleanup successfully processed." });
+    } catch (err: any) {
+      console.error("[CRON] Cron execution failed:", err);
+      res.status(500).json({ error: "Cron execution failed", details: err.message });
+    }
+  });
 }
