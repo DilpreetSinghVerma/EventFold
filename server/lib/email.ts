@@ -368,3 +368,54 @@ function albumMilestoneTemplate(albumTitle: string, viewCount: number, dashboard
         </div>
     `;
 }
+
+export async function sendPromotionalEmail(email: string, subject: string, messageHtml: string) {
+    if (gmailTransporter) {
+        const mailOptions = {
+            from: `"EventFold" <${GMAIL_EMAIL}>`,
+            to: email,
+            subject: subject,
+            html: promotionalEmailTemplate(messageHtml),
+        };
+
+        try {
+            await gmailTransporter.sendMail(mailOptions);
+            console.log(`[GMAIL] Promotional email sent to ${email} - Subject: "${subject}"`);
+            return true;
+        } catch (error) {
+            console.error('[GMAIL] Failed to send promotional email:', error);
+        }
+    } else {
+        console.log(`[EMAIL SIMULATION] Promotional email to ${email} - Subject: "${subject}"`);
+    }
+    return false;
+}
+
+function promotionalEmailTemplate(messageHtml: string) {
+    return `
+        <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; padding: 40px; border: 1px solid #1e1e2e; border-radius: 24px; background: #030303; color: white;">
+            <div style="text-align: center; margin-bottom: 30px;">
+                <img src="https://eventfoldstudio.com/branding%20material/without%20bg%20version.png" alt="EventFold Logo" style="height: 60px; margin-bottom: 10px; display: inline-block;" />
+                <p style="text-transform: uppercase; letter-spacing: 5px; font-size: 10px; color: rgba(255,255,255,0.4);">Official Announcement</p>
+            </div>
+            
+            <div style="line-height: 1.8; color: rgba(255,255,255,0.85); font-size: 15px; margin-bottom: 30px;">
+                ${messageHtml}
+            </div>
+
+            <hr style="border: 0; border-top: 1px solid rgba(255,255,255,0.1); margin: 35px 0;" />
+            
+            <p style="line-height: 1.6; color: rgba(255,255,255,0.6); text-align: center; font-size: 13px;">
+                Have questions or want to see it in action? Visit our studio homepage to discover how we help creators succeed.
+            </p>
+
+            <div style="text-align: center; margin-top: 25px;">
+                <a href="https://www.eventfoldstudio.com" style="background: #8b5cf6; color: white; padding: 15px 32px; border-radius: 10px; text-decoration: none; font-weight: bold; font-size: 14px; display: inline-block; box-shadow: 0 10px 20px rgba(139, 92, 246, 0.2);">VISIT EVENTFOLD STUDIO</a>
+            </div>
+
+            <p style="color: rgba(255,255,255,0.2); font-size: 9px; text-align: center; margin-top: 50px; text-transform: uppercase; letter-spacing: 2px;">
+                Sent to select photographers and print labs.
+            </p>
+        </div>
+    `;
+}

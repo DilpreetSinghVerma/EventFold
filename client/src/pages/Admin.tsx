@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import { Loader2, Plus, Minus, Trash2, Eye, LayoutDashboard, Users, BookCopy, ShieldAlert, TrendingUp, Activity, Database, Globe, Search, ArrowUpCircle, CheckCircle2, XCircle, Sparkles, Cloud, HardDrive, Wifi, Zap, AlertTriangle, RefreshCw, IndianRupee, PieChart, BarChart3, Clock, Crown, CreditCard, Star, Download, Megaphone } from "lucide-react";
+import { Loader2, Plus, Minus, Trash2, Eye, LayoutDashboard, Users, BookCopy, ShieldAlert, TrendingUp, Activity, Database, Globe, Search, ArrowUpCircle, CheckCircle2, XCircle, Sparkles, Cloud, HardDrive, Wifi, Zap, AlertTriangle, RefreshCw, IndianRupee, PieChart, BarChart3, Clock, Crown, CreditCard, Star, Download, Megaphone, Mail } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { Link, useLocation } from "wouter";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -26,6 +26,13 @@ export default function Admin() {
   const [cloudError, setCloudError] = useState<string | null>(null);
   const [cleanupData, setCleanupData] = useState<any>(null);
   const [cleanupLoading, setCleanupLoading] = useState(false);
+
+  // Form states for Email Broadcast
+  const [emailSubject, setEmailSubject] = useState("");
+  const [emailTarget, setEmailTarget] = useState("all");
+  const [emailCustomList, setEmailCustomList] = useState("");
+  const [emailMessage, setEmailMessage] = useState("");
+  const [sendingBroadcast, setSendingBroadcast] = useState(false);
 
   const fetchCleanup = async () => {
     setCleanupLoading(true);
@@ -323,6 +330,9 @@ export default function Admin() {
             </TabsTrigger>
             <TabsTrigger value="broadcast" className="data-[state=active]:bg-primary rounded-lg flex gap-2">
               <Megaphone className="w-4 h-4" /> Broadcasts
+            </TabsTrigger>
+            <TabsTrigger value="email-broadcast" className="data-[state=active]:bg-primary rounded-lg flex gap-2">
+              <Mail className="w-4 h-4" /> Email Broadcast
             </TabsTrigger>
           </TabsList>
 
@@ -1419,6 +1429,190 @@ export default function Admin() {
                   )}
                 </CardContent>
               </Card>
+            </div>
+          </TabsContent>
+
+          <TabsContent value="email-broadcast">
+            <div className="grid lg:grid-cols-12 gap-8 mt-6">
+              {/* Left Column: Form */}
+              <div className="lg:col-span-6 space-y-6">
+                <Card className="bg-white/[0.02] border-white/5 rounded-2xl overflow-hidden glass">
+                  <CardHeader>
+                    <CardTitle className="text-xl flex items-center gap-2">
+                      <Mail className="text-primary w-5 h-5" /> 
+                      Email Broadcast System
+                    </CardTitle>
+                    <p className="text-white/40 text-sm">Send promotional or update emails to targeted cohorts or a custom lead list.</p>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    <div className="space-y-2">
+                      <label className="text-sm font-medium text-white/77">Target Group</label>
+                      <Select 
+                        value={emailTarget} 
+                        onValueChange={(val) => {
+                          setEmailTarget(val);
+                          if (val === "custom") {
+                            if (!emailSubject) setEmailSubject("Deliver 3D Cinematic Albums to Your Clients — Try EventFold Studio");
+                            if (!emailMessage) setEmailMessage(`<h3>Transform How You Deliver Albums to Your Clients</h3>\n<p>Are you still sharing photos via Google Drive links or USB pen drives? Traditional file-sharing is boring and does not showcase the true emotion of your work.</p>\n\n<p>With <strong>EventFold Studio</strong>, you can instantly turn your client photos into a premium, interactive virtual 3D flipbook that feels like holding a real physical album, complete with:</p>\n\n<ul>\n  <li><strong>Realistic 3D Page Turning</strong> with fluid layouts</li>\n  <li><strong>Embedded Video Highlights</strong> playing directly inside the pages</li>\n  <li><strong>One-Click Client WhatsApp Booking</strong> inside the album viewer</li>\n  <li><strong>Instant Sharing</strong> via custom links & scan-ready QR codes</li>\n</ul>\n\n<p>Make your photography studio stand out and give your clients a cinematic experience they will share with their family and friends.</p>\n\n<p>Click the button below to sign up and publish your first album for free in under 60 seconds!</p>`);
+                          }
+                        }}
+                      >
+                        <SelectTrigger className="bg-white/5 border-white/10 h-10">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent className="bg-[#0a0a0b] border-white/10 text-white">
+                          <SelectItem value="all">All Registered Users</SelectItem>
+                          <SelectItem value="free">Free Tier Users Only</SelectItem>
+                          <SelectItem value="photographers">Paid Photographers (Studio plans)</SelectItem>
+                          <SelectItem value="labs">Print Labs Only</SelectItem>
+                          <SelectItem value="custom">Custom Email List (Cold Leads)</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+
+                    {emailTarget === "custom" && (
+                      <div className="space-y-2">
+                        <label className="text-sm font-medium text-white/70 flex justify-between">
+                          <span>Recipient Email Addresses</span>
+                          <span className="text-[10px] text-white/30 lowercase font-bold tracking-wider">comma or line separated</span>
+                        </label>
+                        <textarea
+                          placeholder="photographer1@gmail.com, studio2@yahoo.com, printlab3@gmail.com..."
+                          value={emailCustomList}
+                          onChange={(e) => setEmailCustomList(e.target.value)}
+                          rows={4}
+                          className="w-full rounded-md bg-white/5 border border-white/10 text-white p-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary/50 font-mono"
+                        />
+                      </div>
+                    )}
+
+                    <div className="space-y-2">
+                      <label className="text-sm font-medium text-white/70">Subject Line</label>
+                      <Input 
+                        placeholder="e.g. Transform your gallery sharing experience..." 
+                        value={emailSubject}
+                        onChange={(e) => setEmailSubject(e.target.value)}
+                        className="bg-white/5 border-white/10" 
+                      />
+                    </div>
+
+                    <div className="space-y-2">
+                      <label className="text-sm font-medium text-white/70">Message (HTML Supported)</label>
+                      <textarea
+                        placeholder="Write your announcement or marketing pitch here..."
+                        value={emailMessage}
+                        onChange={(e) => setEmailMessage(e.target.value)}
+                        rows={12}
+                        className="w-full rounded-md bg-white/5 border border-white/10 text-white p-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary/50 font-mono"
+                      />
+                    </div>
+
+                    <div className="pt-4">
+                      <Button 
+                        className="w-full"
+                        disabled={sendingBroadcast}
+                        onClick={async () => {
+                          if (!emailSubject.trim()) return toast({title: "Subject required", variant: "destructive"});
+                          if (!emailMessage.trim()) return toast({title: "Message required", variant: "destructive"});
+                          
+                          let customEmailsArr: string[] = [];
+                          if (emailTarget === "custom") {
+                            if (!emailCustomList.trim()) return toast({title: "Email list required", variant: "destructive"});
+                            customEmailsArr = emailCustomList.split(/[,\n]/).map(e => e.trim()).filter(e => e.length > 0);
+                            if (customEmailsArr.length === 0) return toast({title: "No valid emails", variant: "destructive"});
+                          }
+
+                          try {
+                            setSendingBroadcast(true);
+                            await apiRequest("POST", "/api/admin/broadcast-email", {
+                              subject: emailSubject,
+                              message: emailMessage,
+                              target: emailTarget,
+                              customEmails: customEmailsArr
+                            });
+                            toast({
+                              title: "Broadcast Started",
+                              description: "The email broadcast was successfully started in the background.",
+                            });
+                            if (emailTarget === "custom") {
+                              setEmailCustomList("");
+                            }
+                          } catch (err: any) {
+                            toast({
+                              title: "Broadcast Failed",
+                              description: err.message || "Failed to trigger email broadcast.",
+                              variant: "destructive"
+                            });
+                          } finally {
+                            setSendingBroadcast(false);
+                          }
+                        }}
+                      >
+                        {sendingBroadcast ? (
+                          <>
+                            <Loader2 className="w-4 h-4 mr-2 animate-spin" /> Dispatching Broadcast...
+                          </>
+                        ) : (
+                          "Send Email Broadcast"
+                        )}
+                      </Button>
+                      <p className="text-[10px] text-white/30 text-center mt-2">
+                        * Runs in the background with a 500ms delay per recipient to prevent SMTP limits.
+                      </p>
+                    </div>
+                  </CardContent>
+                </Card>
+              </div>
+
+              {/* Right Column: Real-time Live Preview */}
+              <div className="lg:col-span-6 space-y-6">
+                <Card className="bg-white/[0.02] border-white/5 rounded-2xl overflow-hidden glass h-full flex flex-col">
+                  <CardHeader className="border-b border-white/5 bg-white/[0.01]">
+                    <CardTitle className="text-sm uppercase tracking-widest text-white/40 flex items-center gap-2">
+                      <Eye className="w-4 h-4" /> Real-time Email Preview
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="p-6 flex-1 flex flex-col justify-start overflow-y-auto">
+                    <div className="border border-white/10 rounded-2xl overflow-hidden bg-black p-4 scale-95 origin-top min-h-[500px] w-full">
+                      <div className="text-xs text-white/40 mb-4 border-b border-white/5 pb-2">
+                        <div><strong>From:</strong> EventFold Studio &lt;eventfoldstudio@gmail.com&gt;</div>
+                        <div className="mt-1"><strong>Subject:</strong> {emailSubject || <span className="text-white/20 italic">No subject specified</span>}</div>
+                      </div>
+                      <div 
+                        className="email-preview-body"
+                        dangerouslySetInnerHTML={{
+                          __html: `
+                            <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; padding: 25px; border: 1px solid #1e1e2e; border-radius: 20px; background: #030303; color: white; text-align: left;">
+                              <div style="text-align: center; margin-bottom: 20px;">
+                                <img src="https://eventfoldstudio.com/branding%20material/without%20bg%20version.png" alt="EventFold Logo" style="height: 50px; margin-bottom: 5px; display: inline-block;" />
+                                <p style="text-transform: uppercase; letter-spacing: 4px; font-size: 8px; color: rgba(255,255,255,0.4); margin: 0;">Official Announcement</p>
+                              </div>
+                              
+                              <div style="line-height: 1.6; color: rgba(255,255,255,0.85); font-size: 13px;">
+                                ${emailMessage || '<p style="color: rgba(255,255,255,0.2); text-align: center; padding: 40px 0;">Write your message content in the editor to see a live preview of the client email...</p>'}
+                              </div>
+
+                              <hr style="border: 0; border-top: 1px solid rgba(255,255,255,0.1); margin: 25px 0;" />
+                              
+                              <p style="line-height: 1.5; color: rgba(255,255,255,0.5); text-align: center; font-size: 11px; margin-bottom: 0;">
+                                Have questions or want to see it in action? Visit our studio homepage to discover how we help creators succeed.
+                              </p>
+
+                              <div style="text-align: center; margin-top: 15px;">
+                                <a href="#" style="background: #8b5cf6; color: white; padding: 12px 24px; border-radius: 8px; text-decoration: none; font-weight: bold; font-size: 12px; display: inline-block;">VISIT EVENTFOLD STUDIO</a>
+                              </div>
+
+                              <p style="color: rgba(255,255,255,0.2); font-size: 8px; text-align: center; margin-top: 35px; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 0;">
+                                Sent to select photographers and print labs.
+                              </p>
+                            </div>
+                          `
+                        }}
+                      />
+                    </div>
+                  </CardContent>
+                </Card>
+              </div>
             </div>
           </TabsContent>
         </Tabs>

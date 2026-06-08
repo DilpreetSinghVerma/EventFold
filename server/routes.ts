@@ -923,6 +923,76 @@ export function registerRoutes(
     }
   });
 
+  // Admin: Broadcast Email to cohorts or custom lists of leads
+  app.post("/api/admin/broadcast-email", async (req, res) => {
+    try {
+      if (!req.isAuthenticated()) return res.status(401).json({ error: "Unauthorized" });
+      const adminUser = req.user as any;
+      if (adminUser.role !== 'admin' && adminUser.email !== 'dilpreetsinghverma@gmail.com') {
+        return res.status(403).json({ error: "High-level clearing required" });
+      }
+
+      const { subject, message, target, customEmails } = req.body;
+      if (!subject || !message || !target) {
+        return res.status(400).json({ error: "Subject, message, and target cohort are required." });
+      }
+
+      let emailsToNotify: string[] = [];
+
+      if (target === 'custom') {
+        if (!Array.isArray(customEmails)) {
+          return res.status(400).json({ error: "customEmails array is required when target is custom." });
+        }
+        emailsToNotify = customEmails
+          .map(e => e.trim().toLowerCase())
+          .filter(e => e.includes('@') && e.length > 3);
+      } else {
+        const allUsers = await storage.getUsers();
+        if (target === 'all') {
+          emailsToNotify = allUsers.map(u => u.email);
+        } else if (target === 'free') {
+          emailsToNotify = allUsers.filter(u => u.plan === 'free').map(u => u.email);
+        } else if (target === 'photographers') {
+          emailsToNotify = allUsers.filter(u => ['pro', 'elite'].includes(u.plan)).map(u => u.email);
+        } else if (target === 'labs') {
+          emailsToNotify = allUsers.filter(u => ['lab_monthly', 'lab_half_yearly', 'lab_yearly', 'lab_unlimited'].includes(u.plan)).map(u => u.email);
+        }
+      }
+
+      // De-duplicate emails
+      emailsToNotify = Array.from(new Set(emailsToNotify));
+
+      if (emailsToNotify.length === 0) {
+        return res.json({ success: true, count: 0, message: "No recipients match the target cohort." });
+      }
+
+      console.log(`[BROADCAST] Starting email broadcast of "${subject}" to ${emailsToNotify.length} targets.`);
+      const { sendPromotionalEmail } = await import("./lib/email");
+
+      // Execute dispatch in background (non-blocking)
+      (async () => {
+        for (let i = 0; i < emailsToNotify.length; i++) {
+          const email = emailsToNotify[i];
+          try {
+            await sendPromotionalEmail(email, subject, message);
+            // Throttle 500ms to be safe with SMTP servers
+            await new Promise(resolve => setTimeout(resolve, 500));
+          } catch (err) {
+            console.error(`[BROADCAST] Failed to send to ${email}:`, err);
+          }
+        }
+        console.log(`[BROADCAST] Completed email broadcast of "${subject}" to ${emailsToNotify.length} targets.`);
+      })().catch(err => {
+        console.error("[BROADCAST] Background error in queue loop:", err);
+      });
+
+      res.json({ success: true, count: emailsToNotify.length, message: `Broadcast started in the background to ${emailsToNotify.length} recipients.` });
+    } catch (e) {
+      console.error("Broadcast failed:", e);
+      res.status(500).json({ error: "Failed to start email broadcast" });
+    }
+  });
+
 
   // Update album metadata
   app.patch("/api/albums/:id", async (req, res) => {
