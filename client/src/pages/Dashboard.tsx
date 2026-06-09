@@ -1229,7 +1229,7 @@ export default function Dashboard() {
         setReferralOpen(open);
         if (!open) setRefLinkCopied(false);
       }}>
-        <DialogContent className="max-w-2xl bg-[#0a0a0c] border border-purple-500/20 text-white rounded-[2.5rem] p-6 lg:p-8 overflow-hidden relative shadow-[0_20px_50px_rgba(168,85,247,0.15)]">
+        <DialogContent className="max-w-2xl bg-[#0a0a0c] border border-purple-500/20 text-white rounded-[2.5rem] p-6 lg:p-8 overflow-hidden shadow-[0_20px_50px_rgba(168,85,247,0.15)]">
           {/* Subtle Decorative glow in modal */}
           <div className="absolute top-[-20%] left-[-20%] w-[50%] h-[50%] bg-purple-500/10 rounded-full blur-[100px] pointer-events-none" />
 
