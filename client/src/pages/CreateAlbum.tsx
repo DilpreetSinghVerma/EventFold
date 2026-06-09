@@ -13,7 +13,7 @@ import { Flipbook } from '@/components/Flipbook';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 
 export default function CreateAlbum() {
-  const { user, startRazorpayCheckout } = useAuth();
+  const { user, startRazorpayCheckout, buyAlbumCredit } = useAuth();
   const [, setLocation] = useLocation();
   const { addAlbum } = useAlbumStore();
   const [step, setStep] = useState(1);

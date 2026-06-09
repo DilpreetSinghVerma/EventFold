@@ -443,7 +443,7 @@ export async function sendReferralRewardEmail(email: string, name: string) {
 }
 
 function referralRewardEmailTemplate(name: string) {
-    const dashboardUrl = `${GMAIL_URL}/dashboard`;
+    const dashboardUrl = "https://www.eventfoldstudio.com/dashboard";
     return `
         <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; padding: 40px; border: 1px solid #c084fc; border-radius: 24px; background: #030303; color: white; box-shadow: 0 10px 30px rgba(192, 132, 252, 0.15);">
             <div style="text-align: center; margin-bottom: 30px;">

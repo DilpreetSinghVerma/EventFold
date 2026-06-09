@@ -20,6 +20,7 @@ import {
 import { useAuth } from '@/lib/auth';
 import { ContactModal } from '@/components/ContactModal';
 import { useQueryClient } from '@tanstack/react-query';
+import { useToast } from '@/hooks/use-toast';
 
 function ClientBrandingModalContent({ album, onSaved }: { album: any, onSaved: () => void }) {
   const { user } = useAuth();
@@ -248,6 +249,7 @@ function TransferToLabModalContent({ album, onSaved }: { album: any, onSaved: ()
 
 export default function Dashboard() {
   const { user, logout, buyAlbumCredit, startRazorpayCheckout } = useAuth();
+  const { toast } = useToast();
   const [albums, setAlbums] = useState<any[]>([]);
   const [dashboardMode, setDashboardMode] = useState<'personal' | 'lab'>('personal');
   const [loading, setLoading] = useState(true);
@@ -1077,8 +1079,9 @@ export default function Dashboard() {
               <div className="flex flex-wrap items-center gap-4 pt-4">
                 <Button
                   onClick={() => setReferralOpen(true)}
-                  className="h-10 rounded-full bg-purple-500/10 border border-purple-500/30 text-purple-300 hover:bg-purple-500/20 font-bold px-6 group transition-all animate-pulse hover:animate-none"
+                  className="h-10 rounded-full bg-gradient-to-r from-amber-500 via-yellow-400 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-zinc-950 font-extrabold px-6 border border-yellow-300/30 relative overflow-hidden shadow-lg shadow-amber-500/25 hover:shadow-amber-500/40 active:scale-95 transition-all"
                 >
+                  <div className="absolute inset-y-0 w-12 bg-gradient-to-r from-transparent via-white/50 to-transparent -skew-x-20 animate-gold-shine pointer-events-none" />
                   <Gift className="w-4 h-4 mr-2" /> REFER & EARN
                 </Button>
                 {isAdmin ? (

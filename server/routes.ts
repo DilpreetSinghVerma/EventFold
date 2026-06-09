@@ -168,6 +168,7 @@ export function registerRoutes(
       }));
 
       res.json({
+        success: true,
         referralCode: user.referralCode || '',
         totalReferred,
         pendingCount,
