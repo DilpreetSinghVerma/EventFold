@@ -20,6 +20,8 @@ interface FlipbookProps {
   onSlideshowEnd?: () => void;
   onPageChange?: (current: number, total: number) => void;
   audioUrl?: string;
+  pageWidth?: number;
+  pageHeight?: number;
 }
 
 export const Flipbook = forwardRef(({
@@ -36,7 +38,9 @@ export const Flipbook = forwardRef(({
   isSlideshowActive = false,
   onSlideshowEnd,
   onPageChange,
-  audioUrl
+  audioUrl,
+  pageWidth,
+  pageHeight
 }: FlipbookProps, ref) => {
   const book = useRef<any>(null);
 
@@ -46,8 +50,12 @@ export const Flipbook = forwardRef(({
   }));
 
   const container = useRef<HTMLDivElement>(null);
-  const [pageWidth, setPageWidth] = useState(360);
-  const [pageHeight, setPageHeight] = useState(240);
+  const [localPageWidth, setLocalPageWidth] = useState(360);
+  const [localPageHeight, setLocalPageHeight] = useState(240);
+
+  const finalPageWidth = pageWidth || localPageWidth;
+  const finalPageHeight = pageHeight || localPageHeight;
+
   const [ready, setReady] = useState(false);
   const [isOpened, setIsOpened] = useState(false);
   const [isFullscreen, setIsFullscreen] = useState(false);
@@ -153,7 +161,8 @@ export const Flipbook = forwardRef(({
 
       // Vertical space usage: be more aggressive on mobile landscape to clear UI
       const isLandscape = screenW > screenH;
-      const verticalPadding = isMobile ? (isLandscape ? 40 : 140) : 340;
+      // Increase padding in mobile landscape from 40 to 85 to clear title and controls
+      const verticalPadding = isMobile ? (isLandscape ? 85 : 140) : 340;
       const horizontalPadding = isMobile ? (isLandscape ? 40 : 40) : 500;
 
       let availW = screenW - horizontalPadding;
@@ -163,16 +172,22 @@ export const Flipbook = forwardRef(({
       availW = Math.max(availW, 200);
       availH = Math.max(availH, 150);
 
-      let w = availW / multiplier;
-      let h = w / PAGE_RATIO;
-
-      if (h > availH) {
+      let w, h;
+      if (isMobile && isLandscape) {
+        // Size the page to fit the height, letting the width overflow to default to 100% zoom
         h = availH;
         w = h * PAGE_RATIO;
+      } else {
+        w = availW / multiplier;
+        h = w / PAGE_RATIO;
+        if (h > availH) {
+          h = availH;
+          w = h * PAGE_RATIO;
+        }
       }
 
-      setPageWidth(Math.floor(w));
-      setPageHeight(Math.floor(h));
+      setLocalPageWidth(Math.floor(w));
+      setLocalPageHeight(Math.floor(h));
     };
 
     handleResize();
@@ -271,8 +286,9 @@ export const Flipbook = forwardRef(({
     backgroundColor: '#000',
     WebkitBackfaceVisibility: 'hidden',
     backfaceVisibility: 'hidden',
-    transform: 'translateZ(0)',
-    WebkitTransform: 'translateZ(0)',
+    transform: 'translate3d(0, 0, 0)',
+    WebkitTransform: 'translate3d(0, 0, 0)',
+    willChange: 'transform',
   };
 
   return (
@@ -290,33 +306,37 @@ export const Flipbook = forwardRef(({
             // Mobile: plain div, no 3D transforms — full GPU power goes to the flip animation
             <motion.div
               initial={{ opacity: 0, y: 40 }}
-              animate={{
-                opacity: 1,
-                y: 0,
-                // Center the cover on mobile by shifting the book half-page to the left
-                x: (currentPage === 0 && window.innerWidth < 1024) ? -(pageWidth / 2) : 0
-              }}
-              transition={{
-                duration: 0.6,
-                ease: 'easeOut',
-                x: { type: 'spring', stiffness: 100, damping: 20 }
-              }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6, ease: 'easeOut' }}
               style={{ display: 'inline-block' }}
             >
+              <div
+                style={{
+                  display: 'inline-block',
+                  transform: `translate3d(${(currentPage === 0 && window.innerWidth < 1024) ? -(finalPageWidth / 2) : 0}px, 0, 0)`,
+                  transition: 'transform 0.6s cubic-bezier(0.16, 1, 0.3, 1)',
+                  willChange: 'transform'
+                }}
+              >
             <HTMLFlipBook
               ref={book}
-              width={pageWidth}
-              height={pageHeight}
+              width={finalPageWidth}
+              height={finalPageHeight}
               size="fixed"
               minWidth={50}
               maxWidth={3000}
               minHeight={50}
               maxHeight={3000}
-              maxShadowOpacity={window.innerWidth < 1024 ? 0 : 0.3}
+              maxShadowOpacity={0}
               showCover={true}
               mobileScrollSupport={false}
-              className="shadow-2xl"
-              style={{ display: 'block' }}
+              className="shadow-none"
+              style={{
+                display: 'block',
+                willChange: 'transform',
+                transformStyle: 'preserve-3d',
+                WebkitTransformStyle: 'preserve-3d',
+              }}
               startPage={0}
               drawShadow={window.innerWidth >= 1024}
               onChangeState={(e: any) => {
@@ -324,7 +344,7 @@ export const Flipbook = forwardRef(({
                   playFlipSound();
                 }
               }}
-              flippingTime={1000}
+              flippingTime={1200}
               usePortrait={false}
               startZIndex={0}
               autoSize={false}
@@ -406,6 +426,11 @@ export const Flipbook = forwardRef(({
                               height: '100%',
                               objectFit: 'cover',
                               display: 'block',
+                              WebkitBackfaceVisibility: 'hidden',
+                              backfaceVisibility: 'hidden',
+                              transform: 'translate3d(0, 0, 0)',
+                              WebkitTransform: 'translate3d(0, 0, 0)',
+                              willChange: 'transform',
                             }}
                           />
                           <div className="absolute inset-0 opacity-[0.03] pointer-events-none" style={{ backgroundImage: `url("https://www.transparenttextures.com/patterns/leather.png")` }} />
@@ -454,7 +479,12 @@ export const Flipbook = forwardRef(({
                               position: 'absolute',
                               top: 0,
                               left: 0,
-                              zIndex: 1
+                              zIndex: 1,
+                              WebkitBackfaceVisibility: 'hidden',
+                              backfaceVisibility: 'hidden',
+                              transform: 'translate3d(0, 0, 0)',
+                              WebkitTransform: 'translate3d(0, 0, 0)',
+                              willChange: 'transform',
                             }}
                           />
                           {page.video && (
@@ -497,7 +527,11 @@ export const Flipbook = forwardRef(({
                                 left: 0,
                                 zIndex: 2,
                                 opacity: 0,
-                                transition: 'opacity 0.4s ease-in-out'
+                                transition: 'opacity 0.4s ease-in-out',
+                                WebkitBackfaceVisibility: 'hidden',
+                                backfaceVisibility: 'hidden',
+                                transform: 'translate3d(0, 0, 0)',
+                                WebkitTransform: 'translate3d(0, 0, 0)',
                               }}
                             />
                           )}
@@ -523,6 +557,7 @@ export const Flipbook = forwardRef(({
                 return null;
               })}
             </HTMLFlipBook>
+            </div>
             </motion.div>
           ) : (
             // Desktop: full 3D tilt animation
@@ -558,8 +593,8 @@ export const Flipbook = forwardRef(({
             >
             <HTMLFlipBook
               ref={book}
-              width={pageWidth}
-              height={pageHeight}
+              width={finalPageWidth}
+              height={finalPageHeight}
               size="fixed"
               minWidth={50}
               maxWidth={3000}
@@ -569,7 +604,12 @@ export const Flipbook = forwardRef(({
               showCover={true}
               mobileScrollSupport={false}
               className="shadow-2xl"
-              style={{ display: 'block' }}
+              style={{
+                display: 'block',
+                willChange: 'transform',
+                transformStyle: 'preserve-3d',
+                WebkitTransformStyle: 'preserve-3d',
+              }}
               startPage={0}
               drawShadow={true}
               onChangeState={(e: any) => {
@@ -577,7 +617,7 @@ export const Flipbook = forwardRef(({
                   playFlipSound();
                 }
               }}
-              flippingTime={1000}
+              flippingTime={1200}
               usePortrait={false}
               startZIndex={0}
               autoSize={false}
@@ -627,7 +667,17 @@ export const Flipbook = forwardRef(({
                       {isNear && (
                         <>
                           <img src={page.image} alt="cover" loading="eager"
-                            style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
+                            style={{
+                              width: '100%',
+                              height: '100%',
+                              objectFit: 'cover',
+                              display: 'block',
+                              WebkitBackfaceVisibility: 'hidden',
+                              backfaceVisibility: 'hidden',
+                              transform: 'translate3d(0, 0, 0)',
+                              WebkitTransform: 'translate3d(0, 0, 0)',
+                              willChange: 'transform',
+                            }} />
                           <div className="absolute inset-0 opacity-[0.03] pointer-events-none" style={{ backgroundImage: `url("https://www.transparenttextures.com/patterns/leather.png")` }} />
                           <div className="absolute inset-0 bg-gradient-to-tr from-black/60 via-transparent to-white/10 pointer-events-none" />
                           <div className="absolute inset-4 border border-white/10 rounded-sm pointer-events-none" />
@@ -658,7 +708,12 @@ export const Flipbook = forwardRef(({
                               position: 'absolute',
                               top: 0,
                               left: 0,
-                              zIndex: 1
+                              zIndex: 1,
+                              WebkitBackfaceVisibility: 'hidden',
+                              backfaceVisibility: 'hidden',
+                              transform: 'translate3d(0, 0, 0)',
+                              WebkitTransform: 'translate3d(0, 0, 0)',
+                              willChange: 'transform',
                             }}
                           />
                           {page.video && (

@@ -42,6 +42,7 @@ export default function DemoViewer() {
     const scaleRef = useRef(1);                      // actual value, no re-renders
     const zoomContainerRef = useRef<HTMLDivElement>(null); // direct DOM zoom
     const flipbookRef = useRef<any>(null);
+    const [dimensions, setDimensions] = useState({ pageWidth: 360, pageHeight: 240 });
     const [isPortrait, setIsPortrait] = useState(false);
     const [isSmallHeight, setIsSmallHeight] = useState(false);
     const [isMobileLandscape, setIsMobileLandscape] = useState(false);
@@ -54,12 +55,46 @@ export default function DemoViewer() {
 
     useEffect(() => {
         const checkOrientation = () => {
-            const portrait = window.innerHeight > window.innerWidth && window.innerWidth < 1024;
-            const smallH = window.innerHeight < 500;
-            const mobileL = window.innerWidth > window.innerHeight && window.innerWidth < 1024;
+            const screenW = window.visualViewport ? window.visualViewport.width : window.innerWidth;
+            const screenH = window.visualViewport ? window.visualViewport.height : window.innerHeight;
+            const portrait = screenH > screenW && screenW < 1024;
+            const smallH = screenH < 500;
+            const mobileL = screenW > screenH && screenW < 1024;
             setIsPortrait(portrait);
             setIsSmallHeight(smallH);
             setIsMobileLandscape(mobileL);
+
+            const isMobile = screenW < 1024;
+            const PAGE_RATIO = 1.5;
+            const multiplier = 2;
+            const isLandscape = screenW > screenH;
+            // Use 120 padding on mobile landscape to give 60px margin top and bottom for UI elements (Zero Overlap!)
+            const verticalPadding = isMobile ? (isLandscape ? 120 : 140) : 340;
+            const horizontalPadding = isMobile ? (isLandscape ? 40 : 40) : 500;
+
+            let availW = screenW - horizontalPadding;
+            let availH = screenH - verticalPadding;
+
+            availW = Math.max(availW, 200);
+            availH = Math.max(availH, 150);
+
+            let w, h;
+            if (isMobile && isLandscape) {
+                h = availH;
+                w = h * PAGE_RATIO;
+            } else {
+                w = availW / multiplier;
+                h = w / PAGE_RATIO;
+                if (h > availH) {
+                    h = availH;
+                    w = h * PAGE_RATIO;
+                }
+            }
+
+            setDimensions({
+                pageWidth: Math.floor(w),
+                pageHeight: Math.floor(h)
+            });
         };
         checkOrientation();
         window.addEventListener('resize', checkOrientation);
@@ -178,6 +213,8 @@ export default function DemoViewer() {
     const FlipbookNode = (
         <Flipbook
             ref={flipbookRef}
+            pageWidth={dimensions.pageWidth}
+            pageHeight={dimensions.pageHeight}
             sheets={loadedSheets}
             frontCover={demoFront}
             backCover={demoBack}
@@ -206,20 +243,26 @@ export default function DemoViewer() {
                     centerZoomedOut={true}
                     limitToBounds={true}
                     smooth={true}
-                    minScale={1}
+                    minScale={window.innerWidth < 1024 ? 0.6 : 1}
                     onTransformed={(ref) => setScale(ref.state.scale)}
                     wheel={{ step: 0.1, disabled: window.innerWidth >= 1024 }}
                     doubleClick={{ disabled: false }}
                     pinch={{ disabled: false }}
-                    panning={{ disabled: window.innerWidth >= 1024 || scale <= 1 }}
+                    panning={{ disabled: window.innerWidth >= 1024 }}
                 >
                     {({ zoomIn, zoomOut, resetTransform }) => (
                         <>
                             <TransformComponent
-                                wrapperStyle={{ width: "100%", height: "100%", backgroundColor: "transparent", overflow: "visible" }}
-                                contentStyle={{ width: "100%", height: "100%", display: "flex", alignItems: "center", justifyContent: "center", overflow: "visible" }}
+                                wrapperStyle={{ width: "100%", height: "100%", backgroundColor: "transparent" }}
+                                contentStyle={{ display: "flex", alignItems: "center", justifyContent: "center" }}
                             >
-                                <div className="w-full h-full flex items-center justify-center lg:overflow-visible">
+                                <div
+                                    style={{
+                                        width: window.innerWidth < 1024 ? `${dimensions.pageWidth * 2}px` : '100%',
+                                        height: window.innerWidth < 1024 ? `${dimensions.pageHeight}px` : '100%',
+                                    }}
+                                    className="flex items-center justify-center lg:overflow-visible"
+                                >
                                     {FlipbookNode}
                                 </div>
                             </TransformComponent>
@@ -236,8 +279,8 @@ export default function DemoViewer() {
                             </div>
 
                             <motion.div
-                                animate={{ y: uiVisible ? 0 : (window.innerWidth < 1024 ? -120 : 100), opacity: uiVisible ? 1 : 0 }}
-                                className={`${window.innerWidth < 1024 ? 'fixed top-4 left-1/2 -translate-x-1/2' : 'absolute bottom-10'} z-[70] flex gap-1 md:gap-2 glass-dark px-3 py-1.5 md:px-4 md:py-2 rounded-2xl border-white/5 shadow-2xl scale-90 md:scale-100 transition-all duration-500`}
+                                animate={{ y: uiVisible ? 0 : 100, opacity: uiVisible ? 1 : 0 }}
+                                className={`${window.innerWidth < 1024 ? 'fixed bottom-3 left-1/2 -translate-x-1/2' : 'absolute bottom-10'} z-[70] flex gap-1 md:gap-2 glass-dark px-3 py-1.5 md:px-4 md:py-2 rounded-2xl border-white/5 shadow-2xl scale-90 md:scale-100 transition-all duration-500`}
                             >
                                 {window.innerWidth < 1024 && (
                                         <Link href="/">

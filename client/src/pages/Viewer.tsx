@@ -81,6 +81,7 @@ export default function Viewer() {
   const [scale, setScale] = useState(1);
   const flipbookRef = useRef<any>(null);
   const [settings, setSettings] = useState<any>(null);
+  const [dimensions, setDimensions] = useState({ pageWidth: 360, pageHeight: 240 });
 
   const [isPortrait, setIsPortrait] = useState(false);
   const [isSmallHeight, setIsSmallHeight] = useState(false);
@@ -97,12 +98,46 @@ export default function Viewer() {
 
   useEffect(() => {
     const checkOrientation = () => {
-      const portrait = window.innerHeight > window.innerWidth && window.innerWidth < 1024;
-      const smallH = window.innerHeight < 500;
-      const mobileL = window.innerWidth > window.innerHeight && window.innerWidth < 1024;
+      const screenW = window.visualViewport ? window.visualViewport.width : window.innerWidth;
+      const screenH = window.visualViewport ? window.visualViewport.height : window.innerHeight;
+      const portrait = screenH > screenW && screenW < 1024;
+      const smallH = screenH < 500;
+      const mobileL = screenW > screenH && screenW < 1024;
       setIsPortrait(portrait);
       setIsSmallHeight(smallH);
       setIsMobileLandscape(mobileL);
+
+      const isMobile = screenW < 1024;
+      const PAGE_RATIO = 1.5;
+      const multiplier = 2;
+      const isLandscape = screenW > screenH;
+      // Use 120 padding on mobile landscape to give 60px margin top and bottom for UI elements (Zero Overlap!)
+      const verticalPadding = isMobile ? (isLandscape ? 120 : 140) : 340;
+      const horizontalPadding = isMobile ? (isLandscape ? 40 : 40) : 500;
+
+      let availW = screenW - horizontalPadding;
+      let availH = screenH - verticalPadding;
+
+      availW = Math.max(availW, 200);
+      availH = Math.max(availH, 150);
+
+      let w, h;
+      if (isMobile && isLandscape) {
+        h = availH;
+        w = h * PAGE_RATIO;
+      } else {
+        w = availW / multiplier;
+        h = w / PAGE_RATIO;
+        if (h > availH) {
+          h = availH;
+          w = h * PAGE_RATIO;
+        }
+      }
+
+      setDimensions({
+        pageWidth: Math.floor(w),
+        pageHeight: Math.floor(h)
+      });
     };
     checkOrientation();
     window.addEventListener('resize', checkOrientation);
@@ -618,7 +653,7 @@ export default function Viewer() {
            uploaded from a different studio's account, deterring link reselling.
       ─────────────────────────────────────────────────────────────────────── */}
       {isShared && (
-        <div className="fixed bottom-3 left-1/2 -translate-x-1/2 z-[200] pointer-events-none select-none">
+        <div className={`fixed bottom-3 z-[200] pointer-events-none select-none ${window.innerWidth < 1024 ? 'right-4' : 'left-1/2 -translate-x-1/2'}`}>
           <div className="flex items-center gap-1.5 bg-black/60 backdrop-blur-md px-3.5 py-1.5 rounded-full border border-white/10 shadow-xl">
             <div className="w-1 h-1 rounded-full bg-primary/70 animate-pulse" />
             <span className="text-[9px] text-white/40 font-mono tracking-widest uppercase">Album by</span>
@@ -716,13 +751,13 @@ export default function Viewer() {
         onContextMenu={(e) => e.preventDefault()}
       >
         <TransformWrapper
-          initialScale={window.innerWidth < 1024 ? 1.08 : 1}
+          initialScale={1}
           maxScale={window.innerWidth < 1024 ? 4 : 2}
           centerOnInit={true}
           centerZoomedOut={true}
           limitToBounds={true}
           smooth={true}
-          minScale={1}
+          minScale={window.innerWidth < 1024 ? 0.6 : 1}
           onTransformed={(ref) => setScale(ref.state.scale)}
           wheel={{ step: 0.1, disabled: window.innerWidth >= 1024 }}
           doubleClick={{ disabled: false }}
@@ -738,23 +773,25 @@ export default function Viewer() {
                   width: "100%",
                   height: "100%",
                   backgroundColor: "transparent",
-                  overflow: "visible" // Allow zoom/pan to extend outside viewport without clipping
                 }}
                 contentStyle={{
-                  width: "100%",
-                  height: "100%",
                   display: "flex",
                   alignItems: "center",
                   justifyContent: "center",
-                  overflow: "visible"
                 }}
               >
                 <div
-                  className="w-full h-full flex items-center justify-center lg:overflow-visible"
+                  style={{
+                    width: window.innerWidth < 1024 ? `${dimensions.pageWidth * 2}px` : '100%',
+                    height: window.innerWidth < 1024 ? `${dimensions.pageHeight}px` : '100%',
+                  }}
+                  className="flex items-center justify-center lg:overflow-visible"
                 >
                   <div onContextMenu={(e) => e.preventDefault()} className="theft-protection">
                     <Flipbook
                       ref={flipbookRef}
+                      pageWidth={dimensions.pageWidth}
+                      pageHeight={dimensions.pageHeight}
                       sheets={loadedSheets}
                       frontCover={loadedFrontCover}
                       backCover={loadedBackCover}
@@ -774,7 +811,7 @@ export default function Viewer() {
                            const spreadIndex = Math.floor((current - 1) / 2);
                            const sheetId = (loadedSheets as any)[spreadIndex * 2]?.id;
                            if (sheetId) {
-                              fetch(`/api/files/${sheetId}/view`, { method: 'POST' }).catch(() => {});
+                               fetch(`/api/files/${sheetId}/view`, { method: 'POST' }).catch(() => {});
                            }
                         }
                       }}
@@ -809,10 +846,10 @@ export default function Viewer() {
               {/* Floating Zoom Controls (Responsive - Now visible on both) */}
               <motion.div
                 animate={{
-                  y: uiVisible ? 0 : (window.innerWidth < 1024 ? -120 : 100),
+                  y: uiVisible ? 0 : 100,
                   opacity: uiVisible ? 1 : 0
                 }}
-                className={`${window.innerWidth < 1024 ? 'fixed top-4 left-1/2 -translate-x-1/2' : 'absolute bottom-10'} z-[70] flex gap-1 md:gap-2 glass-dark px-3 py-1.5 md:px-4 md:py-2 rounded-2xl border-white/5 shadow-2xl scale-90 md:scale-100 transition-all duration-500`}
+                className={`${window.innerWidth < 1024 ? 'fixed bottom-3 left-1/2 -translate-x-1/2' : 'absolute bottom-10'} z-[70] flex gap-1 md:gap-2 glass-dark px-3 py-1.5 md:px-4 md:py-2 rounded-2xl border-white/5 shadow-2xl scale-90 md:scale-100 transition-all duration-500`}
               >
                 {window.innerWidth < 1024 && !isShared && (
                   <>
