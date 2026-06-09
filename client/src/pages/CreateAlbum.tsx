@@ -364,6 +364,10 @@ export default function CreateAlbum() {
       setStatus('Deployment successful!');
       addAlbum(album);
 
+      if ((album as any).referralCreditGranted) {
+        sessionStorage.setItem("showReferralCreditPopup", "true");
+      }
+
       setTimeout(() => {
         setLoading(false);
         setLocation('/dashboard');

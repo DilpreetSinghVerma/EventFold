@@ -265,6 +265,7 @@ export default function Dashboard() {
   const [referralStats, setReferralStats] = useState<any>(null);
   const [loadingReferrals, setLoadingReferrals] = useState(false);
   const [refLinkCopied, setRefLinkCopied] = useState(false);
+  const [congratsOpen, setCongratsOpen] = useState(false);
 
   const fetchReferralStats = async () => {
     setLoadingReferrals(true);
@@ -292,6 +293,14 @@ export default function Dashboard() {
       fetchReferralStats();
     }
   }, [referralOpen]);
+
+  useEffect(() => {
+    const showPopup = sessionStorage.getItem("showReferralCreditPopup");
+    if (showPopup === "true") {
+      sessionStorage.removeItem("showReferralCreditPopup");
+      setCongratsOpen(true);
+    }
+  }, []);
   const modeFilteredAlbums = albums.filter(album => 
     dashboardMode === 'lab' ? album.isLabAlbum === 1 : album.isLabAlbum !== 1
   );
@@ -1363,6 +1372,46 @@ export default function Dashboard() {
               </div>
             </div>
           )}
+        </DialogContent>
+      </Dialog>
+
+      {/* Referral Congrats Modal */}
+      <Dialog open={congratsOpen} onOpenChange={setCongratsOpen}>
+        <DialogContent className="max-w-md bg-[#0a0612] border-purple-500/20 text-white rounded-[3rem] p-8 relative overflow-hidden shadow-[0_32px_80px_-16px_rgba(0,0,0,0.8)]">
+          {/* Glowing Background Details */}
+          <div className="absolute top-[-20%] left-[-20%] w-[80%] h-[80%] bg-purple-500/20 rounded-full blur-[100px] pointer-events-none" />
+          <div className="absolute bottom-[-20%] right-[-20%] w-[80%] h-[80%] bg-amber-500/10 rounded-full blur-[100px] pointer-events-none" />
+
+          <DialogHeader className="flex flex-col items-center text-center space-y-4">
+            <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-amber-400 via-yellow-400 to-amber-600 flex items-center justify-center shadow-xl shadow-yellow-500/20 ring-1 ring-yellow-400/30 animate-pulse">
+              <Gift className="w-8 h-8 text-black" />
+            </div>
+            <DialogTitle className="text-2xl font-bold tracking-tight text-transparent bg-clip-text bg-gradient-to-r from-amber-300 via-yellow-200 to-purple-400">
+              Congratulations! 🎉
+            </DialogTitle>
+            <DialogDescription className="text-white/40 text-[10px] font-black uppercase tracking-widest">
+              Referral Benefit Unlocked
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-6 my-6 text-center relative z-10">
+            <p className="text-white/80 text-sm leading-relaxed">
+              Since you signed up using a referral link and just published your first 3D album, you have earned <span className="font-extrabold text-yellow-400">1 Extra Album Credit</span> completely <span className="font-extrabold text-emerald-400">FREE</span> (normally ₹99)!
+            </p>
+            <div className="p-4 rounded-2xl bg-white/5 border border-white/5 backdrop-blur-md">
+              <div className="text-[10px] text-white/40 uppercase tracking-widest font-black mb-1">Your Benefit</div>
+              <div className="text-lg font-black text-amber-300">+1 Free Album Credit Added</div>
+            </div>
+          </div>
+
+          <div className="flex justify-center mt-6">
+            <Button
+              onClick={() => setCongratsOpen(false)}
+              className="w-full h-12 rounded-xl bg-purple-600 hover:bg-purple-500 text-white font-bold tracking-wide"
+            >
+              Start Designing
+            </Button>
+          </div>
         </DialogContent>
       </Dialog>
       </main>

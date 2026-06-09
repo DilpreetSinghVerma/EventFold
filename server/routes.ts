@@ -625,11 +625,14 @@ export function registerRoutes(
       const album = await storage.createAlbum(data);
 
       // Referral System Trigger: Check if this is the referee's first album creation
+      let referralCreditGranted = false;
       try {
         const refereeReferral = await storage.getReferralByReferee(userId);
         if (refereeReferral && ['joined', 'verified'].includes(refereeReferral.status)) {
           // Update status to 'completed' since they've now created their first album!
           await storage.updateReferral(refereeReferral.id, { status: 'completed' });
+          await storage.addCredit(userId, 1);
+          referralCreditGranted = true;
 
           const referrerId = refereeReferral.referrerId;
           // Concurrency-safe atomic check
@@ -678,7 +681,10 @@ export function registerRoutes(
         console.error("Failed to dynamically import email library for creation alert:", err);
       });
 
-      res.json(album);
+      res.json({
+        ...album,
+        referralCreditGranted
+      });
     } catch (e) {
       if (e instanceof ZodError) {
         return res.status(400).json({ error: "Invalid album data provided", details: e.errors });
