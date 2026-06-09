@@ -773,11 +773,15 @@ export default function Viewer() {
                   width: "100%",
                   height: "100%",
                   backgroundColor: "transparent",
+                  overflow: "visible"
                 }}
                 contentStyle={{
+                  width: "100%",
+                  height: "100%",
                   display: "flex",
                   alignItems: "center",
                   justifyContent: "center",
+                  overflow: "visible"
                 }}
               >
                 <div
