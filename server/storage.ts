@@ -1,5 +1,5 @@
 import crypto from "crypto";
-import { type InsertAlbum, type Album, type InsertFile, type File, type User, type InsertUser, albums, files, settings, users } from "../shared/schema";
+import { type InsertAlbum, type Album, type InsertFile, type File, type User, type InsertUser, type Referral, type InsertReferral, albums, files, settings, users, referrals } from "../shared/schema";
 import { db } from "./db";
 import { eq, asc, lte, and, isNotNull, sql } from "drizzle-orm";
 
@@ -36,6 +36,12 @@ export interface IStorage {
   cleanupExpiredAlbums(): Promise<void>;
   getPublicDemos(): Promise<Album[]>;
   updateAlbum(id: string, data: Partial<Album>): Promise<Album>;
+
+  getUserByReferralCode(code: string): Promise<User | undefined>;
+  getReferralsByReferrer(referrerId: string): Promise<Referral[]>;
+  createReferral(referral: InsertReferral): Promise<Referral>;
+  updateReferral(id: string, data: Partial<Referral>): Promise<Referral>;
+  getReferralByReferee(refereeId: string): Promise<Referral | undefined>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -256,6 +262,36 @@ export class DatabaseStorage implements IStorage {
     if (!db) return;
     await db.delete(users).where(eq(users.id, userId));
   }
+
+  async getUserByReferralCode(code: string): Promise<User | undefined> {
+    if (!db) throw new Error("DB not connected");
+    const [row] = await db.select().from(users).where(eq(users.referralCode, code));
+    return row;
+  }
+
+  async getReferralsByReferrer(referrerId: string): Promise<Referral[]> {
+    if (!db) throw new Error("DB not connected");
+    return await db.select().from(referrals).where(eq(referrals.referrerId, referrerId)).orderBy(asc(referrals.createdAt));
+  }
+
+  async createReferral(insertReferral: InsertReferral): Promise<Referral> {
+    if (!db) throw new Error("DB not connected");
+    const [row] = await db.insert(referrals).values(insertReferral).returning();
+    return row;
+  }
+
+  async updateReferral(id: string, data: Partial<Referral>): Promise<Referral> {
+    if (!db) throw new Error("DB not connected");
+    const [row] = await db.update(referrals).set(data).where(eq(referrals.id, id)).returning();
+    if (!row) throw new Error("Referral not found");
+    return row;
+  }
+
+  async getReferralByReferee(refereeId: string): Promise<Referral | undefined> {
+    if (!db) throw new Error("DB not connected");
+    const [row] = await db.select().from(referrals).where(eq(referrals.refereeId, refereeId));
+    return row;
+  }
 }
 
 export class MemStorage implements IStorage {
@@ -263,18 +299,22 @@ export class MemStorage implements IStorage {
   private files: Map<string, File>;
   private users: Map<string, User>;
   private settings: Map<string, any>;
+  private referrals: Map<string, Referral>;
   private albumIdCounter: number;
   private fileIdCounter: number;
   private userIdCounter: number;
+  private referralIdCounter: number;
 
   constructor() {
     this.albums = new Map();
     this.files = new Map();
     this.users = new Map();
     this.settings = new Map();
+    this.referrals = new Map();
     this.albumIdCounter = 1;
     this.fileIdCounter = 1;
     this.userIdCounter = 1;
+    this.referralIdCounter = 1;
   }
 
   async createAlbum(insertAlbum: InsertAlbum): Promise<Album> {
@@ -498,6 +538,41 @@ export class MemStorage implements IStorage {
 
   async deleteUser(userId: string): Promise<void> {
     this.users.delete(userId);
+  }
+
+  async getUserByReferralCode(code: string): Promise<User | undefined> {
+    return Array.from(this.users.values()).find(u => u.referralCode === code);
+  }
+
+  async getReferralsByReferrer(referrerId: string): Promise<Referral[]> {
+    return Array.from(this.referrals.values())
+      .filter(r => r.referrerId === referrerId)
+      .sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime());
+  }
+
+  async createReferral(insertReferral: InsertReferral): Promise<Referral> {
+    const id = crypto.randomUUID();
+    const referral: Referral = {
+      id,
+      referrerId: insertReferral.referrerId,
+      refereeId: insertReferral.refereeId,
+      status: insertReferral.status || 'joined',
+      createdAt: new Date(),
+    };
+    this.referrals.set(id, referral);
+    return referral;
+  }
+
+  async updateReferral(id: string, data: Partial<Referral>): Promise<Referral> {
+    const referral = this.referrals.get(id);
+    if (!referral) throw new Error("Referral not found");
+    const updated = { ...referral, ...data };
+    this.referrals.set(id, updated);
+    return updated;
+  }
+
+  async getReferralByReferee(refereeId: string): Promise<Referral | undefined> {
+    return Array.from(this.referrals.values()).find(r => r.refereeId === refereeId);
   }
 }
 

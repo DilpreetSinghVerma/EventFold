@@ -419,3 +419,59 @@ function promotionalEmailTemplate(messageHtml: string) {
         </div>
     `;
 }
+
+export async function sendReferralRewardEmail(email: string, name: string) {
+    if (gmailTransporter) {
+        const mailOptions = {
+            from: `"EventFold" <${GMAIL_EMAIL}>`,
+            to: email,
+            subject: "Congratulations! You've earned 1 free album credit 🎉",
+            html: referralRewardEmailTemplate(name),
+        };
+
+        try {
+            await gmailTransporter.sendMail(mailOptions);
+            console.log(`[GMAIL] Referral reward email sent to ${email}`);
+            return true;
+        } catch (error) {
+            console.error('[GMAIL] Failed to send referral reward email:', error);
+        }
+    } else {
+        console.log(`[EMAIL SIMULATION] Referral reward email to ${email} - Name: ${name}`);
+    }
+    return false;
+}
+
+function referralRewardEmailTemplate(name: string) {
+    const dashboardUrl = `${GMAIL_URL}/dashboard`;
+    return `
+        <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; padding: 40px; border: 1px solid #c084fc; border-radius: 24px; background: #030303; color: white; box-shadow: 0 10px 30px rgba(192, 132, 252, 0.15);">
+            <div style="text-align: center; margin-bottom: 30px;">
+                <img src="https://eventfoldstudio.com/branding%20material/without%20bg%20version.png" alt="EventFold Logo" style="height: 60px; margin-bottom: 10px; display: inline-block;" />
+                <p style="text-transform: uppercase; letter-spacing: 5px; font-size: 10px; color: #a78bfa; font-weight: bold;">Referral Program Reward</p>
+            </div>
+            
+            <h2 style="font-size: 22px; color: white; text-align: center; margin-bottom: 20px;">Free Credit Earned! 🎁</h2>
+            
+            <p style="line-height: 1.6; color: rgba(255,255,255,0.8); font-size: 15px;">Hi ${name},</p>
+            
+            <p style="line-height: 1.6; color: rgba(255,255,255,0.8); font-size: 15px;">Congratulations! Two of your referred friends have successfully verified their accounts and published their first 3D flipbook albums.</p>
+            
+            <p style="line-height: 1.6; color: rgba(255,255,255,0.8); font-size: 15px;">As promised, we have automatically added <strong>1 free album credit</strong> to your account! You can check your updated balance on your dashboard at any time.</p>
+            
+            <div style="text-align: center; margin-top: 40px; margin-bottom: 40px;">
+                <a href="${dashboardUrl}" style="background: #a78bfa; color: black; padding: 18px 40px; border-radius: 12px; text-decoration: none; font-weight: bold; font-size: 16px; display: inline-block; box-shadow: 0 10px 20px rgba(167, 139, 250, 0.3);">GO TO MY DASHBOARD</a>
+            </div>
+
+            <p style="line-height: 1.6; color: rgba(255,255,255,0.7); text-align: center; font-size: 14px;">
+                Keep sharing your unique referral link to earn more free credits! Every 2 successful referrals gets you another credit.
+            </p>
+
+            <hr style="border: 0; border-top: 1px solid rgba(255,255,255,0.1); margin: 35px 0;" />
+            
+            <p style="color: rgba(255,255,255,0.2); font-size: 9px; text-align: center; margin-top: 20px; text-transform: uppercase; letter-spacing: 2px;">
+                Automated Referral System Notification · Do not reply
+            </p>
+        </div>
+    `;
+}

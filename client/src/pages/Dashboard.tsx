@@ -2,7 +2,7 @@ import { Link } from 'wouter';
 import { Card, CardContent, CardFooter } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Plus, QrCode, Eye, Trash2, LayoutGrid, Calendar, LogOut, Settings as SettingsIcon, Lock, Loader2, Sparkles, User as UserIcon, Crown, Copy, Download, Share2, Check, ShieldAlert, BarChart3, FolderHeart, ChevronDown, Clock, TrendingUp, Building2, AlertTriangle } from 'lucide-react';
+import { Plus, QrCode, Eye, Trash2, LayoutGrid, Calendar, LogOut, Settings as SettingsIcon, Lock, Loader2, Sparkles, User as UserIcon, Crown, Copy, Download, Share2, Check, ShieldAlert, BarChart3, FolderHeart, ChevronDown, Clock, TrendingUp, Building2, AlertTriangle, Gift } from 'lucide-react';
 
 import { QRCodeSVG } from 'qrcode.react';
 import { Badge } from '@/components/ui/badge';
@@ -258,6 +258,38 @@ export default function Dashboard() {
   const [upgradingLifetimeId, setUpgradingLifetimeId] = useState<string | null>(null);
   const isAdmin = user?.role === 'admin' || ["admin@eventfold.com", "dilpreetsinghverma@gmail.com"].includes(user?.email || "");
   const isLabPlan = ['lab_monthly', 'lab_half_yearly', 'lab_yearly', 'lab_unlimited'].includes(user?.plan || '') || isAdmin;
+
+  const [referralOpen, setReferralOpen] = useState(false);
+  const [referralStats, setReferralStats] = useState<any>(null);
+  const [loadingReferrals, setLoadingReferrals] = useState(false);
+  const [refLinkCopied, setRefLinkCopied] = useState(false);
+
+  const fetchReferralStats = async () => {
+    setLoadingReferrals(true);
+    try {
+      const res = await fetch('/api/referrals/stats');
+      if (res.ok) {
+        const data = await res.json();
+        setReferralStats(data);
+      }
+    } catch (e) {
+      console.error("Failed to fetch referral stats:", e);
+    } finally {
+      setLoadingReferrals(false);
+    }
+  };
+
+  useEffect(() => {
+    if (user) {
+      fetchReferralStats();
+    }
+  }, [user]);
+
+  useEffect(() => {
+    if (referralOpen) {
+      fetchReferralStats();
+    }
+  }, [referralOpen]);
   const modeFilteredAlbums = albums.filter(album => 
     dashboardMode === 'lab' ? album.isLabAlbum === 1 : album.isLabAlbum !== 1
   );
@@ -1043,6 +1075,12 @@ export default function Dashboard() {
               )}
               <div className="w-px h-6 bg-white/10 mx-2" />
               <div className="flex flex-wrap items-center gap-4 pt-4">
+                <Button
+                  onClick={() => setReferralOpen(true)}
+                  className="h-10 rounded-full bg-purple-500/10 border border-purple-500/30 text-purple-300 hover:bg-purple-500/20 font-bold px-6 group transition-all animate-pulse hover:animate-none"
+                >
+                  <Gift className="w-4 h-4 mr-2" /> REFER & EARN
+                </Button>
                 {isAdmin ? (
                   dashboardMode === 'lab' ? (
                     <div className="flex items-center gap-3 px-6 py-3 bg-emerald-500/10 border border-emerald-500/20 rounded-2xl text-sm font-bold text-emerald-400 shadow-2xl shadow-emerald-500/10 transition-all hover:scale-[1.02]">
@@ -1183,6 +1221,142 @@ export default function Dashboard() {
             </AnimatePresence>
           </div>
         )}
+      {/* Referral Program Modal */}
+      <Dialog open={referralOpen} onOpenChange={(open) => {
+        setReferralOpen(open);
+        if (!open) setRefLinkCopied(false);
+      }}>
+        <DialogContent className="max-w-2xl bg-[#0a0a0c] border border-purple-500/20 text-white rounded-[2.5rem] p-6 lg:p-8 overflow-hidden relative shadow-[0_20px_50px_rgba(168,85,247,0.15)]">
+          {/* Subtle Decorative glow in modal */}
+          <div className="absolute top-[-20%] left-[-20%] w-[50%] h-[50%] bg-purple-500/10 rounded-full blur-[100px] pointer-events-none" />
+
+          <DialogHeader className="mb-6">
+            <DialogTitle className="text-3xl font-bold flex items-center gap-3 text-purple-300">
+              <Gift className="w-8 h-8 text-purple-400 animate-bounce" /> Refer & Earn Free Credits
+            </DialogTitle>
+            <DialogDescription className="text-white/40 text-xs font-bold uppercase tracking-widest mt-1">
+              Invite your creator friends and get rewarded
+            </DialogDescription>
+          </DialogHeader>
+
+          {loadingReferrals && !referralStats ? (
+            <div className="py-12 flex justify-center items-center">
+              <Loader2 className="w-8 h-8 animate-spin text-purple-400" />
+            </div>
+          ) : (
+            <div className="space-y-6">
+              {/* Top Stats Overview */}
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+                <div className="bg-white/5 border border-white/5 rounded-2xl p-4 text-center">
+                  <div className="text-[10px] uppercase font-bold text-white/30 tracking-wider mb-1">Total Joined</div>
+                  <div className="text-2xl font-black text-white">{referralStats?.totalReferred || 0}</div>
+                </div>
+                <div className="bg-white/5 border border-white/5 rounded-2xl p-4 text-center">
+                  <div className="text-[10px] uppercase font-bold text-white/30 tracking-wider mb-1">Verified</div>
+                  <div className="text-2xl font-black text-blue-400">{referralStats?.verifiedCount || 0}</div>
+                </div>
+                <div className="bg-white/5 border border-white/5 rounded-2xl p-4 text-center">
+                  <div className="text-[10px] uppercase font-bold text-white/30 tracking-wider mb-1">Published 3D</div>
+                  <div className="text-2xl font-black text-emerald-400">{referralStats?.completedCount || 0}</div>
+                </div>
+                <div className="bg-white/5 border border-white/5 rounded-2xl p-4 text-center">
+                  <div className="text-[10px] uppercase font-bold text-white/30 tracking-wider mb-1">Earned Credits</div>
+                  <div className="text-2xl font-black text-purple-400">+{referralStats?.totalCreditsEarned || 0}</div>
+                </div>
+              </div>
+
+              {/* Progress Card towards Next Credit */}
+              <div className="bg-purple-500/5 border border-purple-500/10 rounded-3xl p-6 relative overflow-hidden">
+                <div className="flex justify-between items-center mb-3">
+                  <div>
+                    <h4 className="text-sm font-bold text-purple-300">Progress to Next Album Credit</h4>
+                    <p className="text-[10px] text-white/40 mt-0.5">Invite 2 friends who verify & publish an album to earn 1 credit</p>
+                  </div>
+                  <div className="text-right">
+                    <span className="text-lg font-black text-purple-300">{(referralStats?.nextRewardProgress || 0)} / 2</span>
+                    <span className="text-[10px] text-white/40 block">completed</span>
+                  </div>
+                </div>
+                {/* Custom Progress Bar */}
+                <div className="w-full h-2.5 bg-white/5 rounded-full overflow-hidden">
+                  <div 
+                    className="h-full bg-gradient-to-r from-purple-500 to-indigo-500 rounded-full transition-all duration-500" 
+                    style={{ width: `${((referralStats?.nextRewardProgress || 0) / 2) * 100}%` }}
+                  />
+                </div>
+              </div>
+
+              {/* Share link input */}
+              <div className="space-y-2">
+                <label className="text-xs font-bold text-white/40 uppercase tracking-widest">Your Unique Referral Link</label>
+                <div className="flex gap-2">
+                  <Input 
+                    readOnly 
+                    value={`${window.location.origin}/login?ref=${referralStats?.referralCode || ''}`}
+                    className="bg-white/5 border-white/10 text-white font-mono text-sm h-12 focus:ring-purple-500/50" 
+                  />
+                  <Button 
+                    onClick={() => {
+                      navigator.clipboard.writeText(`${window.location.origin}/login?ref=${referralStats?.referralCode || ''}`);
+                      setRefLinkCopied(true);
+                      toast({
+                        title: "Link Copied!",
+                        description: "Your referral link has been copied to your clipboard.",
+                      });
+                      setTimeout(() => setRefLinkCopied(false), 2000);
+                    }}
+                    className="h-12 px-6 bg-purple-600 hover:bg-purple-500 text-black font-bold rounded-xl flex items-center gap-2"
+                  >
+                    {refLinkCopied ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
+                    {refLinkCopied ? "Copied" : "Copy"}
+                  </Button>
+                </div>
+              </div>
+
+              {/* Referral History / Table logs */}
+              <div className="space-y-3 pt-2">
+                <h4 className="text-xs font-bold text-white/40 uppercase tracking-widest">Referred Friends History</h4>
+                {referralStats?.referrals?.length === 0 ? (
+                  <div className="bg-white/[0.02] border border-white/5 rounded-2xl py-8 text-center text-white/30 text-sm">
+                    No friends referred yet. Share your link above to get started!
+                  </div>
+                ) : (
+                  <div className="bg-white/[0.02] border border-white/5 rounded-2xl overflow-hidden max-h-[180px] overflow-y-auto no-scrollbar">
+                    <table className="w-full text-left border-collapse text-xs">
+                      <thead>
+                        <tr className="border-b border-white/5 bg-white/[0.02] text-white/40">
+                          <th className="p-3 font-bold">Friend</th>
+                          <th className="p-3 font-bold">Status</th>
+                          <th className="p-3 font-bold text-right">Date Joined</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {referralStats?.referrals?.map((ref: any) => (
+                          <tr key={ref.id} className="border-b border-white/5 last:border-0 hover:bg-white/[0.01]">
+                            <td className="p-3">
+                              <div className="font-bold text-white">{ref.name}</div>
+                              <div className="text-[10px] text-white/40">{ref.email}</div>
+                            </td>
+                            <td className="p-3">
+                              {ref.status === 'joined' && <span className="px-2 py-0.5 rounded-md bg-blue-500/10 text-blue-400 font-bold text-[9px] uppercase">Joined (Unverified)</span>}
+                              {ref.status === 'verified' && <span className="px-2 py-0.5 rounded-md bg-amber-500/10 text-amber-400 font-bold text-[9px] uppercase">Verified (No Album)</span>}
+                              {ref.status === 'completed' && <span className="px-2 py-0.5 rounded-md bg-emerald-500/10 text-emerald-400 font-bold text-[9px] uppercase">Completed</span>}
+                              {ref.status === 'rewarded' && <span className="px-2 py-0.5 rounded-md bg-purple-500/10 text-purple-400 font-bold text-[9px] uppercase">Rewarded</span>}
+                            </td>
+                            <td className="p-3 text-right text-white/40">
+                              {new Date(ref.createdAt).toLocaleDateString()}
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
       </main>
     </div >
   );

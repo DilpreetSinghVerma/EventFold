@@ -64,8 +64,9 @@ export function setupAuth(app: Express) {
                 clientSecret: process.env.GOOGLE_CLIENT_SECRET || "dummy",
                 callbackURL: "/api/auth/google/callback",
                 proxy: true,
+                passReqToCallback: true,
             },
-            async (_accessToken, _refreshToken, profile, done) => {
+            async (req, _accessToken, _refreshToken, profile, done) => {
                 try {
                     const email = profile.emails?.[0].value;
                     if (!email) return done(new Error("No email found from Google"));
@@ -81,6 +82,27 @@ export function setupAuth(app: Express) {
                                 avatar: user.avatar || profile.photos?.[0].value || null
                             });
                         } else {
+                            // Unique referral code generation loop
+                            let newReferralCode = "";
+                            let codeExists = true;
+                            while (codeExists) {
+                                const clean = email.split('@')[0].replace(/[^a-zA-Z0-9]/g, '').toUpperCase();
+                                const rand = Math.random().toString(36).substring(2, 6).toUpperCase();
+                                newReferralCode = `${clean || 'USER'}-${rand}`;
+                                const checkUser = await storage.getUserByReferralCode(newReferralCode);
+                                if (!checkUser) codeExists = false;
+                            }
+
+                            // Retrieve referrer from session cookie if present
+                            const sessionRefCode = (req.session as any)?.referralCode;
+                            let referredById: string | null = null;
+                            if (sessionRefCode) {
+                                const referrerUser = await storage.getUserByReferralCode(sessionRefCode.trim().toUpperCase());
+                                if (referrerUser && referrerUser.email.toLowerCase().trim() !== email.toLowerCase().trim()) {
+                                    referredById = referrerUser.id;
+                                }
+                            }
+
                             user = await storage.createUser({
                                 googleId: profile.id,
                                 email: email,
@@ -94,7 +116,19 @@ export function setupAuth(app: Express) {
                                 password: null,
                                 isVerified: 1, // Google users are pre-verified
                                 verificationCode: null,
+                                referralCode: newReferralCode,
+                                referredById: referredById,
                             });
+
+                            if (referredById) {
+                                await storage.createReferral({
+                                    referrerId: referredById,
+                                    refereeId: user.id,
+                                    status: 'verified', // Google accounts are auto-verified
+                                });
+                                // Clean up the session reference
+                                delete (req.session as any).referralCode;
+                            }
                         }
                     }
                     return done(null, user);
@@ -166,7 +200,12 @@ export function setupAuth(app: Express) {
     });
 
     // Auth Routes
-    app.get("/api/auth/google", passport.authenticate("google", { scope: ["profile", "email"] }));
+    app.get("/api/auth/google", (req: any, res, next) => {
+        if (req.query.ref) {
+            req.session.referralCode = req.query.ref;
+        }
+        passport.authenticate("google", { scope: ["profile", "email"] })(req, res, next);
+    });
 
     app.get(
         "/api/auth/google/callback",
@@ -192,7 +231,7 @@ export function setupAuth(app: Express) {
     // Register Route
     app.post("/api/auth/register", async (req, res, next) => {
         try {
-            const { email, password, name } = req.body;
+            const { email, password, name, referralCode } = req.body;
             if (!email || !password) {
                 return res.status(400).json({ error: "Email and password are required" });
             }
@@ -207,6 +246,26 @@ export function setupAuth(app: Express) {
             const otp = Math.floor(100000 + Math.random() * 900000).toString();
             const hashedPassword = await hashPassword(password);
 
+            // Generate unique referral code
+            let newReferralCode = "";
+            let codeExists = true;
+            while (codeExists) {
+                const clean = cleanEmail.split('@')[0].replace(/[^a-zA-Z0-9]/g, '').toUpperCase();
+                const rand = Math.random().toString(36).substring(2, 6).toUpperCase();
+                newReferralCode = `${clean || 'USER'}-${rand}`;
+                const checkUser = await storage.getUserByReferralCode(newReferralCode);
+                if (!checkUser) codeExists = false;
+            }
+
+            // Look up referrer user
+            let referredById: string | null = null;
+            if (referralCode) {
+                const referrerUser = await storage.getUserByReferralCode(referralCode.trim().toUpperCase());
+                if (referrerUser && referrerUser.email.toLowerCase().trim() !== cleanEmail) {
+                    referredById = referrerUser.id;
+                }
+            }
+
             const user = await storage.createUser({
                 googleId: null,
                 email: cleanEmail,
@@ -220,10 +279,19 @@ export function setupAuth(app: Express) {
                 razorpaySubscriptionId: null,
                 isVerified: 0,
                 verificationCode: otp,
+                referralCode: newReferralCode,
+                referredById: referredById,
             });
 
-            await sendVerificationEmail(cleanEmail, otp);
+            if (referredById) {
+                await storage.createReferral({
+                    referrerId: referredById,
+                    refereeId: user.id,
+                    status: 'joined',
+                });
+            }
 
+            await sendVerificationEmail(cleanEmail, otp);
 
             req.logIn(user, (err) => {
                 if (err) return next(err);
@@ -246,6 +314,17 @@ export function setupAuth(app: Express) {
 
         if (user.verificationCode === code) {
             const updatedUser = await storage.updateUser(user.id, { isVerified: 1, verificationCode: null });
+            
+            // Update referral status to 'verified' if joined
+            try {
+                const referral = await storage.getReferralByReferee(user.id);
+                if (referral && referral.status === 'joined') {
+                    await storage.updateReferral(referral.id, { status: 'verified' });
+                }
+            } catch (err) {
+                console.error("Failed to update referral on verification:", err);
+            }
+
             // Update session user
             Object.assign(req.user as any, updatedUser);
             return res.json({ success: true, user: updatedUser });

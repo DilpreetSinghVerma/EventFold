@@ -4,7 +4,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { LogIn, Globe, ShieldCheck, Zap, Sparkles, ImagePlus, ArrowRight, Mail, Lock } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useToast } from "@/hooks/use-toast";
 
 export default function Login() {
@@ -21,8 +21,27 @@ export default function Login() {
     const [resetCode, setResetCode] = useState("");
     const [newPassword, setNewPassword] = useState("");
 
+    useEffect(() => {
+        const params = new URLSearchParams(window.location.search);
+        const ref = params.get("ref");
+        if (ref) {
+            sessionStorage.setItem("referralCode", ref);
+            setIsRegister(true);
+            setShowEmailLogin(true);
+            toast({
+                title: "Referral Link Applied",
+                description: "Complete your signup to claim your benefits.",
+            });
+        }
+    }, [toast]);
+
     const handleGoogleLogin = () => {
-        window.location.href = "/api/auth/google";
+        const storedRef = sessionStorage.getItem("referralCode");
+        if (storedRef) {
+            window.location.href = `/api/auth/google?ref=${encodeURIComponent(storedRef)}`;
+        } else {
+            window.location.href = "/api/auth/google";
+        }
     };
 
     const handleEmailAuth = async (e: React.FormEvent) => {
@@ -30,7 +49,8 @@ export default function Login() {
         setLoading(true);
         try {
             const endpoint = isRegister ? "/api/auth/register" : "/api/auth/login";
-            const payload = isRegister ? { email, password, name } : { email, password };
+            const storedRef = sessionStorage.getItem("referralCode") || undefined;
+            const payload = isRegister ? { email, password, name, referralCode: storedRef } : { email, password };
             
             const res = await fetch(endpoint, {
                 method: "POST",
@@ -43,6 +63,9 @@ export default function Login() {
                     title: isRegister ? "Account created!" : "Welcome back!", 
                     description: isRegister ? "Your premium account is ready." : "Successfully logged in." 
                 });
+                if (isRegister) {
+                    sessionStorage.removeItem("referralCode");
+                }
                 window.location.href = "/dashboard";
             } else {
                 const data = await res.json();

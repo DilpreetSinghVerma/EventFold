@@ -22,6 +22,8 @@ export const users = pgTable("users", {
   subscriptionStartedAt: timestamp("subscription_started_at"),
   subscriptionExpiresAt: timestamp("subscription_expires_at"),
   lastActiveAt: timestamp("last_active_at"),
+  referralCode: text("referral_code").unique(),
+  referredById: varchar("referred_by_id").references(() => users.id, { onDelete: 'set null' }),
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 
@@ -83,6 +85,18 @@ export const broadcasts = pgTable("broadcasts", {
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 
+export const referrals = pgTable("referrals", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  referrerId: varchar("referrer_id").notNull().references(() => users.id, { onDelete: 'cascade' }),
+  refereeId: varchar("referee_id").notNull().unique().references(() => users.id, { onDelete: 'cascade' }),
+  status: varchar("status", { length: 20 }).notNull().default('joined'), // 'joined', 'verified', 'completed', 'rewarded'
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+}, (table) => {
+  return {
+    referrerIdx: index("referrer_idx").on(table.referrerId, table.status),
+  };
+});
+
 export const insertAlbumSchema = createInsertSchema(albums).omit({
   id: true,
   createdAt: true,
@@ -97,6 +111,11 @@ export const insertUserSchema = createInsertSchema(users).omit({
   createdAt: true,
 });
 
+export const insertReferralSchema = createInsertSchema(referrals).omit({
+  id: true,
+  createdAt: true,
+});
+
 export type InsertAlbum = z.infer<typeof insertAlbumSchema>;
 export type Album = typeof albums.$inferSelect;
 export type InsertFile = z.infer<typeof insertFileSchema>;
@@ -104,3 +123,5 @@ export type File = typeof files.$inferSelect;
 export type User = typeof users.$inferSelect;
 export type InsertUser = z.infer<typeof insertUserSchema>;
 export type Broadcast = typeof broadcasts.$inferSelect;
+export type Referral = typeof referrals.$inferSelect;
+export type InsertReferral = z.infer<typeof insertReferralSchema>;

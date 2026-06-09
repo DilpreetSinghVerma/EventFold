@@ -1,4 +1,4 @@
-import { eq, asc, desc, lte, and, isNotNull, sql } from "drizzle-orm";
+import { eq, asc, desc, lte, and, isNotNull, sql, inArray } from "drizzle-orm";
 import { db } from "./db";
 import express, { type Express, Request, Response, NextFunction } from "express";
 import { createServer, type Server } from "http";
@@ -6,7 +6,7 @@ import { storage } from "./storage";
 import multer from "multer";
 import path from "path";
 import fs from "fs";
-import { insertAlbumSchema, insertFileSchema, users, albums, files, broadcasts } from "../shared/schema";
+import { insertAlbumSchema, insertFileSchema, users, albums, files, broadcasts, referrals } from "../shared/schema";
 import { ZodError } from "zod";
 import Stripe from "stripe";
 import Razorpay from "razorpay";
@@ -134,6 +134,53 @@ export function registerRoutes(
       res.json(s);
     } catch (e) {
       res.status(500).json({ error: "Failed to fetch settings" });
+    }
+  });
+
+  // Get Referral Stats and History
+  app.get("/api/referrals/stats", async (req, res) => {
+    try {
+      if (!req.isAuthenticated()) return res.status(401).json({ error: "Unauthorized" });
+      const userId = (req.user as any).id;
+      const user = await storage.getUser(userId);
+      if (!user) return res.status(404).json({ error: "User not found" });
+
+      const referralsList = await storage.getReferralsByReferrer(userId);
+      
+      const totalReferred = referralsList.length;
+      const pendingCount = referralsList.filter(r => r.status === 'joined').length;
+      const verifiedCount = referralsList.filter(r => r.status === 'verified').length;
+      const completedCount = referralsList.filter(r => r.status === 'completed').length;
+      const rewardedCount = referralsList.filter(r => r.status === 'rewarded').length;
+
+      const nextRewardProgress = completedCount % 2; 
+      const totalCreditsEarned = Math.floor(rewardedCount / 2);
+
+      const resolvedReferrals = await Promise.all(referralsList.map(async (r) => {
+        const refereeUser = await storage.getUser(r.refereeId);
+        return {
+          id: r.id,
+          email: refereeUser ? refereeUser.email : 'Unknown',
+          name: refereeUser ? (refereeUser.name || refereeUser.email.split('@')[0]) : 'User Joined',
+          status: r.status,
+          createdAt: r.createdAt
+        };
+      }));
+
+      res.json({
+        referralCode: user.referralCode || '',
+        totalReferred,
+        pendingCount,
+        verifiedCount,
+        completedCount,
+        rewardedCount,
+        nextRewardProgress,
+        totalCreditsEarned,
+        referrals: resolvedReferrals
+      });
+    } catch (e: any) {
+      console.error("Failed to fetch referral stats:", e);
+      res.status(500).json({ error: "Failed to fetch referral statistics" });
     }
   });
 
@@ -575,6 +622,51 @@ export function registerRoutes(
         await storage.deductCredit(userId);
       }
       const album = await storage.createAlbum(data);
+
+      // Referral System Trigger: Check if this is the referee's first album creation
+      try {
+        const refereeReferral = await storage.getReferralByReferee(userId);
+        if (refereeReferral && ['joined', 'verified'].includes(refereeReferral.status)) {
+          // Update status to 'completed' since they've now created their first album!
+          await storage.updateReferral(refereeReferral.id, { status: 'completed' });
+
+          const referrerId = refereeReferral.referrerId;
+          // Concurrency-safe atomic check
+          const completedReferrals = await db.select().from(referrals)
+            .where(and(eq(referrals.referrerId, referrerId), eq(referrals.status, 'completed')))
+            .limit(2);
+
+          if (completedReferrals.length === 2) {
+            // Atomic update matching only these specific rows to avoid double-claiming
+            const updatedRows = await db.update(referrals)
+              .set({ status: 'rewarded' })
+              .where(and(
+                inArray(referrals.id, [completedReferrals[0].id, completedReferrals[1].id]),
+                eq(referrals.status, 'completed')
+              ))
+              .returning();
+
+            // Reward the referrer ONLY if exactly 2 rows were successfully set to 'rewarded' by this thread
+            if (updatedRows.length === 2) {
+              await storage.addCredit(referrerId, 1);
+              
+              // Send congratulatory email to the referrer
+              const referrerUser = await storage.getUser(referrerId);
+              if (referrerUser && referrerUser.email) {
+                import("./lib/email").then(({ sendReferralRewardEmail }) => {
+                  sendReferralRewardEmail(referrerUser.email, referrerUser.name || referrerUser.email).catch(err => {
+                    console.error("Failed to send referral reward email:", err);
+                  });
+                }).catch(err => {
+                  console.error("Failed to dynamically import email library for referral reward:", err);
+                });
+              }
+            }
+          }
+        }
+      } catch (refErr) {
+        console.error("Failed to process referral triggers:", refErr);
+      }
       
       // Send Album Published confirmation email in the background
       import("./lib/email").then(({ sendAlbumPublishedEmail }) => {
