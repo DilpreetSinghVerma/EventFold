@@ -1,0 +1,25 @@
+node_modules
+dist
+.git
+.vercel
+uploads
+selection tool
+my secret apis or user pass
+server_log.txt
+server_log_live.txt
+build-studio
+check-album-dates.ts
+check-db.ts
+debug.log
+debug_output.txt
+errors.txt
+output.json
+test-api.ts
+test-cloudinary.ts
+test-db.ts
+test_res.txt
+tmp
+tsc_errors.txt
+tsc_errors_2.txt
+tsc_errors_2_utf8.txt
+tsc_errors_utf8.txt
