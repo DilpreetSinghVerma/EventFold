@@ -1246,6 +1246,11 @@ export default function Dashboard() {
             <div className="py-12 flex justify-center items-center">
               <Loader2 className="w-8 h-8 animate-spin text-purple-400" />
             </div>
+          ) : !referralStats ? (
+            <div className="py-12 text-center text-white/40">
+              <Loader2 className="w-6 h-6 animate-spin text-purple-400 mx-auto mb-3" />
+              Initializing referral workspace...
+            </div>
           ) : (
             <div className="space-y-6">
               {/* Top Stats Overview */}
