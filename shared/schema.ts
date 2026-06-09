@@ -23,7 +23,7 @@ export const users = pgTable("users", {
   subscriptionExpiresAt: timestamp("subscription_expires_at"),
   lastActiveAt: timestamp("last_active_at"),
   referralCode: text("referral_code").unique(),
-  referredById: varchar("referred_by_id").references(() => users.id, { onDelete: 'set null' }),
+  referredById: varchar("referred_by_id").references((): any => users.id, { onDelete: 'set null' }),
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 
