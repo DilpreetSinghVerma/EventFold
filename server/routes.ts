@@ -1962,6 +1962,7 @@ export function registerRoutes(
         return res.status(403).json({ error: "Admin privilege required" });
       }
 
+      const { prefix = "BATALA" } = req.body;
       const leads = await storage.getKioskLeads();
       let sentCount = 0;
 
@@ -1970,7 +1971,7 @@ export function registerRoutes(
 
       for (const lead of leads) {
         // Generate a unique 8 character promo code
-        const code = "BATALA-" + crypto.randomBytes(4).toString("hex").toUpperCase();
+        const code = `${prefix.toUpperCase()}-` + crypto.randomBytes(4).toString("hex").toUpperCase();
         await storage.createPromoCode(code);
 
         const emailHtml = `

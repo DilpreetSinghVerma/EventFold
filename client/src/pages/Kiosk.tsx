@@ -66,7 +66,18 @@ export default function Kiosk() {
           <div className="flex flex-col items-center justify-center py-10 animate-in zoom-in duration-300">
             <CheckCircle2 className="w-20 h-20 text-green-500 mb-6" />
             <h2 className="text-2xl font-bold text-center">Got it, {name.split(' ')[0]}!</h2>
-            <p className="text-white/50 text-center mt-2">Check your email soon for your free promo code.</p>
+            <p className="text-white/50 text-center mt-2 mb-8">Check your email soon for your free promo code.</p>
+            <Button 
+              onClick={() => {
+                setSuccess(false);
+                setName("");
+                setEmail("");
+              }}
+              variant="outline"
+              className="border-white/10 text-white/50 hover:text-white"
+            >
+              Add Next Person
+            </Button>
           </div>
         ) : (
           <form onSubmit={handleSubmit} className="space-y-6">

@@ -89,8 +89,8 @@ export default function Admin() {
   const leads = (leadsData as any)?.leads || [];
 
   const sendPromosMutation = useMutation({
-    mutationFn: async () => {
-      const res = await apiRequest("POST", "/api/admin/promo/send");
+    mutationFn: async (prefix: string) => {
+      const res = await apiRequest("POST", "/api/admin/promo/send", { prefix });
       return res.json();
     },
     onSuccess: (data) => {
@@ -1722,8 +1722,11 @@ export default function Admin() {
                     </Link>
                     <Button 
                       onClick={() => {
-                        if (window.confirm(`Send unique promo codes to ${leads.length} leads? This will take ~${(leads.length * 1.5).toFixed(1)} seconds.`)) {
-                          sendPromosMutation.mutate();
+                        const prefix = window.prompt("Enter a prefix for the promo codes (e.g. BATALA, DELHI, EVENT):", "BATALA");
+                        if (prefix !== null) {
+                          if (window.confirm(`Send unique promo codes with prefix "${prefix.toUpperCase()}-" to ${leads.length} leads? This will take ~${(leads.length * 1.5).toFixed(1)} seconds.`)) {
+                            sendPromosMutation.mutate(prefix);
+                          }
                         }
                       }}
                       disabled={leads.length === 0 || sendPromosMutation.isPending}
