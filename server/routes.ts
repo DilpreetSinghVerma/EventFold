@@ -1985,6 +1985,23 @@ export function registerRoutes(
     }
   });
 
+  app.delete("/api/admin/leads/:id", async (req, res) => {
+    try {
+      if (!req.isAuthenticated()) return res.status(401).json({ error: "Unauthorized" });
+      const user = req.user as any;
+      const adminEmails = ["admin@eventfold.com", "dilpreetsinghverma@gmail.com"];
+      if (user.role !== 'admin' && !adminEmails.includes(user.email)) {
+        return res.status(403).json({ error: "Admin privilege required" });
+      }
+
+      await storage.deleteKioskLead(req.params.id);
+      res.json({ success: true, message: "Lead deleted successfully" });
+    } catch (e: any) {
+      console.error("Failed to delete lead:", e);
+      res.status(500).json({ error: "Failed to delete lead" });
+    }
+  });
+
   app.post("/api/admin/exhibitions/:id/promo/send", async (req, res) => {
     try {
       if (!req.isAuthenticated()) return res.status(401).json({ error: "Unauthorized" });

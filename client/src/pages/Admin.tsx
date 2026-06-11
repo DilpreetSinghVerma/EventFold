@@ -26,6 +26,21 @@ function ExhibitionRow({ exhibition, sendPromosMutation }: { exhibition: any, se
   });
   const leads = (leadsData as any)?.leads || [];
 
+  const { toast } = useToast();
+  const deleteLeadMutation = useMutation({
+    mutationFn: async (leadId: string) => {
+      const res = await apiRequest("DELETE", `/api/admin/leads/${leadId}`);
+      return res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: [`/api/admin/exhibitions/${exhibition.id}/leads`] });
+      toast({ title: "Success", description: "Lead deleted successfully." });
+    },
+    onError: (err: any) => {
+      toast({ title: "Failed", description: err.message, variant: "destructive" });
+    }
+  });
+
   return (
     <>
       <TableRow className="border-white/5 hover:bg-white/[0.02]">
@@ -75,6 +90,7 @@ function ExhibitionRow({ exhibition, sendPromosMutation }: { exhibition: any, se
                       <TableHead className="text-white/50 h-8 text-xs">Name</TableHead>
                       <TableHead className="text-white/50 h-8 text-xs">Email</TableHead>
                       <TableHead className="text-white/50 h-8 text-xs">Captured At</TableHead>
+                      <TableHead className="text-white/50 h-8 text-xs text-right">Actions</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
@@ -83,6 +99,21 @@ function ExhibitionRow({ exhibition, sendPromosMutation }: { exhibition: any, se
                         <TableCell className="py-2 text-sm">{lead.name}</TableCell>
                         <TableCell className="py-2 text-white/60 text-sm">{lead.email}</TableCell>
                         <TableCell className="py-2 text-white/40 text-sm">{new Date(lead.createdAt).toLocaleString()}</TableCell>
+                        <TableCell className="py-2 text-right">
+                          <Button 
+                            variant="ghost" 
+                            size="icon"
+                            className="h-8 w-8 text-white/40 hover:text-red-500 hover:bg-red-500/10"
+                            onClick={() => {
+                              if (window.confirm(`Are you sure you want to delete lead ${lead.email}?`)) {
+                                deleteLeadMutation.mutate(lead.id);
+                              }
+                            }}
+                            disabled={deleteLeadMutation.isPending}
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </TableCell>
                       </TableRow>
                     ))}
                   </TableBody>

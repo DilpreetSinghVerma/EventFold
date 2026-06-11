@@ -48,6 +48,7 @@ export interface IStorage {
   getExhibition(id: string): Promise<any | undefined>;
   createKioskLead(data: { exhibitionId: string; name: string; email: string }): Promise<KioskLead>;
   getKioskLeads(exhibitionId: string): Promise<KioskLead[]>;
+  deleteKioskLead(id: string): Promise<void>;
   createPromoCode(code: string): Promise<PromoCode>;
   getPromoCode(code: string): Promise<PromoCode | undefined>;
   markPromoCodeUsed(id: string, userId: string): Promise<void>;
@@ -326,8 +327,13 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getKioskLeads(exhibitionId: string): Promise<KioskLead[]> {
-    if (!db) return [];
+    if (!db) throw new Error("Database connection not established. Check your DATABASE_URL.");
     return await db.select().from(kioskLeads).where(eq(kioskLeads.exhibitionId, exhibitionId)).orderBy(asc(kioskLeads.createdAt));
+  }
+
+  async deleteKioskLead(id: string): Promise<void> {
+    if (!db) throw new Error("Database connection not established. Check your DATABASE_URL.");
+    await db.delete(kioskLeads).where(eq(kioskLeads.id, id));
   }
 
   async createPromoCode(code: string): Promise<PromoCode> {
@@ -663,9 +669,11 @@ export class MemStorage implements IStorage {
   }
 
   async getKioskLeads(exhibitionId: string): Promise<KioskLead[]> {
-    return Array.from(this.kioskLeads.values())
-      .filter(lead => lead.exhibitionId === exhibitionId)
-      .sort((a, b) => a.createdAt.getTime() - b.createdAt.getTime());
+    return Array.from(this.kioskLeads.values()).filter(l => l.exhibitionId === exhibitionId).sort((a, b) => a.createdAt.getTime() - b.createdAt.getTime());
+  }
+
+  async deleteKioskLead(id: string): Promise<void> {
+    this.kioskLeads.delete(id);
   }
 
   async createPromoCode(code: string): Promise<PromoCode> {
