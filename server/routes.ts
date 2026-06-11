@@ -1917,7 +1917,7 @@ export function registerRoutes(
 
   // --- Kiosk & Promo Code Endpoints ---
 
-  app.post("/api/admin/leads", async (req, res) => {
+  app.post("/api/admin/exhibitions", async (req, res) => {
     try {
       if (!req.isAuthenticated()) return res.status(401).json({ error: "Unauthorized" });
       const user = req.user as any;
@@ -1926,10 +1926,58 @@ export function registerRoutes(
         return res.status(403).json({ error: "Admin privilege required" });
       }
 
-      const { name, email } = req.body;
-      if (!name || !email) return res.status(400).json({ error: "Name and email required" });
+      const { name, prefix } = req.body;
+      if (!name || !prefix) return res.status(400).json({ error: "Name and prefix required" });
 
-      const lead = await storage.createKioskLead({ name, email });
+      const exhibition = await storage.createExhibition(name, prefix);
+      res.json({ success: true, exhibition });
+    } catch (e: any) {
+      console.error("Failed to create exhibition:", e);
+      res.status(500).json({ error: "Failed to create exhibition" });
+    }
+  });
+
+  app.get("/api/admin/exhibitions", async (req, res) => {
+    try {
+      if (!req.isAuthenticated()) return res.status(401).json({ error: "Unauthorized" });
+      const exhibitions = await storage.getExhibitions();
+      res.json({ success: true, exhibitions });
+    } catch (e: any) {
+      res.status(500).json({ error: "Failed to fetch exhibitions" });
+    }
+  });
+
+  app.get("/api/admin/exhibitions/:id", async (req, res) => {
+    try {
+      const exhibition = await storage.getExhibition(req.params.id);
+      if (!exhibition) return res.status(404).json({ error: "Exhibition not found" });
+      res.json({ success: true, exhibition });
+    } catch (e: any) {
+      res.status(500).json({ error: "Failed to fetch exhibition" });
+    }
+  });
+
+  app.get("/api/admin/exhibitions/:id/leads", async (req, res) => {
+    try {
+      if (!req.isAuthenticated()) return res.status(401).json({ error: "Unauthorized" });
+      const user = req.user as any;
+      const adminEmails = ["admin@eventfold.com", "dilpreetsinghverma@gmail.com"];
+      if (user.role !== 'admin' && !adminEmails.includes(user.email)) {
+        return res.status(403).json({ error: "Admin privilege required" });
+      }
+      const leads = await storage.getKioskLeads(req.params.id);
+      res.json({ success: true, leads });
+    } catch (e: any) {
+      res.status(500).json({ error: "Failed to fetch leads" });
+    }
+  });
+
+  app.post("/api/admin/leads", async (req, res) => {
+    try {
+      const { exhibitionId, name, email } = req.body;
+      if (!exhibitionId || !name || !email) return res.status(400).json({ error: "Exhibition ID, name, and email required" });
+
+      const lead = await storage.createKioskLead({ exhibitionId, name, email });
       res.json({ success: true, lead });
     } catch (e: any) {
       console.error("Failed to capture lead:", e);
@@ -1937,7 +1985,7 @@ export function registerRoutes(
     }
   });
 
-  app.get("/api/admin/leads", async (req, res) => {
+  app.post("/api/admin/exhibitions/:id/promo/send", async (req, res) => {
     try {
       if (!req.isAuthenticated()) return res.status(401).json({ error: "Unauthorized" });
       const user = req.user as any;
@@ -1946,32 +1994,18 @@ export function registerRoutes(
         return res.status(403).json({ error: "Admin privilege required" });
       }
 
-      const leads = await storage.getKioskLeads();
-      res.json({ success: true, leads });
-    } catch (e: any) {
-      res.status(500).json({ error: "Failed to fetch leads" });
-    }
-  });
+      const exhibition = await storage.getExhibition(req.params.id);
+      if (!exhibition) return res.status(404).json({ error: "Exhibition not found" });
 
-  app.post("/api/admin/promo/send", async (req, res) => {
-    try {
-      if (!req.isAuthenticated()) return res.status(401).json({ error: "Unauthorized" });
-      const user = req.user as any;
-      const adminEmails = ["admin@eventfold.com", "dilpreetsinghverma@gmail.com"];
-      if (user.role !== 'admin' && !adminEmails.includes(user.email)) {
-        return res.status(403).json({ error: "Admin privilege required" });
-      }
-
-      const { prefix = "BATALA" } = req.body;
-      const leads = await storage.getKioskLeads();
+      const leads = await storage.getKioskLeads(req.params.id);
       let sentCount = 0;
 
       // Import the mass mailer
       const { sendPromotionalEmail } = await import("./lib/email");
 
       for (const lead of leads) {
-        // Generate a unique 8 character promo code
-        const code = `${prefix.toUpperCase()}-` + crypto.randomBytes(4).toString("hex").toUpperCase();
+        // Generate a unique 8 character promo code using exhibition prefix
+        const code = `${exhibition.prefix.toUpperCase()}-` + crypto.randomBytes(4).toString("hex").toUpperCase();
         await storage.createPromoCode(code);
 
         const emailHtml = `

@@ -8,18 +8,30 @@ import { Megaphone, CheckCircle2 } from "lucide-react";
 import { useAuth } from "@/lib/auth";
 import { Redirect } from "wouter";
 
+import { useRoute } from "wouter";
+import { useQuery } from "@tanstack/react-query";
+
 export default function Kiosk() {
   const { user } = useAuth();
+  const [match, params] = useRoute("/kiosk/:id");
+  const exhibitionId = params?.id;
+  
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
   const { toast } = useToast();
 
+  const { data: exhibitionData } = useQuery({
+    queryKey: [`/api/admin/exhibitions/${exhibitionId}`],
+    enabled: !!exhibitionId,
+  });
+  const exhibition = (exhibitionData as any)?.exhibition;
+
   const adminEmails = ["admin@eventfold.com", "dilpreetsinghverma@gmail.com"];
   const isAdmin = user?.role === 'admin' || (user?.email && adminEmails.includes(user.email));
 
-  if (!user || !isAdmin) {
+  if (!user || !isAdmin || !match) {
     return <Redirect to="/dashboard" />;
   }
 
@@ -29,7 +41,7 @@ export default function Kiosk() {
 
     setLoading(true);
     try {
-      await apiRequest("POST", "/api/admin/leads", { name, email });
+      await apiRequest("POST", "/api/admin/leads", { exhibitionId, name, email });
       setSuccess(true);
       setTimeout(() => {
         setSuccess(false);
@@ -58,8 +70,10 @@ export default function Kiosk() {
           <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mb-6">
             <Megaphone className="w-8 h-8 text-primary" />
           </div>
-          <h1 className="text-4xl font-black tracking-tight text-center mb-2">EventFold Studio</h1>
-          <p className="text-white/50 text-center">Exclusive Exhibition Offer</p>
+          <h1 className="text-3xl font-black tracking-tight text-center mb-2">
+            {exhibition ? exhibition.name : "EventFold Studio"}
+          </h1>
+          <p className="text-white/50 text-center">Exclusive Special Offer</p>
         </div>
 
         {success ? (

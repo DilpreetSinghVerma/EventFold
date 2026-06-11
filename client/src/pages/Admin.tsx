@@ -15,6 +15,86 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Progress } from "@/components/ui/progress";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Label } from "@/components/ui/label";
+import { ChevronDown, ChevronUp } from "lucide-react";
+
+function ExhibitionRow({ exhibition, sendPromosMutation }: { exhibition: any, sendPromosMutation: any }) {
+  const [expanded, setExpanded] = useState(false);
+  const { data: leadsData, isLoading: leadsLoading } = useQuery({
+    queryKey: [`/api/admin/exhibitions/${exhibition.id}/leads`],
+    enabled: expanded,
+  });
+  const leads = (leadsData as any)?.leads || [];
+
+  return (
+    <>
+      <TableRow className="border-white/5 hover:bg-white/[0.02]">
+        <TableCell className="font-medium">{exhibition.name}</TableCell>
+        <TableCell className="text-white/60">{exhibition.prefix}</TableCell>
+        <TableCell className="text-white/40">{new Date(exhibition.createdAt).toLocaleDateString()}</TableCell>
+        <TableCell className="text-right space-x-2">
+          <Link href={`/kiosk/${exhibition.id}`} target="_blank">
+            <Button variant="outline" size="sm" className="border-white/10 bg-white/5 gap-2">
+              <Plus className="w-4 h-4" /> Kiosk View
+            </Button>
+          </Link>
+          <Button variant="ghost" size="sm" onClick={() => setExpanded(!expanded)} className="text-white/60">
+            {expanded ? <ChevronUp className="w-4 h-4 mr-1" /> : <ChevronDown className="w-4 h-4 mr-1" />}
+            Leads
+          </Button>
+        </TableCell>
+      </TableRow>
+      {expanded && (
+        <TableRow className="bg-black/20">
+          <TableCell colSpan={4} className="p-4 border-b border-white/5">
+            <div className="bg-white/5 rounded-lg border border-white/10 p-4">
+              <div className="flex justify-between items-center mb-4">
+                <h4 className="font-semibold text-primary">Leads for {exhibition.name}</h4>
+                <Button 
+                  onClick={() => {
+                    if (window.confirm(`Send unique promo codes with prefix "${exhibition.prefix.toUpperCase()}-" to ${leads.length} leads?`)) {
+                      sendPromosMutation.mutate(exhibition.id);
+                    }
+                  }}
+                  disabled={leads.length === 0 || sendPromosMutation.isPending}
+                  size="sm"
+                  className="bg-primary hover:bg-primary/90 text-white font-bold gap-2"
+                >
+                  {sendPromosMutation.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : <Mail className="w-4 h-4" />}
+                  Send Promos ({leads.length})
+                </Button>
+              </div>
+              {leadsLoading ? (
+                <div className="py-4 flex justify-center"><Loader2 className="animate-spin text-primary" /></div>
+              ) : leads.length === 0 ? (
+                <div className="py-4 text-center text-white/40 text-sm">No leads captured yet for this exhibition.</div>
+              ) : (
+                <Table>
+                  <TableHeader>
+                    <TableRow className="border-white/5 hover:bg-transparent">
+                      <TableHead className="text-white/50 h-8 text-xs">Name</TableHead>
+                      <TableHead className="text-white/50 h-8 text-xs">Email</TableHead>
+                      <TableHead className="text-white/50 h-8 text-xs">Captured At</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {leads.map((lead: any) => (
+                      <TableRow key={lead.id} className="border-white/5 hover:bg-transparent">
+                        <TableCell className="py-2 text-sm">{lead.name}</TableCell>
+                        <TableCell className="py-2 text-white/60 text-sm">{lead.email}</TableCell>
+                        <TableCell className="py-2 text-white/40 text-sm">{new Date(lead.createdAt).toLocaleString()}</TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              )}
+            </div>
+          </TableCell>
+        </TableRow>
+      )}
+    </>
+  );
+}
 
 export default function Admin() {
   const { user } = useAuth();
@@ -83,14 +163,28 @@ export default function Admin() {
   });
   const activeBroadcast = activeBroadcastData?.broadcast;
 
-  const { data: leadsData, isLoading: leadsLoading } = useQuery({
-    queryKey: ["/api/admin/leads"],
+  const { data: exhibitionsData, isLoading: exhibitionsLoading } = useQuery({
+    queryKey: ["/api/admin/exhibitions"],
   });
-  const leads = (leadsData as any)?.leads || [];
+  const exhibitions = (exhibitionsData as any)?.exhibitions || [];
+
+  const createExhibitionMutation = useMutation({
+    mutationFn: async (data: { name: string; prefix: string }) => {
+      const res = await apiRequest("POST", "/api/admin/exhibitions", data);
+      return res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/exhibitions"] });
+      toast({ title: "Success", description: "Exhibition created successfully." });
+    },
+    onError: (err: any) => {
+      toast({ title: "Failed", description: err.message, variant: "destructive" });
+    }
+  });
 
   const sendPromosMutation = useMutation({
-    mutationFn: async (prefix: string) => {
-      const res = await apiRequest("POST", "/api/admin/promo/send", { prefix });
+    mutationFn: async (exhibitionId: string) => {
+      const res = await apiRequest("POST", `/api/admin/exhibitions/${exhibitionId}/promo/send`);
       return res.json();
     },
     onSuccess: (data) => {
@@ -1710,55 +1804,63 @@ export default function Admin() {
             </div>
           </TabsContent>
           <TabsContent value="exhibition-leads">
+            <Card className="bg-white/5 border-white/10 overflow-hidden mb-6">
+              <CardHeader className="border-b border-white/5 bg-white/[0.02]">
+                <CardTitle className="text-lg flex items-center gap-2">
+                  <Plus className="w-5 h-5 text-primary" /> Create New Exhibition Kiosk
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="p-6">
+                <form onSubmit={(e) => {
+                  e.preventDefault();
+                  const fd = new FormData(e.currentTarget);
+                  const name = fd.get("name") as string;
+                  const prefix = fd.get("prefix") as string;
+                  if (name && prefix) {
+                    createExhibitionMutation.mutate({ name, prefix });
+                    (e.target as HTMLFormElement).reset();
+                  }
+                }} className="flex items-end gap-4">
+                  <div className="space-y-2 flex-1">
+                    <Label className="text-white/70">Exhibition Name</Label>
+                    <Input name="name" placeholder="e.g. Photo Expo Delhi" required className="bg-white/5 border-white/10" />
+                  </div>
+                  <div className="space-y-2 w-48">
+                    <Label className="text-white/70">Promo Prefix</Label>
+                    <Input name="prefix" placeholder="e.g. DELHI" required className="bg-white/5 border-white/10 uppercase" />
+                  </div>
+                  <Button type="submit" disabled={createExhibitionMutation.isPending} className="bg-primary hover:bg-primary/90 text-white font-bold">
+                    {createExhibitionMutation.isPending ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <Plus className="w-4 h-4 mr-2" />}
+                    Create Kiosk List
+                  </Button>
+                </form>
+              </CardContent>
+            </Card>
+
             <Card className="bg-white/5 border-white/10 overflow-hidden">
               <CardHeader className="border-b border-white/5 bg-white/[0.02]">
-                <CardTitle className="text-lg flex items-center justify-between gap-2">
-                  <div className="flex items-center gap-2"><Gift className="w-5 h-5 text-primary" /> Exhibition Leads</div>
-                  <div className="flex gap-2">
-                    <Link href="/kiosk" target="_blank">
-                      <Button variant="outline" className="border-white/10 bg-white/5 gap-2">
-                        <Plus className="w-4 h-4" /> Open Kiosk View
-                      </Button>
-                    </Link>
-                    <Button 
-                      onClick={() => {
-                        const prefix = window.prompt("Enter a prefix for the promo codes (e.g. BATALA, DELHI, EVENT):", "BATALA");
-                        if (prefix !== null) {
-                          if (window.confirm(`Send unique promo codes with prefix "${prefix.toUpperCase()}-" to ${leads.length} leads? This will take ~${(leads.length * 1.5).toFixed(1)} seconds.`)) {
-                            sendPromosMutation.mutate(prefix);
-                          }
-                        }
-                      }}
-                      disabled={leads.length === 0 || sendPromosMutation.isPending}
-                      className="bg-primary hover:bg-primary/90 text-white font-bold gap-2"
-                    >
-                      {sendPromosMutation.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : <Mail className="w-4 h-4" />}
-                      Send Promos to All Leads
-                    </Button>
-                  </div>
+                <CardTitle className="text-lg flex items-center gap-2">
+                  <Gift className="w-5 h-5 text-primary" /> Exhibition Kiosk Lists
                 </CardTitle>
               </CardHeader>
               <CardContent className="p-0">
-                {leadsLoading ? (
+                {exhibitionsLoading ? (
                   <div className="p-8 flex justify-center"><Loader2 className="animate-spin text-primary" /></div>
-                ) : leads.length === 0 ? (
-                  <div className="p-8 text-center text-white/40">No leads captured yet. Open the Kiosk View to start.</div>
+                ) : exhibitions.length === 0 ? (
+                  <div className="p-8 text-center text-white/40">No exhibitions created yet. Create one above to start collecting leads.</div>
                 ) : (
                   <Table>
                     <TableHeader className="bg-white/[0.01]">
                       <TableRow className="border-white/5 hover:bg-transparent">
-                        <TableHead className="text-white/50">Name</TableHead>
-                        <TableHead className="text-white/50">Email</TableHead>
-                        <TableHead className="text-white/50">Captured At</TableHead>
+                        <TableHead className="text-white/50">Exhibition Name</TableHead>
+                        <TableHead className="text-white/50">Prefix</TableHead>
+                        <TableHead className="text-white/50">Created Date</TableHead>
+                        <TableHead className="text-right text-white/50">Actions</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
-                      {leads.map((lead: any) => (
-                        <TableRow key={lead.id} className="border-white/5 hover:bg-white/[0.02]">
-                          <TableCell className="font-medium">{lead.name}</TableCell>
-                          <TableCell className="text-white/60">{lead.email}</TableCell>
-                          <TableCell className="text-white/40">{new Date(lead.createdAt).toLocaleString()}</TableCell>
-                        </TableRow>
+                      {exhibitions.map((ex: any) => (
+                        <ExhibitionRow key={ex.id} exhibition={ex} sendPromosMutation={sendPromosMutation} />
                       ))}
                     </TableBody>
                   </Table>

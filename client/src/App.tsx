@@ -115,7 +115,7 @@ function Router() {
       <Route path="/admin">
         {user ? (user.role === 'admin' || user.email === 'dilpreetsinghverma@gmail.com' ? <Admin /> : <Redirect to="/dashboard" />) : <Redirect to="/login" />}
       </Route>
-      <Route path="/kiosk">
+      <Route path="/kiosk/:id">
         {user ? (user.role === 'admin' || user.email === 'dilpreetsinghverma@gmail.com' ? <Kiosk /> : <Redirect to="/dashboard" />) : <Redirect to="/login" />}
       </Route>
 
@@ -130,7 +130,6 @@ function Router() {
       <Route path="/privacy" component={Privacy} />
       <Route path="/about" component={About} />
       <Route path="/faq" component={FAQ} />
-
       <Route component={NotFound} />
     </Switch>
   );

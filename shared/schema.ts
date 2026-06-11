@@ -97,8 +97,16 @@ export const referrals = pgTable("referrals", {
   };
 });
 
+export const exhibitions = pgTable("exhibitions", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  name: text("name").notNull(),
+  prefix: varchar("prefix", { length: 20 }).notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
 export const kioskLeads = pgTable("kiosk_leads", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  exhibitionId: varchar("exhibition_id").references(() => exhibitions.id, { onDelete: 'cascade' }),
   name: text("name").notNull(),
   email: text("email").notNull(),
   createdAt: timestamp("created_at").defaultNow().notNull(),
@@ -141,5 +149,6 @@ export type InsertUser = z.infer<typeof insertUserSchema>;
 export type Broadcast = typeof broadcasts.$inferSelect;
 export type Referral = typeof referrals.$inferSelect;
 export type InsertReferral = z.infer<typeof insertReferralSchema>;
+export type Exhibition = typeof exhibitions.$inferSelect;
 export type KioskLead = typeof kioskLeads.$inferSelect;
 export type PromoCode = typeof promoCodes.$inferSelect;

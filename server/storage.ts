@@ -1,5 +1,5 @@
 import crypto from "crypto";
-import { type InsertAlbum, type Album, type InsertFile, type File, type User, type InsertUser, type Referral, type InsertReferral, type KioskLead, type PromoCode, albums, files, settings, users, referrals, kioskLeads, promoCodes } from "../shared/schema";
+import { type InsertAlbum, type Album, type InsertFile, type File, type User, type InsertUser, type Referral, type InsertReferral, type KioskLead, type PromoCode, type Exhibition, albums, files, settings, users, referrals, kioskLeads, promoCodes, exhibitions } from "../shared/schema";
 import { db } from "./db";
 import { eq, asc, lte, and, isNotNull, sql } from "drizzle-orm";
 
@@ -43,8 +43,11 @@ export interface IStorage {
   updateReferral(id: string, data: Partial<Referral>): Promise<Referral>;
   getReferralByReferee(refereeId: string): Promise<Referral | undefined>;
 
-  createKioskLead(data: { name: string; email: string }): Promise<KioskLead>;
-  getKioskLeads(): Promise<KioskLead[]>;
+  createExhibition(name: string, prefix: string): Promise<any>;
+  getExhibitions(): Promise<any[]>;
+  getExhibition(id: string): Promise<any | undefined>;
+  createKioskLead(data: { exhibitionId: string; name: string; email: string }): Promise<KioskLead>;
+  getKioskLeads(exhibitionId: string): Promise<KioskLead[]>;
   createPromoCode(code: string): Promise<PromoCode>;
   getPromoCode(code: string): Promise<PromoCode | undefined>;
   markPromoCodeUsed(id: string, userId: string): Promise<void>;
@@ -299,15 +302,32 @@ export class DatabaseStorage implements IStorage {
     return row;
   }
 
-  async createKioskLead(data: { name: string; email: string }): Promise<KioskLead> {
+  async createExhibition(name: string, prefix: string): Promise<any> {
+    if (!db) throw new Error("DB not connected");
+    const [row] = await db.insert(exhibitions).values({ name, prefix }).returning();
+    return row;
+  }
+
+  async getExhibitions(): Promise<any[]> {
+    if (!db) return [];
+    return await db.select().from(exhibitions).orderBy(asc(exhibitions.createdAt));
+  }
+
+  async getExhibition(id: string): Promise<any | undefined> {
+    if (!db) return undefined;
+    const [row] = await db.select().from(exhibitions).where(eq(exhibitions.id, id));
+    return row;
+  }
+
+  async createKioskLead(data: { exhibitionId: string; name: string; email: string }): Promise<KioskLead> {
     if (!db) throw new Error("DB not connected");
     const [row] = await db.insert(kioskLeads).values(data).returning();
     return row;
   }
 
-  async getKioskLeads(): Promise<KioskLead[]> {
+  async getKioskLeads(exhibitionId: string): Promise<KioskLead[]> {
     if (!db) return [];
-    return await db.select().from(kioskLeads).orderBy(asc(kioskLeads.createdAt));
+    return await db.select().from(kioskLeads).where(eq(kioskLeads.exhibitionId, exhibitionId)).orderBy(asc(kioskLeads.createdAt));
   }
 
   async createPromoCode(code: string): Promise<PromoCode> {
@@ -378,6 +398,8 @@ export class MemStorage implements IStorage {
       customBusinessName: insertAlbum.customBusinessName || null,
       customBusinessLogo: insertAlbum.customBusinessLogo || null,
       customContactWhatsApp: insertAlbum.customContactWhatsApp || null,
+      isLabAlbum: insertAlbum.isLabAlbum || 0,
+      expiryNotificationSent: 0,
       createdAt: new Date(),
     };
     this.albums.set(id, album);
@@ -480,6 +502,7 @@ export class MemStorage implements IStorage {
       role: insertUser.role || (insertUser.email === 'dilpreetsinghverma@gmail.com' ? 'admin' : 'user'),
       subscriptionStartedAt: insertUser.subscriptionStartedAt || null,
       subscriptionExpiresAt: insertUser.subscriptionExpiresAt || null,
+      lastActiveAt: null,
       createdAt: new Date()
     };
     this.users.set(id, user);
@@ -615,15 +638,34 @@ export class MemStorage implements IStorage {
     return Array.from(this.referrals.values()).find(r => r.refereeId === refereeId);
   }
 
-  async createKioskLead(data: { name: string; email: string }): Promise<KioskLead> {
+  private exhibitions = new Map<string, any>();
+
+  async createExhibition(name: string, prefix: string): Promise<any> {
+    const id = crypto.randomUUID();
+    const ex = { id, name, prefix, createdAt: new Date() };
+    this.exhibitions.set(id, ex);
+    return ex;
+  }
+
+  async getExhibitions(): Promise<any[]> {
+    return Array.from(this.exhibitions.values()).sort((a, b) => a.createdAt.getTime() - b.createdAt.getTime());
+  }
+
+  async getExhibition(id: string): Promise<any | undefined> {
+    return this.exhibitions.get(id);
+  }
+
+  async createKioskLead(data: { exhibitionId: string; name: string; email: string }): Promise<KioskLead> {
     const id = crypto.randomUUID();
     const lead: KioskLead = { id, ...data, createdAt: new Date() };
     this.kioskLeads.set(id, lead);
     return lead;
   }
 
-  async getKioskLeads(): Promise<KioskLead[]> {
-    return Array.from(this.kioskLeads.values());
+  async getKioskLeads(exhibitionId: string): Promise<KioskLead[]> {
+    return Array.from(this.kioskLeads.values())
+      .filter(lead => lead.exhibitionId === exhibitionId)
+      .sort((a, b) => a.createdAt.getTime() - b.createdAt.getTime());
   }
 
   async createPromoCode(code: string): Promise<PromoCode> {
