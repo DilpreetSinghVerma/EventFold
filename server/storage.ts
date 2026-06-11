@@ -1,5 +1,5 @@
 import crypto from "crypto";
-import { type InsertAlbum, type Album, type InsertFile, type File, type User, type InsertUser, type Referral, type InsertReferral, albums, files, settings, users, referrals } from "../shared/schema";
+import { type InsertAlbum, type Album, type InsertFile, type File, type User, type InsertUser, type Referral, type InsertReferral, type KioskLead, type PromoCode, albums, files, settings, users, referrals, kioskLeads, promoCodes } from "../shared/schema";
 import { db } from "./db";
 import { eq, asc, lte, and, isNotNull, sql } from "drizzle-orm";
 
@@ -42,6 +42,12 @@ export interface IStorage {
   createReferral(referral: InsertReferral): Promise<Referral>;
   updateReferral(id: string, data: Partial<Referral>): Promise<Referral>;
   getReferralByReferee(refereeId: string): Promise<Referral | undefined>;
+
+  createKioskLead(data: { name: string; email: string }): Promise<KioskLead>;
+  getKioskLeads(): Promise<KioskLead[]>;
+  createPromoCode(code: string): Promise<PromoCode>;
+  getPromoCode(code: string): Promise<PromoCode | undefined>;
+  markPromoCodeUsed(id: string, userId: string): Promise<void>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -292,6 +298,36 @@ export class DatabaseStorage implements IStorage {
     const [row] = await db.select().from(referrals).where(eq(referrals.refereeId, refereeId));
     return row;
   }
+
+  async createKioskLead(data: { name: string; email: string }): Promise<KioskLead> {
+    if (!db) throw new Error("DB not connected");
+    const [row] = await db.insert(kioskLeads).values(data).returning();
+    return row;
+  }
+
+  async getKioskLeads(): Promise<KioskLead[]> {
+    if (!db) return [];
+    return await db.select().from(kioskLeads).orderBy(asc(kioskLeads.createdAt));
+  }
+
+  async createPromoCode(code: string): Promise<PromoCode> {
+    if (!db) throw new Error("DB not connected");
+    const [row] = await db.insert(promoCodes).values({ code }).returning();
+    return row;
+  }
+
+  async getPromoCode(code: string): Promise<PromoCode | undefined> {
+    if (!db) return undefined;
+    const [row] = await db.select().from(promoCodes).where(eq(promoCodes.code, code));
+    return row;
+  }
+
+  async markPromoCodeUsed(id: string, userId: string): Promise<void> {
+    if (!db) return;
+    await db.update(promoCodes)
+      .set({ isUsed: 1, usedById: userId, usedAt: new Date() })
+      .where(eq(promoCodes.id, id));
+  }
 }
 
 export class MemStorage implements IStorage {
@@ -300,6 +336,8 @@ export class MemStorage implements IStorage {
   private users: Map<string, User>;
   private settings: Map<string, any>;
   private referrals: Map<string, Referral>;
+  private kioskLeads: Map<string, KioskLead>;
+  private promoCodes: Map<string, PromoCode>;
   private albumIdCounter: number;
   private fileIdCounter: number;
   private userIdCounter: number;
@@ -311,6 +349,8 @@ export class MemStorage implements IStorage {
     this.users = new Map();
     this.settings = new Map();
     this.referrals = new Map();
+    this.kioskLeads = new Map();
+    this.promoCodes = new Map();
     this.albumIdCounter = 1;
     this.fileIdCounter = 1;
     this.userIdCounter = 1;
@@ -573,6 +613,35 @@ export class MemStorage implements IStorage {
 
   async getReferralByReferee(refereeId: string): Promise<Referral | undefined> {
     return Array.from(this.referrals.values()).find(r => r.refereeId === refereeId);
+  }
+
+  async createKioskLead(data: { name: string; email: string }): Promise<KioskLead> {
+    const id = crypto.randomUUID();
+    const lead: KioskLead = { id, ...data, createdAt: new Date() };
+    this.kioskLeads.set(id, lead);
+    return lead;
+  }
+
+  async getKioskLeads(): Promise<KioskLead[]> {
+    return Array.from(this.kioskLeads.values());
+  }
+
+  async createPromoCode(code: string): Promise<PromoCode> {
+    const id = crypto.randomUUID();
+    const promo: PromoCode = { id, code, isUsed: 0, usedById: null, createdAt: new Date(), usedAt: null };
+    this.promoCodes.set(id, promo);
+    return promo;
+  }
+
+  async getPromoCode(code: string): Promise<PromoCode | undefined> {
+    return Array.from(this.promoCodes.values()).find(p => p.code === code);
+  }
+
+  async markPromoCodeUsed(id: string, userId: string): Promise<void> {
+    const promo = this.promoCodes.get(id);
+    if (promo) {
+      this.promoCodes.set(id, { ...promo, isUsed: 1, usedById: userId, usedAt: new Date() });
+    }
   }
 }
 

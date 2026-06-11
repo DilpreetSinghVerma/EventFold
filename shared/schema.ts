@@ -97,6 +97,22 @@ export const referrals = pgTable("referrals", {
   };
 });
 
+export const kioskLeads = pgTable("kiosk_leads", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  name: text("name").notNull(),
+  email: text("email").notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+export const promoCodes = pgTable("promo_codes", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  code: varchar("code", { length: 20 }).notNull().unique(),
+  isUsed: integer("is_used").notNull().default(0), // 0: no, 1: yes
+  usedById: varchar("used_by_id").references(() => users.id, { onDelete: 'set null' }),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  usedAt: timestamp("used_at"),
+});
+
 export const insertAlbumSchema = createInsertSchema(albums).omit({
   id: true,
   createdAt: true,
@@ -125,3 +141,5 @@ export type InsertUser = z.infer<typeof insertUserSchema>;
 export type Broadcast = typeof broadcasts.$inferSelect;
 export type Referral = typeof referrals.$inferSelect;
 export type InsertReferral = z.infer<typeof insertReferralSchema>;
+export type KioskLead = typeof kioskLeads.$inferSelect;
+export type PromoCode = typeof promoCodes.$inferSelect;

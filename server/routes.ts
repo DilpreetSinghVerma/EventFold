@@ -1864,12 +1864,23 @@ export function registerRoutes(
       const totalUsers = recentUsers.length;
       const totalAlbums = recentAlbums.length;
 
+      // Get referral program metrics
+      const totalReferralsList = await db.select().from(referrals);
+      const referralStats = {
+        total: totalReferralsList.length,
+        joined: totalReferralsList.filter(r => r.status === 'joined').length,
+        verified: totalReferralsList.filter(r => r.status === 'verified').length,
+        completed: totalReferralsList.filter(r => r.status === 'completed').length,
+        rewarded: totalReferralsList.filter(r => r.status === 'rewarded').length,
+      };
+
       res.json({
         success: true,
         chartData,
         stats: {
           totalUsers,
           totalAlbums,
+          referralStats,
         }
       });
 
@@ -1903,4 +1914,114 @@ export function registerRoutes(
       res.status(500).json({ error: "Cron execution failed", details: err.message });
     }
   });
+
+  // --- Kiosk & Promo Code Endpoints ---
+
+  app.post("/api/admin/leads", async (req, res) => {
+    try {
+      if (!req.isAuthenticated()) return res.status(401).json({ error: "Unauthorized" });
+      const user = req.user as any;
+      const adminEmails = ["admin@eventfold.com", "dilpreetsinghverma@gmail.com"];
+      if (user.role !== 'admin' && !adminEmails.includes(user.email)) {
+        return res.status(403).json({ error: "Admin privilege required" });
+      }
+
+      const { name, email } = req.body;
+      if (!name || !email) return res.status(400).json({ error: "Name and email required" });
+
+      const lead = await storage.createKioskLead({ name, email });
+      res.json({ success: true, lead });
+    } catch (e: any) {
+      console.error("Failed to capture lead:", e);
+      res.status(500).json({ error: "Failed to capture lead" });
+    }
+  });
+
+  app.get("/api/admin/leads", async (req, res) => {
+    try {
+      if (!req.isAuthenticated()) return res.status(401).json({ error: "Unauthorized" });
+      const user = req.user as any;
+      const adminEmails = ["admin@eventfold.com", "dilpreetsinghverma@gmail.com"];
+      if (user.role !== 'admin' && !adminEmails.includes(user.email)) {
+        return res.status(403).json({ error: "Admin privilege required" });
+      }
+
+      const leads = await storage.getKioskLeads();
+      res.json({ success: true, leads });
+    } catch (e: any) {
+      res.status(500).json({ error: "Failed to fetch leads" });
+    }
+  });
+
+  app.post("/api/admin/promo/send", async (req, res) => {
+    try {
+      if (!req.isAuthenticated()) return res.status(401).json({ error: "Unauthorized" });
+      const user = req.user as any;
+      const adminEmails = ["admin@eventfold.com", "dilpreetsinghverma@gmail.com"];
+      if (user.role !== 'admin' && !adminEmails.includes(user.email)) {
+        return res.status(403).json({ error: "Admin privilege required" });
+      }
+
+      const leads = await storage.getKioskLeads();
+      let sentCount = 0;
+
+      // Import the mass mailer
+      const { sendPromotionalEmail } = await import("./lib/email");
+
+      for (const lead of leads) {
+        // Generate a unique 8 character promo code
+        const code = "BATALA-" + crypto.randomBytes(4).toString("hex").toUpperCase();
+        await storage.createPromoCode(code);
+
+        const emailHtml = `
+          <h2 style="color: white; font-size: 24px;">Thank you for visiting EventFold Studio!</h2>
+          <p>It was great meeting you at the exhibition. As promised, here is your exclusive promo code to get <strong>1 FREE Album Credit</strong>.</p>
+          <div style="background: #1e1e2e; padding: 20px; border-radius: 12px; text-align: center; margin: 20px 0;">
+            <span style="font-size: 32px; font-weight: bold; letter-spacing: 5px; color: #8b5cf6;">${code}</span>
+          </div>
+          <p>Sign up at <a href="https://eventfoldstudio.com" style="color: #8b5cf6;">eventfoldstudio.com</a>, head to your Dashboard, and redeem this code instantly.</p>
+        `;
+
+        await sendPromotionalEmail(lead.email, "Your Free EventFold Studio Credit! 🎁", emailHtml);
+        sentCount++;
+        
+        // 1.5 second delay to avoid spam/rate limits
+        await new Promise(resolve => setTimeout(resolve, 1500));
+      }
+
+      res.json({ success: true, message: `Sent ${sentCount} promo codes successfully.` });
+    } catch (e: any) {
+      console.error("Failed to send promos:", e);
+      res.status(500).json({ error: "Failed to send promo codes" });
+    }
+  });
+
+  app.post("/api/billing/redeem-promo", async (req, res) => {
+    try {
+      if (!req.isAuthenticated()) return res.status(401).json({ error: "Unauthorized" });
+      const userId = (req.user as any).id;
+      const { code } = req.body;
+
+      if (!code) return res.status(400).json({ error: "Promo code is required" });
+
+      const promo = await storage.getPromoCode(code.trim().toUpperCase());
+      if (!promo) {
+        return res.status(404).json({ error: "Invalid promo code" });
+      }
+
+      if (promo.isUsed === 1) {
+        return res.status(400).json({ error: "This promo code has already been used" });
+      }
+
+      // Mark used and add credit
+      await storage.markPromoCodeUsed(promo.id, userId);
+      await storage.addCredit(userId, 1);
+
+      res.json({ success: true, message: "1 Free Album Credit added to your account!" });
+    } catch (e: any) {
+      console.error("Failed to redeem promo:", e);
+      res.status(500).json({ error: "Failed to redeem promo code" });
+    }
+  });
+
 }

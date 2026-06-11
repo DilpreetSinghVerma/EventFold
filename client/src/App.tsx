@@ -22,6 +22,7 @@ import About from "@/pages/About";
 import FAQ from "@/pages/FAQ";
 import AlbumEdit from "@/pages/AlbumEdit";
 import ScrollToTop from "@/components/ScrollToTop";
+import Kiosk from "@/pages/Kiosk";
 
 import { AuthProvider, useAuth } from "@/lib/auth";
 import { I18nProvider } from "@/lib/i18n";
@@ -113,6 +114,9 @@ function Router() {
       </Route>
       <Route path="/admin">
         {user ? (user.role === 'admin' || user.email === 'dilpreetsinghverma@gmail.com' ? <Admin /> : <Redirect to="/dashboard" />) : <Redirect to="/login" />}
+      </Route>
+      <Route path="/kiosk">
+        {user ? (user.role === 'admin' || user.email === 'dilpreetsinghverma@gmail.com' ? <Kiosk /> : <Redirect to="/dashboard" />) : <Redirect to="/login" />}
       </Route>
 
 

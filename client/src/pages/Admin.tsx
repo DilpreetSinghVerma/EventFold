@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import { Loader2, Plus, Minus, Trash2, Eye, LayoutDashboard, Users, BookCopy, ShieldAlert, TrendingUp, Activity, Database, Globe, Search, ArrowUpCircle, CheckCircle2, XCircle, Sparkles, Cloud, HardDrive, Wifi, Zap, AlertTriangle, RefreshCw, IndianRupee, PieChart, BarChart3, Clock, Crown, CreditCard, Star, Download, Megaphone, Mail } from "lucide-react";
+import { Loader2, Plus, Minus, Trash2, Eye, LayoutDashboard, Users, BookCopy, ShieldAlert, TrendingUp, Activity, Database, Globe, Search, ArrowUpCircle, CheckCircle2, XCircle, Sparkles, Cloud, HardDrive, Wifi, Zap, AlertTriangle, RefreshCw, IndianRupee, PieChart, BarChart3, Clock, Crown, CreditCard, Star, Download, Megaphone, Mail, Gift } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { Link, useLocation } from "wouter";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -82,6 +82,24 @@ export default function Admin() {
     queryKey: ["/api/broadcasts/active"],
   });
   const activeBroadcast = activeBroadcastData?.broadcast;
+
+  const { data: leadsData, isLoading: leadsLoading } = useQuery({
+    queryKey: ["/api/admin/leads"],
+  });
+  const leads = (leadsData as any)?.leads || [];
+
+  const sendPromosMutation = useMutation({
+    mutationFn: async () => {
+      const res = await apiRequest("POST", "/api/admin/promo/send");
+      return res.json();
+    },
+    onSuccess: (data) => {
+      toast({ title: "Success", description: data.message });
+    },
+    onError: (err: any) => {
+      toast({ title: "Failed", description: err.message, variant: "destructive" });
+    }
+  });
 
   const filteredUsers = users?.filter(u => 
     u.name?.toLowerCase().includes(searchTerm.toLowerCase()) || 
@@ -333,6 +351,9 @@ export default function Admin() {
             </TabsTrigger>
             <TabsTrigger value="email-broadcast" className="data-[state=active]:bg-primary rounded-lg flex gap-2">
               <Mail className="w-4 h-4" /> Email Broadcast
+            </TabsTrigger>
+            <TabsTrigger value="exhibition-leads" className="data-[state=active]:bg-primary rounded-lg flex gap-2">
+              <Gift className="w-4 h-4" /> Exhibition Leads
             </TabsTrigger>
           </TabsList>
 
@@ -1194,6 +1215,68 @@ export default function Admin() {
                     </CardContent>
                   </Card>
 
+                  {/* Referral Invite Funnel */}
+                  <Card className="bg-white/[0.03] border-white/5 rounded-2xl overflow-hidden">
+                    <CardHeader className="border-b border-white/5 bg-white/[0.02]">
+                      <CardTitle className="text-lg flex items-center gap-2 text-amber-400 font-display font-bold">
+                        <Gift className="w-5 h-5 text-amber-500" /> Referral Invite Funnel
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent className="p-8">
+                      {(() => {
+                        const refStats = (analytics as any)?.stats?.referralStats || { total: 0, joined: 0, verified: 0, completed: 0, rewarded: 0 };
+                        const refTotal = refStats.total;
+                        const refVerified = refStats.verified + refStats.completed + refStats.rewarded;
+                        const refCompleted = refStats.completed + refStats.rewarded;
+                        const refRewarded = refStats.rewarded;
+
+                        const steps = [
+                          { label: 'Referred Signups', count: refTotal, pct: 100, color: 'bg-blue-500' },
+                          { label: 'Verified Accounts', count: refVerified, pct: refTotal > 0 ? (refVerified / refTotal * 100) : 0, color: 'bg-purple-500' },
+                          { label: 'First Album Published', count: refCompleted, pct: refTotal > 0 ? (refCompleted / refTotal * 100) : 0, color: 'bg-emerald-500' },
+                          { label: 'Rewarded Referrals (Paid out)', count: refRewarded, pct: refTotal > 0 ? (refRewarded / refTotal * 100) : 0, color: 'bg-amber-500' },
+                        ];
+
+                        return (
+                          <div className="space-y-6">
+                            <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-2">
+                              <div className="bg-white/[0.02] border border-white/5 rounded-xl p-4">
+                                <p className="text-xs text-white/40 uppercase tracking-wider">Total Signups</p>
+                                <p className="text-2xl font-black mt-1 text-blue-400">{refTotal}</p>
+                              </div>
+                              <div className="bg-white/[0.02] border border-white/5 rounded-xl p-4">
+                                <p className="text-xs text-white/40 uppercase tracking-wider">Verified Accounts</p>
+                                <p className="text-2xl font-black mt-1 text-purple-400">{refVerified}</p>
+                              </div>
+                              <div className="bg-white/[0.02] border border-white/5 rounded-xl p-4">
+                                <p className="text-xs text-white/40 uppercase tracking-wider">Album Published</p>
+                                <p className="text-2xl font-black mt-1 text-emerald-400">{refCompleted}</p>
+                              </div>
+                              <div className="bg-white/[0.02] border border-white/5 rounded-xl p-4">
+                                <p className="text-xs text-white/40 uppercase tracking-wider">Paid / Rewarded</p>
+                                <p className="text-2xl font-black mt-1 text-amber-500">{refRewarded}</p>
+                              </div>
+                            </div>
+
+                            <div className="space-y-4">
+                              {steps.map((step, idx) => (
+                                <div key={idx} className="space-y-1">
+                                  <div className="flex justify-between text-xs">
+                                    <span className="font-bold text-white/70">{step.label}</span>
+                                    <span className="font-black text-white">{step.count} ({step.pct.toFixed(0)}%)</span>
+                                  </div>
+                                  <div className="w-full h-3 bg-white/5 rounded-full overflow-hidden">
+                                    <div className={`h-full rounded-full ${step.color}`} style={{ width: `${Math.max(step.pct, 2)}%` }} />
+                                  </div>
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        );
+                      })()}
+                    </CardContent>
+                  </Card>
+
                   {/* Album Ratings from Feedback Collector */}
                   <Card className="bg-white/[0.03] border-white/5 rounded-2xl overflow-hidden">
                     <CardHeader className="border-b border-white/5 bg-white/[0.02]">
@@ -1625,6 +1708,60 @@ export default function Admin() {
                 </Card>
               </div>
             </div>
+          </TabsContent>
+          <TabsContent value="exhibition-leads">
+            <Card className="bg-white/5 border-white/10 overflow-hidden">
+              <CardHeader className="border-b border-white/5 bg-white/[0.02]">
+                <CardTitle className="text-lg flex items-center justify-between gap-2">
+                  <div className="flex items-center gap-2"><Gift className="w-5 h-5 text-primary" /> Exhibition Leads</div>
+                  <div className="flex gap-2">
+                    <Link href="/kiosk" target="_blank">
+                      <Button variant="outline" className="border-white/10 bg-white/5 gap-2">
+                        <Plus className="w-4 h-4" /> Open Kiosk View
+                      </Button>
+                    </Link>
+                    <Button 
+                      onClick={() => {
+                        if (window.confirm(`Send unique promo codes to ${leads.length} leads? This will take ~${(leads.length * 1.5).toFixed(1)} seconds.`)) {
+                          sendPromosMutation.mutate();
+                        }
+                      }}
+                      disabled={leads.length === 0 || sendPromosMutation.isPending}
+                      className="bg-primary hover:bg-primary/90 text-white font-bold gap-2"
+                    >
+                      {sendPromosMutation.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : <Mail className="w-4 h-4" />}
+                      Send Promos to All Leads
+                    </Button>
+                  </div>
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="p-0">
+                {leadsLoading ? (
+                  <div className="p-8 flex justify-center"><Loader2 className="animate-spin text-primary" /></div>
+                ) : leads.length === 0 ? (
+                  <div className="p-8 text-center text-white/40">No leads captured yet. Open the Kiosk View to start.</div>
+                ) : (
+                  <Table>
+                    <TableHeader className="bg-white/[0.01]">
+                      <TableRow className="border-white/5 hover:bg-transparent">
+                        <TableHead className="text-white/50">Name</TableHead>
+                        <TableHead className="text-white/50">Email</TableHead>
+                        <TableHead className="text-white/50">Captured At</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {leads.map((lead: any) => (
+                        <TableRow key={lead.id} className="border-white/5 hover:bg-white/[0.02]">
+                          <TableCell className="font-medium">{lead.name}</TableCell>
+                          <TableCell className="text-white/60">{lead.email}</TableCell>
+                          <TableCell className="text-white/40">{new Date(lead.createdAt).toLocaleString()}</TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                )}
+              </CardContent>
+            </Card>
           </TabsContent>
         </Tabs>
       </div>

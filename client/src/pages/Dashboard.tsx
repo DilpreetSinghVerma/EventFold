@@ -247,6 +247,66 @@ function TransferToLabModalContent({ album, onSaved }: { album: any, onSaved: ()
   );
 }
 
+function PromoRedeemer({ onRedeemed }: { onRedeemed: () => void }) {
+  const [code, setCode] = useState("");
+  const [loading, setLoading] = useState(false);
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
+
+  const handleRedeem = async () => {
+    if (!code) return;
+    setLoading(true);
+    try {
+      const res = await fetch("/api/billing/redeem-promo", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ code })
+      });
+      const data = await res.json();
+      if (res.ok) {
+        toast({ title: "Success!", description: data.message });
+        queryClient.invalidateQueries({ queryKey: ["/api/auth/me"] });
+        onRedeemed();
+        setCode("");
+      } else {
+        toast({ title: "Failed", description: data.error, variant: "destructive" });
+      }
+    } catch (e: any) {
+      toast({ title: "Error", description: "Network error", variant: "destructive" });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <div className="space-y-6">
+      <DialogHeader>
+        <DialogTitle className="text-2xl font-bold flex items-center gap-2 text-primary">
+          <Gift className="w-5 h-5" /> Redeem Promo Code
+        </DialogTitle>
+        <DialogDescription className="text-white/40">
+          Enter your unique promo code to claim free album credits.
+        </DialogDescription>
+      </DialogHeader>
+      <div className="space-y-4">
+        <Input 
+          placeholder="e.g. BATALA-X8J9P" 
+          value={code} 
+          onChange={(e) => setCode(e.target.value.toUpperCase())}
+          className="h-14 text-center text-xl tracking-widest font-black bg-white/5 border-white/10 uppercase"
+        />
+        <Button 
+          onClick={handleRedeem} 
+          disabled={loading || !code} 
+          className="w-full h-12 bg-primary hover:bg-primary/90 text-white font-bold"
+        >
+          {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : "Claim Free Credit"}
+        </Button>
+      </div>
+    </div>
+  );
+}
+
 export default function Dashboard() {
   const { user, logout, buyAlbumCredit, startRazorpayCheckout } = useAuth();
   const { toast } = useToast();
@@ -1149,6 +1209,19 @@ export default function Dashboard() {
                       <Crown className="w-4 h-4 mr-2" /> UPGRADE TO UNLIMITED (₹199) <span className="ml-2 text-[10px] line-through opacity-70">₹499</span>
                       <span className="absolute -top-1 -right-1 px-2 py-0.5 bg-cyan-400 text-black text-[8px] font-black rounded-full">HOT</span>
                     </Button>
+                    <Dialog>
+                      <DialogTrigger asChild>
+                        <Button
+                          variant="outline"
+                          className="h-10 rounded-full border-dashed border-white/20 text-white/60 hover:text-white hover:border-white/50 px-6 font-bold uppercase text-[10px] tracking-widest gap-2"
+                        >
+                          <Gift className="w-3.5 h-3.5" /> Redeem Promo
+                        </Button>
+                      </DialogTrigger>
+                      <DialogContent className="sm:max-w-md bg-[#0a0a0b] border-white/10 text-white rounded-3xl">
+                        <PromoRedeemer onRedeemed={fetchAlbums} />
+                      </DialogContent>
+                    </Dialog>
                   </>
                 )}
               </div>
