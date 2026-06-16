@@ -2061,8 +2061,13 @@ export function registerRoutes(
         return res.status(404).json({ error: "Invalid promo code" });
       }
 
-      if (promo.isUsed === 1) {
-        return res.status(400).json({ error: "This promo code has already been used" });
+      if (promo.isUsed === 1 || promo.currentUses >= promo.maxUses) {
+        return res.status(400).json({ error: "This promo code has reached its maximum number of uses" });
+      }
+
+      const hasRedeemed = await storage.hasUserRedeemedPromo(promo.id, userId);
+      if (hasRedeemed) {
+        return res.status(400).json({ error: "You have already redeemed this promo code" });
       }
 
       if (promo.expiresAt && new Date(promo.expiresAt) < new Date()) {
@@ -2087,9 +2092,10 @@ export function registerRoutes(
         return res.status(403).json({ error: "Forbidden" });
       }
       
-      const { prefix, count, expiresAt, credits } = req.body;
+      const { prefix, count, expiresAt, credits, isGlobal, maxUses } = req.body;
       const numCodes = parseInt(count) || 1;
       const creds = parseInt(credits) || 1;
+      const mUses = parseInt(maxUses) || 1;
       const prefixStr = (prefix || "PROMO").toUpperCase().replace(/[^A-Z0-9]/g, '');
       
       let expiryDate: Date | null = null;
@@ -2098,11 +2104,19 @@ export function registerRoutes(
       }
 
       const generatedCodes: string[] = [];
-      for (let i = 0; i < numCodes; i++) {
-        const randomPart = Math.random().toString(36).substring(2, 8).toUpperCase();
-        const codeString = `${prefixStr}-${randomPart}`;
-        await storage.createPromoCode(codeString, expiryDate, creds);
-        generatedCodes.push(codeString);
+      
+      if (isGlobal && prefixStr) {
+        // Global mode: exactly one code matching the prefix, with maxUses
+        await storage.createPromoCode(prefixStr, expiryDate, creds, mUses);
+        generatedCodes.push(prefixStr);
+      } else {
+        // Bulk random mode
+        for (let i = 0; i < numCodes; i++) {
+          const randomPart = Math.random().toString(36).substring(2, 8).toUpperCase();
+          const codeString = prefixStr ? `${prefixStr}-${randomPart}` : randomPart;
+          await storage.createPromoCode(codeString, expiryDate, creds, 1);
+          generatedCodes.push(codeString);
+        }
       }
 
       res.json({ success: true, codes: generatedCodes });

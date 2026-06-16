@@ -129,8 +129,10 @@ function ExhibitionRow({ exhibition, sendPromosMutation }: { exhibition: any, se
 
 function PromoCodeGenerator() {
   const { toast } = useToast();
+  const [generationMode, setGenerationMode] = useState<"bulk" | "global">("bulk");
   const [prefix, setPrefix] = useState("");
   const [count, setCount] = useState("1");
+  const [maxUses, setMaxUses] = useState("1");
   const [credits, setCredits] = useState("1");
   const [expiryType, setExpiryType] = useState("none");
   const [generatedCodes, setGeneratedCodes] = useState<string[]>([]);
@@ -147,10 +149,12 @@ function PromoCodeGenerator() {
       }
 
       const res = await apiRequest("POST", "/api/admin/promo/generate", {
-        prefix: prefix || "PROMO",
+        prefix: prefix || (generationMode === "global" ? "PROMO" : ""),
         count: parseInt(count) || 1,
         credits: parseInt(credits) || 1,
-        expiresAt
+        expiresAt,
+        isGlobal: generationMode === "global",
+        maxUses: parseInt(maxUses) || 1
       });
       return res.json();
     },
@@ -172,27 +176,71 @@ function PromoCodeGenerator() {
         <CardDescription>Generate unique promo codes with custom expiry times and credits.</CardDescription>
       </CardHeader>
       <CardContent className="space-y-6">
+        <div className="flex gap-4 mb-4">
+          <Button 
+            variant={generationMode === "bulk" ? "default" : "outline"}
+            onClick={() => setGenerationMode("bulk")}
+            className="flex-1"
+          >
+            Bulk Random Codes
+          </Button>
+          <Button 
+            variant={generationMode === "global" ? "default" : "outline"}
+            onClick={() => setGenerationMode("global")}
+            className="flex-1"
+          >
+            One Global Code
+          </Button>
+        </div>
+
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div className="space-y-2">
-            <Label>Custom Prefix (Optional)</Label>
-            <Input 
-              placeholder="e.g. VIP, SUMMER" 
-              value={prefix} 
-              onChange={(e) => setPrefix(e.target.value)} 
-              className="bg-white/5 border-white/10"
-            />
-          </div>
-          <div className="space-y-2">
-            <Label>Number of Codes</Label>
-            <Input 
-              type="number" 
-              min="1" 
-              max="100" 
-              value={count} 
-              onChange={(e) => setCount(e.target.value)} 
-              className="bg-white/5 border-white/10"
-            />
-          </div>
+          {generationMode === "bulk" ? (
+            <>
+              <div className="space-y-2">
+                <Label>Custom Prefix (Optional)</Label>
+                <Input 
+                  placeholder="e.g. VIP, SUMMER" 
+                  value={prefix} 
+                  onChange={(e) => setPrefix(e.target.value)} 
+                  className="bg-white/5 border-white/10"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label>Number of Codes</Label>
+                <Input 
+                  type="number" 
+                  min="1" 
+                  max="1000" 
+                  value={count} 
+                  onChange={(e) => setCount(e.target.value)} 
+                  className="bg-white/5 border-white/10"
+                />
+              </div>
+            </>
+          ) : (
+            <>
+              <div className="space-y-2">
+                <Label>Exact Code Name</Label>
+                <Input 
+                  placeholder="e.g. FOUNDER26" 
+                  value={prefix} 
+                  onChange={(e) => setPrefix(e.target.value)} 
+                  className="bg-white/5 border-white/10"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label>Max Number of Uses</Label>
+                <Input 
+                  type="number" 
+                  min="1" 
+                  value={maxUses} 
+                  onChange={(e) => setMaxUses(e.target.value)} 
+                  className="bg-white/5 border-white/10"
+                  placeholder="How many times can this code be used?"
+                />
+              </div>
+            </>
+          )}
           <div className="space-y-2">
             <Label>Credits per Code</Label>
             <Input 

@@ -1,5 +1,5 @@
 import crypto from "crypto";
-import { type InsertAlbum, type Album, type InsertFile, type File, type User, type InsertUser, type Referral, type InsertReferral, type KioskLead, type PromoCode, type Exhibition, albums, files, settings, users, referrals, kioskLeads, promoCodes, exhibitions } from "../shared/schema";
+import { type InsertAlbum, type Album, type InsertFile, type File, type User, type InsertUser, type Referral, type InsertReferral, type KioskLead, type PromoCode, type Exhibition, albums, files, settings, users, referrals, kioskLeads, promoCodes, promoRedemptions, exhibitions } from "../shared/schema";
 import { db } from "./db";
 import { eq, asc, lte, and, isNotNull, sql } from "drizzle-orm";
 
@@ -49,8 +49,9 @@ export interface IStorage {
   createKioskLead(data: { exhibitionId: string; name: string; email: string }): Promise<KioskLead>;
   getKioskLeads(exhibitionId: string): Promise<KioskLead[]>;
   deleteKioskLead(id: string): Promise<void>;
-  createPromoCode(code: string, expiresAt?: Date | null, credits?: number): Promise<PromoCode>;
+  createPromoCode(code: string, expiresAt?: Date | null, credits?: number, maxUses?: number): Promise<PromoCode>;
   getPromoCode(code: string): Promise<PromoCode | undefined>;
+  hasUserRedeemedPromo(promoId: string, userId: string): Promise<boolean>;
   markPromoCodeUsed(id: string, userId: string): Promise<void>;
 }
 
@@ -336,9 +337,9 @@ export class DatabaseStorage implements IStorage {
     await db.delete(kioskLeads).where(eq(kioskLeads.id, id));
   }
 
-  async createPromoCode(code: string, expiresAt?: Date | null, credits: number = 1): Promise<PromoCode> {
+  async createPromoCode(code: string, expiresAt?: Date | null, credits: number = 1, maxUses: number = 1): Promise<PromoCode> {
     if (!db) throw new Error("DB not connected");
-    const [row] = await db.insert(promoCodes).values({ code, expiresAt, credits }).returning();
+    const [row] = await db.insert(promoCodes).values({ code, expiresAt, credits, maxUses, currentUses: 0 }).returning();
     return row;
   }
 
@@ -348,11 +349,33 @@ export class DatabaseStorage implements IStorage {
     return row;
   }
 
+  async hasUserRedeemedPromo(promoId: string, userId: string): Promise<boolean> {
+    if (!db) return false;
+    const [row] = await db.select().from(promoRedemptions).where(and(
+      eq(promoRedemptions.promoCodeId, promoId),
+      eq(promoRedemptions.userId, userId)
+    ));
+    return !!row;
+  }
+
   async markPromoCodeUsed(id: string, userId: string): Promise<void> {
     if (!db) return;
+    
+    // Record the redemption
+    await db.insert(promoRedemptions).values({ promoCodeId: id, userId }).onConflictDoNothing();
+
+    // Increment currentUses
     await db.update(promoCodes)
-      .set({ isUsed: 1, usedById: userId, usedAt: new Date() })
+      .set({ currentUses: sql`${promoCodes.currentUses} + 1` })
       .where(eq(promoCodes.id, id));
+    
+    // Check if it reached max uses, and mark isUsed if so
+    const [promo] = await db.select().from(promoCodes).where(eq(promoCodes.id, id));
+    if (promo && promo.currentUses >= promo.maxUses) {
+      await db.update(promoCodes)
+        .set({ isUsed: 1, usedById: userId, usedAt: new Date() })
+        .where(eq(promoCodes.id, id));
+    }
   }
 }
 
@@ -676,11 +699,15 @@ export class MemStorage implements IStorage {
     this.kioskLeads.delete(id);
   }
 
-  async createPromoCode(code: string, expiresAt?: Date | null, credits: number = 1): Promise<PromoCode> {
+  async createPromoCode(code: string, expiresAt?: Date | null, credits: number = 1, maxUses: number = 1): Promise<PromoCode> {
     const id = crypto.randomUUID();
-    const promo: PromoCode = { id, code, isUsed: 0, usedById: null, createdAt: new Date(), usedAt: null, expiresAt: expiresAt || null, credits };
+    const promo: PromoCode = { id, code, isUsed: 0, usedById: null, createdAt: new Date(), usedAt: null, expiresAt: expiresAt || null, credits, maxUses, currentUses: 0 };
     this.promoCodes.set(id, promo);
     return promo;
+  }
+
+  async hasUserRedeemedPromo(promoId: string, userId: string): Promise<boolean> {
+    return false; // MemStorage dummy
   }
 
   async getPromoCode(code: string): Promise<PromoCode | undefined> {

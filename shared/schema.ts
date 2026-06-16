@@ -1,5 +1,5 @@
 import { sql } from "drizzle-orm";
-import { pgTable, text, varchar, integer, timestamp, index } from "drizzle-orm/pg-core";
+import { pgTable, text, varchar, integer, timestamp, index, uniqueIndex } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 
@@ -121,7 +121,18 @@ export const promoCodes = pgTable("promo_codes", {
   usedAt: timestamp("used_at"),
   expiresAt: timestamp("expires_at"),
   credits: integer("credits").notNull().default(1),
+  maxUses: integer("max_uses").notNull().default(1),
+  currentUses: integer("current_uses").notNull().default(0),
 });
+
+export const promoRedemptions = pgTable("promo_redemptions", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  promoCodeId: varchar("promo_code_id").references(() => promoCodes.id, { onDelete: 'cascade' }).notNull(),
+  userId: varchar("user_id").references(() => users.id, { onDelete: 'cascade' }).notNull(),
+  redeemedAt: timestamp("redeemed_at").defaultNow().notNull(),
+}, (t) => ({
+  unq: uniqueIndex("promo_user_unq").on(t.promoCodeId, t.userId),
+}));
 
 export const insertAlbumSchema = createInsertSchema(albums).omit({
   id: true,
