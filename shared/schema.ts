@@ -119,6 +119,8 @@ export const promoCodes = pgTable("promo_codes", {
   usedById: varchar("used_by_id").references(() => users.id, { onDelete: 'set null' }),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   usedAt: timestamp("used_at"),
+  expiresAt: timestamp("expires_at"),
+  credits: integer("credits").notNull().default(1),
 });
 
 export const insertAlbumSchema = createInsertSchema(albums).omit({

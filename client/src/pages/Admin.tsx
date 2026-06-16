@@ -5,7 +5,7 @@ import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip as RechartsToolti
 import { useAuth } from "@/lib/auth";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Loader2, Plus, Minus, Trash2, Eye, LayoutDashboard, Users, BookCopy, ShieldAlert, TrendingUp, Activity, Database, Globe, Search, ArrowUpCircle, CheckCircle2, XCircle, Sparkles, Cloud, HardDrive, Wifi, Zap, AlertTriangle, RefreshCw, IndianRupee, PieChart, BarChart3, Clock, Crown, CreditCard, Star, Download, Megaphone, Mail, Gift } from "lucide-react";
@@ -124,6 +124,134 @@ function ExhibitionRow({ exhibition, sendPromosMutation }: { exhibition: any, se
         </TableRow>
       )}
     </>
+  );
+}
+
+function PromoCodeGenerator() {
+  const { toast } = useToast();
+  const [prefix, setPrefix] = useState("");
+  const [count, setCount] = useState("1");
+  const [credits, setCredits] = useState("1");
+  const [expiryType, setExpiryType] = useState("none");
+  const [generatedCodes, setGeneratedCodes] = useState<string[]>([]);
+
+  const generateMutation = useMutation({
+    mutationFn: async () => {
+      let expiresAt = null;
+      if (expiryType === "24h") {
+        expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString();
+      } else if (expiryType === "1w") {
+        expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString();
+      } else if (expiryType === "1m") {
+        expiresAt = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString();
+      }
+
+      const res = await apiRequest("POST", "/api/admin/promo/generate", {
+        prefix: prefix || "PROMO",
+        count: parseInt(count) || 1,
+        credits: parseInt(credits) || 1,
+        expiresAt
+      });
+      return res.json();
+    },
+    onSuccess: (data) => {
+      setGeneratedCodes(data.codes);
+      toast({ title: "Success", description: `Generated ${data.codes.length} promo codes.` });
+    },
+    onError: (err: any) => {
+      toast({ title: "Failed", description: err.message, variant: "destructive" });
+    }
+  });
+
+  return (
+    <Card className="bg-black/40 border-white/10">
+      <CardHeader>
+        <CardTitle className="flex items-center gap-2">
+          <Gift className="w-5 h-5 text-primary" /> Promo Code Generator
+        </CardTitle>
+        <CardDescription>Generate unique promo codes with custom expiry times and credits.</CardDescription>
+      </CardHeader>
+      <CardContent className="space-y-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="space-y-2">
+            <Label>Custom Prefix (Optional)</Label>
+            <Input 
+              placeholder="e.g. VIP, SUMMER" 
+              value={prefix} 
+              onChange={(e) => setPrefix(e.target.value)} 
+              className="bg-white/5 border-white/10"
+            />
+          </div>
+          <div className="space-y-2">
+            <Label>Number of Codes</Label>
+            <Input 
+              type="number" 
+              min="1" 
+              max="100" 
+              value={count} 
+              onChange={(e) => setCount(e.target.value)} 
+              className="bg-white/5 border-white/10"
+            />
+          </div>
+          <div className="space-y-2">
+            <Label>Credits per Code</Label>
+            <Input 
+              type="number" 
+              min="1" 
+              max="100" 
+              value={credits} 
+              onChange={(e) => setCredits(e.target.value)} 
+              className="bg-white/5 border-white/10"
+            />
+          </div>
+          <div className="space-y-2">
+            <Label>Expiration</Label>
+            <select 
+              value={expiryType} 
+              onChange={(e) => setExpiryType(e.target.value)}
+              className="w-full h-10 px-3 rounded-md border border-white/10 bg-black/40 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
+            >
+              <option value="none">No Expiry (Never Expires)</option>
+              <option value="24h">24 Hours</option>
+              <option value="1w">1 Week</option>
+              <option value="1m">1 Month</option>
+            </select>
+          </div>
+        </div>
+
+        <Button 
+          onClick={() => generateMutation.mutate()} 
+          disabled={generateMutation.isPending}
+          className="w-full bg-primary hover:bg-primary/90 text-white font-bold"
+        >
+          {generateMutation.isPending ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Sparkles className="w-4 h-4 mr-2" />}
+          Generate Codes
+        </Button>
+
+        {generatedCodes.length > 0 && (
+          <div className="mt-6 p-4 bg-white/5 rounded-lg border border-white/10">
+            <div className="flex justify-between items-center mb-2">
+              <h4 className="font-semibold text-sm">Generated Codes ({generatedCodes.length})</h4>
+              <Button 
+                variant="ghost" 
+                size="sm" 
+                onClick={() => {
+                  navigator.clipboard.writeText(generatedCodes.join("\n"));
+                  toast({ title: "Copied!", description: "Codes copied to clipboard." });
+                }}
+              >
+                <BookCopy className="w-4 h-4 mr-2" /> Copy All
+              </Button>
+            </div>
+            <div className="max-h-40 overflow-y-auto bg-black/40 p-2 rounded border border-white/5 font-mono text-sm">
+              {generatedCodes.map((code) => (
+                <div key={code} className="py-1 text-white/80">{code}</div>
+              ))}
+            </div>
+          </div>
+        )}
+      </CardContent>
+    </Card>
   );
 }
 
@@ -476,6 +604,9 @@ export default function Admin() {
             </TabsTrigger>
             <TabsTrigger value="email-broadcast" className="data-[state=active]:bg-primary rounded-lg flex gap-2">
               <Mail className="w-4 h-4" /> Email Broadcast
+            </TabsTrigger>
+            <TabsTrigger value="promo-codes" className="data-[state=active]:bg-primary rounded-lg flex gap-2">
+              <Gift className="w-4 h-4" /> Promo Codes
             </TabsTrigger>
             <TabsTrigger value="exhibition-leads" className="data-[state=active]:bg-primary rounded-lg flex gap-2">
               <Gift className="w-4 h-4" /> Exhibition Leads
@@ -1898,6 +2029,10 @@ export default function Admin() {
                 )}
               </CardContent>
             </Card>
+          </TabsContent>
+
+          <TabsContent value="promo-codes">
+            <PromoCodeGenerator />
           </TabsContent>
         </Tabs>
       </div>

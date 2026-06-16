@@ -49,7 +49,7 @@ export interface IStorage {
   createKioskLead(data: { exhibitionId: string; name: string; email: string }): Promise<KioskLead>;
   getKioskLeads(exhibitionId: string): Promise<KioskLead[]>;
   deleteKioskLead(id: string): Promise<void>;
-  createPromoCode(code: string): Promise<PromoCode>;
+  createPromoCode(code: string, expiresAt?: Date | null, credits?: number): Promise<PromoCode>;
   getPromoCode(code: string): Promise<PromoCode | undefined>;
   markPromoCodeUsed(id: string, userId: string): Promise<void>;
 }
@@ -336,9 +336,9 @@ export class DatabaseStorage implements IStorage {
     await db.delete(kioskLeads).where(eq(kioskLeads.id, id));
   }
 
-  async createPromoCode(code: string): Promise<PromoCode> {
+  async createPromoCode(code: string, expiresAt?: Date | null, credits: number = 1): Promise<PromoCode> {
     if (!db) throw new Error("DB not connected");
-    const [row] = await db.insert(promoCodes).values({ code }).returning();
+    const [row] = await db.insert(promoCodes).values({ code, expiresAt, credits }).returning();
     return row;
   }
 
@@ -676,9 +676,9 @@ export class MemStorage implements IStorage {
     this.kioskLeads.delete(id);
   }
 
-  async createPromoCode(code: string): Promise<PromoCode> {
+  async createPromoCode(code: string, expiresAt?: Date | null, credits: number = 1): Promise<PromoCode> {
     const id = crypto.randomUUID();
-    const promo: PromoCode = { id, code, isUsed: 0, usedById: null, createdAt: new Date(), usedAt: null };
+    const promo: PromoCode = { id, code, isUsed: 0, usedById: null, createdAt: new Date(), usedAt: null, expiresAt: expiresAt || null, credits };
     this.promoCodes.set(id, promo);
     return promo;
   }

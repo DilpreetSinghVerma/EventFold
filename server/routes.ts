@@ -2065,15 +2065,52 @@ export function registerRoutes(
         return res.status(400).json({ error: "This promo code has already been used" });
       }
 
-      // Mark used and add credit
-      await storage.markPromoCodeUsed(promo.id, userId);
-      await storage.addCredit(userId, 1);
+      if (promo.expiresAt && new Date(promo.expiresAt) < new Date()) {
+        return res.status(400).json({ error: "This promo code has expired" });
+      }
 
-      res.json({ success: true, message: "1 Free Album Credit added to your account!" });
+      // Mark used and add credit
+      const creditsToAdd = promo.credits || 1;
+      await storage.markPromoCodeUsed(promo.id, userId);
+      await storage.addCredit(userId, creditsToAdd);
+
+      res.json({ success: true, message: `${creditsToAdd} Free Album Credit${creditsToAdd > 1 ? 's' : ''} added to your account!` });
     } catch (e: any) {
       console.error("Failed to redeem promo:", e);
       res.status(500).json({ error: "Failed to redeem promo code" });
     }
   });
+
+  app.post("/api/admin/promo/generate", async (req, res) => {
+    try {
+      if (!req.isAuthenticated() || (req.user as any).role !== "admin") {
+        return res.status(403).json({ error: "Forbidden" });
+      }
+      
+      const { prefix, count, expiresAt, credits } = req.body;
+      const numCodes = parseInt(count) || 1;
+      const creds = parseInt(credits) || 1;
+      const prefixStr = (prefix || "PROMO").toUpperCase().replace(/[^A-Z0-9]/g, '');
+      
+      let expiryDate: Date | null = null;
+      if (expiresAt) {
+        expiryDate = new Date(expiresAt);
+      }
+
+      const generatedCodes: string[] = [];
+      for (let i = 0; i < numCodes; i++) {
+        const randomPart = Math.random().toString(36).substring(2, 8).toUpperCase();
+        const codeString = `${prefixStr}-${randomPart}`;
+        await storage.createPromoCode(codeString, expiryDate, creds);
+        generatedCodes.push(codeString);
+      }
+
+      res.json({ success: true, codes: generatedCodes });
+    } catch (e: any) {
+      console.error("Failed to generate promo codes:", e);
+      res.status(500).json({ error: "Failed to generate promo codes" });
+    }
+  });
+
 
 }
