@@ -303,6 +303,68 @@ function PromoCodeGenerator() {
   );
 }
 
+function PromoRedemptionsTable() {
+  const { data: redemptions, isLoading } = useQuery<any[]>({
+    queryKey: ["/api/admin/promo/redemptions"],
+  });
+
+  return (
+    <Card className="bg-black/40 border-white/10 mt-6">
+      <CardHeader>
+        <CardTitle className="flex items-center gap-2">
+          <Sparkles className="w-5 h-5 text-primary" /> Redemption Tracker
+        </CardTitle>
+        <CardDescription>Live feed of users who have redeemed your promo codes.</CardDescription>
+      </CardHeader>
+      <CardContent>
+        {isLoading ? (
+          <div className="flex justify-center p-8">
+            <Loader2 className="w-8 h-8 animate-spin text-primary" />
+          </div>
+        ) : !redemptions || redemptions.length === 0 ? (
+          <div className="text-center p-8 text-white/50 border border-white/5 rounded-lg">
+            No promo codes have been redeemed yet.
+          </div>
+        ) : (
+          <div className="rounded-md border border-white/10 overflow-hidden">
+            <Table>
+              <TableHeader className="bg-white/5">
+                <TableRow className="border-white/10">
+                  <TableHead className="text-white/70">Date</TableHead>
+                  <TableHead className="text-white/70">Promo Code</TableHead>
+                  <TableHead className="text-white/70">User</TableHead>
+                  <TableHead className="text-white/70">Credits Given</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {redemptions.map((redemption) => (
+                  <TableRow key={redemption.id} className="border-white/10 hover:bg-white/5">
+                    <TableCell className="font-medium">
+                      {new Date(redemption.redeemedAt).toLocaleDateString()} at {new Date(redemption.redeemedAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                    </TableCell>
+                    <TableCell>
+                      <Badge variant="outline" className="font-mono bg-primary/10 text-primary border-primary/20">
+                        {redemption.promoCode}
+                      </Badge>
+                    </TableCell>
+                    <TableCell>
+                      <div className="flex flex-col">
+                        <span className="font-medium text-white">{redemption.userName}</span>
+                        <span className="text-xs text-white/60">{redemption.userEmail}</span>
+                      </div>
+                    </TableCell>
+                    <TableCell>+{redemption.credits} Albums</TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </div>
+        )}
+      </CardContent>
+    </Card>
+  );
+}
+
 export default function Admin() {
   const { user } = useAuth();
   const { toast } = useToast();
@@ -2080,7 +2142,10 @@ export default function Admin() {
           </TabsContent>
 
           <TabsContent value="promo-codes">
-            <PromoCodeGenerator />
+            <div className="space-y-6">
+              <PromoCodeGenerator />
+              <PromoRedemptionsTable />
+            </div>
           </TabsContent>
         </Tabs>
       </div>

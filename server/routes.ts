@@ -2086,6 +2086,23 @@ export function registerRoutes(
     }
   });
 
+  app.get("/api/admin/promo/redemptions", async (req, res) => {
+    try {
+      if (!req.isAuthenticated()) return res.status(401).json({ error: "Unauthorized" });
+      const user = req.user as any;
+      const adminEmails = ["admin@eventfold.com", "dilpreetsinghverma@gmail.com"];
+      if (user.role !== 'admin' && !adminEmails.includes(user.email)) {
+        return res.status(403).json({ error: "Forbidden" });
+      }
+      
+      const redemptions = await storage.getPromoRedemptionsWithDetails();
+      res.json(redemptions);
+    } catch (err) {
+      console.error(err);
+      res.status(500).json({ error: "Failed to fetch redemptions" });
+    }
+  });
+
   app.post("/api/admin/promo/generate", async (req, res) => {
     try {
       if (!req.isAuthenticated()) return res.status(401).json({ error: "Unauthorized" });

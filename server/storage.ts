@@ -52,6 +52,7 @@ export interface IStorage {
   createPromoCode(code: string, expiresAt?: Date | null, credits?: number, maxUses?: number): Promise<PromoCode>;
   getPromoCode(code: string): Promise<PromoCode | undefined>;
   hasUserRedeemedPromo(promoId: string, userId: string): Promise<boolean>;
+  getPromoRedemptionsWithDetails(): Promise<any[]>;
   markPromoCodeUsed(id: string, userId: string): Promise<void>;
 }
 
@@ -356,6 +357,24 @@ export class DatabaseStorage implements IStorage {
       eq(promoRedemptions.userId, userId)
     ));
     return !!row;
+  }
+
+  async getPromoRedemptionsWithDetails(): Promise<any[]> {
+    if (!db) return [];
+    const results = await db.select({
+      id: promoRedemptions.id,
+      redeemedAt: promoRedemptions.redeemedAt,
+      promoCode: promoCodes.code,
+      credits: promoCodes.credits,
+      userName: users.name,
+      userEmail: users.email,
+    })
+    .from(promoRedemptions)
+    .innerJoin(promoCodes, eq(promoRedemptions.promoCodeId, promoCodes.id))
+    .innerJoin(users, eq(promoRedemptions.userId, users.id))
+    .orderBy(desc(promoRedemptions.redeemedAt));
+    
+    return results;
   }
 
   async markPromoCodeUsed(id: string, userId: string): Promise<void> {
@@ -708,6 +727,9 @@ export class MemStorage implements IStorage {
 
   async hasUserRedeemedPromo(promoId: string, userId: string): Promise<boolean> {
     return false; // MemStorage dummy
+  }
+  async getPromoRedemptionsWithDetails(): Promise<any[]> {
+    return [];
   }
 
   async getPromoCode(code: string): Promise<PromoCode | undefined> {
