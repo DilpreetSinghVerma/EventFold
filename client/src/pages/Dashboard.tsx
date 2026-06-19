@@ -1196,12 +1196,12 @@ export default function Dashboard() {
                       <LayoutGrid className={`w-4 h-4 ${user?.credits === 0 ? 'animate-pulse' : ''}`} />
                       {user?.credits || 0} ALBUM CREDITS {user?.credits === 0 ? 'REMAINING' : 'AVAILABLE'}
                     </div>
-                    <div className="flex flex-col gap-2 w-full mt-2">
+                    <div className="flex items-center gap-2 border-l border-white/10 pl-4 ml-2">
                       <Input 
-                        placeholder="Discount Promo Code (Optional)" 
+                        placeholder="Promo Code?" 
                         value={promoCode}
                         onChange={(e) => setPromoCode(e.target.value.toUpperCase())}
-                        className="h-10 text-center uppercase tracking-widest font-mono text-xs bg-white/5 border-white/10"
+                        className="h-10 w-36 text-center uppercase tracking-widest font-mono text-xs bg-black/40 border-white/10 rounded-full focus-visible:ring-1 focus-visible:ring-primary"
                       />
                       <Button
                         onClick={() => buyAlbumCredit(promoCode)}
