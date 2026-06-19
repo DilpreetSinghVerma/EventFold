@@ -282,10 +282,10 @@ function PromoRedeemer({ onRedeemed }: { onRedeemed: () => void }) {
     <div className="space-y-6">
       <DialogHeader>
         <DialogTitle className="text-2xl font-bold flex items-center gap-2 text-primary">
-          <Gift className="w-5 h-5" /> Redeem Promo Code
+          <Gift className="w-5 h-5" /> Claim Free Credits
         </DialogTitle>
         <DialogDescription className="text-white/40">
-          Enter your unique promo code to claim free album credits.
+          Enter your gift code to claim free album credits instantly.
         </DialogDescription>
       </DialogHeader>
       <div className="space-y-4">
@@ -1202,7 +1202,7 @@ export default function Dashboard() {
                           variant="outline"
                           className="h-10 rounded-full border-dashed border-white/20 text-white/60 hover:text-white hover:border-white/50 px-6 font-bold uppercase text-[10px] tracking-widest gap-2"
                         >
-                          <Gift className="w-3.5 h-3.5" /> Redeem Promo
+                          <Gift className="w-3.5 h-3.5" /> Claim Free Credits
                         </Button>
                       </DialogTrigger>
                       <DialogContent className="sm:max-w-md bg-[#0a0a0b] border-white/10 text-white rounded-3xl">
@@ -1211,7 +1211,7 @@ export default function Dashboard() {
                     </Dialog>
                     <div className="flex items-center gap-2 border-l border-white/10 pl-4 ml-2">
                       <Input 
-                        placeholder="Promo Code?" 
+                        placeholder="Discount Code" 
                         value={promoCode}
                         onChange={(e) => setPromoCode(e.target.value.toUpperCase())}
                         className="h-10 w-36 text-center uppercase tracking-widest font-mono text-xs bg-black/40 border-white/10 rounded-full focus-visible:ring-1 focus-visible:ring-primary"
