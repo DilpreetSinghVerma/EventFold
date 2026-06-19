@@ -1196,6 +1196,19 @@ export default function Dashboard() {
                       <LayoutGrid className={`w-4 h-4 ${user?.credits === 0 ? 'animate-pulse' : ''}`} />
                       {user?.credits || 0} ALBUM CREDITS {user?.credits === 0 ? 'REMAINING' : 'AVAILABLE'}
                     </div>
+                    <Dialog>
+                      <DialogTrigger asChild>
+                        <Button
+                          variant="outline"
+                          className="h-10 rounded-full border-dashed border-white/20 text-white/60 hover:text-white hover:border-white/50 px-6 font-bold uppercase text-[10px] tracking-widest gap-2"
+                        >
+                          <Gift className="w-3.5 h-3.5" /> Redeem Promo
+                        </Button>
+                      </DialogTrigger>
+                      <DialogContent className="sm:max-w-md bg-[#0a0a0b] border-white/10 text-white rounded-3xl">
+                        <PromoRedeemer onRedeemed={fetchAlbums} />
+                      </DialogContent>
+                    </Dialog>
                     <div className="flex items-center gap-2 border-l border-white/10 pl-4 ml-2">
                       <Input 
                         placeholder="Promo Code?" 
@@ -1218,19 +1231,6 @@ export default function Dashboard() {
                         <span className="absolute -top-1 -right-1 px-2 py-0.5 bg-cyan-400 text-black text-[8px] font-black rounded-full">HOT</span>
                       </Button>
                     </div>
-                    <Dialog>
-                      <DialogTrigger asChild>
-                        <Button
-                          variant="outline"
-                          className="h-10 rounded-full border-dashed border-white/20 text-white/60 hover:text-white hover:border-white/50 px-6 font-bold uppercase text-[10px] tracking-widest gap-2"
-                        >
-                          <Gift className="w-3.5 h-3.5" /> Redeem Promo
-                        </Button>
-                      </DialogTrigger>
-                      <DialogContent className="sm:max-w-md bg-[#0a0a0b] border-white/10 text-white rounded-3xl">
-                        <PromoRedeemer onRedeemed={fetchAlbums} />
-                      </DialogContent>
-                    </Dialog>
                   </>
                 )}
               </div>
