@@ -306,12 +306,29 @@ export function registerRoutes(
     try {
       if (!req.isAuthenticated()) return res.status(401).json({ error: "Unauthorized" });
       const userId = (req.user as any).id;
+      const { promoCode } = req.body || {};
+      let amount = 9900; // ₹99 in paise
+      let promoCodeId = null;
+
+      if (promoCode) {
+        const promo = await storage.getPromoCode(promoCode.trim().toUpperCase());
+        if (promo && promo.type === 'discount' && promo.discountPercentage) {
+          const isExpired = promo.expiresAt && new Date() > new Date(promo.expiresAt);
+          if (!isExpired && promo.currentUses < promo.maxUses) {
+            const hasUsed = await storage.hasUserRedeemedPromo(promo.id, userId);
+            if (!hasUsed) {
+              amount = Math.max(100, Math.floor(amount * (1 - promo.discountPercentage / 100))); // Min 1 INR
+              promoCodeId = promo.id;
+            }
+          }
+        }
+      }
 
       const options = {
-        amount: 9900, // ₹99 in paise
+        amount,
         currency: "INR",
         receipt: `rct_${Date.now()}_${userId}`.slice(0, 40),
-        notes: { userId, type: 'credit' }
+        notes: { userId, type: 'credit', promoCodeId }
       };
 
       const order = await razorpay.orders.create(options);
@@ -331,6 +348,7 @@ export function registerRoutes(
       const user = req.user as any;
       const { plan } = req.params;
 
+      const { promoCode } = req.body || {};
       let amount = 19900; // default Pro Monthly (₹199)
       if (plan === 'yearly') {
         amount = 89900; // Elite Yearly (₹899)
@@ -342,11 +360,26 @@ export function registerRoutes(
         amount = 960000; // Lab Yearly (₹9600 - 20% discount from ₹12000)
       }
 
+      let promoCodeId = null;
+      if (promoCode) {
+        const promo = await storage.getPromoCode(promoCode.trim().toUpperCase());
+        if (promo && promo.type === 'discount' && promo.discountPercentage) {
+          const isExpired = promo.expiresAt && new Date() > new Date(promo.expiresAt);
+          if (!isExpired && promo.currentUses < promo.maxUses) {
+            const hasUsed = await storage.hasUserRedeemedPromo(promo.id, user.id);
+            if (!hasUsed) {
+              amount = Math.max(100, Math.floor(amount * (1 - promo.discountPercentage / 100))); // Min 1 INR
+              promoCodeId = promo.id;
+            }
+          }
+        }
+      }
+
       const options = {
         amount,
         currency: "INR",
         receipt: `rct_${Date.now()}_${user.id}`.slice(0, 40),
-        notes: { userId: user.id, type: 'subscription', plan }
+        notes: { userId: user.id, type: 'subscription', plan, promoCodeId }
       };
 
       const order = await razorpay.orders.create(options);
@@ -402,7 +435,11 @@ export function registerRoutes(
       (async () => {
         if (event.event === "payment.captured") {
           const payment = event.payload.payment.entity;
-          const { userId, type, plan } = payment.notes;
+          const { userId, type, plan, promoCodeId } = payment.notes;
+
+          if (promoCodeId) {
+            await storage.markPromoCodeUsed(promoCodeId, userId);
+          }
 
           if (type === 'credit') {
             await storage.addCredit(userId, 1);
@@ -2061,6 +2098,10 @@ export function registerRoutes(
         return res.status(404).json({ error: "Invalid promo code" });
       }
 
+      if (promo.type === 'discount') {
+        return res.status(400).json({ error: "This is a discount code. Please apply it during checkout." });
+      }
+
       if (promo.isUsed === 1 || promo.currentUses >= promo.maxUses) {
         return res.status(400).json({ error: "This promo code has reached its maximum number of uses" });
       }
@@ -2112,10 +2153,13 @@ export function registerRoutes(
         return res.status(403).json({ error: "Forbidden" });
       }
       
-      const { prefix, count, expiresAt, credits, isGlobal, maxUses } = req.body;
+      const { prefix, count, expiresAt, credits, isGlobal, maxUses, type, discountPercentage, affiliateName } = req.body;
       const numCodes = parseInt(count) || 1;
       const creds = parseInt(credits) || 1;
       const mUses = parseInt(maxUses) || 1;
+      const promoType = type === 'discount' ? 'discount' : 'credits';
+      const discPct = type === 'discount' ? parseInt(discountPercentage) || 0 : null;
+      const affName = type === 'discount' && affiliateName ? affiliateName : null;
       const prefixStr = (prefix || "PROMO").toUpperCase().replace(/[^A-Z0-9]/g, '');
       
       let expiryDate: Date | null = null;
@@ -2127,14 +2171,14 @@ export function registerRoutes(
       
       if (isGlobal && prefixStr) {
         // Global mode: exactly one code matching the prefix, with maxUses
-        await storage.createPromoCode(prefixStr, expiryDate, creds, mUses);
+        await storage.createPromoCode(prefixStr, expiryDate, creds, mUses, promoType, discPct, affName);
         generatedCodes.push(prefixStr);
       } else {
         // Bulk random mode
         for (let i = 0; i < numCodes; i++) {
           const randomPart = Math.random().toString(36).substring(2, 8).toUpperCase();
           const codeString = prefixStr ? `${prefixStr}-${randomPart}` : randomPart;
-          await storage.createPromoCode(codeString, expiryDate, creds, 1);
+          await storage.createPromoCode(codeString, expiryDate, creds, 1, promoType, discPct, affName);
           generatedCodes.push(codeString);
         }
       }

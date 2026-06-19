@@ -22,6 +22,7 @@ export default function Home() {
   const { t } = useI18n();
   const [, setLocation] = useLocation();
   const [pricingTab, setPricingTab] = useState<'studio' | 'lab'>('studio');
+  const [promoCode, setPromoCode] = useState('');
 
   useEffect(() => {
     document.title = "EventFold Studio | Elite 3D Digital Albums for Photographers";
@@ -58,7 +59,7 @@ export default function Home() {
 
   const handleSubscribe = (plan: string) => {
     if (user) {
-      startRazorpayCheckout(plan);
+      startRazorpayCheckout(plan, promoCode);
     } else {
       setLocation('/login');
     }
@@ -393,6 +394,18 @@ export default function Home() {
                 </div>
               </div>
 
+              <div className="max-w-xs mx-auto mb-12">
+                <div className="relative group">
+                  <div className="absolute -inset-1 bg-gradient-to-r from-primary/20 to-purple-500/20 rounded-xl blur opacity-25 group-hover:opacity-50 transition duration-1000 group-hover:duration-200"></div>
+                  <Input 
+                    placeholder="Have a promo code?" 
+                    className="relative bg-black/60 border-white/10 text-center uppercase tracking-widest font-mono text-sm h-12"
+                    value={promoCode}
+                    onChange={(e) => setPromoCode(e.target.value.toUpperCase())}
+                  />
+                </div>
+              </div>
+
               {pricingTab === 'studio' ? (
                 <div className="grid md:grid-cols-3 gap-8 items-start mb-32">
                   {/* Pay Per Album (Mid-Tier) */}
@@ -411,7 +424,7 @@ export default function Home() {
                         <div className="flex items-center gap-2 text-xs text-white/60"><CheckCircle2 className="w-4 h-4 text-primary" /> Password Protection</div>
                         <div className="flex items-center gap-2 text-xs text-white/60"><CheckCircle2 className="w-4 h-4 text-primary" /> Secure Lifetime Hosting</div>
                       </div>
-                      <Button onClick={() => user ? buyAlbumCredit() : setLocation('/login')} className="w-full h-12 rounded-xl bg-white/5 hover:bg-white/10 text-white border border-white/10 font-bold">
+                      <Button onClick={() => user ? buyAlbumCredit(promoCode) : setLocation('/login')} className="w-full h-12 rounded-xl bg-white/5 hover:bg-white/10 text-white border border-white/10 font-bold">
                         Purchase 1 Credit
                       </Button>
                     </div>

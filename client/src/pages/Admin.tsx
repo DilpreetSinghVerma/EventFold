@@ -135,6 +135,9 @@ function PromoCodeGenerator() {
   const [maxUses, setMaxUses] = useState("1");
   const [credits, setCredits] = useState("1");
   const [expiryType, setExpiryType] = useState("none");
+  const [promoType, setPromoType] = useState<"credits" | "discount">("credits");
+  const [discountPercentage, setDiscountPercentage] = useState("20");
+  const [affiliateName, setAffiliateName] = useState("");
   const [generatedCodes, setGeneratedCodes] = useState<string[]>([]);
 
   const generateMutation = useMutation({
@@ -151,10 +154,13 @@ function PromoCodeGenerator() {
       const res = await apiRequest("POST", "/api/admin/promo/generate", {
         prefix: prefix || (generationMode === "global" ? "PROMO" : ""),
         count: parseInt(count) || 1,
-        credits: parseInt(credits) || 1,
+        credits: promoType === 'credits' ? (parseInt(credits) || 1) : 0,
         expiresAt,
         isGlobal: generationMode === "global",
-        maxUses: parseInt(maxUses) || 1
+        maxUses: parseInt(maxUses) || 1,
+        type: promoType,
+        discountPercentage: promoType === 'discount' ? parseInt(discountPercentage) : null,
+        affiliateName: promoType === 'discount' ? affiliateName : null
       });
       return res.json();
     },
@@ -242,16 +248,53 @@ function PromoCodeGenerator() {
             </>
           )}
           <div className="space-y-2">
-            <Label>Credits per Code</Label>
-            <Input 
-              type="number" 
-              min="1" 
-              max="100" 
-              value={credits} 
-              onChange={(e) => setCredits(e.target.value)} 
-              className="bg-white/5 border-white/10"
-            />
+            <Label>Promo Code Type</Label>
+            <select 
+              value={promoType} 
+              onChange={(e) => setPromoType(e.target.value as "credits" | "discount")}
+              className="w-full h-10 px-3 rounded-md border border-white/10 bg-black/40 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
+            >
+              <option value="credits">Free Album Credits</option>
+              <option value="discount">Affiliate Discount (%)</option>
+            </select>
           </div>
+
+          {promoType === 'credits' ? (
+            <div className="space-y-2">
+              <Label>Credits per Code</Label>
+              <Input 
+                type="number" 
+                min="1" 
+                max="100" 
+                value={credits} 
+                onChange={(e) => setCredits(e.target.value)} 
+                className="bg-white/5 border-white/10"
+              />
+            </div>
+          ) : (
+            <>
+              <div className="space-y-2">
+                <Label>Discount Percentage (%)</Label>
+                <Input 
+                  type="number" 
+                  min="1" 
+                  max="100" 
+                  value={discountPercentage} 
+                  onChange={(e) => setDiscountPercentage(e.target.value)} 
+                  className="bg-white/5 border-white/10"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label>Affiliate Name (Optional)</Label>
+                <Input 
+                  placeholder="e.g. Umar, Swarnendu" 
+                  value={affiliateName} 
+                  onChange={(e) => setAffiliateName(e.target.value)} 
+                  className="bg-white/5 border-white/10"
+                />
+              </div>
+            </>
+          )}
           <div className="space-y-2">
             <Label>Expiration</Label>
             <select 
@@ -333,7 +376,8 @@ function PromoRedemptionsTable() {
                   <TableHead className="text-white/70">Date</TableHead>
                   <TableHead className="text-white/70">Promo Code</TableHead>
                   <TableHead className="text-white/70">User</TableHead>
-                  <TableHead className="text-white/70">Credits Given</TableHead>
+                  <TableHead className="text-white/70">Reward/Discount</TableHead>
+                  <TableHead className="text-white/70">Affiliate</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -353,7 +397,22 @@ function PromoRedemptionsTable() {
                         <span className="text-xs text-white/60">{redemption.userEmail}</span>
                       </div>
                     </TableCell>
-                    <TableCell>+{redemption.credits} Albums</TableCell>
+                    <TableCell>
+                      {redemption.type === 'discount' ? (
+                        <Badge className="bg-emerald-500/20 text-emerald-400 hover:bg-emerald-500/30">
+                          {redemption.discountPercentage}% Off Sale
+                        </Badge>
+                      ) : (
+                        <span>+{redemption.credits} Albums</span>
+                      )}
+                    </TableCell>
+                    <TableCell>
+                      {redemption.type === 'discount' && redemption.affiliateName ? (
+                        <span className="text-primary font-medium">{redemption.affiliateName}</span>
+                      ) : (
+                        <span className="text-white/40">-</span>
+                      )}
+                    </TableCell>
                   </TableRow>
                 ))}
               </TableBody>

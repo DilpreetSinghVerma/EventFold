@@ -6,8 +6,8 @@ interface AuthContextType {
     user: User | null;
     isLoading: boolean;
     logout: () => void;
-    startRazorpayCheckout: (plan?: string) => Promise<void>;
-    buyAlbumCredit: () => Promise<void>;
+    startRazorpayCheckout: (plan?: string, promoCode?: string) => Promise<void>;
+    buyAlbumCredit: (promoCode?: string) => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -29,9 +29,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         },
     });
 
-    const startRazorpayCheckout = async (plan: string = 'monthly') => {
+    const startRazorpayCheckout = async (plan: string = 'monthly', promoCode?: string) => {
         try {
-            const res = await fetch(`/api/billing/subscribe/${plan}`, { method: "POST" });
+            const res = await fetch(`/api/billing/subscribe/${plan}`, { 
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ promoCode })
+            });
             const data = await res.json();
 
             if (data.orderId) {
@@ -69,9 +73,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         }
     };
 
-    const buyAlbumCredit = async () => {
+    const buyAlbumCredit = async (promoCode?: string) => {
         try {
-            const res = await fetch("/api/billing/buy-credit", { method: "POST" });
+            const res = await fetch("/api/billing/buy-credit", { 
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ promoCode })
+            });
             const data = await res.json();
 
             if (data.orderId) {

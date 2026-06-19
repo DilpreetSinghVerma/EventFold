@@ -49,7 +49,7 @@ export interface IStorage {
   createKioskLead(data: { exhibitionId: string; name: string; email: string }): Promise<KioskLead>;
   getKioskLeads(exhibitionId: string): Promise<KioskLead[]>;
   deleteKioskLead(id: string): Promise<void>;
-  createPromoCode(code: string, expiresAt?: Date | null, credits?: number, maxUses?: number): Promise<PromoCode>;
+  createPromoCode(code: string, expiresAt?: Date | null, credits?: number, maxUses?: number, type?: string, discountPercentage?: number | null, affiliateName?: string | null): Promise<PromoCode>;
   getPromoCode(code: string): Promise<PromoCode | undefined>;
   hasUserRedeemedPromo(promoId: string, userId: string): Promise<boolean>;
   getPromoRedemptionsWithDetails(): Promise<any[]>;
@@ -338,9 +338,9 @@ export class DatabaseStorage implements IStorage {
     await db.delete(kioskLeads).where(eq(kioskLeads.id, id));
   }
 
-  async createPromoCode(code: string, expiresAt?: Date | null, credits: number = 1, maxUses: number = 1): Promise<PromoCode> {
+  async createPromoCode(code: string, expiresAt?: Date | null, credits: number = 1, maxUses: number = 1, type: string = 'credits', discountPercentage: number | null = null, affiliateName: string | null = null): Promise<PromoCode> {
     if (!db) throw new Error("DB not connected");
-    const [row] = await db.insert(promoCodes).values({ code, expiresAt, credits, maxUses, currentUses: 0 }).returning();
+    const [row] = await db.insert(promoCodes).values({ code, expiresAt, credits, maxUses, currentUses: 0, type, discountPercentage, affiliateName }).returning();
     return row;
   }
 
@@ -366,6 +366,9 @@ export class DatabaseStorage implements IStorage {
       redeemedAt: promoRedemptions.redeemedAt,
       promoCode: promoCodes.code,
       credits: promoCodes.credits,
+      type: promoCodes.type,
+      discountPercentage: promoCodes.discountPercentage,
+      affiliateName: promoCodes.affiliateName,
       userName: users.name,
       userEmail: users.email,
     })
@@ -718,9 +721,9 @@ export class MemStorage implements IStorage {
     this.kioskLeads.delete(id);
   }
 
-  async createPromoCode(code: string, expiresAt?: Date | null, credits: number = 1, maxUses: number = 1): Promise<PromoCode> {
+  async createPromoCode(code: string, expiresAt?: Date | null, credits: number = 1, maxUses: number = 1, type: string = 'credits', discountPercentage: number | null = null, affiliateName: string | null = null): Promise<PromoCode> {
     const id = crypto.randomUUID();
-    const promo: PromoCode = { id, code, isUsed: 0, usedById: null, createdAt: new Date(), usedAt: null, expiresAt: expiresAt || null, credits, maxUses, currentUses: 0 };
+    const promo: PromoCode = { id, code, isUsed: 0, usedById: null, createdAt: new Date(), usedAt: null, expiresAt: expiresAt || null, credits, maxUses, currentUses: 0, type, discountPercentage, affiliateName };
     this.promoCodes.set(id, promo);
     return promo;
   }

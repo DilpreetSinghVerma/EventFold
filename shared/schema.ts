@@ -123,6 +123,9 @@ export const promoCodes = pgTable("promo_codes", {
   credits: integer("credits").notNull().default(1),
   maxUses: integer("max_uses").notNull().default(1),
   currentUses: integer("current_uses").notNull().default(0),
+  type: varchar("type", { length: 20 }).notNull().default('credits'), // 'credits' or 'discount'
+  discountPercentage: integer("discount_percentage"), // e.g., 20 for 20%
+  affiliateName: text("affiliate_name"), // e.g., 'Swarnendu', 'Umar'
 });
 
 export const promoRedemptions = pgTable("promo_redemptions", {
