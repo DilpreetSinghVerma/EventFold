@@ -318,6 +318,7 @@ export default function Dashboard() {
   const [settings, setSettings] = useState<any>(null);
   const [copiedId, setCopiedId] = useState<string | null>(null);
   const [upgradingLifetimeId, setUpgradingLifetimeId] = useState<string | null>(null);
+  const [promoCode, setPromoCode] = useState("");
   const isAdmin = user?.role === 'admin' || ["admin@eventfold.com", "dilpreetsinghverma@gmail.com"].includes(user?.email || "");
   const isLabPlan = ['lab_monthly', 'lab_half_yearly', 'lab_yearly', 'lab_unlimited'].includes(user?.plan || '') || isAdmin;
 
@@ -1195,20 +1196,28 @@ export default function Dashboard() {
                       <LayoutGrid className={`w-4 h-4 ${user?.credits === 0 ? 'animate-pulse' : ''}`} />
                       {user?.credits || 0} ALBUM CREDITS {user?.credits === 0 ? 'REMAINING' : 'AVAILABLE'}
                     </div>
-                    <Button
-                      onClick={buyAlbumCredit}
-                      className="h-10 rounded-full bg-white/5 backdrop-blur-md text-white hover:bg-white/10 border border-white/10 font-bold px-6 group transition-all"
-                    >
-                      <Plus className="w-4 h-4 mr-2 group-hover:rotate-90 transition-transform" /> BUY 1 CREDIT (₹99) <span className="ml-2 text-[10px] line-through opacity-50">₹199</span>
-                    </Button>
-                    <Button
-                      onClick={() => startRazorpayCheckout('monthly')}
-                      className="h-10 rounded-full bg-primary hover:bg-primary/90 text-white font-bold px-6 shadow-xl shadow-primary/20 relative group overflow-hidden"
-                    >
-                      <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:animate-[shimmer_2s_infinite]" />
-                      <Crown className="w-4 h-4 mr-2" /> UPGRADE TO UNLIMITED (₹199) <span className="ml-2 text-[10px] line-through opacity-70">₹499</span>
-                      <span className="absolute -top-1 -right-1 px-2 py-0.5 bg-cyan-400 text-black text-[8px] font-black rounded-full">HOT</span>
-                    </Button>
+                    <div className="flex flex-col gap-2 w-full mt-2">
+                      <Input 
+                        placeholder="Discount Promo Code (Optional)" 
+                        value={promoCode}
+                        onChange={(e) => setPromoCode(e.target.value.toUpperCase())}
+                        className="h-10 text-center uppercase tracking-widest font-mono text-xs bg-white/5 border-white/10"
+                      />
+                      <Button
+                        onClick={() => buyAlbumCredit(promoCode)}
+                        className="h-10 rounded-full bg-white/5 backdrop-blur-md text-white hover:bg-white/10 border border-white/10 font-bold px-6 group transition-all"
+                      >
+                        <Plus className="w-4 h-4 mr-2 group-hover:rotate-90 transition-transform" /> BUY 1 CREDIT (₹99) <span className="ml-2 text-[10px] line-through opacity-50">₹199</span>
+                      </Button>
+                      <Button
+                        onClick={() => startRazorpayCheckout('monthly', promoCode)}
+                        className="h-10 rounded-full bg-primary hover:bg-primary/90 text-white font-bold px-6 shadow-xl shadow-primary/20 relative group overflow-hidden"
+                      >
+                        <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:animate-[shimmer_2s_infinite]" />
+                        <Crown className="w-4 h-4 mr-2" /> UPGRADE TO UNLIMITED (₹199) <span className="ml-2 text-[10px] line-through opacity-70">₹499</span>
+                        <span className="absolute -top-1 -right-1 px-2 py-0.5 bg-cyan-400 text-black text-[8px] font-black rounded-full">HOT</span>
+                      </Button>
+                    </div>
                     <Dialog>
                       <DialogTrigger asChild>
                         <Button
