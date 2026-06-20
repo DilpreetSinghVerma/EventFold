@@ -2085,7 +2085,36 @@ export function registerRoutes(
     }
   });
 
+  // Validate a discount promo code (no redemption, just check)
+  app.post("/api/billing/validate-promo", async (req, res) => {
+    try {
+      if (!req.isAuthenticated()) return res.status(401).json({ error: "Unauthorized" });
+      const userId = (req.user as any).id;
+      const { code } = req.body;
+      if (!code) return res.status(400).json({ error: "Code required" });
+
+      const promo = await storage.getPromoCode(code.trim().toUpperCase());
+      if (!promo) return res.status(404).json({ error: "Invalid discount code. Please check and try again." });
+      if (promo.type !== 'discount') return res.status(400).json({ error: "This is a gift code, not a discount code. Use 'Claim Free Credits' instead." });
+      if (promo.isUsed === 1 || promo.currentUses >= promo.maxUses) return res.status(400).json({ error: "This code has expired or reached its usage limit." });
+      if (promo.expiresAt && new Date(promo.expiresAt) < new Date()) return res.status(400).json({ error: "This discount code has expired." });
+
+      const hasRedeemed = await storage.hasUserRedeemedPromo(promo.id, userId);
+      if (hasRedeemed) return res.status(400).json({ error: "You have already used this discount code on a previous purchase." });
+
+      res.json({
+        valid: true,
+        discountPercentage: promo.discountPercentage,
+        affiliateName: promo.affiliateName,
+      });
+    } catch (e: any) {
+      console.error("validate-promo error:", e);
+      res.status(500).json({ error: "Failed to validate code" });
+    }
+  });
+
   app.post("/api/billing/redeem-promo", async (req, res) => {
+
     try {
       if (!req.isAuthenticated()) return res.status(401).json({ error: "Unauthorized" });
       const userId = (req.user as any).id;

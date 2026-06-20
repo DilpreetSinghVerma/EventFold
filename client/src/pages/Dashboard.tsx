@@ -319,6 +319,44 @@ export default function Dashboard() {
   const [copiedId, setCopiedId] = useState<string | null>(null);
   const [upgradingLifetimeId, setUpgradingLifetimeId] = useState<string | null>(null);
   const [promoCode, setPromoCode] = useState("");
+  const [promoValidating, setPromoValidating] = useState(false);
+  const [promoDiscount, setPromoDiscount] = useState<number | null>(null);
+  const [promoValidated, setPromoValidated] = useState(false);
+  const [promoError, setPromoError] = useState("");
+
+  const applyPromoCode = async () => {
+    if (!promoCode.trim()) return;
+    setPromoValidating(true);
+    setPromoError("");
+    setPromoValidated(false);
+    setPromoDiscount(null);
+    try {
+      const res = await fetch("/api/billing/validate-promo", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ code: promoCode.trim() })
+      });
+      const data = await res.json();
+      if (res.ok && data.valid) {
+        setPromoDiscount(data.discountPercentage);
+        setPromoValidated(true);
+        toast({ title: `✅ ${promoCode.toUpperCase()} applied!`, description: `${data.discountPercentage}% discount will be applied at checkout.` });
+      } else {
+        setPromoError(data.error || "Invalid code.");
+      }
+    } catch {
+      setPromoError("Could not validate code. Try again.");
+    } finally {
+      setPromoValidating(false);
+    }
+  };
+
+  const clearPromo = () => {
+    setPromoCode("");
+    setPromoDiscount(null);
+    setPromoValidated(false);
+    setPromoError("");
+  };
   const isAdmin = user?.role === 'admin' || ["admin@eventfold.com", "dilpreetsinghverma@gmail.com"].includes(user?.email || "");
   const isLabPlan = ['lab_monthly', 'lab_half_yearly', 'lab_yearly', 'lab_unlimited'].includes(user?.plan || '') || isAdmin;
 
@@ -1210,24 +1248,54 @@ export default function Dashboard() {
                       </DialogContent>
                     </Dialog>
                     <div className="flex items-center gap-2 border-l border-white/10 pl-4 ml-2">
-                      <Input 
-                        placeholder="Discount Code" 
-                        value={promoCode}
-                        onChange={(e) => setPromoCode(e.target.value.toUpperCase())}
-                        className="h-10 w-36 text-center uppercase tracking-widest font-mono text-xs bg-black/40 border-white/10 rounded-full focus-visible:ring-1 focus-visible:ring-primary"
-                      />
+                      {/* Discount Code Widget */}
+                      {promoValidated && promoDiscount ? (
+                        <div className="flex items-center gap-2 px-3 py-1.5 bg-emerald-500/15 border border-emerald-500/30 rounded-full">
+                          <Check className="w-3.5 h-3.5 text-emerald-400" />
+                          <span className="text-emerald-400 font-bold text-xs tracking-widest font-mono">{promoCode.toUpperCase()}</span>
+                          <span className="text-emerald-400/70 text-xs">— {promoDiscount}% OFF</span>
+                          <button onClick={clearPromo} className="ml-1 text-white/30 hover:text-white/70 text-xs leading-none">×</button>
+                        </div>
+                      ) : (
+                        <div className="flex items-center gap-1">
+                          <Input
+                            placeholder="Discount Code"
+                            value={promoCode}
+                            onChange={(e) => { setPromoCode(e.target.value.toUpperCase()); setPromoError(""); setPromoValidated(false); setPromoDiscount(null); }}
+                            onKeyDown={(e) => e.key === "Enter" && applyPromoCode()}
+                            className={`h-10 w-36 text-center uppercase tracking-widest font-mono text-xs bg-black/40 border-white/10 rounded-full focus-visible:ring-1 focus-visible:ring-primary transition-colors ${ promoError ? 'border-red-500/50' : '' }`}
+                          />
+                          <Button
+                            onClick={applyPromoCode}
+                            disabled={!promoCode.trim() || promoValidating}
+                            size="sm"
+                            className="h-10 px-4 rounded-full bg-white/10 hover:bg-white/20 text-white font-bold text-xs border border-white/10"
+                          >
+                            {promoValidating ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : "Apply"}
+                          </Button>
+                        </div>
+                      )}
+                      {promoError && (
+                        <span className="text-red-400 text-[10px] max-w-28 leading-tight">{promoError}</span>
+                      )}
                       <Button
-                        onClick={() => buyAlbumCredit(promoCode)}
+                        onClick={() => buyAlbumCredit(promoValidated ? promoCode : undefined)}
                         className="h-10 rounded-full bg-white/5 backdrop-blur-md text-white hover:bg-white/10 border border-white/10 font-bold px-6 group transition-all"
                       >
-                        <Plus className="w-4 h-4 mr-2 group-hover:rotate-90 transition-transform" /> BUY 1 CREDIT (₹99) <span className="ml-2 text-[10px] line-through opacity-50">₹199</span>
+                        <Plus className="w-4 h-4 mr-2 group-hover:rotate-90 transition-transform" />
+                        BUY 1 CREDIT {promoValidated && promoDiscount
+                          ? <><span className="ml-2 font-black text-emerald-400">₹{Math.round(99 * (1 - promoDiscount / 100))}</span><span className="ml-1 text-[10px] line-through opacity-40">₹99</span></>
+                          : <><span className="ml-1">(₹99)</span><span className="ml-2 text-[10px] line-through opacity-50">₹199</span></>}
                       </Button>
                       <Button
-                        onClick={() => startRazorpayCheckout('monthly', promoCode)}
+                        onClick={() => startRazorpayCheckout('monthly', promoValidated ? promoCode : undefined)}
                         className="h-10 rounded-full bg-primary hover:bg-primary/90 text-white font-bold px-6 shadow-xl shadow-primary/20 relative group overflow-hidden"
                       >
                         <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:animate-[shimmer_2s_infinite]" />
-                        <Crown className="w-4 h-4 mr-2" /> UPGRADE TO UNLIMITED (₹199) <span className="ml-2 text-[10px] line-through opacity-70">₹499</span>
+                        <Crown className="w-4 h-4 mr-2" />
+                        UPGRADE TO UNLIMITED {promoValidated && promoDiscount
+                          ? <><span className="ml-2 font-black text-cyan-300">₹{Math.round(199 * (1 - promoDiscount / 100))}</span><span className="ml-1 text-[10px] line-through opacity-40">₹199</span></>
+                          : <><span className="ml-1">(₹199)</span><span className="ml-2 text-[10px] line-through opacity-70">₹499</span></>}
                         <span className="absolute -top-1 -right-1 px-2 py-0.5 bg-cyan-400 text-black text-[8px] font-black rounded-full">HOT</span>
                       </Button>
                     </div>
