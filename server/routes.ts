@@ -2099,8 +2099,8 @@ export function registerRoutes(
       if (promo.isUsed === 1 || promo.currentUses >= promo.maxUses) return res.status(400).json({ error: "This code has expired or reached its usage limit." });
       if (promo.expiresAt && new Date(promo.expiresAt) < new Date()) return res.status(400).json({ error: "This discount code has expired." });
 
-      const hasRedeemed = await storage.hasUserRedeemedPromo(promo.id, userId);
-      if (hasRedeemed) return res.status(400).json({ error: "You have already used this discount code on a previous purchase." });
+      // Allow discount codes to be reused by the same user across multiple purchases
+      // (The hasUserRedeemedPromo check is removed here so interns keep getting sales credit)
 
       res.json({
         valid: true,
