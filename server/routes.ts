@@ -2094,8 +2094,8 @@ export function registerRoutes(
       if (!code) return res.status(400).json({ error: "Code required" });
 
       const promo = await storage.getPromoCode(code.trim().toUpperCase());
-      if (!promo) return res.status(404).json({ error: "Invalid discount code. Please check and try again." });
-      if (promo.type !== 'discount') return res.status(400).json({ error: "This is a gift code, not a discount code. Use 'Claim Free Credits' instead." });
+      if (!promo) return res.status(404).json({ error: "Invalid code. Please check and try again." });
+      if (promo.type !== 'discount') return res.status(400).json({ error: "This is a gift code, not a discount code. Use 'Claim Free Credits' instead.", isGiftCode: true });
       if (promo.isUsed === 1 || promo.currentUses >= promo.maxUses) return res.status(400).json({ error: "This code has expired or reached its usage limit." });
       if (promo.expiresAt && new Date(promo.expiresAt) < new Date()) return res.status(400).json({ error: "This discount code has expired." });
 

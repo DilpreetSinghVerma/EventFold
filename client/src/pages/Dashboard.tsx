@@ -322,7 +322,9 @@ export default function Dashboard() {
   const [promoValidating, setPromoValidating] = useState(false);
   const [promoDiscount, setPromoDiscount] = useState<number | null>(null);
   const [promoValidated, setPromoValidated] = useState(false);
+  const [promoType, setPromoType] = useState<'discount' | 'credits' | null>(null);
   const [promoError, setPromoError] = useState("");
+  const queryClient = useQueryClient();
 
   const applyPromoCode = async () => {
     if (!promoCode.trim()) return;
@@ -330,19 +332,48 @@ export default function Dashboard() {
     setPromoError("");
     setPromoValidated(false);
     setPromoDiscount(null);
+    setPromoType(null);
     try {
+      // Step 1: validate the code and detect its type
       const res = await fetch("/api/billing/validate-promo", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ code: promoCode.trim() })
       });
       const data = await res.json();
-      if (res.ok && data.valid) {
+
+      if (!res.ok) {
+        // validate-promo rejects gift codes — try redeeming directly
+        if (data.isGiftCode) {
+          // It's a credits code — redeem it now
+          const redeemRes = await fetch("/api/billing/redeem-promo", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ code: promoCode.trim() })
+          });
+          const redeemData = await redeemRes.json();
+          if (redeemRes.ok) {
+            setPromoValidated(true);
+            setPromoType('credits');
+            queryClient.invalidateQueries({ queryKey: ["/api/auth/me"] });
+            toast({ title: `✅ Code redeemed!`, description: redeemData.message });
+            setPromoCode("");
+            setPromoValidated(false);
+          } else {
+            setPromoError(redeemData.error || "Could not redeem code.");
+          }
+        } else {
+          setPromoError(data.error || "Invalid code.");
+        }
+        return;
+      }
+
+      if (data.valid) {
+        // It's a discount code
         setPromoDiscount(data.discountPercentage);
         setPromoValidated(true);
+        setPromoType('discount');
         toast({ title: `✅ ${promoCode.toUpperCase()} applied!`, description: `${data.discountPercentage}% discount will be applied at checkout.` });
-      } else {
-        setPromoError(data.error || "Invalid code.");
       }
     } catch {
       setPromoError("Could not validate code. Try again.");
@@ -355,6 +386,7 @@ export default function Dashboard() {
     setPromoCode("");
     setPromoDiscount(null);
     setPromoValidated(false);
+    setPromoType(null);
     setPromoError("");
   };
   const isAdmin = user?.role === 'admin' || ["admin@eventfold.com", "dilpreetsinghverma@gmail.com"].includes(user?.email || "");
@@ -1234,22 +1266,9 @@ export default function Dashboard() {
                       <LayoutGrid className={`w-4 h-4 ${user?.credits === 0 ? 'animate-pulse' : ''}`} />
                       {user?.credits || 0} ALBUM CREDITS {user?.credits === 0 ? 'REMAINING' : 'AVAILABLE'}
                     </div>
-                    <Dialog>
-                      <DialogTrigger asChild>
-                        <Button
-                          variant="outline"
-                          className="h-10 rounded-full border-dashed border-white/20 text-white/60 hover:text-white hover:border-white/50 px-6 font-bold uppercase text-[10px] tracking-widest gap-2"
-                        >
-                          <Gift className="w-3.5 h-3.5" /> Claim Free Credits
-                        </Button>
-                      </DialogTrigger>
-                      <DialogContent className="sm:max-w-md bg-[#0a0a0b] border-white/10 text-white rounded-3xl">
-                        <PromoRedeemer onRedeemed={fetchAlbums} />
-                      </DialogContent>
-                    </Dialog>
+                    {/* Unified "Have a code?" widget */}
                     <div className="flex items-center gap-2 border-l border-white/10 pl-4 ml-2">
-                      {/* Discount Code Widget */}
-                      {promoValidated && promoDiscount ? (
+                      {promoValidated && promoType === 'discount' && promoDiscount ? (
                         <div className="flex items-center gap-2 px-3 py-1.5 bg-emerald-500/15 border border-emerald-500/30 rounded-full">
                           <Check className="w-3.5 h-3.5 text-emerald-400" />
                           <span className="text-emerald-400 font-bold text-xs tracking-widest font-mono">{promoCode.toUpperCase()}</span>
@@ -1259,11 +1278,11 @@ export default function Dashboard() {
                       ) : (
                         <div className="flex items-center gap-1">
                           <Input
-                            placeholder="Discount Code"
+                            placeholder="Have a code?"
                             value={promoCode}
-                            onChange={(e) => { setPromoCode(e.target.value.toUpperCase()); setPromoError(""); setPromoValidated(false); setPromoDiscount(null); }}
+                            onChange={(e) => { setPromoCode(e.target.value.toUpperCase()); setPromoError(""); setPromoValidated(false); setPromoDiscount(null); setPromoType(null); }}
                             onKeyDown={(e) => e.key === "Enter" && applyPromoCode()}
-                            className={`h-10 w-36 text-center uppercase tracking-widest font-mono text-xs bg-black/40 border-white/10 rounded-full focus-visible:ring-1 focus-visible:ring-primary transition-colors ${ promoError ? 'border-red-500/50' : '' }`}
+                            className={`h-10 w-36 text-center uppercase tracking-widest font-mono text-xs bg-black/40 border-white/10 rounded-full focus-visible:ring-1 focus-visible:ring-primary transition-colors ${promoError ? 'border-red-500/50' : ''}`}
                           />
                           <Button
                             onClick={applyPromoCode}
@@ -1279,21 +1298,21 @@ export default function Dashboard() {
                         <span className="text-red-400 text-[10px] max-w-28 leading-tight">{promoError}</span>
                       )}
                       <Button
-                        onClick={() => buyAlbumCredit(promoValidated ? promoCode : undefined)}
+                        onClick={() => buyAlbumCredit(promoValidated && promoType === 'discount' ? promoCode : undefined)}
                         className="h-10 rounded-full bg-white/5 backdrop-blur-md text-white hover:bg-white/10 border border-white/10 font-bold px-6 group transition-all"
                       >
                         <Plus className="w-4 h-4 mr-2 group-hover:rotate-90 transition-transform" />
-                        BUY 1 CREDIT {promoValidated && promoDiscount
+                        BUY 1 CREDIT {promoValidated && promoType === 'discount' && promoDiscount
                           ? <><span className="ml-2 font-black text-emerald-400">₹{Math.round(99 * (1 - promoDiscount / 100))}</span><span className="ml-1 text-[10px] line-through opacity-40">₹99</span></>
                           : <><span className="ml-1">(₹99)</span><span className="ml-2 text-[10px] line-through opacity-50">₹199</span></>}
                       </Button>
                       <Button
-                        onClick={() => startRazorpayCheckout('monthly', promoValidated ? promoCode : undefined)}
+                        onClick={() => startRazorpayCheckout('monthly', promoValidated && promoType === 'discount' ? promoCode : undefined)}
                         className="h-10 rounded-full bg-primary hover:bg-primary/90 text-white font-bold px-6 shadow-xl shadow-primary/20 relative group overflow-hidden"
                       >
                         <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:animate-[shimmer_2s_infinite]" />
                         <Crown className="w-4 h-4 mr-2" />
-                        UPGRADE TO UNLIMITED {promoValidated && promoDiscount
+                        UPGRADE TO UNLIMITED {promoValidated && promoType === 'discount' && promoDiscount
                           ? <><span className="ml-2 font-black text-cyan-300">₹{Math.round(199 * (1 - promoDiscount / 100))}</span><span className="ml-1 text-[10px] line-through opacity-40">₹199</span></>
                           : <><span className="ml-1">(₹199)</span><span className="ml-2 text-[10px] line-through opacity-70">₹499</span></>}
                         <span className="absolute -top-1 -right-1 px-2 py-0.5 bg-cyan-400 text-black text-[8px] font-black rounded-full">HOT</span>
