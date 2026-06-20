@@ -2247,4 +2247,39 @@ export function registerRoutes(
     }
   });
 
+  // Delete a promo code (admin)
+  app.delete("/api/admin/promo/:id", async (req, res) => {
+    try {
+      if (!req.isAuthenticated()) return res.status(401).json({ error: "Unauthorized" });
+      const user = req.user as any;
+      const adminEmails = ["admin@eventfold.com", "dilpreetsinghverma@gmail.com"];
+      if (user.role !== 'admin' && !adminEmails.includes(user.email)) {
+        return res.status(403).json({ error: "Forbidden" });
+      }
+      await storage.deletePromoCode(req.params.id);
+      res.json({ success: true });
+    } catch (e: any) {
+      console.error("Failed to delete promo code:", e);
+      res.status(500).json({ error: "Failed to delete promo code" });
+    }
+  });
+
+  // Set a promo code to unlimited uses (admin)
+  app.patch("/api/admin/promo/:id/max-uses", async (req, res) => {
+    try {
+      if (!req.isAuthenticated()) return res.status(401).json({ error: "Unauthorized" });
+      const user = req.user as any;
+      const adminEmails = ["admin@eventfold.com", "dilpreetsinghverma@gmail.com"];
+      if (user.role !== 'admin' && !adminEmails.includes(user.email)) {
+        return res.status(403).json({ error: "Forbidden" });
+      }
+      const maxUses = parseInt(req.body.maxUses) || 99999;
+      await storage.updatePromoMaxUses(req.params.id, maxUses);
+      res.json({ success: true });
+    } catch (e: any) {
+      console.error("Failed to update promo max uses:", e);
+      res.status(500).json({ error: "Failed to update" });
+    }
+  });
+
 }

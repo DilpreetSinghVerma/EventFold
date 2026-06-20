@@ -52,6 +52,8 @@ export interface IStorage {
   createPromoCode(code: string, expiresAt?: Date | null, credits?: number, maxUses?: number, type?: string, discountPercentage?: number | null, affiliateName?: string | null): Promise<PromoCode>;
   getPromoCode(code: string): Promise<PromoCode | undefined>;
   getAllPromoCodes(): Promise<PromoCode[]>;
+  deletePromoCode(id: string): Promise<void>;
+  updatePromoMaxUses(id: string, maxUses: number): Promise<void>;
   hasUserRedeemedPromo(promoId: string, userId: string): Promise<boolean>;
   getPromoRedemptionsWithDetails(): Promise<any[]>;
   markPromoCodeUsed(id: string, userId: string): Promise<void>;
@@ -354,6 +356,16 @@ export class DatabaseStorage implements IStorage {
   async getAllPromoCodes(): Promise<PromoCode[]> {
     if (!db) return [];
     return await db.select().from(promoCodes).orderBy(promoCodes.createdAt);
+  }
+
+  async deletePromoCode(id: string): Promise<void> {
+    if (!db) throw new Error("DB not connected");
+    await db.delete(promoCodes).where(eq(promoCodes.id, id));
+  }
+
+  async updatePromoMaxUses(id: string, maxUses: number): Promise<void> {
+    if (!db) throw new Error("DB not connected");
+    await db.update(promoCodes).set({ maxUses }).where(eq(promoCodes.id, id));
   }
 
   async hasUserRedeemedPromo(promoId: string, userId: string): Promise<boolean> {
@@ -747,6 +759,15 @@ export class MemStorage implements IStorage {
 
   async getAllPromoCodes(): Promise<PromoCode[]> {
     return Array.from(this.promoCodes.values());
+  }
+
+  async deletePromoCode(id: string): Promise<void> {
+    this.promoCodes.delete(id);
+  }
+
+  async updatePromoMaxUses(id: string, maxUses: number): Promise<void> {
+    const promo = this.promoCodes.get(id);
+    if (promo) this.promoCodes.set(id, { ...promo, maxUses });
   }
 
   async markPromoCodeUsed(id: string, userId: string): Promise<void> {

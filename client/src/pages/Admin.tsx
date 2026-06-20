@@ -256,7 +256,9 @@ function InternHQ() {
           <CardTitle className="text-base flex items-center gap-2">
             <Gift className="w-4 h-4 text-primary" /> Your Intern Discount Codes
           </CardTitle>
-          <CardDescription>All discount codes you've generated. Click any code to copy it.</CardDescription>
+          <CardDescription>
+            All discount codes you've generated. Codes with <span className="text-amber-400 font-semibold">limited uses</span> won't work after they're used — click <span className="text-primary font-semibold">Set Unlimited</span> to fix them.
+          </CardDescription>
         </CardHeader>
         <CardContent>
           {internCodes.length === 0 ? (
@@ -269,39 +271,86 @@ function InternHQ() {
                     <TableHead className="text-white/70">Intern Name</TableHead>
                     <TableHead className="text-white/70">Code</TableHead>
                     <TableHead className="text-white/70">Discount</TableHead>
-                    <TableHead className="text-white/70">Uses</TableHead>
+                    <TableHead className="text-white/70">Studios Reached</TableHead>
                     <TableHead className="text-white/70">Expires</TableHead>
-                    <TableHead></TableHead>
+                    <TableHead className="text-white/70">Actions</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {internCodes.map((c: any) => (
-                    <TableRow key={c.id} className="border-white/10 hover:bg-white/5">
-                      <TableCell className="font-medium text-white">{c.affiliateName || '—'}</TableCell>
-                      <TableCell>
-                        <Badge variant="outline" className="font-mono bg-primary/10 text-primary border-primary/20">{c.code}</Badge>
-                      </TableCell>
-                      <TableCell>
-                        <Badge className="bg-emerald-500/20 text-emerald-400">{c.discountPercentage}% Off</Badge>
-                      </TableCell>
-                      <TableCell className="text-white/60 text-sm">{c.currentUses ?? 0} / {c.maxUses}</TableCell>
-                      <TableCell className="text-white/40 text-xs">
-                        {c.expiresAt ? new Date(c.expiresAt).toLocaleDateString() : 'Never'}
-                      </TableCell>
-                      <TableCell>
-                        <Button
-                          variant="ghost" size="sm"
-                          className="h-7 px-2 text-xs text-white/40 hover:text-white"
-                          onClick={() => {
-                            navigator.clipboard.writeText(c.code);
-                            toast({ title: "Copied!", description: `${c.code} copied.` });
-                          }}
-                        >
-                          <BookCopy className="w-3 h-3 mr-1" /> Copy
-                        </Button>
-                      </TableCell>
-                    </TableRow>
-                  ))}
+                  {internCodes.map((c: any) => {
+                    const isUnlimited = c.maxUses >= 9999;
+                    return (
+                      <TableRow key={c.id} className="border-white/10 hover:bg-white/5">
+                        <TableCell className="font-medium text-white">{c.affiliateName || '—'}</TableCell>
+                        <TableCell>
+                          <Badge variant="outline" className="font-mono bg-primary/10 text-primary border-primary/20">{c.code}</Badge>
+                        </TableCell>
+                        <TableCell>
+                          <Badge className="bg-emerald-500/20 text-emerald-400">{c.discountPercentage}% Off</Badge>
+                        </TableCell>
+                        <TableCell>
+                          <div className="flex items-center gap-2">
+                            <span className="text-white font-bold text-base">{c.currentUses ?? 0}</span>
+                            {isUnlimited ? (
+                              <span className="text-[10px] text-primary/60 font-mono">/ ∞ unlimited</span>
+                            ) : (
+                              <span className="text-amber-400 text-xs font-bold">/ {c.maxUses} ⚠️ limited!</span>
+                            )}
+                          </div>
+                        </TableCell>
+                        <TableCell className="text-white/40 text-xs">
+                          {c.expiresAt ? new Date(c.expiresAt).toLocaleDateString() : 'Never'}
+                        </TableCell>
+                        <TableCell>
+                          <div className="flex items-center gap-1">
+                            <Button
+                              variant="ghost" size="sm"
+                              className="h-7 px-2 text-xs text-white/40 hover:text-white"
+                              onClick={() => {
+                                navigator.clipboard.writeText(c.code);
+                                toast({ title: "Copied!", description: `${c.code} copied.` });
+                              }}
+                            >
+                              <BookCopy className="w-3 h-3 mr-1" /> Copy
+                            </Button>
+                            {!isUnlimited && (
+                              <Button
+                                variant="ghost" size="sm"
+                                className="h-7 px-2 text-xs text-primary/70 hover:text-primary border border-primary/20 hover:border-primary/50"
+                                onClick={async () => {
+                                  try {
+                                    const res = await apiRequest("PATCH", `/api/admin/promo/${c.id}/max-uses`, { maxUses: 99999 });
+                                    if (res.ok) {
+                                      toast({ title: "✅ Set to Unlimited!", description: `${c.code} can now be used by unlimited photographers.` });
+                                      refetchCodes();
+                                    }
+                                  } catch { toast({ title: "Error", description: "Could not update.", variant: "destructive" }); }
+                                }}
+                              >
+                                ∞ Set Unlimited
+                              </Button>
+                            )}
+                            <Button
+                              variant="ghost" size="sm"
+                              className="h-7 px-2 text-xs text-red-500/50 hover:text-red-400 hover:bg-red-500/10"
+                              onClick={async () => {
+                                if (!window.confirm(`Delete code "${c.code}"? This cannot be undone.`)) return;
+                                try {
+                                  const res = await apiRequest("DELETE", `/api/admin/promo/${c.id}`);
+                                  if (res.ok) {
+                                    toast({ title: "Deleted", description: `${c.code} has been removed.` });
+                                    refetchCodes();
+                                  }
+                                } catch { toast({ title: "Error", description: "Could not delete.", variant: "destructive" }); }
+                              }}
+                            >
+                              <Trash2 className="w-3 h-3" />
+                            </Button>
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    );
+                  })}
                 </TableBody>
               </Table>
             </div>
