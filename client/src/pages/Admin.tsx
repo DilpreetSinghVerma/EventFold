@@ -127,6 +127,221 @@ function ExhibitionRow({ exhibition, sendPromosMutation }: { exhibition: any, se
   );
 }
 
+// ─── Intern HQ ────────────────────────────────────────────────────────────────
+function InternHQ() {
+  const { toast } = useToast();
+  const [internName, setInternName] = useState("");
+  const [discount, setDiscount] = useState("20");
+  const [creating, setCreating] = useState(false);
+
+  const { data: redemptions, isLoading, refetch } = useQuery<any[]>({
+    queryKey: ["/api/admin/promo/redemptions"],
+  });
+
+  // Summarise sales per affiliate
+  const affiliates: { name: string; code: string; sales: number; totalDiscount: number }[] = [];
+  if (redemptions) {
+    redemptions
+      .filter(r => r.type === "discount" && r.affiliateName)
+      .forEach(r => {
+        const existing = affiliates.find(a => a.name === r.affiliateName);
+        if (existing) {
+          existing.sales += 1;
+          existing.totalDiscount += (r.discountPercentage || 0);
+        } else {
+          affiliates.push({ name: r.affiliateName, code: r.promoCode, sales: 1, totalDiscount: r.discountPercentage || 0 });
+        }
+      });
+  }
+
+  const handleCreate = async () => {
+    if (!internName.trim()) {
+      toast({ title: "Name required", description: "Enter the intern's name.", variant: "destructive" });
+      return;
+    }
+    const codeName = internName.trim().toUpperCase().replace(/[^A-Z0-9]/g, "") + discount;
+    setCreating(true);
+    try {
+      const expiresAt = new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString();
+      const res = await apiRequest("POST", "/api/admin/promo/generate", {
+        prefix: codeName,
+        count: 1,
+        credits: 0,
+        expiresAt,
+        isGlobal: true,
+        maxUses: 999,
+        type: "discount",
+        discountPercentage: parseInt(discount),
+        affiliateName: internName.trim(),
+      });
+      const data = await res.json();
+      if (data.codes?.length) {
+        await navigator.clipboard.writeText(data.codes[0]);
+        toast({ title: "✅ Code Created & Copied!", description: `Code "${data.codes[0]}" is ready to share with ${internName.trim()}.` });
+        setInternName("");
+        refetch();
+      } else {
+        toast({ title: "Error", description: data.error || "Failed to generate.", variant: "destructive" });
+      }
+    } catch (e: any) {
+      toast({ title: "Error", description: "Network error.", variant: "destructive" });
+    } finally {
+      setCreating(false);
+    }
+  };
+
+  return (
+    <div className="space-y-8">
+      {/* Quick Create Card */}
+      <Card className="bg-gradient-to-br from-primary/10 via-black/40 to-purple-900/10 border-primary/20">
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2 text-xl">
+            <Sparkles className="w-5 h-5 text-primary" /> Intern Affiliate HQ
+          </CardTitle>
+          <CardDescription>
+            Type an intern's name → click Generate → code is auto-copied. Send it to them and track their sales below.
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="flex flex-col sm:flex-row gap-4 items-end">
+            <div className="flex-1 space-y-2">
+              <Label className="text-white/70 text-xs uppercase tracking-widest">Intern Name</Label>
+              <Input
+                placeholder="e.g. Swarnendu Das"
+                value={internName}
+                onChange={e => setInternName(e.target.value)}
+                onKeyDown={e => e.key === "Enter" && handleCreate()}
+                className="bg-white/5 border-white/10 h-12 text-base"
+              />
+            </div>
+            <div className="w-32 space-y-2">
+              <Label className="text-white/70 text-xs uppercase tracking-widest">Discount %</Label>
+              <Input
+                type="number" min="1" max="99"
+                value={discount}
+                onChange={e => setDiscount(e.target.value)}
+                className="bg-white/5 border-white/10 h-12 text-base text-center font-bold"
+              />
+            </div>
+            <Button
+              onClick={handleCreate}
+              disabled={creating || !internName.trim()}
+              className="h-12 px-8 bg-primary hover:bg-primary/90 font-bold text-base shrink-0"
+            >
+              {creating ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Sparkles className="w-4 h-4 mr-2" />}
+              Generate & Copy Code
+            </Button>
+          </div>
+          <p className="text-xs text-white/30 mt-3">
+            💡 The generated code (e.g. <span className="font-mono text-primary">SWARNENDU20</span>) is valid for 1 year with unlimited uses. It will be auto-copied to your clipboard so you can paste it directly into WhatsApp.
+          </p>
+        </CardContent>
+      </Card>
+
+      {/* Intern Scorecards */}
+      {isLoading ? (
+        <div className="flex justify-center p-8"><Loader2 className="w-8 h-8 animate-spin text-primary" /></div>
+      ) : affiliates.length > 0 ? (
+        <div>
+          <h3 className="text-sm font-bold uppercase tracking-widest text-white/40 mb-4">Intern Leaderboard</h3>
+          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+            {affiliates.sort((a, b) => b.sales - a.sales).map((intern, i) => (
+              <Card key={intern.name} className="bg-white/[0.03] border-white/10 hover:border-primary/30 transition-colors">
+                <CardContent className="pt-5 pb-4 px-5">
+                  <div className="flex items-start justify-between">
+                    <div>
+                      <div className="flex items-center gap-2 mb-1">
+                        {i === 0 && <span className="text-base">🥇</span>}
+                        {i === 1 && <span className="text-base">🥈</span>}
+                        {i >= 2 && <span className="text-base">🎯</span>}
+                        <span className="font-bold text-white text-lg">{intern.name}</span>
+                      </div>
+                      <div className="font-mono text-xs text-primary/80 bg-primary/10 px-2 py-0.5 rounded inline-block">{intern.code}</div>
+                    </div>
+                    <div className="text-right">
+                      <div className="text-3xl font-black text-primary">{intern.sales}</div>
+                      <div className="text-[10px] text-white/40 uppercase tracking-widest">Sale{intern.sales !== 1 ? 's' : ''}</div>
+                    </div>
+                  </div>
+                  <div className="mt-3 flex items-center gap-2">
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="h-8 px-3 text-xs text-white/50 hover:text-white border border-white/10 hover:border-white/20"
+                      onClick={() => {
+                        navigator.clipboard.writeText(intern.code);
+                        toast({ title: "Copied!", description: `${intern.code} copied to clipboard.` });
+                      }}
+                    >
+                      <BookCopy className="w-3.5 h-3.5 mr-1.5" /> Copy Code
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        </div>
+      ) : (
+        <div className="text-center p-12 border border-dashed border-white/10 rounded-2xl text-white/30">
+          <Sparkles className="w-8 h-8 mx-auto mb-3 opacity-30" />
+          <p className="font-semibold">No intern sales yet.</p>
+          <p className="text-sm mt-1">Create a code above and share it with your interns to start tracking!</p>
+        </div>
+      )}
+
+      {/* Full Sales Feed */}
+      {redemptions && redemptions.filter(r => r.type === 'discount').length > 0 && (
+        <Card className="bg-black/40 border-white/10">
+          <CardHeader>
+            <CardTitle className="text-base flex items-center gap-2">
+              <TrendingUp className="w-4 h-4 text-primary" /> Full Sales Feed
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="rounded-md border border-white/10 overflow-hidden">
+              <Table>
+                <TableHeader className="bg-white/5">
+                  <TableRow className="border-white/10">
+                    <TableHead className="text-white/70">Date</TableHead>
+                    <TableHead className="text-white/70">Intern</TableHead>
+                    <TableHead className="text-white/70">Code Used</TableHead>
+                    <TableHead className="text-white/70">Photographer</TableHead>
+                    <TableHead className="text-white/70">Discount</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {redemptions.filter(r => r.type === 'discount').map((r: any) => (
+                    <TableRow key={r.id} className="border-white/10 hover:bg-white/5">
+                      <TableCell className="text-xs text-white/50">
+                        {new Date(r.redeemedAt).toLocaleDateString()} {new Date(r.redeemedAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                      </TableCell>
+                      <TableCell>
+                        <span className="font-bold text-primary">{r.affiliateName || '-'}</span>
+                      </TableCell>
+                      <TableCell>
+                        <Badge variant="outline" className="font-mono bg-primary/10 text-primary border-primary/20 text-xs">{r.promoCode}</Badge>
+                      </TableCell>
+                      <TableCell>
+                        <div className="flex flex-col">
+                          <span className="font-medium text-white text-sm">{r.userName}</span>
+                          <span className="text-xs text-white/40">{r.userEmail}</span>
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        <Badge className="bg-emerald-500/20 text-emerald-400">{r.discountPercentage}% Off</Badge>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+    </div>
+  );
+}
+
 function PromoCodeGenerator({ typeFilter }: { typeFilter?: "credits" | "discount" }) {
   const { toast } = useToast();
   const [generationMode, setGenerationMode] = useState<"bulk" | "global">("bulk");
@@ -2225,10 +2440,7 @@ export default function Admin() {
           </TabsContent>
 
           <TabsContent value="affiliate-promo">
-            <div className="space-y-6">
-              <PromoCodeGenerator typeFilter="discount" />
-              <PromoRedemptionsTable typeFilter="discount" />
-            </div>
+            <InternHQ />
           </TabsContent>
         </Tabs>
       </div>
