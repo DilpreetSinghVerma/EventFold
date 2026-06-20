@@ -2160,7 +2160,7 @@ export function registerRoutes(
       const promoType = type === 'discount' ? 'discount' : 'credits';
       const discPct = type === 'discount' ? parseInt(discountPercentage) || 0 : null;
       const affName = type === 'discount' && affiliateName ? affiliateName : null;
-      const prefixStr = (prefix || "PROMO").toUpperCase().replace(/[^A-Z0-9]/g, '');
+      const prefixStr = (prefix || "PROMO").toUpperCase().replace(/[^A-Z0-9,]/g, '');
       
       let expiryDate: Date | null = null;
       if (expiresAt) {
@@ -2170,9 +2170,12 @@ export function registerRoutes(
       const generatedCodes: string[] = [];
       
       if (isGlobal && prefixStr) {
-        // Global mode: exactly one code matching the prefix, with maxUses
-        await storage.createPromoCode(prefixStr, expiryDate, creds, mUses, promoType, discPct, affName);
-        generatedCodes.push(prefixStr);
+        // Global mode: exactly one or multiple comma-separated codes matching the prefix, with maxUses
+        const names = prefixStr.split(',').map(n => n.trim()).filter(Boolean);
+        for (const name of names) {
+          await storage.createPromoCode(name, expiryDate, creds, mUses, promoType, discPct, affName);
+          generatedCodes.push(name);
+        }
       } else {
         // Bulk random mode
         for (let i = 0; i < numCodes; i++) {

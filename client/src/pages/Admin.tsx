@@ -226,9 +226,9 @@ function PromoCodeGenerator({ typeFilter }: { typeFilter?: "credits" | "discount
           ) : (
             <>
               <div className="space-y-2">
-                <Label>Exact Code Name</Label>
+                <Label>Exact Code Name(s)</Label>
                 <Input 
-                  placeholder="e.g. FOUNDER26" 
+                  placeholder="e.g. SWARNENDU28, UMAR20" 
                   value={prefix} 
                   onChange={(e) => setPrefix(e.target.value)} 
                   className="bg-white/5 border-white/10"
