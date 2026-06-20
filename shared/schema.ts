@@ -133,7 +133,9 @@ export const promoRedemptions = pgTable("promo_redemptions", {
   promoCodeId: varchar("promo_code_id").references(() => promoCodes.id, { onDelete: 'cascade' }).notNull(),
   userId: varchar("user_id").references(() => users.id, { onDelete: 'cascade' }).notNull(),
   redeemedAt: timestamp("redeemed_at").defaultNow().notNull(),
-});
+}, (t) => ({
+  unq: uniqueIndex("promo_user_unq").on(t.promoCodeId, t.userId),
+}));
 
 export const insertAlbumSchema = createInsertSchema(albums).omit({
   id: true,
