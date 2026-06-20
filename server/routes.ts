@@ -2197,13 +2197,21 @@ export function registerRoutes(
       }
 
       const generatedCodes: string[] = [];
+      const skippedCodes: string[] = [];
       
       if (isGlobal && prefixStr) {
-        // Global mode: exactly one or multiple comma-separated codes matching the prefix, with maxUses
-        const names = prefixStr.split(',').map(n => n.trim()).filter(Boolean);
+        // Global mode: exactly one or multiple comma-separated codes, with maxUses
+        const names = prefixStr.split(',').map((n: string) => n.trim()).filter(Boolean);
         for (const name of names) {
-          await storage.createPromoCode(name, expiryDate, creds, mUses, promoType, discPct, affName);
-          generatedCodes.push(name);
+          // Check if code already exists — return it instead of failing
+          const existing = await storage.getPromoCode(name);
+          if (existing) {
+            skippedCodes.push(name);
+            generatedCodes.push(name); // still return it so user can copy
+          } else {
+            await storage.createPromoCode(name, expiryDate, creds, mUses, promoType, discPct, affName);
+            generatedCodes.push(name);
+          }
         }
       } else {
         // Bulk random mode
@@ -2215,12 +2223,28 @@ export function registerRoutes(
         }
       }
 
-      res.json({ success: true, codes: generatedCodes });
+      res.json({ success: true, codes: generatedCodes, alreadyExisted: skippedCodes });
     } catch (e: any) {
       console.error("Failed to generate promo codes:", e);
       res.status(500).json({ error: "Failed to generate promo codes" });
     }
   });
 
+  // List all promo codes (admin)
+  app.get("/api/admin/promo/list", async (req, res) => {
+    try {
+      if (!req.isAuthenticated()) return res.status(401).json({ error: "Unauthorized" });
+      const user = req.user as any;
+      const adminEmails = ["admin@eventfold.com", "dilpreetsinghverma@gmail.com"];
+      if (user.role !== 'admin' && !adminEmails.includes(user.email)) {
+        return res.status(403).json({ error: "Forbidden" });
+      }
+      const codes = await storage.getAllPromoCodes();
+      res.json(codes);
+    } catch (e: any) {
+      console.error("Failed to list promo codes:", e);
+      res.status(500).json({ error: "Failed to list promo codes" });
+    }
+  });
 
 }

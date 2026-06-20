@@ -138,6 +138,13 @@ function InternHQ() {
     queryKey: ["/api/admin/promo/redemptions"],
   });
 
+  const { data: allCodes, refetch: refetchCodes } = useQuery<any[]>({
+    queryKey: ["/api/admin/promo/list"],
+  });
+
+  // Only intern/discount codes
+  const internCodes = allCodes?.filter(c => c.type === 'discount') || [];
+
   // Summarise sales per affiliate
   const affiliates: { name: string; code: string; sales: number; totalDiscount: number }[] = [];
   if (redemptions) {
@@ -177,9 +184,14 @@ function InternHQ() {
       const data = await res.json();
       if (data.codes?.length) {
         await navigator.clipboard.writeText(data.codes[0]);
-        toast({ title: "✅ Code Created & Copied!", description: `Code "${data.codes[0]}" is ready to share with ${internName.trim()}.` });
+        const wasExisting = data.alreadyExisted?.includes(data.codes[0]);
+        toast({
+          title: wasExisting ? "✅ Code Already Exists — Copied!" : "✅ Code Created & Copied!",
+          description: `Code "${data.codes[0]}" is ready to share with ${internName.trim()}.`
+        });
         setInternName("");
         refetch();
+        refetchCodes();
       } else {
         toast({ title: "Error", description: data.error || "Failed to generate.", variant: "destructive" });
       }
@@ -235,6 +247,65 @@ function InternHQ() {
           <p className="text-xs text-white/30 mt-3">
             💡 The generated code (e.g. <span className="font-mono text-primary">SWARNENDU20</span>) is valid for 1 year with unlimited uses. It will be auto-copied to your clipboard so you can paste it directly into WhatsApp.
           </p>
+        </CardContent>
+      </Card>
+
+      {/* All Generated Intern Codes */}
+      <Card className="bg-black/40 border-white/10">
+        <CardHeader className="pb-3">
+          <CardTitle className="text-base flex items-center gap-2">
+            <Gift className="w-4 h-4 text-primary" /> Your Intern Discount Codes
+          </CardTitle>
+          <CardDescription>All discount codes you've generated. Click any code to copy it.</CardDescription>
+        </CardHeader>
+        <CardContent>
+          {internCodes.length === 0 ? (
+            <div className="text-center py-8 text-white/30 text-sm">No codes generated yet. Use the form above!</div>
+          ) : (
+            <div className="rounded-md border border-white/10 overflow-hidden">
+              <Table>
+                <TableHeader className="bg-white/5">
+                  <TableRow className="border-white/10">
+                    <TableHead className="text-white/70">Intern Name</TableHead>
+                    <TableHead className="text-white/70">Code</TableHead>
+                    <TableHead className="text-white/70">Discount</TableHead>
+                    <TableHead className="text-white/70">Uses</TableHead>
+                    <TableHead className="text-white/70">Expires</TableHead>
+                    <TableHead></TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {internCodes.map((c: any) => (
+                    <TableRow key={c.id} className="border-white/10 hover:bg-white/5">
+                      <TableCell className="font-medium text-white">{c.affiliateName || '—'}</TableCell>
+                      <TableCell>
+                        <Badge variant="outline" className="font-mono bg-primary/10 text-primary border-primary/20">{c.code}</Badge>
+                      </TableCell>
+                      <TableCell>
+                        <Badge className="bg-emerald-500/20 text-emerald-400">{c.discountPercentage}% Off</Badge>
+                      </TableCell>
+                      <TableCell className="text-white/60 text-sm">{c.currentUses ?? 0} / {c.maxUses}</TableCell>
+                      <TableCell className="text-white/40 text-xs">
+                        {c.expiresAt ? new Date(c.expiresAt).toLocaleDateString() : 'Never'}
+                      </TableCell>
+                      <TableCell>
+                        <Button
+                          variant="ghost" size="sm"
+                          className="h-7 px-2 text-xs text-white/40 hover:text-white"
+                          onClick={() => {
+                            navigator.clipboard.writeText(c.code);
+                            toast({ title: "Copied!", description: `${c.code} copied.` });
+                          }}
+                        >
+                          <BookCopy className="w-3 h-3 mr-1" /> Copy
+                        </Button>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </div>
+          )}
         </CardContent>
       </Card>
 

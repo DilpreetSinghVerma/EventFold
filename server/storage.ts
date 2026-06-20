@@ -51,6 +51,7 @@ export interface IStorage {
   deleteKioskLead(id: string): Promise<void>;
   createPromoCode(code: string, expiresAt?: Date | null, credits?: number, maxUses?: number, type?: string, discountPercentage?: number | null, affiliateName?: string | null): Promise<PromoCode>;
   getPromoCode(code: string): Promise<PromoCode | undefined>;
+  getAllPromoCodes(): Promise<PromoCode[]>;
   hasUserRedeemedPromo(promoId: string, userId: string): Promise<boolean>;
   getPromoRedemptionsWithDetails(): Promise<any[]>;
   markPromoCodeUsed(id: string, userId: string): Promise<void>;
@@ -348,6 +349,11 @@ export class DatabaseStorage implements IStorage {
     if (!db) return undefined;
     const [row] = await db.select().from(promoCodes).where(eq(promoCodes.code, code));
     return row;
+  }
+
+  async getAllPromoCodes(): Promise<PromoCode[]> {
+    if (!db) return [];
+    return await db.select().from(promoCodes).orderBy(promoCodes.createdAt);
   }
 
   async hasUserRedeemedPromo(promoId: string, userId: string): Promise<boolean> {
@@ -737,6 +743,10 @@ export class MemStorage implements IStorage {
 
   async getPromoCode(code: string): Promise<PromoCode | undefined> {
     return Array.from(this.promoCodes.values()).find(p => p.code === code);
+  }
+
+  async getAllPromoCodes(): Promise<PromoCode[]> {
+    return Array.from(this.promoCodes.values());
   }
 
   async markPromoCodeUsed(id: string, userId: string): Promise<void> {
