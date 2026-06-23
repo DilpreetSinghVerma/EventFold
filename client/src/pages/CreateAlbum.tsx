@@ -59,6 +59,7 @@ export default function CreateAlbum() {
     sheetCustomWidth: string;
     sheetCustomHeight: string;
     sheetCustomMode: string;
+    bgMusicChoice: 'upload' | 'sample' | 'none';
   }>({
     title: '',
     date: new Date().toISOString().split('T')[0],
@@ -74,6 +75,7 @@ export default function CreateAlbum() {
     sheetCustomWidth: '',
     sheetCustomHeight: '',
     sheetCustomMode: 'page',
+    bgMusicChoice: 'sample',
   });
 
   const [showOtherSizes, setShowOtherSizes] = useState(false);
@@ -337,10 +339,18 @@ export default function CreateAlbum() {
         }
       });
 
-      if (formData.bgMusic) {
+      if (formData.bgMusicChoice === 'upload' && formData.bgMusic) {
         uploadTasks.push(async () => {
           const url = await uploadToR2(formData.bgMusic!, 'Background Music', true);
           return { filePath: url, fileType: 'audio', orderIndex: 0 };
+        });
+      } else if (formData.bgMusicChoice === 'sample') {
+        uploadTasks.push(async () => {
+          return { filePath: '/indian-wedding-music.mp3', fileType: 'audio', orderIndex: 0 };
+        });
+      } else if (formData.bgMusicChoice === 'none') {
+        uploadTasks.push(async () => {
+          return { filePath: 'none', fileType: 'audio', orderIndex: 0 };
         });
       }
 
@@ -618,14 +628,59 @@ export default function CreateAlbum() {
                   </div>
 
                   <div className="space-y-3">
-                    <Label htmlFor="bgMusic" className="text-sm font-bold uppercase tracking-[0.15em] text-white/40 ml-1">Custom Background Music (Max 15MB)</Label>
-                    <Input
-                      id="bgMusic"
-                      type="file"
-                      accept="audio/*"
-                      onChange={(e) => setFormData({ ...formData, bgMusic: e.target.files?.[0] || null })}
-                      className="h-14 bg-white/[0.03] border-white/5 rounded-2xl px-6 focus:ring-primary/20 transition-all font-mono py-3"
-                    />
+                    <Label className="text-sm font-bold uppercase tracking-[0.15em] text-white/40 ml-1">Background Music</Label>
+                    <div className="grid grid-cols-3 gap-2 mb-3">
+                      <button
+                        type="button"
+                        onClick={() => setFormData({ ...formData, bgMusicChoice: 'sample' })}
+                        className={`h-10 rounded-xl border text-xs font-bold uppercase tracking-widest transition-all ${
+                          formData.bgMusicChoice === 'sample'
+                            ? 'border-primary bg-primary/10 text-primary'
+                            : 'border-white/10 bg-white/[0.02] text-white/40 hover:text-white/60'
+                        }`}
+                      >
+                        🎵 Sample Track
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setFormData({ ...formData, bgMusicChoice: 'upload' })}
+                        className={`h-10 rounded-xl border text-xs font-bold uppercase tracking-widest transition-all ${
+                          formData.bgMusicChoice === 'upload'
+                            ? 'border-primary bg-primary/10 text-primary'
+                            : 'border-white/10 bg-white/[0.02] text-white/40 hover:text-white/60'
+                        }`}
+                      >
+                        ⬆️ Upload Custom
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setFormData({ ...formData, bgMusicChoice: 'none' })}
+                        className={`h-10 rounded-xl border text-xs font-bold uppercase tracking-widest transition-all ${
+                          formData.bgMusicChoice === 'none'
+                            ? 'border-red-500/50 bg-red-500/10 text-red-400'
+                            : 'border-white/10 bg-white/[0.02] text-white/40 hover:text-white/60'
+                        }`}
+                      >
+                        🔇 No Music
+                      </button>
+                    </div>
+
+                    {formData.bgMusicChoice === 'sample' && (
+                      <div className="p-3 bg-primary/5 border border-primary/20 rounded-xl text-xs text-primary/80 flex items-center gap-2">
+                        <span>🎵</span>
+                        <span>"Indian Wedding Background Music" will be used.</span>
+                      </div>
+                    )}
+
+                    {formData.bgMusicChoice === 'upload' && (
+                      <Input
+                        id="bgMusic"
+                        type="file"
+                        accept="audio/*"
+                        onChange={(e) => setFormData({ ...formData, bgMusic: e.target.files?.[0] || null })}
+                        className="h-14 bg-white/[0.03] border-white/5 rounded-2xl px-6 focus:ring-primary/20 transition-all font-mono py-3"
+                      />
+                    )}
                   </div>
                 </div>
 

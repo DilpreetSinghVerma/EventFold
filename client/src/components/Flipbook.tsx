@@ -74,9 +74,13 @@ export const Flipbook = forwardRef(({
     // Soft piano / wedding-style royalty-free background music or custom upload
     const defaultMusicUrl = '/music.mp3';
     
-    const music = new Audio(audioUrl || defaultMusicUrl);
-    music.loop = true;
-    music.volume = 0;
+    let music: HTMLAudioElement | null = null;
+    if (audioUrl !== 'none') {
+      music = new Audio(audioUrl || defaultMusicUrl);
+      music.loop = true;
+      music.volume = 0;
+      music.load();
+    }
     bgMusic.current = music;
 
     const flip = new Audio('/page flip sound.mp3');

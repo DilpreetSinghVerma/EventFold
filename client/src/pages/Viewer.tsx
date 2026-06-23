@@ -336,7 +336,10 @@ export default function Viewer() {
     }
   };
 
-  const musicUrl = album?.bgMusicUrl || customAudio || getThemeMusic(album?.theme || 'royal');
+  let musicUrl = album?.bgMusicUrl || customAudio || getThemeMusic(album?.theme || 'royal');
+  if (customAudio === 'none') {
+    musicUrl = 'none';
+  }
   const shareUrl = `${origin}/album/${id}?shared=true`;
 
   const handleShare = async () => {
