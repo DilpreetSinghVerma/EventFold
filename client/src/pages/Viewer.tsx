@@ -52,21 +52,26 @@ function getCloudinaryHalves(url: string, widthCap?: number): [string, string] |
   return [left, right];
 }
 
-// Calculate page width:height ratio from sheetSize string
-// A 12x36 sheet is a 2-page spread, so each page is 12x18 => ratio = 18/12 = 1.5
-// A 12x12 spread means each page is 12x6 => ratio = 6/12 = 0.5... but actually
-// sheetSize refers to a SINGLE PAGE so 12x36 means one panoramic page, ratio = 36/12 = 3... 
-// BUT the flipbook splits it into 2 halves, so displayed page ratio = (36/2)/12 = 1.5
+// Calculate page width:height ratio from sheetSize string.
+// Convention: album size = HEIGHT x WIDTH of a single sheet/spread.
+// The flipbook viewer always splits a sheet image into LEFT and RIGHT halves.
+// So each displayed PAGE = (sheetWidth / 2) x sheetHeight → ratio = (sheetWidth/2) / sheetHeight
+//
+// Examples:
+//   12x36 → each page = 18" wide, 12" tall  → ratio = 18/12 = 1.5  (landscape)
+//   12x12 → full spread = 24" wide, 12" tall → each page = 12" wide, 12" tall → ratio = 12/12 = 1.0  (square)
+//   10x10 → full spread = 20" wide, 10" tall → each page = 10" wide, 10" tall → ratio = 10/10 = 1.0  (square)
+//   12x18 → portrait page: 12" wide, 18" tall → full spread = 24" wide, 18" tall → each page = 12/18 = 0.667
+//   8x12  → portrait page: 8" wide, 12" tall  → full spread = 16" wide, 12" tall → each page = 8/12  = 0.667
 function getPageRatio(sheetSize?: string, customW?: number, customH?: number): number {
-  if (!sheetSize || sheetSize === '12x36') return 1.5;      // Default: 36/2=18 wide, 12 tall => 18/12 = 1.5
-  if (sheetSize === '12x12') return 0.5;                    // 12/2=6 wide, 12 tall => 6/12 = 0.5
-  if (sheetSize === '10x10') return 0.5;                    // 10/2=5 wide, 10 tall => 5/10 = 0.5
-  if (sheetSize === '12x18') return 0.75;                   // 18/2=9 wide, 12 tall => 9/12 = 0.75
-  if (sheetSize === '8x12') return 0.75;                    // 12/2=6 wide, 8 tall => 6/8 = 0.75
+  if (!sheetSize || sheetSize === '12x36') return 1.5;   // landscape panoramic spread
+  if (sheetSize === '12x12') return 1.0;                 // square pages (was 0.5 — FIXED)
+  if (sheetSize === '10x10') return 1.0;                 // square pages (was 0.5 — FIXED)
+  if (sheetSize === '12x18') return 0.667;               // portrait pages
+  if (sheetSize === '8x12')  return 0.667;               // portrait pages
   if (sheetSize === 'custom' && customW && customH) {
-    // Custom: user provides total spread width x height
-    // Each page = (customW / 2) / customH
-    return (customW / 2) / customH;
+    // User provides width x height of a SINGLE PAGE in inches
+    return customW / customH;
   }
   return 1.5; // Safe fallback — never breaks existing albums
 }
@@ -166,7 +171,8 @@ export default function Viewer() {
     return () => {
       window.removeEventListener('resize', checkOrientation);
     };
-  }, []);
+  // Re-run when album sheetSize loads (album data comes in async after mount)
+  }, [album?.sheetSize, album?.sheetCustomWidth, album?.sheetCustomHeight]);
 
   useEffect(() => {
     return () => {
