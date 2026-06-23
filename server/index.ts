@@ -18,6 +18,9 @@ import { sql } from "drizzle-orm";
     await db.execute(sql`ALTER TABLE "users" ADD COLUMN IF NOT EXISTS "last_active_at" timestamp;`);
     await db.execute(sql`ALTER TABLE "albums" ADD COLUMN IF NOT EXISTS "near_expiry_notification_sent" integer DEFAULT 0 NOT NULL;`);
     await db.execute(sql`ALTER TABLE "albums" ADD COLUMN IF NOT EXISTS "expiry_notification_sent" integer DEFAULT 0 NOT NULL;`);
+    await db.execute(sql`ALTER TABLE "albums" ADD COLUMN IF NOT EXISTS "sheet_size" varchar(20) DEFAULT '12x36' NOT NULL;`);
+    await db.execute(sql`ALTER TABLE "albums" ADD COLUMN IF NOT EXISTS "sheet_custom_width" integer;`);
+    await db.execute(sql`ALTER TABLE "albums" ADD COLUMN IF NOT EXISTS "sheet_custom_height" integer;`);
     await db.execute(sql`
       CREATE TABLE IF NOT EXISTS "broadcasts" (
           "id" serial PRIMARY KEY NOT NULL,

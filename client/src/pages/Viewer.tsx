@@ -52,6 +52,25 @@ function getCloudinaryHalves(url: string, widthCap?: number): [string, string] |
   return [left, right];
 }
 
+// Calculate page width:height ratio from sheetSize string
+// A 12x36 sheet is a 2-page spread, so each page is 12x18 => ratio = 18/12 = 1.5
+// A 12x12 spread means each page is 12x6 => ratio = 6/12 = 0.5... but actually
+// sheetSize refers to a SINGLE PAGE so 12x36 means one panoramic page, ratio = 36/12 = 3... 
+// BUT the flipbook splits it into 2 halves, so displayed page ratio = (36/2)/12 = 1.5
+function getPageRatio(sheetSize?: string, customW?: number, customH?: number): number {
+  if (!sheetSize || sheetSize === '12x36') return 1.5;      // Default: 36/2=18 wide, 12 tall => 18/12 = 1.5
+  if (sheetSize === '12x12') return 0.5;                    // 12/2=6 wide, 12 tall => 6/12 = 0.5
+  if (sheetSize === '10x10') return 0.5;                    // 10/2=5 wide, 10 tall => 5/10 = 0.5
+  if (sheetSize === '12x18') return 0.75;                   // 18/2=9 wide, 12 tall => 9/12 = 0.75
+  if (sheetSize === '8x12') return 0.75;                    // 12/2=6 wide, 8 tall => 6/8 = 0.75
+  if (sheetSize === 'custom' && customW && customH) {
+    // Custom: user provides total spread width x height
+    // Each page = (customW / 2) / customH
+    return (customW / 2) / customH;
+  }
+  return 1.5; // Safe fallback — never breaks existing albums
+}
+
 // Simple optimization for single images (covers)
 function optimizeCloudinary(url: string, widthCap?: number): string {
   if (!url.includes('res.cloudinary.com')) return url;
@@ -108,7 +127,8 @@ export default function Viewer() {
       setIsMobileLandscape(mobileL);
 
       const isMobile = screenW < 1024;
-      const PAGE_RATIO = 1.5;
+      // Dynamic ratio based on album sheet size — safe fallback to 1.5 for all existing albums
+      const PAGE_RATIO = getPageRatio(album?.sheetSize, album?.sheetCustomWidth, album?.sheetCustomHeight);
       const multiplier = 2;
       const isLandscape = screenW > screenH;
       // Use 120 padding on mobile landscape to give 60px margin top and bottom for UI elements (Zero Overlap!)

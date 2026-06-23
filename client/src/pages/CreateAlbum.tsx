@@ -55,6 +55,9 @@ export default function CreateAlbum() {
     password: string;
     bgMusic: File | null;
     autoCompressVideos: boolean;
+    sheetSize: string;
+    sheetCustomWidth: string;
+    sheetCustomHeight: string;
   }>({
     title: '',
     date: new Date().toISOString().split('T')[0],
@@ -66,8 +69,12 @@ export default function CreateAlbum() {
     password: '',
     bgMusic: null,
     autoCompressVideos: true,
+    sheetSize: '12x36',
+    sheetCustomWidth: '',
+    sheetCustomHeight: '',
   });
 
+  const [showOtherSizes, setShowOtherSizes] = useState(false);
   const [previewOpen, setPreviewOpen] = useState(false);
   const [isPreviewLoading, setIsPreviewLoading] = useState(false);
   const [previewSheets, setPreviewSheets] = useState<string[]>([]);
@@ -181,7 +188,10 @@ export default function CreateAlbum() {
             date: formData.date,
             theme: formData.theme,
             password: formData.password || null,
-            isLabAlbum: isLabMode ? 1 : 0
+            isLabAlbum: isLabMode ? 1 : 0,
+            sheetSize: formData.sheetSize,
+            sheetCustomWidth: formData.sheetSize === 'custom' && formData.sheetCustomWidth ? parseInt(formData.sheetCustomWidth) : null,
+            sheetCustomHeight: formData.sheetSize === 'custom' && formData.sheetCustomHeight ? parseInt(formData.sheetCustomHeight) : null,
           }),
         });
       } catch (e: any) {
@@ -482,6 +492,93 @@ export default function CreateAlbum() {
                       onChange={(e) => setFormData({ ...formData, password: e.target.value })}
                       className="h-14 bg-white/[0.03] border-white/5 rounded-2xl px-6 focus:ring-primary/20 transition-all font-mono"
                     />
+                  </div>
+
+                  {/* Sheet Size Selector */}
+                  <div className="space-y-3">
+                    <Label className="text-sm font-bold uppercase tracking-[0.15em] text-white/40 ml-1">Album Sheet Size</Label>
+                    {/* Default 12x36 - Always Visible & Selected */}
+                    <button
+                      type="button"
+                      onClick={() => setFormData({ ...formData, sheetSize: '12x36' })}
+                      className={`w-full h-14 rounded-2xl border-2 flex items-center justify-between px-5 transition-all font-bold ${
+                        formData.sheetSize === '12x36'
+                          ? 'border-primary bg-primary/10 text-primary'
+                          : 'border-white/10 bg-white/[0.03] text-white/60 hover:border-white/20'
+                      }`}
+                    >
+                      <span className="flex items-center gap-3">
+                        <span className="text-xl">📐</span>
+                        <span>12 × 36 inch</span>
+                        <span className="text-xs font-normal opacity-60">(Standard Panoramic Spread)</span>
+                      </span>
+                      {formData.sheetSize === '12x36' && <span className="text-xs bg-primary text-white px-2 py-1 rounded-full">Default ✓</span>}
+                    </button>
+
+                    {/* Other Sizes Expandable */}
+                    <button
+                      type="button"
+                      onClick={() => setShowOtherSizes(!showOtherSizes)}
+                      className="w-full h-10 rounded-xl border border-white/10 bg-white/[0.02] text-white/40 hover:text-white/70 hover:border-white/20 transition-all text-xs font-bold uppercase tracking-widest flex items-center justify-center gap-2"
+                    >
+                      {showOtherSizes ? '▲ Hide Other Sizes' : '▼ Other Sizes'}
+                    </button>
+
+                    {showOtherSizes && (
+                      <div className="space-y-2 pt-1">
+                        {[
+                          { id: '12x12', label: '12 × 12 inch', desc: 'Square Spread', emoji: '⬛' },
+                          { id: '10x10', label: '10 × 10 inch', desc: 'Square Small', emoji: '◾' },
+                          { id: '12x18', label: '12 × 18 inch', desc: 'Portrait Spread', emoji: '📜' },
+                          { id: '8x12',  label: '8 × 12 inch',  desc: 'Portrait Single', emoji: '🖼️' },
+                          { id: 'custom', label: 'Custom Size',  desc: 'Enter your own dimensions', emoji: '✏️' },
+                        ].map((size) => (
+                          <button
+                            key={size.id}
+                            type="button"
+                            onClick={() => setFormData({ ...formData, sheetSize: size.id })}
+                            className={`w-full h-12 rounded-xl border flex items-center justify-between px-4 transition-all text-sm ${
+                              formData.sheetSize === size.id
+                                ? 'border-primary bg-primary/10 text-primary font-bold'
+                                : 'border-white/8 bg-white/[0.02] text-white/50 hover:border-white/15'
+                            }`}
+                          >
+                            <span className="flex items-center gap-3">
+                              <span>{size.emoji}</span>
+                              <span>{size.label}</span>
+                              <span className="text-xs opacity-60">{size.desc}</span>
+                            </span>
+                            {formData.sheetSize === size.id && <span className="text-xs">✓</span>}
+                          </button>
+                        ))}
+
+                        {/* Custom size inputs */}
+                        {formData.sheetSize === 'custom' && (
+                          <div className="grid grid-cols-2 gap-3 pt-2">
+                            <div className="space-y-1">
+                              <Label className="text-xs text-white/30 uppercase tracking-widest ml-1">Width (inches)</Label>
+                              <Input
+                                type="number"
+                                placeholder="e.g. 12"
+                                value={formData.sheetCustomWidth}
+                                onChange={(e) => setFormData({ ...formData, sheetCustomWidth: e.target.value })}
+                                className="h-12 bg-white/[0.03] border-white/10 rounded-xl px-4"
+                              />
+                            </div>
+                            <div className="space-y-1">
+                              <Label className="text-xs text-white/30 uppercase tracking-widest ml-1">Height (inches)</Label>
+                              <Input
+                                type="number"
+                                placeholder="e.g. 24"
+                                value={formData.sheetCustomHeight}
+                                onChange={(e) => setFormData({ ...formData, sheetCustomHeight: e.target.value })}
+                                className="h-12 bg-white/[0.03] border-white/10 rounded-xl px-4"
+                              />
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    )}
                   </div>
 
                   <div className="space-y-3">
