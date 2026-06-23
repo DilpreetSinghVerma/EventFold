@@ -43,6 +43,7 @@ export const albums = pgTable("albums", {
   sheetSize: varchar("sheet_size", { length: 20 }).notNull().default('12x36'), // e.g. '12x36', '12x12', '10x10', '12x18', '8x12', 'custom'
   sheetCustomWidth: integer("sheet_custom_width"), // Custom width in inches (only used when sheetSize = 'custom')
   sheetCustomHeight: integer("sheet_custom_height"), // Custom height in inches (only used when sheetSize = 'custom')
+  sheetCustomMode: varchar("sheet_custom_mode", { length: 10 }).default('page'), // 'page' = single page dims, 'spread' = full spread dims
   showInPortfolio: integer("show_in_portfolio").notNull().default(0), // 0: Hide, 1: Show in Studio Gallery
   totalEngagementTime: integer("total_engagement_time").notNull().default(0), // Total seconds spent by viewers
   avgRating: integer("avg_rating").notNull().default(0), // 0-50 scaled (divide by 10 for 0-5 stars)

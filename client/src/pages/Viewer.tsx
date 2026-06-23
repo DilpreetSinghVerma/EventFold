@@ -63,15 +63,20 @@ function getCloudinaryHalves(url: string, widthCap?: number): [string, string] |
 //   10x10 → full spread = 20" wide, 10" tall → each page = 10" wide, 10" tall → ratio = 10/10 = 1.0  (square)
 //   12x18 → portrait page: 12" wide, 18" tall → full spread = 24" wide, 18" tall → each page = 12/18 = 0.667
 //   8x12  → portrait page: 8" wide, 12" tall  → full spread = 16" wide, 12" tall → each page = 8/12  = 0.667
-function getPageRatio(sheetSize?: string, customW?: number, customH?: number): number {
+function getPageRatio(sheetSize?: string, customW?: number, customH?: number, customMode?: string): number {
   if (!sheetSize || sheetSize === '12x36') return 1.5;   // landscape panoramic spread
-  if (sheetSize === '12x12') return 1.0;                 // square pages (was 0.5 — FIXED)
-  if (sheetSize === '10x10') return 1.0;                 // square pages (was 0.5 — FIXED)
+  if (sheetSize === '12x12') return 1.0;                 // square pages
+  if (sheetSize === '10x10') return 1.0;                 // square pages
   if (sheetSize === '12x18') return 0.667;               // portrait pages
   if (sheetSize === '8x12')  return 0.667;               // portrait pages
   if (sheetSize === 'custom' && customW && customH) {
-    // User provides width x height of a SINGLE PAGE in inches
-    return customW / customH;
+    if (customMode === 'spread') {
+      // User entered full double-page spread dimensions: ratio = (width/2) / height
+      return (customW / 2) / customH;
+    } else {
+      // User entered single page dimensions (default): ratio = width / height
+      return customW / customH;
+    }
   }
   return 1.5; // Safe fallback — never breaks existing albums
 }
@@ -133,7 +138,7 @@ export default function Viewer() {
 
       const isMobile = screenW < 1024;
       // Dynamic ratio based on album sheet size — safe fallback to 1.5 for all existing albums
-      const PAGE_RATIO = getPageRatio(album?.sheetSize, album?.sheetCustomWidth, album?.sheetCustomHeight);
+      const PAGE_RATIO = getPageRatio(album?.sheetSize, album?.sheetCustomWidth, album?.sheetCustomHeight, album?.sheetCustomMode);
       const multiplier = 2;
       const isLandscape = screenW > screenH;
       // Use 120 padding on mobile landscape to give 60px margin top and bottom for UI elements (Zero Overlap!)

@@ -58,6 +58,7 @@ export default function CreateAlbum() {
     sheetSize: string;
     sheetCustomWidth: string;
     sheetCustomHeight: string;
+    sheetCustomMode: string;
   }>({
     title: '',
     date: new Date().toISOString().split('T')[0],
@@ -72,6 +73,7 @@ export default function CreateAlbum() {
     sheetSize: '12x36',
     sheetCustomWidth: '',
     sheetCustomHeight: '',
+    sheetCustomMode: 'page',
   });
 
   const [showOtherSizes, setShowOtherSizes] = useState(false);
@@ -192,6 +194,7 @@ export default function CreateAlbum() {
             sheetSize: formData.sheetSize,
             sheetCustomWidth: formData.sheetSize === 'custom' && formData.sheetCustomWidth ? parseInt(formData.sheetCustomWidth) : null,
             sheetCustomHeight: formData.sheetSize === 'custom' && formData.sheetCustomHeight ? parseInt(formData.sheetCustomHeight) : null,
+            sheetCustomMode: formData.sheetSize === 'custom' ? formData.sheetCustomMode : null,
           }),
         });
       } catch (e: any) {
@@ -554,26 +557,59 @@ export default function CreateAlbum() {
 
                         {/* Custom size inputs */}
                         {formData.sheetSize === 'custom' && (
-                          <div className="grid grid-cols-2 gap-3 pt-2">
-                            <div className="space-y-1">
-                              <Label className="text-xs text-white/30 uppercase tracking-widest ml-1">Width (inches)</Label>
-                              <Input
-                                type="number"
-                                placeholder="e.g. 12"
-                                value={formData.sheetCustomWidth}
-                                onChange={(e) => setFormData({ ...formData, sheetCustomWidth: e.target.value })}
-                                className="h-12 bg-white/[0.03] border-white/10 rounded-xl px-4"
-                              />
+                          <div className="space-y-3 pt-2">
+                            {/* Mode Toggle */}
+                            <div className="flex rounded-xl overflow-hidden border border-white/10">
+                              <button
+                                type="button"
+                                onClick={() => setFormData({ ...formData, sheetCustomMode: 'page' })}
+                                className={`flex-1 py-2 text-xs font-bold uppercase tracking-widest transition-all ${
+                                  formData.sheetCustomMode === 'page'
+                                    ? 'bg-primary text-white'
+                                    : 'bg-white/[0.02] text-white/40 hover:text-white/60'
+                                }`}
+                              >
+                                📄 Single Page Size
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => setFormData({ ...formData, sheetCustomMode: 'spread' })}
+                                className={`flex-1 py-2 text-xs font-bold uppercase tracking-widest transition-all ${
+                                  formData.sheetCustomMode === 'spread'
+                                    ? 'bg-primary text-white'
+                                    : 'bg-white/[0.02] text-white/40 hover:text-white/60'
+                                }`}
+                              >
+                                📐 Full Spread Size
+                              </button>
                             </div>
-                            <div className="space-y-1">
-                              <Label className="text-xs text-white/30 uppercase tracking-widest ml-1">Height (inches)</Label>
-                              <Input
-                                type="number"
-                                placeholder="e.g. 24"
-                                value={formData.sheetCustomHeight}
-                                onChange={(e) => setFormData({ ...formData, sheetCustomHeight: e.target.value })}
-                                className="h-12 bg-white/[0.03] border-white/10 rounded-xl px-4"
-                              />
+                            <p className="text-xs text-white/25 text-center px-2">
+                              {formData.sheetCustomMode === 'page'
+                                ? 'Enter the dimensions of ONE page (e.g. 12" wide × 15" tall)'
+                                : 'Enter the total spread width × height when album is fully open (e.g. 24" wide × 12" tall)'}
+                            </p>
+                            {/* Dimension Inputs */}
+                            <div className="grid grid-cols-2 gap-3">
+                              <div className="space-y-1">
+                                <Label className="text-xs text-white/30 uppercase tracking-widest ml-1">Width (inches)</Label>
+                                <Input
+                                  type="number"
+                                  placeholder="e.g. 12"
+                                  value={formData.sheetCustomWidth}
+                                  onChange={(e) => setFormData({ ...formData, sheetCustomWidth: e.target.value })}
+                                  className="h-12 bg-white/[0.03] border-white/10 rounded-xl px-4"
+                                />
+                              </div>
+                              <div className="space-y-1">
+                                <Label className="text-xs text-white/30 uppercase tracking-widest ml-1">Height (inches)</Label>
+                                <Input
+                                  type="number"
+                                  placeholder="e.g. 24"
+                                  value={formData.sheetCustomHeight}
+                                  onChange={(e) => setFormData({ ...formData, sheetCustomHeight: e.target.value })}
+                                  className="h-12 bg-white/[0.03] border-white/10 rounded-xl px-4"
+                                />
+                              </div>
                             </div>
                           </div>
                         )}
