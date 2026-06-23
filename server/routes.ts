@@ -419,7 +419,9 @@ export function registerRoutes(
 
     try {
       const shasum = crypto.createHmac("sha256", secret);
-      shasum.update(JSON.stringify(req.body));
+      // Critical Fix: Use rawBody buffer because JSON.stringify ruins the signature format
+      const bodyString = (req as any).rawBody ? ((req as any).rawBody as Buffer).toString('utf8') : JSON.stringify(req.body);
+      shasum.update(bodyString);
       const digest = shasum.digest("hex");
 
       if (digest !== signature) {
