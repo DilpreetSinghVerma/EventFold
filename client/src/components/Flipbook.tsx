@@ -462,6 +462,7 @@ export const Flipbook = forwardRef(({
                       style={{
                         ...pageBase,
                         backgroundColor: '#0a0a0a',
+                        overflow: 'hidden',
                       }}
                     >
                       {isNear && (
@@ -473,15 +474,18 @@ export const Flipbook = forwardRef(({
                             animate={driftAnimate}
                             transition={{ duration: 10, repeat: Infinity, repeatType: "reverse", ease: "easeInOut" }}
                             style={{
-                              width: '100%',
-                              height: '100%',
-                              objectFit: 'cover',
-                              objectPosition: isLeftHalf ? 'left' : 'right',
-                              display: 'block',
-                              backgroundColor: '#0a0a0a',
+                              // Split via 200% width + translateX instead of objectPosition.
+                              // This is aspect-ratio-agnostic and works for 12x12, 10x10,
+                              // portrait, and custom sizes — not just wide panoramic 12x36.
                               position: 'absolute',
                               top: 0,
-                              left: 0,
+                              left: isLeftHalf ? '0%' : '-100%',
+                              width: '200%',
+                              height: '100%',
+                              objectFit: 'cover',
+                              objectPosition: 'center',
+                              display: 'block',
+                              backgroundColor: '#0a0a0a',
                               zIndex: 1,
                               WebkitBackfaceVisibility: 'hidden',
                               backfaceVisibility: 'hidden',
@@ -519,23 +523,24 @@ export const Flipbook = forwardRef(({
                                 }
                               }}
                               style={{
-                                width: '100%',
-                                height: '100%',
-                                objectFit: 'cover',
-                                objectPosition: isLeftHalf ? 'left' : 'right',
-                                display: 'block',
-                                backgroundColor: 'transparent',
-                                position: 'absolute',
-                                top: 0,
-                                left: 0,
-                                zIndex: 2,
-                                opacity: 0,
-                                transition: 'opacity 0.4s ease-in-out',
-                                WebkitBackfaceVisibility: 'hidden',
-                                backfaceVisibility: 'hidden',
-                                transform: 'translate3d(0, 0, 0)',
-                                WebkitTransform: 'translate3d(0, 0, 0)',
-                              }}
+                              // Same 200% width + offset split technique as the image above
+                              position: 'absolute',
+                              top: 0,
+                              left: isLeftHalf ? '0%' : '-100%',
+                              width: '200%',
+                              height: '100%',
+                              objectFit: 'cover',
+                              objectPosition: 'center',
+                              display: 'block',
+                              backgroundColor: 'transparent',
+                              zIndex: 2,
+                              opacity: 0,
+                              transition: 'opacity 0.4s ease-in-out',
+                              WebkitBackfaceVisibility: 'hidden',
+                              backfaceVisibility: 'hidden',
+                              transform: 'translate3d(0, 0, 0)',
+                              WebkitTransform: 'translate3d(0, 0, 0)',
+                            }}
                             />
                           )}
 
