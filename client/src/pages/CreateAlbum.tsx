@@ -84,6 +84,54 @@ export default function CreateAlbum() {
   const [previewSheets, setPreviewSheets] = useState<string[]>([]);
   const [previewFront, setPreviewFront] = useState('');
   const [previewBack, setPreviewBack] = useState('');
+  const [sizeWarning, setSizeWarning] = useState<string | null>(null);
+  const [samplePlaying, setSamplePlaying] = useState(false);
+  const sampleAudioRef = useRef<HTMLAudioElement | null>(null);
+
+  // Expected image spread ratio (width/height) for each size
+  const getExpectedSpreadRatio = (sheetSize: string, customW: string, customH: string, customMode: string) => {
+    if (sheetSize === '12x36') return { ratio: 3.0, tolerance: 0.4, label: 'wide panoramic (3:1 spread)' };
+    if (sheetSize === '12x12') return { ratio: 2.0, tolerance: 0.4, label: 'square spread (2:1)' };
+    if (sheetSize === '10x10') return { ratio: 2.0, tolerance: 0.4, label: 'square spread (2:1)' };
+    if (sheetSize === '12x18') return { ratio: 1.33, tolerance: 0.35, label: 'portrait spread (4:3)' };
+    if (sheetSize === '8x12')  return { ratio: 1.33, tolerance: 0.35, label: 'portrait spread (4:3)' };
+    if (sheetSize === 'custom' && customW && customH) {
+      const w = parseFloat(customW);
+      const h = parseFloat(customH);
+      if (customMode === 'spread') return { ratio: w / h, tolerance: 0.4, label: `custom spread (${w}x${h})` };
+      return { ratio: (w * 2) / h, tolerance: 0.4, label: `custom spread (${w*2}x${h})` };
+    }
+    return null;
+  };
+
+  // Validate sheet image ratios when sheets or size changes
+  const validateSheetRatios = useCallback((sheets: File[], sheetSize: string, customW: string, customH: string, customMode: string) => {
+    const expected = getExpectedSpreadRatio(sheetSize, customW, customH, customMode);
+    if (!expected || sheets.length === 0) { setSizeWarning(null); return; }
+    let mismatchCount = 0;
+    let checked = 0;
+    const promises = sheets.slice(0, 5).map(file => new Promise<void>(resolve => {
+      const img = new Image();
+      const url = URL.createObjectURL(file);
+      img.onload = () => {
+        const ratio = img.width / img.height;
+        if (Math.abs(ratio - expected.ratio) > expected.tolerance) mismatchCount++;
+        checked++;
+        URL.revokeObjectURL(url);
+        resolve();
+      };
+      img.onerror = () => { URL.revokeObjectURL(url); resolve(); };
+      img.src = url;
+    }));
+    Promise.all(promises).then(() => {
+      if (mismatchCount > 0) {
+        setSizeWarning(`⚠️ ${mismatchCount} of ${checked} sheet image(s) may have the wrong dimensions for a ${sheetSize} album. Expected a ${expected.label} image. Please check your Photoshop template.`);
+      } else {
+        setSizeWarning(null);
+      }
+    });
+  }, []);
+
 
   const [sheetPreviews, setSheetPreviews] = useState<string[]>([]);
   const prevPreviewsRef = useRef<string[]>([]);
@@ -108,12 +156,43 @@ export default function CreateAlbum() {
   }, [previewOpen]);
 
   const onDropSheets = useCallback((acceptedFiles: File[]) => {
-    setFormData((prev) => ({
-      ...prev,
-      sheets: [...prev.sheets, ...acceptedFiles],
-      sheetVideos: [...prev.sheetVideos, ...acceptedFiles.map(() => ({ file: null, side: 'left' as const }))],
-    }));
+    setFormData((prev) => {
+      const newSheets = [...prev.sheets, ...acceptedFiles];
+      // Validate aspect ratios against selected size
+      validateSheetRatios(newSheets, prev.sheetSize, prev.sheetCustomWidth, prev.sheetCustomHeight, prev.sheetCustomMode);
+      return {
+        ...prev,
+        sheets: newSheets,
+        sheetVideos: [...prev.sheetVideos, ...acceptedFiles.map(() => ({ file: null, side: 'left' as const }))],
+      };
+    });
+  }, [validateSheetRatios]);
+
+  // Re-validate when size selection changes
+  useEffect(() => {
+    validateSheetRatios(formData.sheets, formData.sheetSize, formData.sheetCustomWidth, formData.sheetCustomHeight, formData.sheetCustomMode);
+  }, [formData.sheetSize, formData.sheetCustomWidth, formData.sheetCustomHeight, formData.sheetCustomMode]);
+
+  // Sample audio cleanup
+  useEffect(() => {
+    return () => { sampleAudioRef.current?.pause(); };
   }, []);
+
+  const toggleSamplePreview = () => {
+    if (!sampleAudioRef.current) {
+      sampleAudioRef.current = new Audio('/indian-wedding-music.mp3');
+      sampleAudioRef.current.loop = true;
+      sampleAudioRef.current.onended = () => setSamplePlaying(false);
+    }
+    if (samplePlaying) {
+      sampleAudioRef.current.pause();
+      setSamplePlaying(false);
+    } else {
+      sampleAudioRef.current.play().catch(() => {});
+      setSamplePlaying(true);
+    }
+  };
+
 
   const { getRootProps: getSheetRootProps, getInputProps: getSheetInputProps, isDragActive: isSheetDragActive } = useDropzone({
     onDrop: onDropSheets,
@@ -666,9 +745,22 @@ export default function CreateAlbum() {
                     </div>
 
                     {formData.bgMusicChoice === 'sample' && (
-                      <div className="p-3 bg-primary/5 border border-primary/20 rounded-xl text-xs text-primary/80 flex items-center gap-2">
-                        <span>🎵</span>
-                        <span>"Indian Wedding Background Music" will be used.</span>
+                      <div className="p-3 bg-primary/5 border border-primary/20 rounded-xl text-xs text-primary/80 flex items-center justify-between gap-3">
+                        <div className="flex items-center gap-2">
+                          <span>🎵</span>
+                          <span className="font-medium">Indian Wedding Background Music</span>
+                        </div>
+                        <button
+                          type="button"
+                          onClick={toggleSamplePreview}
+                          className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold uppercase tracking-widest transition-all ${
+                            samplePlaying
+                              ? 'bg-primary/20 text-primary border border-primary/40 animate-pulse'
+                              : 'bg-white/5 text-white/50 border border-white/10 hover:border-primary/30 hover:text-primary/70'
+                          }`}
+                        >
+                          {samplePlaying ? '⏸ Stop' : '▶ Preview'}
+                        </button>
                       </div>
                     )}
 
@@ -801,7 +893,14 @@ export default function CreateAlbum() {
                     <CloudUpload className="w-10 h-10" />
                   </div>
                   <h3 className="text-2xl font-bold mb-2">Drop Project Sheets</h3>
-                  <p className="text-muted-foreground">Panoramic 12×36 resolution recommended</p>
+                  <p className="text-muted-foreground">
+                    {formData.sheetSize === '12x36' ? 'Panoramic 12×36 spread recommended (3:1 ratio)'
+                    : formData.sheetSize === '12x12' ? 'Square spread image required (2:1 ratio e.g. 2400×1200px)'
+                    : formData.sheetSize === '10x10' ? 'Square spread image required (2:1 ratio e.g. 2000×1000px)'
+                    : formData.sheetSize === '12x18' ? 'Portrait spread image required (~4:3 ratio e.g. 2400×1800px)'
+                    : formData.sheetSize === '8x12'  ? 'Portrait spread image required (~4:3 ratio e.g. 1600×1200px)'
+                    : 'Upload your spread images matching the selected size'}
+                  </p>
 
                   {isSheetDragActive && (
                     <motion.div
@@ -810,6 +909,22 @@ export default function CreateAlbum() {
                     />
                   )}
                 </div>
+
+                {/* Size Mismatch Warning */}
+                {sizeWarning && (
+                  <div className="flex items-start gap-3 p-4 bg-amber-500/10 border border-amber-500/30 rounded-2xl text-amber-300 text-sm">
+                    <span className="text-lg mt-0.5 shrink-0">⚠️</span>
+                    <div>
+                      <p className="font-bold mb-1">Image Size Mismatch</p>
+                      <p className="text-amber-300/80 text-xs leading-relaxed">{sizeWarning.replace('⚠️ ', '')}</p>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => setSizeWarning(null)}
+                      className="ml-auto text-amber-400/60 hover:text-amber-300 text-lg shrink-0"
+                    >×</button>
+                  </div>
+                )}
 
                 <div className="space-y-4">
                   <div className="flex flex-col md:flex-row items-center justify-between gap-4 mb-4">
