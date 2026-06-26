@@ -2,7 +2,7 @@ import { Link } from 'wouter';
 import { Card, CardContent, CardFooter } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Plus, QrCode, Eye, Trash2, LayoutGrid, Calendar, LogOut, Settings as SettingsIcon, Lock, Loader2, Sparkles, User as UserIcon, Crown, Copy, Download, Share2, Check, ShieldAlert, BarChart3, FolderHeart, ChevronDown, Clock, TrendingUp, Building2, AlertTriangle, Gift } from 'lucide-react';
+import { Plus, QrCode, Eye, Trash2, LayoutGrid, Calendar, LogOut, Settings as SettingsIcon, Lock, Loader2, Sparkles, User as UserIcon, Crown, Copy, Download, Share2, Check, ShieldAlert, BarChart3, FolderHeart, ChevronDown, Clock, TrendingUp, Building2, AlertTriangle, Gift, Trophy, Star, Flame, Medal, Gem, Zap, X } from 'lucide-react';
 
 import { QRCodeSVG } from 'qrcode.react';
 import { Badge } from '@/components/ui/badge';
@@ -18,6 +18,7 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { useAuth } from '@/lib/auth';
+import { AdBanner } from '@/components/AdBanner';
 import { ContactModal } from '@/components/ContactModal';
 import { useQueryClient } from '@tanstack/react-query';
 import { useToast } from '@/hooks/use-toast';
@@ -398,6 +399,8 @@ export default function Dashboard() {
   const [refLinkCopied, setRefLinkCopied] = useState(false);
   const [congratsOpen, setCongratsOpen] = useState(false);
   const [showFreeTrialPopup, setShowFreeTrialPopup] = useState(false);
+  const [exitIntentOpen, setExitIntentOpen] = useState(false);
+  const [badgeToast, setBadgeToast] = useState<{ emoji: string; label: string; msg: string } | null>(null);
 
   const fetchReferralStats = async () => {
     setLoadingReferrals(true);
@@ -454,6 +457,29 @@ export default function Dashboard() {
       setTimeout(() => setShowFreeTrialPopup(true), 800);
     }
   }, [user, loading, albums]);
+
+  // Exit intent detector — fires once per session for 0-credit, free-plan, non-admin users
+  useEffect(() => {
+    if (!user || isAdmin || (user.credits ?? 0) > 0) return;
+    if (sessionStorage.getItem('exitIntentShown') === 'true') return;
+
+    const handleMouseLeave = (e: MouseEvent) => {
+      if (e.clientY < 10) {
+        sessionStorage.setItem('exitIntentShown', 'true');
+        setExitIntentOpen(true);
+        document.removeEventListener('mouseleave', handleMouseLeave);
+      }
+    };
+    document.addEventListener('mouseleave', handleMouseLeave);
+    return () => document.removeEventListener('mouseleave', handleMouseLeave);
+  }, [user, isAdmin]);
+
+  // Auto-dismiss badge toast after 3s
+  useEffect(() => {
+    if (!badgeToast) return;
+    const t = setTimeout(() => setBadgeToast(null), 3000);
+    return () => clearTimeout(t);
+  }, [badgeToast]);
 
   const modeFilteredAlbums = albums.filter(album => 
     dashboardMode === 'lab' ? album.isLabAlbum === 1 : album.isLabAlbum !== 1
@@ -1392,7 +1418,73 @@ export default function Dashboard() {
            </div>
         </div>
 
+        {/* ───── AdSense Banner (Free Users Only) ───── */}
+        {user?.plan === 'free' && (
+          <div className="mb-10 w-full max-w-4xl mx-auto">
+            <AdBanner slot="YOUR_DASHBOARD_AD_SLOT" format="horizontal" />
+          </div>
+        )}
+
+        {/* ───── Achievement Badges ───── */}
+        {dashboardMode === 'personal' && !isAdmin && (
+          <div className="mb-10">
+            <div className="flex items-center gap-2 mb-4">
+              <Trophy className="w-4 h-4 text-amber-400" />
+              <span className="text-[10px] font-black uppercase tracking-[0.2em] text-white/40">Your Achievements</span>
+            </div>
+            <div className="flex gap-3 overflow-x-auto pb-2 no-scrollbar">
+              {[
+                { emoji: '🌱', label: 'First Steps',     msg: 'Welcome! Your journey begins.',          needed: 0,  color: '#34d399', glow: 'rgba(52,211,153,0.35)'   },
+                { emoji: '🏆', label: 'First Album',     msg: 'First album published — you\'re a creator!', needed: 1,  color: '#fbbf24', glow: 'rgba(251,191,36,0.35)'  },
+                { emoji: '⭐', label: 'Rising Creator',  msg: '3 albums done — you\'re rising fast!',   needed: 3,  color: '#f59e0b', glow: 'rgba(245,158,11,0.35)'  },
+                { emoji: '🔥', label: 'On Fire',         msg: '5 albums! You\'re on fire 🔥',           needed: 5,  color: '#f97316', glow: 'rgba(249,115,22,0.35)'  },
+                { emoji: '👑', label: 'Studio Legend',   msg: '10 albums — you\'re a Studio Legend!',   needed: 10, color: '#a78bfa', glow: 'rgba(167,139,250,0.35)' },
+                { emoji: '💎', label: 'Diamond Tier',    msg: '20 albums — Diamond status unlocked!',   needed: 20, color: '#67e8f9', glow: 'rgba(103,232,249,0.35)' },
+              ].map((badge, i) => {
+                const unlocked = albums.length >= badge.needed;
+                return (
+                  <motion.button
+                    key={badge.label}
+                    initial={{ opacity: 0, y: 16 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: i * 0.07 }}
+                    onClick={() => unlocked && setBadgeToast({ emoji: badge.emoji, label: badge.label, msg: badge.msg })}
+                    className="relative flex-shrink-0 flex flex-col items-center gap-2 px-5 py-4 rounded-2xl border transition-all duration-300 cursor-pointer select-none"
+                    style={{
+                      background: unlocked ? `linear-gradient(135deg, ${badge.glow.replace('0.35','0.08')} 0%, rgba(255,255,255,0.02) 100%)` : 'rgba(255,255,255,0.02)',
+                      borderColor: unlocked ? badge.color.replace(')', ',0.4)').replace('rgb','rgba') : 'rgba(255,255,255,0.06)',
+                      boxShadow: unlocked ? `0 0 20px ${badge.glow}, inset 0 1px 0 rgba(255,255,255,0.05)` : 'none',
+                      filter: unlocked ? 'none' : 'grayscale(1)',
+                      opacity: unlocked ? 1 : 0.45,
+                    }}
+                  >
+                    <span className="text-3xl">{badge.emoji}</span>
+                    <span className="text-[10px] font-black uppercase tracking-wider whitespace-nowrap" style={{ color: unlocked ? badge.color : 'rgba(255,255,255,0.3)' }}>
+                      {badge.label}
+                    </span>
+                    {!unlocked && badge.needed > 0 && (
+                      <span className="text-[9px] text-white/25 font-bold whitespace-nowrap">
+                        {badge.needed - albums.length} more to unlock
+                      </span>
+                    )}
+                    {unlocked && (
+                      <motion.div
+                        className="absolute -top-1 -right-1 w-4 h-4 rounded-full flex items-center justify-center"
+                        initial={{ scale: 0 }} animate={{ scale: 1 }} transition={{ delay: i * 0.07 + 0.2, type: 'spring' }}
+                        style={{ background: badge.color }}
+                      >
+                        <Check className="w-2.5 h-2.5 text-black" />
+                      </motion.div>
+                    )}
+                  </motion.button>
+                );
+              })}
+            </div>
+          </div>
+        )}
+
         {modeFilteredAlbums.length === 0 ? (
+
           <div className="flex flex-col items-center justify-center py-32 glass rounded-[3rem] border-dashed border-white/10">
             <div className="w-20 h-20 rounded-full bg-white/5 flex items-center justify-center mb-6">
               <LayoutGrid className="w-10 h-10 text-white/20" />
@@ -1709,6 +1801,87 @@ export default function Dashboard() {
           </motion.div>
         )}
       </AnimatePresence>
+
+      {/* ───── Exit Intent Popup ───── */}
+      <AnimatePresence>
+        {exitIntentOpen && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[110] flex items-center justify-center p-4"
+            style={{ backdropFilter: 'blur(12px)', background: 'rgba(0,0,0,0.75)' }}
+          >
+            <motion.div
+              initial={{ scale: 0.8, opacity: 0, y: 40 }}
+              animate={{ scale: 1, opacity: 1, y: 0 }}
+              exit={{ scale: 0.9, opacity: 0, y: 20 }}
+              className="relative w-full max-w-sm rounded-[2.5rem] overflow-hidden p-8 text-center"
+              style={{ background: 'linear-gradient(160deg, #1f0914 0%, #0a0408 60%, #15050f 100%)', boxShadow: '0 40px 120px -20px rgba(0,0,0,0.9)', border: '1px solid rgba(244,63,94,0.2)' }}
+            >
+              <div className="absolute top-[-30%] left-[-20%] w-[80%] h-[80%] rounded-full blur-[80px]" style={{ background: 'radial-gradient(circle, rgba(244,63,94,0.2) 0%, transparent 70%)' }} />
+              <div className="absolute bottom-[-20%] right-[-20%] w-[70%] h-[70%] rounded-full blur-[80px]" style={{ background: 'radial-gradient(circle, rgba(251,146,60,0.15) 0%, transparent 70%)' }} />
+
+              <div className="relative z-10 flex flex-col items-center">
+                <div className="w-16 h-16 rounded-2xl flex items-center justify-center mb-6 shadow-xl" style={{ background: 'linear-gradient(135deg, #f43f5e 0%, #fb923c 100%)', boxShadow: '0 0 30px rgba(244,63,94,0.4)' }}>
+                  <AlertTriangle className="w-8 h-8 text-white" />
+                </div>
+                
+                <h3 className="text-2xl font-black text-white mb-2 tracking-tight">Wait! Don't leave yet 👋</h3>
+                <p className="text-white/60 text-sm mb-6">Before you go, here is an exclusive <span className="text-rose-400 font-bold">20% OFF</span> on your first credit purchase. Try the studio today!</p>
+                
+                <div className="w-full bg-white/5 border border-white/10 rounded-2xl p-4 mb-6 relative overflow-hidden">
+                  <div className="text-[10px] uppercase font-black tracking-[0.2em] text-white/40 mb-1">Promo Code Applied</div>
+                  <div className="text-2xl font-black text-transparent bg-clip-text" style={{ backgroundImage: 'linear-gradient(90deg, #f43f5e, #fb923c)' }}>STAY20</div>
+                  <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/5 to-transparent -translate-x-full animate-[shimmer_2s_infinite]" />
+                </div>
+
+                <Button 
+                  onClick={() => {
+                    setExitIntentOpen(false);
+                    buyAlbumCredit('STAY20');
+                  }}
+                  className="w-full h-12 rounded-xl text-white font-bold tracking-wide mb-3"
+                  style={{ background: 'linear-gradient(90deg, #f43f5e, #e11d48)' }}
+                >
+                  Claim 20% OFF & Buy Credit
+                </Button>
+                <button 
+                  onClick={() => setExitIntentOpen(false)}
+                  className="text-white/30 text-xs font-semibold hover:text-white/60 transition-colors"
+                >
+                  No thanks, I'll pass
+                </button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* ───── Badge Unlocked Toast ───── */}
+      <AnimatePresence>
+        {badgeToast && (
+          <motion.div
+            initial={{ opacity: 0, y: 50, scale: 0.9 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: 20, scale: 0.9 }}
+            className="fixed bottom-8 left-1/2 -translate-x-1/2 z-[120] flex items-center gap-4 bg-[#0a0612]/90 backdrop-blur-xl border p-3 pr-6 rounded-2xl shadow-2xl"
+            style={{ borderColor: 'rgba(255,255,255,0.1)' }}
+          >
+            <div className="w-12 h-12 rounded-xl flex items-center justify-center bg-white/5 border border-white/10 text-2xl shadow-inner">
+              {badgeToast.emoji}
+            </div>
+            <div>
+              <div className="text-[10px] font-black uppercase tracking-widest text-emerald-400 mb-0.5">Achievement Unlocked</div>
+              <div className="text-white font-bold text-sm leading-tight">{badgeToast.msg}</div>
+            </div>
+            <button onClick={() => setBadgeToast(null)} className="absolute top-2 right-2 text-white/20 hover:text-white/50">
+              <X className="w-4 h-4" />
+            </button>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
 
       {/* Referral Congrats Modal */}
       <Dialog open={congratsOpen} onOpenChange={setCongratsOpen}>

@@ -305,7 +305,8 @@ export function registerRoutes(
   app.post("/api/billing/buy-credit", async (req, res) => {
     try {
       if (!req.isAuthenticated()) return res.status(401).json({ error: "Unauthorized" });
-      const userId = (req.user as any).id;
+      const reqUser = req.user as any;
+      const userId = reqUser.id;
       const { promoCode } = req.body || {};
       let amount = 9900; // ₹99 in paise
       let promoCodeId = null;
@@ -316,7 +317,10 @@ export function registerRoutes(
           const isExpired = promo.expiresAt && new Date() > new Date(promo.expiresAt);
           if (!isExpired && promo.currentUses < promo.maxUses) {
             const hasUsed = await storage.hasUserRedeemedPromo(promo.id, userId);
-            if (!hasUsed) {
+            // First-purchase-only restriction: skip discount silently if user already purchased
+            const isFirstPurchaseOnly = promo.affiliateName === 'FIRST_PURCHASE_ONLY';
+            const hasPurchased = reqUser.plan !== 'free' || (reqUser.subscriptionExpiresAt && new Date(reqUser.subscriptionExpiresAt) > new Date());
+            if (!hasUsed && (!isFirstPurchaseOnly || !hasPurchased)) {
               amount = Math.max(100, Math.floor(amount * (1 - promo.discountPercentage / 100))); // Min 1 INR
               promoCodeId = promo.id;
             }
@@ -878,7 +882,7 @@ export function registerRoutes(
       
       // Strip password from the response for security
       const { password, ...albumSafe } = album as any;
-      res.json({ ...albumSafe, files, branding: brandingCopy, isProtected: !!album.password, isUnlocked: true });
+      res.json({ ...albumSafe, files, branding: brandingCopy, isProtected: !!album.password, isUnlocked: true, ownerPlan: owner?.plan || 'free' });
     } catch (e) {
       res.status(500).json({ error: "Failed to fetch album" });
     }
@@ -2091,7 +2095,8 @@ export function registerRoutes(
   app.post("/api/billing/validate-promo", async (req, res) => {
     try {
       if (!req.isAuthenticated()) return res.status(401).json({ error: "Unauthorized" });
-      const userId = (req.user as any).id;
+      const reqUser = req.user as any;
+      const userId = reqUser.id;
       const { code } = req.body;
       if (!code) return res.status(400).json({ error: "Code required" });
 
@@ -2103,6 +2108,14 @@ export function registerRoutes(
 
       const hasRedeemed = await storage.hasUserRedeemedPromo(promo.id, userId);
       if (hasRedeemed) return res.status(400).json({ error: "You have already used this discount code on a previous purchase." });
+
+      // First-purchase-only restriction: reject if user already has an active plan/subscription
+      if (promo.affiliateName === 'FIRST_PURCHASE_ONLY') {
+        const hasPurchased = reqUser.plan !== 'free' || (reqUser.subscriptionExpiresAt && new Date(reqUser.subscriptionExpiresAt) > new Date());
+        if (hasPurchased) {
+          return res.status(400).json({ error: "This offer is only available for first-time buyers who haven't purchased a plan yet." });
+        }
+      }
 
       res.json({
         valid: true,

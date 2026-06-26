@@ -2,6 +2,7 @@ import { useParams, Link } from 'wouter';
 import { useAlbumStore, ImageStorage } from '@/lib/store';
 import { Flipbook } from '@/components/Flipbook';
 import { Button } from '@/components/ui/button';
+import { AdBanner } from '@/components/AdBanner';
 import {
   ChevronLeft,
   ChevronRight,
@@ -964,6 +965,15 @@ export default function Viewer() {
             </>
           )}
         </TransformWrapper>
+
+        {/* ───── AdSense Banner (Free Album Viewers Only) ───── */}
+        {album?.ownerPlan === 'free' && uiVisible && (
+          <div className="fixed bottom-0 left-1/2 -translate-x-1/2 w-full max-w-[728px] z-[150] pointer-events-auto">
+            <div className="bg-black/80 backdrop-blur-md border-t border-x border-white/10 rounded-t-2xl p-2 pb-0">
+              <AdBanner slot="YOUR_VIEWER_AD_SLOT" format="horizontal" />
+            </div>
+          </div>
+        )}
 
         {/* Rotate Overlay */}
         <AnimatePresence>
