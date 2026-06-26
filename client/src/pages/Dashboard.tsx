@@ -397,6 +397,7 @@ export default function Dashboard() {
   const [loadingReferrals, setLoadingReferrals] = useState(false);
   const [refLinkCopied, setRefLinkCopied] = useState(false);
   const [congratsOpen, setCongratsOpen] = useState(false);
+  const [showFreeTrialPopup, setShowFreeTrialPopup] = useState(false);
 
   const fetchReferralStats = async () => {
     setLoadingReferrals(true);
@@ -432,6 +433,28 @@ export default function Dashboard() {
       setCongratsOpen(true);
     }
   }, []);
+
+  // Show free trial welcome popup for new users
+  useEffect(() => {
+    if (!user) return;
+    const seenKey = `freeTrialWelcomeSeen_${user.id}`;
+    const fromRegistration = sessionStorage.getItem("showNewUserWelcome") === "true";
+    const alreadySeen = localStorage.getItem(seenKey) === "true";
+
+    if (alreadySeen) return;
+
+    if (fromRegistration) {
+      // Email registration path
+      sessionStorage.removeItem("showNewUserWelcome");
+      localStorage.setItem(seenKey, "true");
+      setTimeout(() => setShowFreeTrialPopup(true), 800);
+    } else if (!loading && albums.length === 0 && (user.credits ?? 0) >= 1) {
+      // Google OAuth new user: no albums yet, has the starting credit
+      localStorage.setItem(seenKey, "true");
+      setTimeout(() => setShowFreeTrialPopup(true), 800);
+    }
+  }, [user, loading, albums]);
+
   const modeFilteredAlbums = albums.filter(album => 
     dashboardMode === 'lab' ? album.isLabAlbum === 1 : album.isLabAlbum !== 1
   );
@@ -1543,6 +1566,149 @@ export default function Dashboard() {
           )}
         </DialogContent>
       </Dialog>
+
+      {/* ───── Free Trial Welcome Popup ───── */}
+      <AnimatePresence>
+        {showFreeTrialPopup && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[100] flex items-center justify-center p-4"
+            style={{ backdropFilter: 'blur(12px)', background: 'rgba(0,0,0,0.75)' }}
+          >
+            <motion.div
+              initial={{ scale: 0.7, opacity: 0, y: 60 }}
+              animate={{ scale: 1, opacity: 1, y: 0 }}
+              exit={{ scale: 0.8, opacity: 0, y: 40 }}
+              transition={{ type: 'spring', stiffness: 260, damping: 22, delay: 0.05 }}
+              className="relative w-full max-w-sm rounded-[2.5rem] overflow-hidden shadow-[0_40px_120px_-20px_rgba(0,0,0,0.9)] border border-white/10"
+              style={{ background: 'linear-gradient(160deg, #0d0820 0%, #0a0612 60%, #110c24 100%)' }}
+            >
+              {/* Ambient glow layers */}
+              <div className="absolute inset-0 pointer-events-none">
+                <div className="absolute top-[-30%] left-[-20%] w-[80%] h-[80%] rounded-full blur-[80px]" style={{ background: 'radial-gradient(circle, rgba(251,191,36,0.25) 0%, transparent 70%)' }} />
+                <div className="absolute bottom-[-20%] right-[-20%] w-[70%] h-[70%] rounded-full blur-[80px]" style={{ background: 'radial-gradient(circle, rgba(139,92,246,0.3) 0%, transparent 70%)' }} />
+                <div className="absolute top-[40%] left-[30%] w-[50%] h-[50%] rounded-full blur-[60px]" style={{ background: 'radial-gradient(circle, rgba(16,185,129,0.15) 0%, transparent 70%)' }} />
+              </div>
+
+              {/* Confetti stars deco */}
+              {[...Array(6)].map((_, i) => (
+                <motion.div
+                  key={i}
+                  className="absolute w-1.5 h-1.5 rounded-full"
+                  style={{
+                    background: ['#fbbf24','#a78bfa','#34d399','#f472b6','#60a5fa','#fb923c'][i],
+                    top: `${[8, 12, 6, 18, 10, 15][i]}%`,
+                    left: `${[10, 80, 50, 20, 70, 40][i]}%`,
+                  }}
+                  animate={{ y: [0, -8, 0], opacity: [0.7, 1, 0.7] }}
+                  transition={{ duration: 2 + i * 0.3, repeat: Infinity, ease: 'easeInOut' }}
+                />
+              ))}
+
+              <div className="relative z-10 flex flex-col items-center text-center px-8 py-10">
+                {/* Trophy / Gift icon */}
+                <motion.div
+                  initial={{ scale: 0, rotate: -20 }}
+                  animate={{ scale: 1, rotate: 0 }}
+                  transition={{ type: 'spring', stiffness: 300, damping: 18, delay: 0.2 }}
+                  className="w-24 h-24 rounded-3xl flex items-center justify-center mb-6 shadow-2xl"
+                  style={{ background: 'linear-gradient(135deg, #fbbf24 0%, #f59e0b 40%, #d97706 100%)', boxShadow: '0 0 50px rgba(251,191,36,0.5), 0 20px 40px rgba(0,0,0,0.4)' }}
+                >
+                  <span className="text-5xl select-none">🎁</span>
+                </motion.div>
+
+                {/* Badge */}
+                <motion.div
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.35 }}
+                  className="mb-3 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest border"
+                  style={{ background: 'rgba(251,191,36,0.1)', borderColor: 'rgba(251,191,36,0.3)', color: '#fbbf24' }}
+                >
+                  Free Trial Activated
+                </motion.div>
+
+                {/* Headline */}
+                <motion.h2
+                  initial={{ opacity: 0, y: 12 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.45 }}
+                  className="text-3xl font-black tracking-tight mb-2"
+                  style={{ background: 'linear-gradient(90deg, #fbbf24, #f9fafb, #a78bfa)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}
+                >
+                  Congratulations! 🎉
+                </motion.h2>
+
+                {/* Subtext */}
+                <motion.p
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.55 }}
+                  className="text-white/60 text-sm leading-relaxed mb-6"
+                >
+                  Welcome to <span className="font-bold text-white">Eventful Studio</span>! We've gifted you
+                </motion.p>
+
+                {/* Credit card callout */}
+                <motion.div
+                  initial={{ opacity: 0, scale: 0.9 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  transition={{ delay: 0.65, type: 'spring', stiffness: 200 }}
+                  className="w-full rounded-2xl p-5 mb-6 border"
+                  style={{ background: 'linear-gradient(135deg, rgba(251,191,36,0.08) 0%, rgba(139,92,246,0.08) 100%)', borderColor: 'rgba(251,191,36,0.2)' }}
+                >
+                  <div className="text-[10px] font-black uppercase tracking-widest mb-2" style={{ color: 'rgba(255,255,255,0.4)' }}>Your Free Credit</div>
+                  <div className="flex items-center justify-center gap-3">
+                    <div className="w-10 h-10 rounded-xl flex items-center justify-center" style={{ background: 'rgba(251,191,36,0.15)' }}>
+                      <Sparkles className="w-5 h-5" style={{ color: '#fbbf24' }} />
+                    </div>
+                    <div className="text-left">
+                      <div className="text-2xl font-black text-white">1 Album Credit</div>
+                      <div className="text-xs" style={{ color: '#34d399' }}>Completely FREE — Worth ₹99</div>
+                    </div>
+                  </div>
+                </motion.div>
+
+                {/* What you can do */}
+                <motion.p
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  transition={{ delay: 0.75 }}
+                  className="text-white/50 text-xs leading-relaxed mb-8"
+                >
+                  Use this credit to create your <span className="text-white/80 font-semibold">first 3D Flip Album</span> — no payment needed.
+                </motion.p>
+
+                {/* CTA Button */}
+                <motion.button
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.85 }}
+                  whileHover={{ scale: 1.03 }}
+                  whileTap={{ scale: 0.97 }}
+                  onClick={() => setShowFreeTrialPopup(false)}
+                  className="w-full h-14 rounded-2xl font-black text-sm tracking-wide text-black cursor-pointer border-0 outline-none"
+                  style={{ background: 'linear-gradient(135deg, #fbbf24 0%, #f59e0b 50%, #d97706 100%)', boxShadow: '0 8px 30px rgba(251,191,36,0.4)' }}
+                >
+                  🚀 Start Creating My First Album
+                </motion.button>
+
+                <motion.p
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  transition={{ delay: 1 }}
+                  className="mt-4 text-[10px] font-medium"
+                  style={{ color: 'rgba(255,255,255,0.25)' }}
+                >
+                  Your free credit is already in your account ✓
+                </motion.p>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* Referral Congrats Modal */}
       <Dialog open={congratsOpen} onOpenChange={setCongratsOpen}>

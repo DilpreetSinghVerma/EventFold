@@ -65,6 +65,7 @@ export default function Login() {
                 });
                 if (isRegister) {
                     sessionStorage.removeItem("referralCode");
+                    sessionStorage.setItem("showNewUserWelcome", "true");
                 }
                 window.location.href = "/dashboard";
             } else {
