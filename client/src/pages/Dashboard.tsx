@@ -22,6 +22,7 @@ import { AdBanner } from '@/components/AdBanner';
 import { ContactModal } from '@/components/ContactModal';
 import { useQueryClient } from '@tanstack/react-query';
 import { useToast } from '@/hooks/use-toast';
+import { OnboardingTour } from '@/components/OnboardingTour';
 
 function ClientBrandingModalContent({ album, onSaved }: { album: any, onSaved: () => void }) {
   const { user } = useAuth();
@@ -401,6 +402,26 @@ export default function Dashboard() {
   const [showFreeTrialPopup, setShowFreeTrialPopup] = useState(false);
   const [exitIntentOpen, setExitIntentOpen] = useState(false);
   const [badgeToast, setBadgeToast] = useState<{ emoji: string; label: string; msg: string } | null>(null);
+  const [runTour, setRunTour] = useState(false);
+
+  useEffect(() => {
+    if (!user || loading) return;
+    const tourSeenKey = `onboardingTourSeen_${user.id}`;
+    if (!localStorage.getItem(tourSeenKey)) {
+      // Delay slightly to let UI render properly
+      const timer = setTimeout(() => {
+        setRunTour(true);
+      }, 1500);
+      return () => clearTimeout(timer);
+    }
+  }, [user, loading]);
+
+  const handleTourComplete = () => {
+    if (user) {
+      localStorage.setItem(`onboardingTourSeen_${user.id}`, 'true');
+    }
+    setRunTour(false);
+  };
 
   const fetchReferralStats = async () => {
     setLoadingReferrals(true);
@@ -1150,6 +1171,7 @@ export default function Dashboard() {
 
             <Link href={settings && settings.businessName && settings.businessName.trim() !== 'EventFold Studio' ? `/create?mode=${dashboardMode}` : '/settings'}>
               <Button
+                id="tour-create"
                 className={`rounded-xl px-4 md:px-6 shrink-0 h-9 text-[10px] uppercase font-bold ${
                   settings && settings.businessName && settings.businessName.trim() !== 'EventFold Studio'
                     ? 'bg-primary hover:bg-primary/90 text-white shadow-lg shadow-primary/20'
@@ -1311,7 +1333,7 @@ export default function Dashboard() {
                   </div>
                 ) : (
                   <>
-                    <div className={`flex items-center gap-2 px-6 py-2 rounded-full text-sm font-bold shadow-xl transition-all ${user?.credits === 0 ? 'bg-red-500/10 border border-red-500/40 text-red-500 shadow-red-500/10 scale-105' : 'bg-primary/10 border border-primary/20 text-primary shadow-primary/10'}`}>
+                    <div id="tour-credits" className={`flex items-center gap-2 px-6 py-2 rounded-full text-sm font-bold shadow-xl transition-all ${user?.credits === 0 ? 'bg-red-500/10 border border-red-500/40 text-red-500 shadow-red-500/10 scale-105' : 'bg-primary/10 border border-primary/20 text-primary shadow-primary/10'}`}>
                       <LayoutGrid className={`w-4 h-4 ${user?.credits === 0 ? 'animate-pulse' : ''}`} />
                       {user?.credits || 0} ALBUM CREDITS {user?.credits === 0 ? 'REMAINING' : 'AVAILABLE'}
                     </div>
@@ -1419,11 +1441,13 @@ export default function Dashboard() {
         </div>
 
         {/* ───── AdSense Banner (Free Users Only) ───── */}
+        {/* Temporarily disabled until AdSense is approved
         {user?.plan === 'free' && (
           <div className="mb-10 w-full max-w-4xl mx-auto">
             <AdBanner slot="YOUR_DASHBOARD_AD_SLOT" format="horizontal" />
           </div>
         )}
+        */}
 
         {/* ───── Achievement Badges ───── */}
         {dashboardMode === 'personal' && !isAdmin && (
@@ -1485,7 +1509,7 @@ export default function Dashboard() {
 
         {modeFilteredAlbums.length === 0 ? (
 
-          <div className="flex flex-col items-center justify-center py-32 glass rounded-[3rem] border-dashed border-white/10">
+          <div id="tour-gallery" className="flex flex-col items-center justify-center py-32 glass rounded-[3rem] border-dashed border-white/10">
             <div className="w-20 h-20 rounded-full bg-white/5 flex items-center justify-center mb-6">
               <LayoutGrid className="w-10 h-10 text-white/20" />
             </div>
@@ -1504,7 +1528,7 @@ export default function Dashboard() {
             </Link>
           </div>
         ) : (
-          <div className="grid grid-cols-2 lg:grid-cols-3 gap-4 md:gap-8 pb-32 w-full">
+          <div id="tour-gallery" className="grid grid-cols-2 lg:grid-cols-3 gap-4 md:gap-8 pb-32 w-full">
             <AnimatePresence>
               {modeFilteredAlbums.filter(album => {
                  const matchesCategory = activeCategory === 'All' || album.category === activeCategory;
@@ -1922,6 +1946,32 @@ export default function Dashboard() {
           </div>
         </DialogContent>
       </Dialog>
+      
+      <OnboardingTour 
+        run={runTour}
+        onComplete={handleTourComplete}
+        steps={[
+          {
+            targetId: 'tour-credits',
+            title: 'Your Album Credits',
+            content: 'Welcome to EventFold Studio! We have given you 1 Free Trial Credit to explore the magic of 3D albums.',
+            placement: 'bottom'
+          },
+          {
+            targetId: 'tour-create',
+            title: 'Create Your First Album',
+            content: 'Click here to turn your standard photos into an elite cinematic 3D experience.',
+            placement: 'bottom'
+          },
+          {
+            targetId: 'tour-gallery',
+            title: 'Your Digital Shelf',
+            content: 'Your published albums will beautifully appear here. Get started and wow your clients!',
+            placement: 'top'
+          }
+        ]}
+      />
+
       </main>
     </div >
   );

@@ -967,6 +967,7 @@ export default function Viewer() {
         </TransformWrapper>
 
         {/* ───── AdSense Banner (Free Album Viewers Only) ───── */}
+        {/* Temporarily disabled until AdSense is approved
         {album?.ownerPlan === 'free' && uiVisible && (
           <div className="fixed bottom-0 left-1/2 -translate-x-1/2 w-full max-w-[728px] z-[150] pointer-events-auto">
             <div className="bg-black/80 backdrop-blur-md border-t border-x border-white/10 rounded-t-2xl p-2 pb-0">
@@ -974,6 +975,7 @@ export default function Viewer() {
             </div>
           </div>
         )}
+        */}
 
         {/* Rotate Overlay */}
         <AnimatePresence>
