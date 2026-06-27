@@ -564,8 +564,8 @@ export default function Viewer() {
     };
 
     return (
-      <div className="min-h-screen flex items-center justify-center bg-background text-white p-6 relative overflow-hidden">
-        <div className="fixed inset-0 bg-primary/5 blur-[120px] rounded-full -z-10 animate-pulse" />
+      <div className="min-h-[100dvh] flex items-center justify-center bg-background text-white p-6 relative overflow-y-auto overflow-x-hidden">
+        <div className="fixed inset-0 bg-primary/5 blur-[120px] rounded-full -z-10 animate-pulse pointer-events-none" />
         <BrandingHeader />
 
         <motion.div
