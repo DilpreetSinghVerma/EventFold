@@ -22,7 +22,6 @@ import { AdBanner } from '@/components/AdBanner';
 import { ContactModal } from '@/components/ContactModal';
 import { useQueryClient } from '@tanstack/react-query';
 import { useToast } from '@/hooks/use-toast';
-import { OnboardingTour } from '@/components/OnboardingTour';
 
 function ClientBrandingModalContent({ album, onSaved }: { album: any, onSaved: () => void }) {
   const { user } = useAuth();
@@ -402,26 +401,6 @@ export default function Dashboard() {
   const [showFreeTrialPopup, setShowFreeTrialPopup] = useState(false);
   const [exitIntentOpen, setExitIntentOpen] = useState(false);
   const [badgeToast, setBadgeToast] = useState<{ emoji: string; label: string; msg: string } | null>(null);
-  const [runTour, setRunTour] = useState(false);
-
-  useEffect(() => {
-    if (!user || loading) return;
-    const tourSeenKey = `onboardingTourSeen_${user.id}`;
-    if (!localStorage.getItem(tourSeenKey)) {
-      // Delay slightly to let UI render properly
-      const timer = setTimeout(() => {
-        setRunTour(true);
-      }, 1500);
-      return () => clearTimeout(timer);
-    }
-  }, [user, loading]);
-
-  const handleTourComplete = () => {
-    if (user) {
-      localStorage.setItem(`onboardingTourSeen_${user.id}`, 'true');
-    }
-    setRunTour(false);
-  };
 
   const fetchReferralStats = async () => {
     setLoadingReferrals(true);
@@ -1946,31 +1925,6 @@ export default function Dashboard() {
           </div>
         </DialogContent>
       </Dialog>
-      
-      <OnboardingTour 
-        run={runTour}
-        onComplete={handleTourComplete}
-        steps={[
-          {
-            targetId: 'tour-credits',
-            title: 'Your Album Credits',
-            content: 'Welcome to EventFold Studio! We have given you 1 Free Trial Credit to explore the magic of 3D albums.',
-            placement: 'bottom'
-          },
-          {
-            targetId: 'tour-create',
-            title: 'Create Your First Album',
-            content: 'Click here to turn your standard photos into an elite cinematic 3D experience.',
-            placement: 'bottom'
-          },
-          {
-            targetId: 'tour-gallery',
-            title: 'Your Digital Shelf',
-            content: 'Your published albums will beautifully appear here. Get started and wow your clients!',
-            placement: 'top'
-          }
-        ]}
-      />
 
       </main>
     </div >
