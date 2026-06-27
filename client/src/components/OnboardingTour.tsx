@@ -97,12 +97,12 @@ export function OnboardingTour({ steps, onComplete, run }: OnboardingTourProps) 
         switch (placement) {
             case 'bottom':
                 popoverStyle.top = targetRect.bottom + padding + 16;
-                popoverStyle.left = targetRect.left + (targetRect.width / 2);
+                popoverStyle.left = Math.max(180, Math.min(targetRect.left + (targetRect.width / 2), window.innerWidth - 180));
                 popoverStyle.transform = 'translateX(-50%)';
                 break;
             case 'top':
                 popoverStyle.bottom = window.innerHeight - targetRect.top + padding + 16;
-                popoverStyle.left = targetRect.left + (targetRect.width / 2);
+                popoverStyle.left = Math.max(180, Math.min(targetRect.left + (targetRect.width / 2), window.innerWidth - 180));
                 popoverStyle.transform = 'translateX(-50%)';
                 break;
             case 'right':
