@@ -125,6 +125,11 @@ export default function Viewer() {
   const [ratingHover, setRatingHover] = useState(0);
   const [ratingValue, setRatingValue] = useState(0);
   const [ratingSubmitted, setRatingSubmitted] = useState(false);
+  
+  // Password wall state
+  const [pwd, setPwd] = useState('');
+  const [err, setErr] = useState(false);
+  const [isUnlocking, setIsUnlocking] = useState(false);
 
   useEffect(() => {
     const checkOrientation = () => {
@@ -537,11 +542,54 @@ export default function Viewer() {
     </motion.div>
   );
 
-  const PasswordWall = () => {
-    const [pwd, setPwd] = useState('');
-    const [err, setErr] = useState(false);
-    const [isUnlocking, setIsUnlocking] = useState(false);
 
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-[#020202] text-white overflow-hidden relative">
+        <div className="fixed inset-0 bg-primary/10 blur-[150px] rounded-full -z-10 animate-pulse" />
+
+        <div className="text-center relative max-w-sm px-8">
+           <AnimatePresence mode="wait">
+             <motion.div
+               key="branding-splash"
+               initial={{ opacity: 0, scale: 0.9 }}
+               animate={{ opacity: 1, scale: 1 }}
+               exit={{ opacity: 0, scale: 1.1 }}
+               transition={{ duration: 0.8 }}
+             >
+                {settings?.businessLogo ? (
+                   <img src={settings.businessLogo} alt="Logo" className="h-16 mb-12 mx-auto object-contain opacity-80" />
+                ) : (
+                   <Building2 className="w-16 h-16 mb-12 mx-auto text-primary opacity-40 shadow-[0_0_40px_rgba(var(--primary),0.3)]" />
+                )}
+
+                <div className="space-y-6">
+                   <div className="relative">
+                      <div className="h-1 w-full bg-white/5 rounded-full overflow-hidden border border-white/5">
+                        <motion.div 
+                          className="h-full bg-gradient-to-r from-primary/40 via-primary to-primary/40"
+                          initial={{ width: "0%" }}
+                          animate={{ width: "100%" }}
+                          transition={{ duration: 4, ease: "easeInOut" }}
+                        />
+                      </div>
+                   </div>
+                   
+                   <div className="space-y-2">
+                      <p className="font-display font-bold text-2xl tracking-tight text-white/90">Curating Moments</p>
+                      <p className="text-primary/60 text-[10px] font-mono uppercase tracking-[0.3em] h-4">{loadStatus}</p>
+                   </div>
+                </div>
+             </motion.div>
+           </AnimatePresence>
+        </div>
+      </div>
+    );
+  }
+
+  // Show password wall if protected and not unlocked
+  if (album.isProtected && !album.isUnlocked) {
     const submit = async () => {
       setIsUnlocking(true);
       setErr(false);
@@ -623,55 +671,6 @@ export default function Viewer() {
         </motion.div>
       </div>
     );
-  };
-
-  if (loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-[#020202] text-white overflow-hidden relative">
-        <div className="fixed inset-0 bg-primary/10 blur-[150px] rounded-full -z-10 animate-pulse" />
-
-        <div className="text-center relative max-w-sm px-8">
-           <AnimatePresence mode="wait">
-             <motion.div
-               key="branding-splash"
-               initial={{ opacity: 0, scale: 0.9 }}
-               animate={{ opacity: 1, scale: 1 }}
-               exit={{ opacity: 0, scale: 1.1 }}
-               transition={{ duration: 0.8 }}
-             >
-                {settings?.businessLogo ? (
-                   <img src={settings.businessLogo} alt="Logo" className="h-16 mb-12 mx-auto object-contain opacity-80" />
-                ) : (
-                   <Building2 className="w-16 h-16 mb-12 mx-auto text-primary opacity-40 shadow-[0_0_40px_rgba(var(--primary),0.3)]" />
-                )}
-
-                <div className="space-y-6">
-                   <div className="relative">
-                      <div className="h-1 w-full bg-white/5 rounded-full overflow-hidden border border-white/5">
-                        <motion.div 
-                          className="h-full bg-gradient-to-r from-primary/40 via-primary to-primary/40"
-                          initial={{ width: "0%" }}
-                          animate={{ width: "100%" }}
-                          transition={{ duration: 4, ease: "easeInOut" }}
-                        />
-                      </div>
-                   </div>
-                   
-                   <div className="space-y-2">
-                      <p className="font-display font-bold text-2xl tracking-tight text-white/90">Curating Moments</p>
-                      <p className="text-primary/60 text-[10px] font-mono uppercase tracking-[0.3em] h-4">{loadStatus}</p>
-                   </div>
-                </div>
-             </motion.div>
-           </AnimatePresence>
-        </div>
-      </div>
-    );
-  }
-
-  // Show password wall if protected and not unlocked
-  if (album.isProtected && !album.isUnlocked) {
-    return <PasswordWall />;
   }
 
   return (
