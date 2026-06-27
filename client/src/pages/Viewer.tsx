@@ -564,7 +564,7 @@ export default function Viewer() {
     };
 
     return (
-      <div className="min-h-[100dvh] flex items-center justify-center bg-background text-white p-6 relative overflow-y-auto overflow-x-hidden">
+      <div className="min-h-screen flex items-center justify-center bg-background text-white p-6 relative overflow-y-auto overflow-x-hidden">
         <div className="fixed inset-0 bg-primary/5 blur-[120px] rounded-full -z-10 animate-pulse pointer-events-none" />
         <BrandingHeader />
 
@@ -592,7 +592,6 @@ export default function Viewer() {
                 onChange={(e) => { setPwd(e.target.value); setErr(false); }}
                 onKeyDown={(e) => e.key === 'Enter' && submit()}
                 className={`w-full h-16 bg-white/[0.03] border-white/10 rounded-2xl px-6 text-2xl text-center font-mono focus:ring-2 focus:ring-primary/40 focus:border-primary/40 transition-all outline-none ${err ? 'border-red-500/50 bg-red-500/5' : ''}`}
-                autoFocus
               />
               {err && (
                 <motion.p
