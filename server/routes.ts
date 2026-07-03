@@ -439,9 +439,19 @@ export function registerRoutes(
 
       // Run database updates and subscription provisioning asynchronously in the background
       (async () => {
-        if (event.event === "payment.captured") {
-          const payment = event.payload.payment.entity;
-          const { userId, type, plan, promoCodeId } = payment.notes;
+        if (event.event === "payment.captured" || event.event === "order.paid") {
+          const payment = event.payload.payment?.entity;
+          const order = event.payload.order?.entity;
+          
+          // Notes are originally attached to the Order. Razorpay usually copies them to the Payment, 
+          // but order.notes is the source of truth and more reliable.
+          const notes = order?.notes || payment?.notes || {};
+          const { userId, type, plan, promoCodeId } = notes;
+
+          if (!userId) {
+            console.error(`[WEBHOOK] Ignored ${event.event} - missing userId in notes.`);
+            return;
+          }
 
           if (promoCodeId) {
             await storage.markPromoCodeUsed(promoCodeId, userId);
@@ -449,7 +459,7 @@ export function registerRoutes(
 
           if (type === 'credit') {
             await storage.addCredit(userId, 1);
-            console.log(`[WEBHOOK] Credits added for user ${userId} via Razorpay`);
+            console.log(`[WEBHOOK] Credits added for user ${userId} via Razorpay (${event.event})`);
           } else if (type === 'subscription') {
             let planType = plan; // e.g. 'pro', 'elite', 'lab_monthly', 'lab_half_yearly', 'lab_yearly'
             const isYearly = plan === 'yearly' || plan === 'elite';
@@ -478,7 +488,7 @@ export function registerRoutes(
 
             const userToUpdate: any = {
               plan: planType,
-              razorpayCustomerId: payment.customer_id,
+              razorpayCustomerId: payment?.customer_id || null,
               subscriptionStartedAt: startedAt,
               subscriptionExpiresAt: expiresAt
             };
@@ -500,7 +510,7 @@ export function registerRoutes(
                 .where(eq(albums.userId, userId));
             }
 
-            console.log(`[WEBHOOK] User ${userId} upgraded to ${plan} via Razorpay. Albums made permanent.`);
+            console.log(`[WEBHOOK] User ${userId} upgraded to ${plan} via Razorpay (${event.event}). Albums made permanent.`);
           }
         }
       })().catch(err => {
