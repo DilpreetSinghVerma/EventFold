@@ -264,7 +264,7 @@ function expiredAlbumTemplate(albumTitle: string, dashboardUrl: string) {
 
 export async function sendAlbumPublishedEmail(email: string, albumTitle: string, albumId: string) {
     if (gmailTransporter) {
-        const albumUrl = `https://www.eventfoldstudio.com/viewer/${albumId}`;
+        const albumUrl = `https://www.eventfoldstudio.com/album/${albumId}?shared=true`;
         const mailOptions = {
             from: `"EventFold" <${GMAIL_EMAIL}>`,
             to: email,
