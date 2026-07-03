@@ -420,6 +420,107 @@ function promotionalEmailTemplate(messageHtml: string) {
     `;
 }
 
+export async function sendSubscriptionConfirmationEmail(
+    email: string,
+    name: string,
+    plan: string,
+    expiresAt: Date
+) {
+    if (gmailTransporter) {
+        const planLabel =
+            plan === 'pro' ? 'Studio Monthly' :
+            plan === 'elite' ? 'Elite Yearly' :
+            plan === 'lab_monthly' ? 'Lab Monthly' :
+            plan === 'lab_half_yearly' ? 'Lab Half-Yearly' :
+            plan === 'lab_yearly' ? 'Lab Yearly' : plan;
+
+        const mailOptions = {
+            from: `"EventFold" <${GMAIL_EMAIL}>`,
+            to: email,
+            subject: `🎉 Your ${planLabel} subscription is now active!`,
+            html: subscriptionConfirmationTemplate(name, planLabel, expiresAt),
+        };
+
+        try {
+            await gmailTransporter.sendMail(mailOptions);
+            console.log(`[GMAIL] Subscription confirmation email sent to ${email} (${planLabel})`);
+            return true;
+        } catch (error) {
+            console.error('[GMAIL] Failed to send subscription confirmation email:', error);
+        }
+    } else {
+        console.log(`[EMAIL SIMULATION] Subscription confirmation for ${email} - Plan: ${plan}`);
+    }
+    return false;
+}
+
+function subscriptionConfirmationTemplate(name: string, planLabel: string, expiresAt: Date) {
+    const dashboardUrl = 'https://www.eventfoldstudio.com/dashboard';
+    const expiryStr = expiresAt.toLocaleDateString('en-IN', { year: 'numeric', month: 'long', day: 'numeric' });
+    const isYearly = planLabel.toLowerCase().includes('yearly');
+    const accentColor = isYearly ? '#f59e0b' : '#8b5cf6';
+    const accentShadow = isYearly ? 'rgba(245, 158, 11, 0.3)' : 'rgba(139, 92, 246, 0.3)';
+
+    return `
+        <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; padding: 40px; border: 1px solid #1e1e2e; border-radius: 24px; background: #030303; color: white;">
+            <div style="text-align: center; margin-bottom: 30px;">
+                <img src="https://eventfoldstudio.com/branding%20material/without%20bg%20version.png" alt="EventFold Logo" style="height: 60px; margin-bottom: 10px; display: inline-block;" />
+                <p style="text-transform: uppercase; letter-spacing: 5px; font-size: 10px; color: rgba(255,255,255,0.4);">Subscription Confirmed</p>
+            </div>
+
+            <div style="background: linear-gradient(135deg, ${accentColor}18, ${accentColor}08); border: 1px solid ${accentColor}40; padding: 30px; border-radius: 20px; text-align: center; margin-bottom: 30px;">
+                <div style="font-size: 48px; margin-bottom: 10px;">🎉</div>
+                <h2 style="font-size: 26px; margin: 0 0 8px 0; color: white;">Welcome to ${planLabel}!</h2>
+                <p style="font-size: 14px; margin: 0; color: ${accentColor}; font-weight: bold; text-transform: uppercase; letter-spacing: 2px;">Your Account is Now Unlimited</p>
+            </div>
+
+            <p style="line-height: 1.7; color: rgba(255,255,255,0.75); font-size: 15px;">
+                Hi ${name || 'there'},<br /><br />
+                Thank you for subscribing to EventFold Studio! Your payment has been confirmed and your <strong>${planLabel}</strong> plan is now fully active. You can start creating unlimited cinematic flipbook albums right away.
+            </p>
+
+            <div style="background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.07); border-radius: 16px; padding: 24px; margin: 28px 0;">
+                <table style="width: 100%; border-collapse: collapse;">
+                    <tr>
+                        <td style="padding: 10px 0; color: rgba(255,255,255,0.4); font-size: 12px; text-transform: uppercase; letter-spacing: 1px; border-bottom: 1px solid rgba(255,255,255,0.05);">Plan</td>
+                        <td style="padding: 10px 0; color: white; font-weight: bold; text-align: right; border-bottom: 1px solid rgba(255,255,255,0.05);">${planLabel}</td>
+                    </tr>
+                    <tr>
+                        <td style="padding: 10px 0; color: rgba(255,255,255,0.4); font-size: 12px; text-transform: uppercase; letter-spacing: 1px; border-bottom: 1px solid rgba(255,255,255,0.05);">Status</td>
+                        <td style="padding: 10px 0; color: #10b981; font-weight: bold; text-align: right; border-bottom: 1px solid rgba(255,255,255,0.05);">✅ Active</td>
+                    </tr>
+                    <tr>
+                        <td style="padding: 10px 0; color: rgba(255,255,255,0.4); font-size: 12px; text-transform: uppercase; letter-spacing: 1px;">Valid Until</td>
+                        <td style="padding: 10px 0; color: white; font-weight: bold; text-align: right;">${expiryStr}</td>
+                    </tr>
+                </table>
+            </div>
+
+            <div style="background: rgba(255,255,255,0.02); border-radius: 14px; padding: 20px; margin-bottom: 28px;">
+                <p style="font-size: 13px; font-weight: bold; color: rgba(255,255,255,0.6); margin: 0 0 12px 0; text-transform: uppercase; letter-spacing: 1px;">What's Unlocked</p>
+                <p style="margin: 6px 0; color: rgba(255,255,255,0.7); font-size: 14px;">✅ Unlimited cinematic 3D flipbook albums</p>
+                <p style="margin: 6px 0; color: rgba(255,255,255,0.7); font-size: 14px;">✅ All existing albums are now permanent</p>
+                <p style="margin: 6px 0; color: rgba(255,255,255,0.7); font-size: 14px;">✅ Password protection for all albums</p>
+                <p style="margin: 6px 0; color: rgba(255,255,255,0.7); font-size: 14px;">✅ Custom studio branding</p>
+                <p style="margin: 6px 0; color: rgba(255,255,255,0.7); font-size: 14px;">✅ Client view analytics & engagement tracking</p>
+            </div>
+
+            <div style="text-align: center; margin: 36px 0;">
+                <a href="${dashboardUrl}" style="background: ${accentColor}; color: ${isYearly ? 'black' : 'white'}; padding: 18px 48px; border-radius: 14px; text-decoration: none; font-weight: bold; font-size: 16px; display: inline-block; box-shadow: 0 10px 30px ${accentShadow};">
+                    GO TO MY DASHBOARD →
+                </a>
+            </div>
+
+            <p style="line-height: 1.6; color: rgba(255,255,255,0.4); font-size: 12px; text-align: center;">
+                If you have any questions, simply reply to this email and our team will get back to you.<br />
+                Thank you for choosing EventFold Studio.
+            </p>
+
+            <p style="color: rgba(255,255,255,0.2); font-size: 10px; text-align: center; margin-top: 40px; text-transform: uppercase; letter-spacing: 2px;">Automated Payment Confirmation · Do not reply</p>
+        </div>
+    `;
+}
+
 export async function sendReferralRewardEmail(email: string, name: string) {
     if (gmailTransporter) {
         const mailOptions = {

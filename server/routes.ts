@@ -501,13 +501,24 @@ export function registerRoutes(
             await storage.updateUser(userId, userToUpdate);
 
             // Make all user's albums permanent upon subscription
-            const userAlbums = await storage.getAlbumsByUser(userId);
             const { db } = await import("./db");
             const { albums } = await import("../shared/schema");
             if (db) {
               await db.update(albums)
                 .set({ expiresAt: null })
                 .where(eq(albums.userId, userId));
+            }
+
+            // Send subscription confirmation email to the user
+            const activatedUser = await storage.getUser(userId);
+            if (activatedUser?.email) {
+              const { sendSubscriptionConfirmationEmail } = await import("./lib/email");
+              sendSubscriptionConfirmationEmail(
+                activatedUser.email,
+                activatedUser.name || '',
+                planType,
+                expiresAt
+              ).catch(err => console.error("[WEBHOOK] Failed to send subscription confirmation email:", err));
             }
 
             console.log(`[WEBHOOK] User ${userId} upgraded to ${plan} via Razorpay (${event.event}). Albums made permanent.`);
