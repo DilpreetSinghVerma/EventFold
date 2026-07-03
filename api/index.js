@@ -148,6 +148,12 @@ Invalid`)}},FromEmailAddress:"invalid@invalid",Destination:{ToAddresses:["invali
             </div>
             <p>This code will expire in 10 minutes.</p>
             <p style="color: #71717a; font-size: 12px; text-align: center;">If you didn't create an account, you can safely ignore this email.</p>
+
+            <div style="margin-top: 30px; padding: 20px; background: linear-gradient(135deg, #25d36618, #25d36608); border: 1px solid #25d36640; border-radius: 16px; text-align: center;">
+                <p style="font-size: 14px; font-weight: bold; color: #25d366; margin: 0 0 8px 0;">\u{1F4F1} Join Our Photographer Community</p>
+                <p style="font-size: 12px; color: #555; margin: 0 0 14px 0;">Get exclusive tips, free coupons, giveaways &amp; connect with other photographers on WhatsApp.</p>
+                <a href="https://chat.whatsapp.com/KZE9TKpwjCmFY5SP7UDAdf" style="background: #25d366; color: white; padding: 12px 28px; border-radius: 10px; text-decoration: none; font-weight: bold; font-size: 14px; display: inline-block;">JOIN WHATSAPP GROUP \u2192</a>
+            </div>
         </div>
     `}function jte(t){return`
         <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; padding: 40px; border: 2px solid #8b5cf6; border-radius: 20px; background: #030303; color: white;">
@@ -333,6 +339,12 @@ Invalid`)}},FromEmailAddress:"invalid@invalid",Destination:{ToAddresses:["invali
                 If you have any questions, simply reply to this email and our team will get back to you.<br />
                 Thank you for choosing EventFold Studio.
             </p>
+
+            <div style="margin-top: 28px; padding: 20px; background: linear-gradient(135deg, #25d36618, #25d36608); border: 1px solid #25d36640; border-radius: 16px; text-align: center;">
+                <p style="font-size: 14px; font-weight: bold; color: #25d366; margin: 0 0 6px 0;">\u{1F4F1} Join Our Exclusive Photographer Community</p>
+                <p style="font-size: 12px; color: rgba(255,255,255,0.5); margin: 0 0 14px 0;">Get free coupons, giveaways, tips &amp; connect with fellow photographers on WhatsApp.</p>
+                <a href="https://chat.whatsapp.com/KZE9TKpwjCmFY5SP7UDAdf" style="background: #25d366; color: white; padding: 12px 28px; border-radius: 10px; text-decoration: none; font-weight: bold; font-size: 14px; display: inline-block;">JOIN WHATSAPP GROUP \u2192</a>
+            </div>
 
             <p style="color: rgba(255,255,255,0.2); font-size: 10px; text-align: center; margin-top: 40px; text-transform: uppercase; letter-spacing: 2px;">Automated Payment Confirmation \xB7 Do not reply</p>
         </div>
