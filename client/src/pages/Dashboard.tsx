@@ -1362,10 +1362,21 @@ export default function Dashboard() {
                       >
                         <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:animate-[shimmer_2s_infinite]" />
                         <Crown className="w-4 h-4 mr-2" />
-                        UPGRADE TO UNLIMITED {promoValidated && promoType === 'discount' && promoDiscount
+                        MONTHLY {promoValidated && promoType === 'discount' && promoDiscount
                           ? <><span className="ml-2 font-black text-cyan-300">₹{Math.round(199 * (1 - promoDiscount / 100))}</span><span className="ml-1 text-[10px] line-through opacity-40">₹199</span></>
                           : <><span className="ml-1">(₹199)</span><span className="ml-2 text-[10px] line-through opacity-70">₹499</span></>}
                         <span className="absolute -top-1 -right-1 px-2 py-0.5 bg-cyan-400 text-black text-[8px] font-black rounded-full">HOT</span>
+                      </Button>
+                      <Button
+                        onClick={() => startRazorpayCheckout('yearly', promoValidated && promoType === 'discount' ? promoCode : undefined)}
+                        className="h-10 rounded-full bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-400 hover:to-orange-400 text-white font-bold px-6 shadow-xl shadow-amber-500/20 relative group overflow-hidden"
+                      >
+                        <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:animate-[shimmer_2s_infinite]" />
+                        <Crown className="w-4 h-4 mr-2" />
+                        YEARLY {promoValidated && promoType === 'discount' && promoDiscount
+                          ? <><span className="ml-2 font-black">₹{Math.round(899 * (1 - promoDiscount / 100))}</span><span className="ml-1 text-[10px] line-through opacity-40">₹899</span></>
+                          : <><span className="ml-1">(₹899)</span><span className="ml-2 text-[10px] line-through opacity-70">₹2,388</span></>}
+                        <span className="absolute -top-1 -right-1 px-2 py-0.5 bg-green-400 text-black text-[8px] font-black rounded-full">SAVE 62%</span>
                       </Button>
                     </div>
                   </>

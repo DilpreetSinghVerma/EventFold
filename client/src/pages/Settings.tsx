@@ -392,9 +392,16 @@ export default function Settings() {
                                                 </h3>
                                             </div>
                                             {user?.plan === 'free' && (
-                                                <Button onClick={() => startRazorpayCheckout('monthly')} className="w-full rounded-xl bg-primary shadow-lg shadow-primary/20 mt-2">
-                                                    Upgrade to Unlimited
-                                                </Button>
+                                                <div className="flex flex-col gap-2 w-full mt-2">
+                                                    <Button onClick={() => startRazorpayCheckout('monthly')} className="w-full rounded-xl bg-primary shadow-lg shadow-primary/20">
+                                                        Monthly (₹199/mo)
+                                                    </Button>
+                                                    <Button onClick={() => startRazorpayCheckout('yearly')} className="w-full rounded-xl bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-400 hover:to-orange-400 shadow-lg shadow-amber-500/20 relative">
+                                                        Yearly (₹899/yr)
+                                                        <span className="ml-2 text-[10px] line-through opacity-70">₹2,388</span>
+                                                        <span className="absolute -top-1.5 -right-1.5 px-2 py-0.5 bg-green-400 text-black text-[8px] font-black rounded-full">SAVE 62%</span>
+                                                    </Button>
+                                                </div>
                                             )}
                                         </Card>
 
@@ -445,9 +452,15 @@ export default function Settings() {
                                                 </div>
                                                 <p className="text-sm text-white/60">Unlock unlimited albums, custom branding, and 50GB vault storage.</p>
                                             </div>
-                                            <Button onClick={() => startRazorpayCheckout('monthly')} className="h-14 px-8 rounded-2xl bg-primary hover:bg-primary/90 text-white font-bold shadow-xl shadow-primary/30 shrink-0">
-                                                Upgrade Now (₹199) <span className="ml-2 text-[10px] line-through opacity-70">₹499</span>
-                                            </Button>
+                                            <div className="flex flex-col sm:flex-row gap-3 shrink-0">
+                                                <Button onClick={() => startRazorpayCheckout('monthly')} className="h-14 px-8 rounded-2xl bg-primary hover:bg-primary/90 text-white font-bold shadow-xl shadow-primary/30">
+                                                    Monthly (₹199) <span className="ml-2 text-[10px] line-through opacity-70">₹499</span>
+                                                </Button>
+                                                <Button onClick={() => startRazorpayCheckout('yearly')} className="h-14 px-8 rounded-2xl bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-400 hover:to-orange-400 text-white font-bold shadow-xl shadow-amber-500/30 relative">
+                                                    Yearly (₹899) <span className="ml-2 text-[10px] line-through opacity-70">₹2,388</span>
+                                                    <span className="absolute -top-2 -right-2 px-2 py-0.5 bg-green-400 text-black text-[8px] font-black rounded-full">SAVE 62%</span>
+                                                </Button>
+                                            </div>
                                         </div>
                                     )}
                                 </div>
