@@ -111,6 +111,34 @@ export function registerRoutes(
     }
   });
 
+  // Bulk presigned URL generation — get all upload slots in ONE request
+  // This eliminates the per-file server round-trip that was causing slow uploads
+  app.post("/api/s3-presigned-urls/bulk", express.json(), async (req, res) => {
+    try {
+      if (!req.isAuthenticated()) return res.status(401).json({ error: "Unauthorized" });
+
+      const { files } = req.body; // [{ folder, contentType }]
+      if (!Array.isArray(files) || files.length === 0) {
+        return res.status(400).json({ error: "files array is required" });
+      }
+      if (files.length > 60) {
+        return res.status(400).json({ error: "Cannot request more than 60 presigned URLs at once" });
+      }
+
+      // Generate all presigned URLs in parallel
+      const results = await Promise.all(
+        files.map(({ folder = "albums", contentType }: { folder?: string; contentType: string }) =>
+          generatePresignedUrl(folder, contentType)
+        )
+      );
+
+      res.json({ urls: results });
+    } catch (e: any) {
+      console.error("Failed to generate bulk presigned URLs:", e);
+      res.status(500).json({ error: "Failed to generate presigned URLs" });
+    }
+  });
+
   // Admin: View all Cloudinary account usage at a glance
   app.get("/api/admin/cloudinary-status", async (req, res) => {
     try {

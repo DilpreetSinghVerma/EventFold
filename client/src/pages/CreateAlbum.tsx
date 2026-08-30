@@ -288,161 +288,172 @@ export default function CreateAlbum() {
       }
       const album = await albumResponse.json();
 
-      // --- Helper: Compress image to drastically reduce upload size ---
+      // --- Helper: Compress image — frees ObjectURL immediately to avoid memory leaks ---
       const compressImage = async (file: File): Promise<File> => {
-        return new Promise((resolve, reject) => {
+        return new Promise((resolve) => {
           const img = new Image();
+          const objectUrl = URL.createObjectURL(file);
           img.onload = () => {
-            const canvas = document.createElement("canvas");
-            const MAX_WIDTH = 2500;
-            const MAX_HEIGHT = 2500;
-            let width = img.width;
-            let height = img.height;
-
+            URL.revokeObjectURL(objectUrl); // Free memory right after decode
+            const MAX_DIM = 2500;
+            let { width, height } = img;
             if (width > height) {
-              if (width > MAX_WIDTH) {
-                height *= MAX_WIDTH / width;
-                width = MAX_WIDTH;
-              }
+              if (width > MAX_DIM) { height = Math.round(height * MAX_DIM / width); width = MAX_DIM; }
             } else {
-              if (height > MAX_HEIGHT) {
-                width *= MAX_HEIGHT / height;
-                height = MAX_HEIGHT;
-              }
+              if (height > MAX_DIM) { width = Math.round(width * MAX_DIM / height); height = MAX_DIM; }
             }
+            const canvas = document.createElement("canvas");
             canvas.width = width;
             canvas.height = height;
-
             const ctx = canvas.getContext("2d");
             if (!ctx) return resolve(file);
-
             ctx.drawImage(img, 0, 0, width, height);
-
             canvas.toBlob(
               (blob) => {
                 if (!blob) return resolve(file);
-                const compressedFile = new File([blob], file.name.replace(/\.[^/.]+$/, ".jpg"), {
+                resolve(new File([blob], file.name.replace(/\.[^/.]+$/, ".jpg"), {
                   type: "image/jpeg",
                   lastModified: Date.now(),
-                });
-                resolve(compressedFile);
+                }));
               },
               "image/jpeg",
               0.85
             );
           };
-          img.onerror = () => resolve(file);
-          img.src = URL.createObjectURL(file);
+          img.onerror = () => { URL.revokeObjectURL(objectUrl); resolve(file); };
+          img.src = objectUrl;
         });
       };
 
-      // 2. Securing cloud connection
-      setStatus('Securing cloud connection...');
-
-      // Helper to upload a single file to Cloudflare R2
-      const uploadToR2 = async (file: File, label: string, isVideo = false) => {
-        let sigResponse;
-        try {
-          sigResponse = await fetch('/api/s3-presigned-url', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              folder: 'albums',
-              contentType: file.type || (isVideo ? 'video/mp4' : 'image/jpeg')
-            })
-          });
-        } catch (e: any) {
-          throw new Error("Failed to secure cloud connection. The backend server is unreachable.");
-        }
-
-        if (!sigResponse.ok) {
-          const errBody = await sigResponse.json().catch(() => ({}));
-          throw new Error(errBody.error || 'Failed to get upload URL from server.');
-        }
-
-        const { uploadUrl, finalUrl } = await sigResponse.json();
-
-        let res;
-        try {
-          res = await fetch(uploadUrl, {
-            method: 'PUT',
-            body: file,
-            headers: {
-              'Content-Type': file.type || (isVideo ? 'video/mp4' : 'image/jpeg')
-            }
-          });
-        } catch (fetchErr: any) {
-          console.error("R2 fetch rejected:", fetchErr);
-          throw new Error(`Upload failed for "${label}". Please verify your internet connection.`);
-        }
-
-        if (!res.ok) {
-          throw new Error(`${label}: Upload failed with status ${res.status}`);
-        }
-        return finalUrl;
+      // Helper: run up to `limit` async tasks at once
+      const runWithConcurrency = async <T>(tasks: (() => Promise<T>)[], limit: number, onProgress?: (done: number, total: number) => void): Promise<T[]> => {
+        const results: T[] = new Array(tasks.length);
+        let nextIndex = 0;
+        let completed = 0;
+        const workers = Array.from({ length: Math.min(limit, tasks.length) }, async () => {
+          while (nextIndex < tasks.length) {
+            const i = nextIndex++;
+            results[i] = await tasks[i]();
+            completed++;
+            onProgress?.(completed, tasks.length);
+          }
+        });
+        await Promise.all(workers);
+        return results;
       };
 
-      // 3. Compress and Upload all files directly from Browser to Cloudinary with Concurrency Control
-      setStatus('Compressing and streaming assets to cloud storage...');
+      // ── STEP A: Collect file descriptors for every asset to upload ──────────────
+      type FileDescriptor = {
+        file: File | null;     // null = no compression needed (video/audio)
+        isImage: boolean;
+        isVideo: boolean;
+        meta: { fileType: string; orderIndex: number };
+      };
 
-      const uploadTasks: (() => Promise<any>)[] = [];
+      const descriptors: FileDescriptor[] = [];
 
-      // Add covers
-      uploadTasks.push(async () => {
-        const compressed = await compressImage(formData.frontCover!);
-        const url = await uploadToR2(compressed, 'Front cover');
-        return { filePath: url, fileType: 'cover_front', orderIndex: 0 };
-      });
+      descriptors.push({ file: formData.frontCover!, isImage: true, isVideo: false, meta: { fileType: 'cover_front', orderIndex: 0 } });
+      descriptors.push({ file: formData.backCover!, isImage: true, isVideo: false, meta: { fileType: 'cover_back', orderIndex: 1 } });
 
-      uploadTasks.push(async () => {
-        const compressed = await compressImage(formData.backCover!);
-        const url = await uploadToR2(compressed, 'Back cover');
-        return { filePath: url, fileType: 'cover_back', orderIndex: 1 };
-      });
-
-      // Add sheets and their optional videos
       formData.sheets.forEach((sheet, idx) => {
-        uploadTasks.push(async () => {
-          const compressed = await compressImage(sheet);
-          const url = await uploadToR2(compressed, `Sheet ${idx + 1}`);
-          return { filePath: url, fileType: 'sheet', orderIndex: idx };
-        });
-
+        descriptors.push({ file: sheet, isImage: true, isVideo: false, meta: { fileType: 'sheet', orderIndex: idx } });
         const vidObj = formData.sheetVideos[idx];
-        if (vidObj && vidObj.file) {
-          uploadTasks.push(async () => {
-            const url = await uploadToR2(vidObj.file!, `Motion Portrait ${idx + 1}`, true);
-            const pageNum = (idx * 2) + (vidObj.side === 'right' ? 1 : 0);
-            return { filePath: url, fileType: 'video', orderIndex: pageNum };
-          });
+        if (vidObj?.file) {
+          const pageNum = (idx * 2) + (vidObj.side === 'right' ? 1 : 0);
+          descriptors.push({ file: vidObj.file, isImage: false, isVideo: true, meta: { fileType: 'video', orderIndex: pageNum } });
         }
       });
 
       if (formData.bgMusicChoice === 'upload' && formData.bgMusic) {
-        uploadTasks.push(async () => {
-          const url = await uploadToR2(formData.bgMusic!, 'Background Music', true);
-          return { filePath: url, fileType: 'audio', orderIndex: 0 };
-        });
-      } else if (formData.bgMusicChoice === 'sample') {
-        uploadTasks.push(async () => {
-          return { filePath: '/indian-wedding-music.mp3', fileType: 'audio', orderIndex: 0 };
-        });
-      } else if (formData.bgMusicChoice === 'none') {
-        uploadTasks.push(async () => {
-          return { filePath: 'none', fileType: 'audio', orderIndex: 0 };
-        });
+        descriptors.push({ file: formData.bgMusic, isImage: false, isVideo: false, meta: { fileType: 'audio', orderIndex: 0 } });
       }
 
-      // Execute with concurrency limit of 4
-      const CONCURRENCY_LIMIT = 4;
+      // ── STEP B: Compress all images in parallel (CPU-bound, concurrency=4) ──────
+      setStatus('Compressing images...');
+      const compressedFiles: (File | null)[] = await runWithConcurrency(
+        descriptors.map((d, i) => async () => {
+          if (!d.file) return null;
+          if (d.isImage) return await compressImage(d.file);
+          return d.file; // videos/audio: no compression
+        }),
+        4,
+        (done, total) => setStatus(`Compressing images... (${done}/${total})`)
+      );
+
+      // ── STEP C: Fetch ALL presigned R2 URLs — bulk first, fallback to one-by-one ─
+      setStatus('Securing cloud connections...');
+      const urlRequests = descriptors.map((d, i) => ({
+        folder: 'albums',
+        contentType: d.isImage
+          ? 'image/jpeg'
+          : d.isVideo
+            ? (compressedFiles[i]?.type || 'video/mp4')
+            : (compressedFiles[i]?.type || 'audio/mpeg'),
+      }));
+
+      let presignedSlots: { uploadUrl: string; finalUrl: string }[];
+      try {
+        // Try fast bulk endpoint first (new)
+        const bulkResp = await fetch('/api/s3-presigned-urls/bulk', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ files: urlRequests }),
+        });
+        if (!bulkResp.ok) throw new Error('bulk_failed');
+        const data = await bulkResp.json();
+        presignedSlots = data.urls;
+      } catch {
+        // Fallback: generate presigned URLs one-by-one (old reliable method)
+        console.warn('Bulk presign failed — falling back to sequential presign');
+        presignedSlots = await Promise.all(
+          urlRequests.map(async ({ folder, contentType }) => {
+            const r = await fetch('/api/s3-presigned-url', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ folder, contentType }),
+            });
+            if (!r.ok) throw new Error('Failed to get upload URL from server.');
+            return r.json();
+          })
+        );
+      }
+
+      // ── STEP D: Upload all files to R2 with concurrency=8 ───────────────────────
+      // R2 uploads go directly to Cloudflare (different host), so browser's
+      // 6-connections-per-host limit doesn't apply here — 8 is safe.
+      const UPLOAD_CONCURRENCY = 8;
       const uploadedFiles: any[] = [];
-      for (let i = 0; i < uploadTasks.length; i += CONCURRENCY_LIMIT) {
-        const chunk = uploadTasks.slice(i, i + CONCURRENCY_LIMIT);
-        const results = await Promise.all(chunk.map(task => task()));
-        uploadedFiles.push(...results);
-        // Provide progress feedback
-        const progress = Math.round(((i + chunk.length) / uploadTasks.length) * 100);
-        setStatus(`Streaming assets (${progress}% complete)...`);
+
+      const uploadTasks = descriptors.map((d, i) => async () => {
+        const fileToUpload = compressedFiles[i];
+        if (!fileToUpload) return null; // shouldn't happen
+        const { uploadUrl, finalUrl } = presignedSlots[i];
+        const contentType = d.isImage ? 'image/jpeg' : (fileToUpload.type || 'application/octet-stream');
+        try {
+          const res = await fetch(uploadUrl, {
+            method: 'PUT',
+            body: fileToUpload,
+            headers: { 'Content-Type': contentType },
+          });
+          if (!res.ok) throw new Error(`Upload failed with status ${res.status}`);
+        } catch (err: any) {
+          throw new Error(`Upload failed for "${d.meta.fileType} #${i}": ${err.message}`);
+        }
+        return { filePath: finalUrl, ...d.meta };
+      });
+
+      const uploadResults = await runWithConcurrency(
+        uploadTasks,
+        UPLOAD_CONCURRENCY,
+        (done, total) => setStatus(`Streaming assets (${Math.round(done / total * 100)}% complete)...`)
+      );
+      uploadedFiles.push(...uploadResults.filter(Boolean));
+
+      // Static entries that need no upload
+      if (formData.bgMusicChoice === 'sample') {
+        uploadedFiles.push({ filePath: '/indian-wedding-music.mp3', fileType: 'audio', orderIndex: 0 });
+      } else if (formData.bgMusicChoice === 'none') {
+        uploadedFiles.push({ filePath: 'none', fileType: 'audio', orderIndex: 0 });
       }
 
       // 4. Send the URLs to our server to link them to the album
