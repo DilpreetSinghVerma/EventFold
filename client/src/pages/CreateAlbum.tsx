@@ -326,7 +326,7 @@ export default function CreateAlbum() {
       };
 
       // Helper: run up to `limit` async tasks at once
-      const runWithConcurrency = async <T>(tasks: (() => Promise<T>)[], limit: number, onProgress?: (done: number, total: number) => void): Promise<T[]> => {
+      const runWithConcurrency = async <T,>(tasks: (() => Promise<T>)[], limit: number, onProgress?: (done: number, total: number) => void): Promise<T[]> => {
         const results: T[] = new Array(tasks.length);
         let nextIndex = 0;
         let completed = 0;
