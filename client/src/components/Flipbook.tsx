@@ -88,7 +88,7 @@ export const Flipbook = forwardRef(({
     flipAudio.current = flip;
 
     // Prefetch audio
-    music.load();
+    music?.load();
     flip.load();
 
     // Preload the first few pages immediately plus covers
@@ -105,8 +105,10 @@ export const Flipbook = forwardRef(({
     }
 
     return () => {
-      music.pause();
-      music.src = '';
+      if (music) {
+        music.pause();
+        music.src = '';
+      }
       flip.pause();
       flip.src = '';
     };

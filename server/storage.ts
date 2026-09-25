@@ -1,7 +1,7 @@
 import crypto from "crypto";
 import { type InsertAlbum, type Album, type InsertFile, type File, type User, type InsertUser, type Referral, type InsertReferral, type KioskLead, type PromoCode, type Exhibition, albums, files, settings, users, referrals, kioskLeads, promoCodes, promoRedemptions, exhibitions } from "../shared/schema";
 import { db } from "./db";
-import { eq, asc, lte, and, isNotNull, sql } from "drizzle-orm";
+import { eq, asc, desc, lte, and, isNotNull, sql } from "drizzle-orm";
 
 export interface IStorage {
   createAlbum(album: InsertAlbum): Promise<Album>;
@@ -459,6 +459,10 @@ export class MemStorage implements IStorage {
       isPublicDemo: insertAlbum.isPublicDemo || 'false',
       demoCategory: insertAlbum.demoCategory || null,
       category: insertAlbum.category || 'Uncategorized',
+      sheetSize: insertAlbum.sheetSize || '12x36',
+      sheetCustomWidth: insertAlbum.sheetCustomWidth ?? null,
+      sheetCustomHeight: insertAlbum.sheetCustomHeight ?? null,
+      sheetCustomMode: insertAlbum.sheetCustomMode ?? null,
       bgMusicUrl: insertAlbum.bgMusicUrl || null,
       totalEngagementTime: 0,
       avgRating: 0,
@@ -469,6 +473,7 @@ export class MemStorage implements IStorage {
       customContactWhatsApp: insertAlbum.customContactWhatsApp || null,
       isLabAlbum: insertAlbum.isLabAlbum || 0,
       expiryNotificationSent: 0,
+      nearExpiryNotificationSent: insertAlbum.nearExpiryNotificationSent ?? 0,
       createdAt: new Date(),
     };
     this.albums.set(id, album);
@@ -571,6 +576,8 @@ export class MemStorage implements IStorage {
       role: insertUser.role || (insertUser.email === 'dilpreetsinghverma@gmail.com' ? 'admin' : 'user'),
       subscriptionStartedAt: insertUser.subscriptionStartedAt || null,
       subscriptionExpiresAt: insertUser.subscriptionExpiresAt || null,
+      referralCode: insertUser.referralCode || null,
+      referredById: insertUser.referredById ?? null,
       lastActiveAt: null,
       createdAt: new Date()
     };

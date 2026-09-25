@@ -428,7 +428,7 @@ export default function CreateAlbum() {
         const fileToUpload = compressedFiles[i];
         if (!fileToUpload) return null; // shouldn't happen
         const { uploadUrl, finalUrl } = presignedSlots[i];
-        const contentType = d.isImage ? 'image/jpeg' : (fileToUpload.type || 'application/octet-stream');
+        const contentType = urlRequests[i].contentType;
         try {
           const res = await fetch(uploadUrl, {
             method: 'PUT',

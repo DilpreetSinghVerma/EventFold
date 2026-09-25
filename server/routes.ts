@@ -1,4 +1,4 @@
-import { eq, asc, desc, lte, and, isNotNull, sql, inArray } from "drizzle-orm";
+import { eq, asc, desc, lte, and, isNotNull, sql, inArray, gt } from "drizzle-orm";
 import { db } from "./db";
 import express, { type Express, Request, Response, NextFunction } from "express";
 import { createServer, type Server } from "http";
@@ -121,8 +121,8 @@ export function registerRoutes(
       if (!Array.isArray(files) || files.length === 0) {
         return res.status(400).json({ error: "files array is required" });
       }
-      if (files.length > 60) {
-        return res.status(400).json({ error: "Cannot request more than 60 presigned URLs at once" });
+      if (files.length > 120) {
+        return res.status(400).json({ error: "Cannot request more than 120 presigned URLs at once" });
       }
 
       // Generate all presigned URLs in parallel
@@ -505,13 +505,13 @@ export function registerRoutes(
               expiresAt.setFullYear(expiresAt.getFullYear() + 1);
               if (planType === 'lab_yearly') creditsToAdd = 600;
             } else if (planType === 'lab_half_yearly') {
-              expiresAt.setDate(expiresAt.setDate() + 180);
+              expiresAt.setDate(expiresAt.getDate() + 180);
               creditsToAdd = 300;
             } else if (planType === 'lab_monthly') {
-              expiresAt.setDate(expiresAt.setDate() + 30);
+              expiresAt.setDate(expiresAt.getDate() + 30);
               creditsToAdd = 50;
             } else { // pro
-              expiresAt.setDate(expiresAt.setDate() + 30);
+              expiresAt.setDate(expiresAt.getDate() + 30);
             }
 
             const userToUpdate: any = {
@@ -1933,7 +1933,7 @@ export function registerRoutes(
       }
 
       // Group users
-      recentUsers.forEach(u => {
+      recentUsers.forEach((u: any) => {
         if (!u.createdAt) return;
         const dateStr = new Date(u.createdAt).toISOString().split('T')[0];
         if (chartDataMap.has(dateStr)) {
@@ -1942,7 +1942,7 @@ export function registerRoutes(
       });
 
       // Group albums
-      recentAlbums.forEach(a => {
+      recentAlbums.forEach((a: any) => {
         if (!a.createdAt) return;
         const dateStr = new Date(a.createdAt).toISOString().split('T')[0];
         if (chartDataMap.has(dateStr)) {
@@ -1960,10 +1960,10 @@ export function registerRoutes(
       const totalReferralsList = await db.select().from(referrals);
       const referralStats = {
         total: totalReferralsList.length,
-        joined: totalReferralsList.filter(r => r.status === 'joined').length,
-        verified: totalReferralsList.filter(r => r.status === 'verified').length,
-        completed: totalReferralsList.filter(r => r.status === 'completed').length,
-        rewarded: totalReferralsList.filter(r => r.status === 'rewarded').length,
+        joined: totalReferralsList.filter((r: any) => r.status === 'joined').length,
+        verified: totalReferralsList.filter((r: any) => r.status === 'verified').length,
+        completed: totalReferralsList.filter((r: any) => r.status === 'completed').length,
+        rewarded: totalReferralsList.filter((r: any) => r.status === 'rewarded').length,
       };
 
       res.json({

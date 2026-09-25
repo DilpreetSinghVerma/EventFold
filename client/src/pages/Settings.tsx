@@ -416,7 +416,7 @@ export default function Settings() {
                                                 </h3>
                                             </div>
                                             {(user?.plan === 'free' || (user?.plan?.startsWith('lab_') && user?.plan !== 'lab_unlimited')) && (
-                                                <Button onClick={buyAlbumCredit} variant="outline" className="w-full rounded-xl border-white/10 hover:bg-white/5 mt-2">
+                                                <Button onClick={() => buyAlbumCredit()} variant="outline" className="w-full rounded-xl border-white/10 hover:bg-white/5 mt-2">
                                                     Add 1 Credit (₹99) <span className="ml-2 text-[10px] line-through opacity-50">₹199</span>
                                                 </Button>
                                             )}

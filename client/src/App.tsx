@@ -63,7 +63,7 @@ function ImpersonationBanner() {
 
 function GlobalBroadcastBanner() {
   const [dismissed, setDismissed] = useState(false);
-  const { data } = useQuery({
+  const { data } = useQuery<{ broadcast?: any }>({
     queryKey: ["/api/broadcasts/active"],
     refetchInterval: 60000, // Poll every minute
   });

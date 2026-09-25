@@ -827,7 +827,7 @@ export default function Admin() {
     queryKey: ["/api/admin/users"],
   });
 
-  const { data: analytics } = useQuery({
+  const { data: analytics } = useQuery<any>({
     queryKey: ["/api/admin/analytics"],
   });
 
@@ -835,7 +835,7 @@ export default function Admin() {
     queryKey: ["/api/admin/albums"],
   });
 
-  const { data: activeBroadcastData } = useQuery({
+  const { data: activeBroadcastData } = useQuery<any>({
     queryKey: ["/api/broadcasts/active"],
   });
   const activeBroadcast = activeBroadcastData?.broadcast;
